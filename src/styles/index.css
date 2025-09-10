@@ -1,0 +1,30 @@
+/* Parallelogram-JS Framework Styles */
+@import './components/toasts.css';
+@import './components/lazy-image.css';
+@import './components/modal.css';
+
+:root {
+  --framework-transition-duration: 0.2s;
+  --framework-transition-easing: ease-in-out;
+  --framework-focus-color: #3b82f6;
+  --framework-focus-offset: 2px;
+  --framework-focus-width: 2px;
+}
+
+[data-lazyimage]:focus-visible,
+[data-modal]:focus-visible {
+  outline: var(--framework-focus-width) solid var(--framework-focus-color);
+  outline-offset: var(--framework-focus-offset);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
