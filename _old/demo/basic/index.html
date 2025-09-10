@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>ContenirJS Framework Demo</title>
+        <script type="importmap">
+            {
+              "imports": {
+                "@contenir/core": "../../packages/core/dist/index.js",
+                "@contenir/router": "../../packages/router/dist/index.js",
+                "@contenir/page": "../../packages/page/dist/index.js",
+                "@contenir/ui": "../../packages/ui/dist/index.js",
+                "@contenir/components": "../../packages/components/dist/index.js"
+              }
+            }
+        </script>
+        <script type="module" src="src/main.js"></script>
+    </head>
+    <body>
+        <main id="app">
+            <cn-alerts></cn-alerts>
+            <div class="container">
+                <h1 class="h1">ContenirJS — Framework & Components</h1>
+                <nav class="nav">
+                    <a href="./index.html">Home</a>
+                    <a href="./tabs.html">Tabs</a>
+                    <a href="./select.html">Select</a>
+                    <a href="./transitions.html">Transitions</a>
+                    <a href="#" onclick="pushAlert('success','Hello from Alerts!');return false;">Show alert</a>
+                </nav>
+
+                <div class="card">
+                    <p>Welcome. Use the navigation above to explore individual component demos.</p>
+                    <p>This build includes a mock
+                        <code>/api/cities</code> endpoint via Vite middleware for the Select AJAX demo.</p>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

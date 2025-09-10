@@ -1,0 +1,59 @@
+/* Reset (lite) */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body,h1,h2,h3,h4,p,figure{margin:0}
+img,svg,video,canvas{display:block;max-width:100%}
+
+/* Tokens */
+:root{
+  --cn-font: ui-sans-serif, -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --cn-text: #0b0b0c;
+  --cn-bg: #fff;
+  --cn-surface: #f7f7f8;
+  --cn-radius: 1rem;
+  --cn-anim-distance: 1rem;
+  --cn-anim-duration: .32s;
+  --cn-anim-ease: cubic-bezier(.22,.61,.36,1);
+}
+
+html{color-scheme: light dark}
+body{
+  font: 16px/1.5 var(--cn-font);
+  color: var(--cn-text);
+  background: var(--cn-bg);
+}
+
+/* Page transition */
+[data-transition="fade-y"]{
+  opacity: 0;
+  transform: translateY(var(--cn-anim-distance));
+  transition:
+    opacity var(--cn-anim-duration) var(--cn-anim-ease),
+    transform var(--cn-anim-duration) var(--cn-anim-ease);
+}
+[data-transition="fade-y"].is-entered{
+  opacity: 1;
+  transform: none;
+}
+
+/* Reveal utility for components */
+[data-reveal]{
+  opacity: 0;
+  transform: translateY(calc(var(--cn-anim-distance) * .75));
+  transition:
+    opacity var(--cn-anim-duration) var(--cn-anim-ease),
+    transform var(--cn-anim-duration) var(--cn-anim-ease);
+}
+[data-reveal].is-revealed{
+  opacity: 1;
+  transform: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  [data-transition],[data-reveal]{
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

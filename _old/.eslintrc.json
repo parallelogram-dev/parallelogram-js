@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "env": { "es2022": true, "browser": true, "node": true },
+  "extends": ["eslint:recommended"],
+  "plugins": ["jsdoc"],
+  "parserOptions": { "sourceType": "module", "ecmaVersion": 2022 },
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "jsdoc/require-jsdoc": "off"
+  },
+  "ignorePatterns": ["dist/**"]
+}
