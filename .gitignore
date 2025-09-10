@@ -1,6 +1,6 @@
-node_modules
-dist
-.temp
+node_modules/
+dist/
 .DS_Store
-.esbuild
 *.log
+.env
+coverage/
