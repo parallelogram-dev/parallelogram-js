@@ -1,0 +1,22 @@
+{
+  "name": "contenir-demo",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "clean": "npm run -ws --if-present clean && rimraf apps/demo/web/asset",
+    "start": "webpack serve --mode development --open --port 5173",
+    "dev": "concurrently -k -n PKGS,DEMO \"npm run -ws --if-present dev\" \"npm run start -w apps/demo\"",
+    "build": "npm run -ws --if-present build && npm run build -w apps/demo"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "rimraf": "^6.0.1",
+    "css-loader": "^7.1.2",
+    "mini-css-extract-plugin": "^2.9.1",
+    "sass": "^1.83.0",
+    "sass-loader": "^16.0.3",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  }
+}
