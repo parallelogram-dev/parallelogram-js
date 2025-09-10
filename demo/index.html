@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhancement Framework Demo</title>
+    <link rel="stylesheet" href="demo.css">
+    <!-- Include framework styles -->
+    <link rel="stylesheet" href="../dist/styles/index.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <h1>Enhancement Framework</h1>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#components">Components</a></li>
+                <li><a href="#examples">Examples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="app">
+        <section class="hero">
+            <h2>Progressive Enhancement, Modern JavaScript</h2>
+            <p>A lightweight framework that enhances your HTML without breaking it.</p>
+            <button id="demo-toast" class="btn btn-primary">Show Toast</button>
+            <button id="demo-progress" class="btn btn-secondary">Show Progress</button>
+        </section>
+
+        <section class="features">
+            <div class="feature-grid">
+                <div class="feature">
+                    <h3>🚀 Performance First</h3>
+                    <p>Components load only when needed. HTML works without JavaScript.</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Progressive Enhancement</h3>
+                    <p>Start with semantic HTML, enhance with data attributes.</p>
+                </div>
+                <div class="feature">
+                    <h3>🎨 Customizable Styling</h3>
+                    <p>CSS custom properties make theming effortless.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔧 Developer Experience</h3>
+                    <p>Rich logging, event system, and TypeScript support.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="component-demos">
+            <h2>Component Demonstrations</h2>
+
+            <div class="demo-section">
+                <h3>Lazy Loading Images</h3>
+                <p>Images load as they enter the viewport. Try scrolling down!</p>
+                <div class="image-grid">
+                    <img 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-component="lazy-image"
+                        data-src="https://picsum.photos/400/300?random=1"
+                        alt="Random image 1"
+                        class="demo-image"
+                    >
+                    <img 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-component="lazy-image"
+                        data-src="https://picsum.photos/400/300?random=2"
+                        alt="Random image 2"
+                        class="demo-image"
+                    >
+                    <img 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-component="lazy-image"
+                        data-src="https://picsum.photos/400/300?random=3"
+                        alt="Random image 3"
+                        class="demo-image"
+                    >
+                    <img 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-component="lazy-image"
+                        data-src="https://picsum.photos/400/300?random=4"
+                        alt="Random image 4"
+                        class="demo-image"
+                    >
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Toast Notifications</h3>
+                <div class="button-group">
+                    <button class="btn" onclick="showToast('info')">Info</button>
+                    <button class="btn" onclick="showToast('success')">Success</button>
+                    <button class="btn" onclick="showToast('warn')">Warning</button>
+                    <button class="btn" onclick="showToast('error')">Error</button>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Progress Indicators</h3>
+                <div class="button-group">
+                    <button class="btn" onclick="showProgress()">Determinate Progress</button>
+                    <button class="btn" onclick="showLoadingProgress()">Loading Progress</button>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>Event System</h3>
+                <p>All components communicate through a central event bus.</p>
+                <div id="event-log" class="event-log">
+                    <div class="event-log-header">
+                        <strong>Event Log</strong>
+                        <button onclick="clearEventLog()" class="btn-small">Clear</button>
+                    </div>
+                    <div class="event-log-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="usage-examples">
+            <h2>Usage Examples</h2>
+            
+            <div class="example">
+                <h3>Standalone Component Usage</h3>
+                <pre><code>import { LazyImage } from 'enhancement-framework/components/LazyImage';
+
+// Enhance all lazy images on the page
+LazyImage.enhanceAll();
+
+// Or create and mount manually
+const lazyLoader = new LazyImage();
+document.querySelectorAll('[data-component="lazy-image"]')
+  .forEach(img => lazyLoader.mount(img));</code></pre>
+            </div>
+
+            <div class="example">
+                <h3>HTML Enhancement Pattern</h3>
+                <pre><code>&lt;!-- Works without JavaScript --&gt;
+&lt;img src="placeholder.jpg" alt="Description"&gt;
+
+&lt;!-- Enhanced with data attributes --&gt;
+&lt;img src="placeholder.jpg" 
+     data-lazyimage
+     data-lazyimage-src="actual-image.jpg"
+     data-lazyimage-threshold="200px"
+     alt="Description"&gt;
+
+&lt;!-- Carousel example --&gt;
+&lt;div class="carousel" 
+     data-carousel 
+     data-carousel-autoplay-delay="5000"
+     data-carousel-loop="true"&gt;
+  &lt;!-- carousel content --&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+
+            <div class="example">
+                <h3>Event-Driven Architecture</h3>
+                <pre><code>import { EventManager, AlertManager } from 'enhancement-framework';
+
+const events = new EventManager();
+const alerts = new AlertManager({ eventBus: events });
+
+// Listen for component events
+events.on('lazy-image:loaded', ({ element, src }) => {
+  alerts.success(`Image loaded: ${src}`);
+});
+
+// Components automatically emit events</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Enhancement Framework. MIT License.</p>
+    </footer>
+
+    <!-- Toast container -->
+    <x-toasts placement="top-right"></x-toasts>
+
+    <!-- Load the framework -->
+    <script type="module" src="demo.js"></script>
+</body>
+</html>

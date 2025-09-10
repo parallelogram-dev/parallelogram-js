@@ -1,6 +1,0 @@
-{
-  "name": "demo-basic",
-  "private": true,
-  "type": "module",
-  "scripts": { "serve": "http-server . -c-1 -o" }
-}
