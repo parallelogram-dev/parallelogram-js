@@ -1,18 +1,17 @@
-// Demo.js - Enhancement Framework Demo Implementation
-// Logical initialization flow with proper logging
-
-// Initialize your framework components here
 async function initFramework() {
     try {
         // Import core framework modules first
-        const { ComponentRegistry } = await import('./dist/esm/index.js');
+        const { ComponentRegistry } = await import('./dist/esm/core/ComponentRegistry.min.js');
         const { EventManager } = await import('./dist/esm/core/EventManager.min.js');
         const { DevLogger } = await import('./dist/esm/core/DevLogger.min.js');
         const { RouterManager } = await import('./dist/esm/managers/RouterManager.min.js');
         const { PageManager } = await import('./dist/esm/managers/PageManager.min.js');
+        const { PModal } = await import('./dist/esm/components/PModal.min.js');
+        const { PToasts } = await import('./dist/esm/components/PToasts.min.js');
+        const { PSelect } = await import('./dist/esm/components/PSelect.min.js');
 
         // Initialize logger first for proper logging throughout
-        const logger = new DevLogger({ level: 'info', prefix: 'Demo' });
+        const logger = new DevLogger({ level: 'debug', prefix: 'Demo' });
         logger.info('Initializing Enhancement Framework Demo');
 
         // Create registry with logger available
