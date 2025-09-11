@@ -26,6 +26,9 @@
             "require": "./dist/index.cjs",
             "browser": "./dist/index.umd.js"
         },
+        "./components/*": {
+            "import": "./dist/components/*.js"
+        },
         "./styles": "./dist/styles/index.min.css"
     },
     "files": [
