@@ -41,7 +41,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-scrollreveal]')
  *   .forEach(element => scrollreveal.mount(element));
  */
-export class Scrollreveal extends BaseComponent {
+export default class Scrollreveal extends BaseComponent {
     /**
      * Default configuration for scrollreveal component
      * @returns {Object} Default config

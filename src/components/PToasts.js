@@ -1,4 +1,4 @@
-export class PToasts extends HTMLElement {
+export default class PToasts extends HTMLElement {
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });

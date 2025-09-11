@@ -50,7 +50,7 @@ import { PToasts } from "./PToasts.js";
  *   </optgroup>
  * </p-select>
  */
-export class PSelect extends HTMLElement {
+export default class PSelect extends HTMLElement {
   static formAssociated = true;
 
   constructor() {

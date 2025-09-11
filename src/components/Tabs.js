@@ -26,7 +26,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-tabs]')
  *   .forEach(container => tabs.mount(container));
  */
-export class Tabs extends BaseComponent {
+export default class Tabs extends BaseComponent {
     /**
      * Default configuration for tabs component
      * @returns {Object} Default config

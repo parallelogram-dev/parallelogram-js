@@ -32,7 +32,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-scrollhide]')
  *   .forEach(element => scrollhide.mount(element));
  */
-export class Scrollhide extends BaseComponent {
+export default class Scrollhide extends BaseComponent {
     /**
      * Default configuration for scrollhide component
      * @returns {Object} Default config

@@ -22,7 +22,7 @@
  * </p-modal>
  */
 
-export class PModal extends HTMLElement {
+export default class PModal extends HTMLElement {
   static get observedAttributes() {
     return ['open', 'data-modal-size', 'data-modal-closable'];
   }

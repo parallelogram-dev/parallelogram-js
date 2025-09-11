@@ -34,7 +34,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-videoplay]')
  *   .forEach(element => videoplay.mount(element));
  */
-export class Videoplay extends BaseComponent {
+export default class Videoplay extends BaseComponent {
     /**
      * Default configuration for videoplay component
      * @returns {Object} Default config

@@ -27,7 +27,7 @@
  */
 
 import { BaseComponent } from '@peptolab/parallelogram';
-export class Carousel extends BaseComponent {
+export default class Carousel extends BaseComponent {
     /**
      * Default options for carousel
      */
