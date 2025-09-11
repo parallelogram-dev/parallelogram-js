@@ -1,5 +1,5 @@
 {
-    "name": "parallelogram-js",
+    "name": "@peptolab/parallelogram",
     "version": "1.0.0",
     "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
     "type": "module",
@@ -36,9 +36,26 @@
     ],
     "license": "MIT",
     "sideEffects": false,
+    "exports": {
+        ".": {
+            "import": "./src/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
     "files": [
         "dist",
+        "src",
         "README.md",
         "LICENSE"
-    ]
+    ],
+    "directories": {
+        "test": "test"
+    },
+    "dependencies": {},
+    "peerDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com//parallelogram-dev/parallelogram-js.git"
+    },
+    "author": "Parallelogram"
 }

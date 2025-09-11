@@ -1,17 +1,17 @@
 async function initFramework() {
     try {
         // Import core framework modules first
-        const { ComponentRegistry } = await import('./dist/esm/core/ComponentRegistry.min.js');
-        const { EventManager } = await import('./dist/esm/core/EventManager.min.js');
-        const { DevLogger } = await import('./dist/esm/core/DevLogger.min.js');
-        const { RouterManager } = await import('./dist/esm/managers/RouterManager.min.js');
-        const { PageManager } = await import('./dist/esm/managers/PageManager.min.js');
-        const { PModal } = await import('./dist/esm/components/PModal.min.js');
-        const { PToasts } = await import('./dist/esm/components/PToasts.min.js');
-        const { PSelect } = await import('./dist/esm/components/PSelect.min.js');
+        const {ComponentRegistry} = await import('./dist/esm/core/ComponentRegistry.min.js');
+        const {EventManager} = await import('./dist/esm/core/EventManager.min.js');
+        const {DevLogger} = await import('./dist/esm/core/DevLogger.min.js');
+        const {RouterManager} = await import('./dist/esm/managers/RouterManager.min.js');
+        const {PageManager} = await import('./dist/esm/managers/PageManager.min.js');
+        const {PModal} = await import('./dist/esm/components/PModal.min.js');
+        const {PToasts} = await import('./dist/esm/components/PToasts.min.js');
+        const {PSelect} = await import('./dist/esm/components/PSelect.min.js');
 
         // Initialize logger first for proper logging throughout
-        const logger = new DevLogger({ level: 'debug', prefix: 'Demo' });
+        const logger = new DevLogger({level: 'debug', prefix: 'Demo'}, true);
         logger.info('Initializing Enhancement Framework Demo');
 
         // Create registry with logger available
@@ -71,6 +71,24 @@ async function initFramework() {
                 targetGroups: {
                     'main': ['main', 'navbar'], // When 'main' is requested, also update nav and breadcrumbs
                 },
+                targetGroupTransitions: {
+                    'main': {
+                        out: 'fade-slide-left',
+                        in: 'fade-slide-right',
+                        duration: 300,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                    },
+                    'navbar': {
+                        out: 'fade-scale-down',
+                        in: 'fade-scale-up',
+                        duration: 250
+                    },
+                    'sidebar': {
+                        out: 'slide-left',
+                        in: 'slide-right',
+                        duration: 200
+                    }
+                },
                 enableComponentPooling: true,
                 enableHealthMonitoring: true,
                 trackPerformance: true
@@ -83,14 +101,6 @@ async function initFramework() {
         window.eventBus = eventBus;
         window.logger = logger;
         window.componentRegistry = componentRegistry;
-
-        // Enhance navigation links
-        logger.debug('Enhancing navigation links');
-        //router.enhanceLinks();
-
-        // Scan and mount components
-        logger.debug('Scanning and mounting components');
-        //pageManager.scanAndMount();
 
         logger.info('Framework initialized successfully');
 

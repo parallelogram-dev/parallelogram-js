@@ -485,3 +485,56 @@ main {
 .component__status.error {
     background: #dc3545;
 }
+
+/* Fragment transition animations */
+@keyframes fade-slide-left {
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+@keyframes fade-slide-right {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-scale-down {
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+@keyframes fade-scale-up {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.fade-slide-left {
+    animation: fade-slide-left 0.3s ease forwards;
+}
+
+.fade-slide-right {
+    animation: fade-slide-right 0.3s ease forwards;
+}
+
+.fade-scale-down {
+    animation: fade-scale-down 0.25s ease forwards;
+}
+
+.fade-scale-up {
+    animation: fade-scale-up 0.25s ease forwards;
+}
