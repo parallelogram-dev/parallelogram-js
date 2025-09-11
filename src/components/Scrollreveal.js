@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import {BaseComponent} from '@peptolab/parallelogram';
 
 /**
  * Scrollreveal Component with Global Staggering
@@ -165,18 +165,17 @@ export default class Scrollreveal extends BaseComponent {
      * @param {Object} state - Component state
      */
     _addToRevealQueue(element, state) {
-        // Assign reveal order
         state.revealOrder = this.revealIndex++;
+        this.revealQueue.push({element, state, timestamp: performance.now()});
 
-        // Add to queue
-        this.revealQueue.push({
-            element,
-            state,
-            timestamp: performance.now()
-        });
-
-        // Process the queue
-        this._processRevealQueue();
+        // Use RAF to process queue on next frame
+        if (!this._queueScheduled) {
+            this._queueScheduled = true;
+            requestAnimationFrame(() => {
+                this._processRevealQueue();
+                this._queueScheduled = false;
+            });
+        }
     }
 
     /**
@@ -184,24 +183,29 @@ export default class Scrollreveal extends BaseComponent {
      * @private
      */
     async _processRevealQueue() {
+        if (this.revealQueue.length === 0) return;
+
         // Sort queue by reveal order
         this.revealQueue.sort((a, b) => a.state.revealOrder - b.state.revealOrder);
 
-        // Process each item with stagger delay
-        for (let i = 0; i < this.revealQueue.length; i++) {
-            const { element, state } = this.revealQueue[i];
-
+        // Process immediately on RAF tick
+        for (const {element, state} of this.revealQueue) {
             if (state.isRevealing || state.hasBeenRevealed) continue;
 
-            // Calculate total delay: element delay + global stagger
+            // Calculate delay but don't wait for it here
             const totalDelay = state.delay + (state.revealOrder * state.globalStagger);
 
-            // Reveal with delay
-            setTimeout(() => {
-                if (!state.hasBeenRevealed && !state.isRevealing) {
-                    this._revealElement(element, state, false); // Don't apply element delay again
-                }
-            }, totalDelay);
+            if (totalDelay === 0) {
+                // Reveal immediately on this frame
+                this._revealElement(element, state, false);
+            } else {
+                // Schedule with setTimeout as before
+                setTimeout(() => {
+                    if (!state.hasBeenRevealed && !state.isRevealing) {
+                        this._revealElement(element, state, false);
+                    }
+                }, totalDelay);
+            }
         }
     }
 
@@ -257,7 +261,7 @@ export default class Scrollreveal extends BaseComponent {
             });
 
         } catch (error) {
-            this.logger?.error('Scrollreveal animation failed', { element, error });
+            this.logger?.error('Scrollreveal animation failed', {element, error});
 
             this.eventBus?.emit('scrollreveal:reveal-error', {
                 element,
@@ -291,7 +295,7 @@ export default class Scrollreveal extends BaseComponent {
             });
 
         } catch (error) {
-            this.logger?.error('Scrollreveal hide animation failed', { element, error });
+            this.logger?.error('Scrollreveal hide animation failed', {element, error});
         }
     }
 
@@ -381,8 +385,8 @@ export default class Scrollreveal extends BaseComponent {
                 resolve();
             };
 
-            element.addEventListener('animationend', handleAnimationEnd, { once: true });
-            element.addEventListener('transitionend', handleAnimationEnd, { once: true });
+            element.addEventListener('animationend', handleAnimationEnd, {once: true});
+            element.addEventListener('transitionend', handleAnimationEnd, {once: true});
 
             element.classList.add(className);
 
