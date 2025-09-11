@@ -4,8 +4,535 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Components - Enhancement Framework</title>
+    <meta name="description" content="Interactive components including tabs, toggles, scroll behaviors, and form enhancements">
+    <meta property="og:title" content="Interactive Components - Enhancement Framework">
+    <meta property="og:description" content="Explore interactive components with progressive enhancement">
+    <meta property="og:type" content="website">
     <link rel="stylesheet" href="demo.css">
     <link rel="stylesheet" href="dist/styles/index.min.css">
+    <style>
+        /* Navigation styles */
+        nav {
+            background: #1f2937;
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .nav__container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav__container h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .nav__list {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 2rem;
+        }
+
+        .nav__link {
+            color: #d1d5db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav__link:hover {
+            color: white;
+        }
+
+        .nav__link[data-router-enhanced]::after {
+            content: '⚡';
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .nav__link[aria-current="page"] {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        /* Page content styles */
+        .page-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.125rem;
+            color: #6b7280;
+        }
+
+        .demo__section {
+            margin-bottom: 4rem;
+            padding: 2rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .demo__section h2 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .demo__section h3 {
+            color: #374151;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .button__group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary { background: #0ea5e9; color: white; }
+        .btn-primary:hover { background: #0284c7; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-accent { background: #8b5cf6; color: white; }
+        .btn-accent:hover { background: #7c3aed; }
+        .btn-outline { background: transparent; color: #0ea5e9; border: 1px solid #0ea5e9; }
+        .btn-outline:hover { background: #0ea5e9; color: white; }
+
+        .btn__small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn__small:hover { background: #e5e7eb; }
+
+        /* Tab styles */
+        .tabs__list {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: #374151;
+            background: #f9fafb;
+        }
+
+        .tab[aria-selected="true"] {
+            color: #0ea5e9;
+            border-bottom-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .tab__panel {
+            padding: 1rem 0;
+        }
+
+        /* Dropdown styles */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #374151;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Accordion styles */
+        .accordion {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .accordion__item {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .accordion__item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion__trigger {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion__trigger:hover {
+            background: #f1f5f9;
+        }
+
+        .accordion__trigger::after {
+            content: '+';
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .accordion__trigger[aria-expanded="true"]::after {
+            transform: rotate(45deg);
+        }
+
+        .accordion__panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion__panel.open {
+            max-height: 500px;
+        }
+
+        .accordion__content {
+            padding: 1.5rem;
+        }
+
+        /* Sidebar panel styles */
+        .sidebar-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-panel.open {
+            right: 0;
+        }
+
+        /* Demo navbar for scrollhide */
+        .demo-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1f2937;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            z-index: 999;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .demo-navbar.scrollhide {
+            transform: translateY(-100%);
+        }
+
+        .demo-navbar.scrolloverlay {
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Scroll reveal styles */
+        .reveal-item {
+            margin: 2rem 0;
+            padding: 2rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(2rem);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        [data-reveal-state="visible"] .reveal-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* CSS class-based animations */
+        .css-reveal-item {
+            margin: 2rem 0;
+            padding: 2rem;
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(3rem) scale(0.95);
+        }
+
+        .fade-slide-up {
+            animation: fadeSlideUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(3rem) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        @keyframes bounceIn {
+            from {
+                opacity: 0;
+                transform: translateY(2rem) scale(0.8);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-0.5rem) scale(1.05);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .stagger-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stagger-item {
+            padding: 1.5rem;
+            background: #0ea5e9;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .stagger-item[data-reveal-state="visible"] {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Form styles */
+        .enhanced-form {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .field-help {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .feature-details {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .feature-details h3 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+
+        .event__log {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .event__log-header {
+            background: #374151;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event__log-content {
+            background: white;
+        }
+
+        .event__log-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .event__log-item:last-child {
+            border-bottom: none;
+        }
+
+        .event__log-item pre {
+            background: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0.5rem 0 0 0;
+            font-size: 0.8rem;
+        }
+
+        /* Add top margin for demo content to account for fixed navbar */
+        .demo-content-spacer {
+            height: 80px;
+        }
+    </style>
 </head>
 <body>
     <nav data-view="navbar">
@@ -24,8 +551,121 @@
     <main data-view="main" class="page-content">
         <header class="page-header">
             <h1>Interactive Components</h1>
-            <p>Toggle controls, accessible tabs, and enhanced form interactions.</p>
+            <p>Toggle controls, scroll behaviors, accessible tabs, and enhanced form interactions.</p>
         </header>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Scroll-Responsive Video Components</h2>
+            <p>Videos that automatically play/pause based on viewport visibility:</p>
+
+            <h3>Auto-Playing Background Video</h3>
+            <div style="position: relative; border-radius: 8px; overflow: hidden; margin: 2rem 0;">
+                <video data-videoplay
+                       data-videoplay-threshold="0.3"
+                       data-videoplay-autopause="true"
+                       data-videoplay-automute="true"
+                       style="width: 100%; height: 300px; object-fit: cover;"
+                       muted loop>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    <div style="background: #1f2937; color: white; padding: 2rem; text-align: center;">
+                        <h4>Video Not Supported</h4>
+                        <p>Your browser doesn't support HTML5 video.</p>
+                    </div>
+                </video>
+                <div style="position: absolute; bottom: 1rem; left: 1rem; background: rgba(0,0,0,0.7); color: white; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem;">
+                    Plays when 30% visible, pauses when scrolled out
+                </div>
+            </div>
+
+            <h3>Video with Custom Controls</h3>
+            <div style="background: #f8fafc; padding: 2rem; border-radius: 8px; margin: 2rem 0;">
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center;">
+                    <div>
+                        <video data-videoplay
+                               data-videoplay-threshold="0.5"
+                               data-videoplay-autopause="false"
+                               data-videoplay-automute="false"
+                               data-videoplay-background="true"
+                               style="width: 100%; max-width: 400px; border-radius: 8px;"
+                               controls>
+                            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+                            Your browser doesn't support video.
+                        </video>
+                    </div>
+                    <div>
+                        <h4>Advanced Video</h4>
+                        <p>This video:</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                            <li>Plays when 50% visible</li>
+                            <li>Doesn't auto-pause on exit</li>
+                            <li>Keeps user volume settings</li>
+                            <li>Continues playing in background</li>
+                            <li>Has native controls</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Staggered Video Grid</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                <div style="position: relative;">
+                    <video data-videoplay
+                           data-videoplay-threshold="0.4"
+                           data-videoplay-automute="true"
+                           style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
+                           muted loop>
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                    </video>
+                    <div style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                        Video 1
+                    </div>
+                </div>
+
+                <div style="position: relative;">
+                    <video data-videoplay
+                           data-videoplay-threshold="0.4"
+                           data-videoplay-automute="true"
+                           style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
+                           muted loop>
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+                    </video>
+                    <div style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                        Video 2
+                    </div>
+                </div>
+
+                <div style="position: relative;">
+                    <video data-videoplay
+                           data-videoplay-threshold="0.4"
+                           data-videoplay-automute="true"
+                           style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
+                           muted loop>
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" type="video/mp4">
+                    </video>
+                    <div style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                        Video 3
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-details">
+                <h3>Video Component Features</h3>
+                <ul>
+                    <li><strong>Viewport Detection:</strong> Intersection Observer with configurable thresholds</li>
+                    <li><strong>Autoplay Compliance:</strong> Respects browser policies with smart muting</li>
+                    <li><strong>Performance Optimized:</strong> Page visibility detection and background control</li>
+                    <li><strong>Flexible Configuration:</strong> Per-video settings via data attributes</li>
+                </ul>
+
+                <h4>Configuration Examples:</h4>
+                <div style="background: #f3f4f6; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                    <code>data-videoplay-threshold="0.3"</code> - Play when 30% visible<br>
+                    <code>data-videoplay-autopause="true"</code> - Auto-pause when scrolled out<br>
+                    <code>data-videoplay-automute="true"</code> - Force mute for reliable autoplay<br>
+                    <code>data-videoplay-background="false"</code> - Pause when tab hidden
+                </div>
+            </div>
+        </section>
 
         <section class="demo__section" data-component="demo-section">
             <h2>Accessible Tab Navigation</h2>
@@ -134,47 +774,53 @@
             <div class="toggle-demos">
                 <h3>Dropdown Menus</h3>
                 <div class="button__group">
-                    <button data-toggle
-                            data-toggle-target="#dropdown-menu-1"
-                            data-toggle-capture="true"
-                            class="btn btn-primary">
-                        File Menu
-                    </button>
-                    <div id="dropdown-menu-1" class="dropdown-menu">
-                        <a href="#" class="dropdown-item">New File</a>
-                        <a href="#" class="dropdown-item">Open File</a>
-                        <a href="#" class="dropdown-item">Save</a>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item">Exit</a>
+                    <div style="position: relative;">
+                        <button data-toggle
+                                data-toggle-target="#dropdown-menu-1"
+                                data-toggle-capture="true"
+                                class="btn btn-primary">
+                            File Menu
+                        </button>
+                        <div id="dropdown-menu-1" class="dropdown-menu">
+                            <a href="#" class="dropdown-item">New File</a>
+                            <a href="#" class="dropdown-item">Open File</a>
+                            <a href="#" class="dropdown-item">Save</a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item">Exit</a>
+                        </div>
                     </div>
 
-                    <button data-toggle
-                            data-toggle-target="#dropdown-menu-2"
-                            data-toggle-capture="true"
-                            class="btn btn-secondary">
-                        Edit Menu
-                    </button>
-                    <div id="dropdown-menu-2" class="dropdown-menu">
-                        <a href="#" class="dropdown-item">Undo</a>
-                        <a href="#" class="dropdown-item">Redo</a>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item">Cut</a>
-                        <a href="#" class="dropdown-item">Copy</a>
-                        <a href="#" class="dropdown-item">Paste</a>
+                    <div style="position: relative;">
+                        <button data-toggle
+                                data-toggle-target="#dropdown-menu-2"
+                                data-toggle-capture="true"
+                                class="btn btn-secondary">
+                            Edit Menu
+                        </button>
+                        <div id="dropdown-menu-2" class="dropdown-menu">
+                            <a href="#" class="dropdown-item">Undo</a>
+                            <a href="#" class="dropdown-item">Redo</a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item">Cut</a>
+                            <a href="#" class="dropdown-item">Copy</a>
+                            <a href="#" class="dropdown-item">Paste</a>
+                        </div>
                     </div>
 
-                    <button data-toggle
-                            data-toggle-target="#dropdown-menu-3"
-                            data-toggle-capture="true"
-                            class="btn btn-accent">
-                        View Menu
-                    </button>
-                    <div id="dropdown-menu-3" class="dropdown-menu">
-                        <a href="#" class="dropdown-item">Zoom In</a>
-                        <a href="#" class="dropdown-item">Zoom Out</a>
-                        <a href="#" class="dropdown-item">Full Screen</a>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item">Developer Tools</a>
+                    <div style="position: relative;">
+                        <button data-toggle
+                                data-toggle-target="#dropdown-menu-3"
+                                data-toggle-capture="true"
+                                class="btn btn-accent">
+                            View Menu
+                        </button>
+                        <div id="dropdown-menu-3" class="dropdown-menu">
+                            <a href="#" class="dropdown-item">Zoom In</a>
+                            <a href="#" class="dropdown-item">Zoom Out</a>
+                            <a href="#" class="dropdown-item">Full Screen</a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item">Developer Tools</a>
+                        </div>
                     </div>
                 </div>
 
@@ -263,7 +909,7 @@
                         </ul>
                         <button data-toggle
                                 data-toggle-target="#sidebar-panel"
-                                class="btn btn-sm btn-secondary">
+                                class="btn btn-secondary">
                             Close Sidebar
                         </button>
                     </div>
@@ -277,6 +923,104 @@
                     <li><strong>Accessibility:</strong> ARIA states, keyboard navigation, focus management</li>
                     <li><strong>Event Integration:</strong> Real-time state tracking and debugging</li>
                     <li><strong>Flexible Configuration:</strong> Data attributes for capture, manual, and animation settings</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Scroll-Responsive Components</h2>
+            <p>Interactive behaviors triggered by scroll position and direction:</p>
+
+            <h3>Scroll Hide Navigation</h3>
+            <p>A demonstration navbar that hides when scrolling down and shows when scrolling up:</p>
+
+            <div class="demo-content-spacer"></div>
+            <nav data-scrollhide
+                 data-scroll-threshold="100"
+                 data-overlay-threshold="150"
+                 class="demo-navbar">
+                <div>Demo Navigation Bar - Scroll down to hide, scroll up to show</div>
+            </nav>
+
+            <div style="margin: 2rem 0;">
+                <p><strong>Instructions:</strong> Scroll down on this page to see the demo navigation bar hide. Scroll back up to see it appear again. The bar also gets a backdrop blur effect when scrolled past the overlay threshold.</p>
+
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <h4>Configuration Options:</h4>
+                    <ul>
+                        <li><code>data-scroll-threshold="100"</code> - Pixels to scroll before hiding/showing</li>
+                        <li><code>data-overlay-threshold="150"</code> - Pixels to scroll before overlay effect</li>
+                        <li><code>data-scrollhide-target="#element"</code> - Target different element (optional)</li>
+                        <li><code>data-scrolled-class="custom-hide"</code> - Custom CSS class for hidden state</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Scroll Reveal Animations</h3>
+            <p>Elements that animate into view when scrolled into the viewport:</p>
+
+            <div data-scrollreveal
+                 data-reveal-threshold="0.3"
+                 data-reveal-delay="100">
+                <div class="reveal-item">
+                    <h4>Single Reveal Animation</h4>
+                    <p>This content block reveals with a fade and slide-up animation when 30% of it enters the viewport.</p>
+                </div>
+            </div>
+
+            <div data-scrollreveal
+                 data-reveal-stagger="200"
+                 data-reveal-threshold="0.2">
+                <h4>Staggered Reveal Animation</h4>
+                <p>These items reveal one after another with a 200ms stagger delay:</p>
+                <div class="stagger-container">
+                    <div data-scrollreveal-item class="stagger-item">
+                        <h5>Item 1</h5>
+                        <p>First to appear</p>
+                    </div>
+                    <div data-scrollreveal-item class="stagger-item">
+                        <h5>Item 2</h5>
+                        <p>Second to appear</p>
+                    </div>
+                    <div data-scrollreveal-item class="stagger-item">
+                        <h5>Item 3</h5>
+                        <p>Third to appear</p>
+                    </div>
+                    <div data-scrollreveal-item class="stagger-item">
+                        <h5>Item 4</h5>
+                        <p>Fourth to appear</p>
+                    </div>
+                </div>
+            </div>
+
+            <div data-scrollreveal
+                 data-reveal-once="false"
+                 data-scrollreveal-class="fade-slide-up">
+                <div data-scrollreveal-item class="css-reveal-item">
+                    <h4>CSS Animation Reveal</h4>
+                    <p>This uses a custom CSS class for animation and will re-animate each time it enters the viewport (data-reveal-once="false").</p>
+                    <p><strong>Animation:</strong> Fades in with slide-up and scale effect using pure CSS keyframes.</p>
+                </div>
+            </div>
+
+            <div data-scrollreveal
+                 data-reveal-once="false"
+                 data-scrollreveal-class="bounce-in"
+                 data-reveal-delay="500">
+                <div data-scrollreveal-item class="css-reveal-item">
+                    <h4>Bouncy CSS Animation</h4>
+                    <p>This demonstrates a different CSS animation with a bounce effect and custom threshold.</p>
+                    <p><strong>Animation:</strong> Bounces in with elastic easing when 20% visible.</p>
+                </div>
+            </div>
+
+            <div class="feature-details">
+                <h3>Scroll Component Features</h3>
+                <ul>
+                    <li><strong>Scrollhide:</strong> Direction-aware hiding with overlay effects and configurable thresholds</li>
+                    <li><strong>Scrollreveal:</strong> Intersection Observer-based animations with stagger support</li>
+                    <li><strong>Performance Optimized:</strong> RequestAnimationFrame and passive event listeners</li>
+                    <li><strong>Flexible Animation:</strong> CSS classes or JS-based transitions via TransitionManager</li>
                 </ul>
             </div>
         </section>
@@ -392,12 +1136,32 @@
                 <div class="event__log-header">
                     <strong>Interactive Component Events</strong>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button onclick="clearInteractiveEvents()" class="btn__small">Clear</button>
-                        <button onclick="exportInteractiveEvents()" class="btn__small">Export</button>
+                        <button data-event-action="clear" class="btn__small">Clear</button>
+                        <button data-event-action="export" class="btn__small">Export</button>
                     </div>
                 </div>
-                <div class="event__log-content" id="interactive-events-content" style="max-height: 300px; overflow-y: auto;">
-                    <!-- Events will be populated here -->
+                <div class="event__log-content" data-event-content style="max-height: 300px; overflow-y: auto;">
+                    <div class="event__log-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <strong>page:loaded</strong>
+                                <pre>{"page": "/interactive", "components": ["tabs", "toggle", "scrollhide", "scrollreveal", "forms"]}</pre>
+                            </div>
+                            <small style="color: #999; margin-left: 1rem;">Page load</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add some content to demonstrate scroll effects -->
+        <section class="demo__section" style="margin-bottom: 100vh;">
+            <h2>Scroll Demonstration Area</h2>
+            <p>This extra content allows you to scroll and see the scroll-hide navigation in action. The reveal animations above will trigger as you scroll back up.</p>
+            <div style="height: 50vh; background: linear-gradient(45deg, #f0f9ff, #e0f2fe); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center;">
+                    <h3>Scroll Demo Content</h3>
+                    <p>Keep scrolling to test the navigation hide behavior!</p>
                 </div>
             </div>
         </section>
@@ -435,106 +1199,6 @@
 
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
-
-    <!-- Demo functionality scripts -->
-    <script>
-        // Form handling
-        document.querySelector('[data-enhanced-form]').addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-
-            console.log('Form submitted:', data);
-
-            if (window.Toast && window.Toast.show) {
-                window.Toast.show('Form submitted successfully!', 'success');
-            }
-
-            addInteractiveEvent('form:submit', data);
-        });
-
-        // Interactive events logging
-        function addInteractiveEvent(eventType, data) {
-            const container = document.getElementById('interactive-events-content');
-            if (!container) return;
-
-            const timestamp = new Date().toLocaleTimeString();
-            const eventElement = document.createElement('div');
-            eventElement.className = 'event__log-item';
-            eventElement.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <strong>${eventType}</strong>
-                        <pre style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">${JSON.stringify(data, null, 2)}</pre>
-                    </div>
-                    <small style="color: #999; margin-left: 1rem;">${timestamp}</small>
-                </div>
-            `;
-
-            container.insertBefore(eventElement, container.firstChild);
-
-            // Keep only last 15 events
-            const items = container.querySelectorAll('.event__log-item');
-            if (items.length > 15) {
-                items[items.length - 1].remove();
-            }
-        }
-
-        function clearInteractiveEvents() {
-            const container = document.getElementById('interactive-events-content');
-            if (container) {
-                container.innerHTML = '<div class="event__log-item"><div><em>Event log cleared</em></div></div>';
-            }
-        }
-
-        function exportInteractiveEvents() {
-            const container = document.getElementById('interactive-events-content');
-            if (!container) return;
-
-            const events = Array.from(container.children).map(child => ({
-                timestamp: child.querySelector('small')?.textContent,
-                event: child.querySelector('strong')?.textContent,
-                data: child.querySelector('pre')?.textContent
-            }));
-
-            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `interactive-events-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // Listen for component events
-        document.addEventListener('tabs:change', (e) => {
-            addInteractiveEvent('tabs:change', { activeTab: e.detail.activeTab });
-        });
-
-        document.addEventListener('toggle:show', (e) => {
-            addInteractiveEvent('toggle:show', { target: e.target.dataset.toggleTarget });
-        });
-
-        document.addEventListener('toggle:hide', (e) => {
-            addInteractiveEvent('toggle:hide', { target: e.target.dataset.toggleTarget });
-        });
-
-        document.addEventListener('p-select:change', (e) => {
-            addInteractiveEvent('p-select:change', e.detail);
-        });
-
-        // Page-specific component mounting notification
-        if (window.eventBus) {
-            window.eventBus.emit('page:loaded', {
-                page: '/interactive',
-                components: ['tabs', 'toggle', 'select', 'forms'],
-                timestamp: performance.now()
-            });
-        }
-    </script>
 
     <!-- Load the framework -->
     <script type="module" src="demo.js"></script>
