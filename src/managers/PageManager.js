@@ -29,6 +29,13 @@ export class PageManager {
             updateThrottleMs: 16,
             // Debug
             trackPerformance: false,
+            // Fragment target groups - define which fragments update together
+            targetGroups: {
+                //'main': ['main', 'menubar', 'breadcrumb'], // When 'main' is requested, also update nav and breadcrumbs
+                //'panel': ['panel'], // When 'panel' is requested, only update that
+                //'sidebar': ['sidebar', 'toolbar'], // Sidebar updates might also update related toolbar
+                //'modal': ['modal'] // Modal content standalone
+            },
             ...options
         };
 
@@ -67,12 +74,15 @@ export class PageManager {
         });
 
         // Router event handlers
-        this.eventBus.on('router:navigate-success', ({html, url, trigger, viewTarget}) => {
-            this.replaceFragment(html, {
+        this.eventBus.on('router:navigate-success', ({html, url, trigger, viewTarget, viewTargets}) => {
+            // Resolve target groups based on configuration
+            const resolvedTargets = this._resolveTargetGroups(viewTargets || [viewTarget || 'main']);
+
+            this.replaceFragments(html, {
                 fromNavigation: true,
                 url,
                 trigger,
-                viewTarget: viewTarget || 'main',
+                viewTargets: resolvedTargets,
                 preserveScroll: trigger === 'popstate' && this.options.scrollPosition === 'preserve'
             });
         });
@@ -83,10 +93,12 @@ export class PageManager {
                 const {data} = await this.router.get(url.toString());
 
                 if (typeof data === 'string') {
-                    this.replaceFragment(data, {
+                    const resolvedTargets = this._resolveTargetGroups(['main']);
+
+                    this.replaceFragments(data, {
                         fromPopstate: true,
                         url,
-                        viewTarget: 'main',
+                        viewTargets: resolvedTargets,
                         preserveScroll: this.options.scrollPosition === 'preserve'
                     });
                 }
@@ -124,27 +136,53 @@ export class PageManager {
     }
 
     /**
-     * Replace fragment content with enhanced fragment-based targeting
+     * Resolve target groups based on configuration
      */
-    replaceFragment(html, options = {}) {
+    _resolveTargetGroups(requestedTargets) {
+        const resolved = new Set();
+
+        for (const target of requestedTargets) {
+            if (this.options.targetGroups[target]) {
+                // Add all targets from the group
+                for (const groupTarget of this.options.targetGroups[target]) {
+                    resolved.add(groupTarget);
+                }
+                this.logger?.info(`Resolved target group '${target}' to:`, this.options.targetGroups[target]);
+            } else {
+                // Use the target as-is if no group defined
+                resolved.add(target);
+                this.logger?.debug(`Using target '${target}' directly (no group defined)`);
+            }
+        }
+
+        const finalTargets = Array.from(resolved);
+        this.logger?.info('Final resolved targets:', finalTargets);
+
+        return finalTargets;
+    }
+
+    /**
+     * Replace multiple fragments content with enhanced fragment-based targeting
+     */
+    replaceFragments(html, options = {}) {
         const {
             fromNavigation = false,
             fromPopstate = false,
             preserveScroll = false,
             url = null,
             trigger = 'unknown',
-            viewTarget = 'main'  // New option for fragment targeting
+            viewTargets = ['main']  // Array of fragment targets
         } = options;
 
         const startTime = this.options.trackPerformance ? performance.now() : 0;
 
-        this.logger?.group('Fragment replacement', {
+        this.logger?.group('Multiple fragments replacement', {
             fromNavigation,
             fromPopstate,
             preserveScroll,
             url: url?.toString(),
             trigger,
-            viewTarget
+            viewTargets
         });
 
         try {
@@ -157,102 +195,90 @@ export class PageManager {
                 };
             }
 
-            // Parse the incoming HTML to extract the target fragment
-            const { sourceFragment, targetFragment } = this._extractTargetFragment(html, viewTarget);
+            // Parse the incoming HTML once
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
 
-            if (!sourceFragment) {
-                throw new Error(`Source fragment with data-view="${viewTarget}" not found in fetched HTML`);
+            const replacementResults = [];
+            let hasMainContentUpdate = false;
+
+            // Process each target fragment
+            for (const viewTarget of viewTargets) {
+                try {
+                    const result = this._processSingleFragment(doc, viewTarget, html, options);
+                    replacementResults.push(result);
+
+                    if (viewTarget === 'main') {
+                        hasMainContentUpdate = true;
+                    }
+                } catch (error) {
+                    this.logger?.error(`Failed to replace fragment ${viewTarget}`, {error});
+                    replacementResults.push({
+                        viewTarget,
+                        success: false,
+                        error: error.message
+                    });
+                }
             }
 
-            if (!targetFragment) {
-                throw new Error(`Target fragment with data-view="${viewTarget}" not found in current document`);
-            }
-
-            // Emit pre-unmount event
-            this.eventBus.emit('page:fragment-will-replace', {
-                sourceFragment,
-                targetFragment,
-                viewTarget,
-                html,
-                options,
-                currentUrl: url
-            });
-
-            // Unmount components only within the target fragment
-            this.unmountAllWithin(targetFragment);
-
-            // Replace the target fragment's content with source fragment's content
-            targetFragment.innerHTML = sourceFragment.innerHTML;
-
-            // Copy over any data attributes from the source fragment to target
-            this._copyFragmentAttributes(sourceFragment, targetFragment);
-
-            // Emit post-mount event
-            this.eventBus.emit('page:fragment-did-replace', {
-                targetFragment,
-                viewTarget,
-                options,
-                currentUrl: url
-            });
-
-            // Handle scroll restoration (only if replacing main content)
-            if (viewTarget === 'main') {
+            // Handle scroll restoration and head updates only if main content changed
+            if (hasMainContentUpdate) {
                 this._handleScrollRestoration(scrollPosition, options);
                 this._updateDocumentHead(html);
             }
 
-            // Mount components within the updated fragment
-            this.mountAllWithin(targetFragment, {
-                priority: 'critical',
-                fragmentTarget: viewTarget
-            });
-
-            // Schedule non-critical component mounting
-            if (this.options.mountDelay > 0) {
-                setTimeout(() => {
-                    this.mountAllWithin(targetFragment, {
-                        priority: 'normal',
-                        fragmentTarget: viewTarget
-                    });
-                }, this.options.mountDelay);
-            } else {
-                this.mountAllWithin(targetFragment, {
-                    priority: 'normal',
-                    fragmentTarget: viewTarget
+            // Mount components for all successfully updated fragments
+            const successfulTargets = replacementResults.filter(r => r.success);
+            for (const result of successfulTargets) {
+                // Mount components within the updated fragment
+                this.mountAllWithin(result.targetFragment, {
+                    priority: 'critical',
+                    fragmentTarget: result.viewTarget
                 });
-            }
 
-            // Start observing DOM changes if not already observing
-            if (!this.observer) {
-                this._startObserver(this.container);
+                // Schedule non-critical component mounting
+                if (this.options.mountDelay > 0) {
+                    setTimeout(() => {
+                        this.mountAllWithin(result.targetFragment, {
+                            priority: 'normal',
+                            fragmentTarget: result.viewTarget
+                        });
+                    }, this.options.mountDelay);
+                } else {
+                    this.mountAllWithin(result.targetFragment, {
+                        priority: 'normal',
+                        fragmentTarget: result.viewTarget
+                    });
+                }
             }
 
             // Update performance metrics
             if (this.options.trackPerformance) {
                 const duration = performance.now() - startTime;
                 this.performanceMetrics.fragmentReplacements++;
-                this.logger?.info('Fragment replacement completed', {
+                this.logger?.info('Multiple fragments replacement completed', {
                     duration: `${duration.toFixed(2)}ms`,
-                    viewTarget,
+                    targetsProcessed: viewTargets.length,
+                    successfulReplacements: successfulTargets.length,
                     metrics: this.performanceMetrics
                 });
             }
 
-            this.eventBus.emit('page:fragment-replaced', {
-                targetFragment,
-                viewTarget,
+            this.eventBus.emit('page:fragments-replaced', {
+                results: replacementResults,
+                viewTargets,
                 duration: this.options.trackPerformance ? performance.now() - startTime : null,
                 options
             });
 
         } catch (error) {
-            this.logger?.error('Fragment replacement failed', {
+            this.logger?.error('Multiple fragments replacement failed', {
                 error,
-                viewTarget,
+                viewTargets,
                 html: html.slice(0, 100)
             });
-            this.eventBus.emit('page:fragment-replace-error', {
-                viewTarget,
+            this.eventBus.emit('page:fragments-replace-error', {
+                viewTargets,
                 error,
                 options
             });
@@ -263,76 +289,138 @@ export class PageManager {
     }
 
     /**
-     * Extract target fragment from HTML and find matching fragment in current document
+     * Process a single fragment replacement
      */
-    _extractTargetFragment(html, viewTarget) {
+    _processSingleFragment(doc, viewTarget, originalHtml, options) {
+        // Extract target fragment from parsed HTML and find matching fragment in current document
+        const { sourceFragment, targetFragment } = this._extractTargetFragmentFromDoc(doc, viewTarget);
+
+        if (!sourceFragment) {
+            throw new Error(`Source fragment with data-view="${viewTarget}" not found in fetched HTML`);
+        }
+
+        if (!targetFragment) {
+            throw new Error(`Target fragment with data-view="${viewTarget}" not found in current document`);
+        }
+
+        // Emit pre-unmount event
+        this.eventBus.emit('page:fragment-will-replace', {
+            sourceFragment,
+            targetFragment,
+            viewTarget,
+            html: originalHtml,
+            options
+        });
+
+        // Unmount components only within the target fragment
+        this.unmountAllWithin(targetFragment);
+
+        // Replace the target fragment's content with source fragment's content
+        targetFragment.innerHTML = sourceFragment.innerHTML;
+
+        // Copy over any data attributes from the source fragment to target
+        this._copyFragmentAttributes(sourceFragment, targetFragment);
+
+        // Emit post-mount event
+        this.eventBus.emit('page:fragment-did-replace', {
+            targetFragment,
+            viewTarget,
+            options
+        });
+
+        return {
+            viewTarget,
+            success: true,
+            sourceFragment,
+            targetFragment
+        };
+    }
+
+    /**
+     * Extract target fragment from already parsed document
+     */
+    _extractTargetFragmentFromDoc(doc, viewTarget) {
         let sourceFragment = null;
         let targetFragment = null;
 
-        try {
-            // Parse the incoming HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+        // Find the source fragment in the parsed document
+        sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
 
-            // Find the source fragment in the parsed document
-            sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
+        // If not found, try some fallback strategies
+        if (!sourceFragment) {
+            this.logger?.warn(`Fragment data-view="${viewTarget}" not found, trying fallbacks`);
 
-            // If not found, try some fallback strategies
+            // Fallback 1: Try to find by ID (common pattern)
+            sourceFragment = doc.querySelector(`#${viewTarget}`);
+
+            // Fallback 2: If viewTarget is 'main', try common main selectors
+            if (!sourceFragment && viewTarget === 'main') {
+                sourceFragment = doc.querySelector('main') ||
+                                doc.querySelector('[role="main"]') ||
+                                doc.querySelector('#app') ||
+                                doc.querySelector('.main-content');
+            }
+
+            // Fallback 3: For other targets, try class-based selector
             if (!sourceFragment) {
-                this.logger?.warn(`Fragment data-view="${viewTarget}" not found, trying fallbacks`);
-
-                // Fallback 1: Try to find by ID (common pattern)
-                sourceFragment = doc.querySelector(`#${viewTarget}`);
-
-                // Fallback 2: If viewTarget is 'main', try common main selectors
-                if (!sourceFragment && viewTarget === 'main') {
-                    sourceFragment = doc.querySelector('main') ||
-                                    doc.querySelector('[role="main"]') ||
-                                    doc.querySelector('#app') ||
-                                    doc.querySelector('.main-content');
-                }
-
-                // Fallback 3: For other targets, try class-based selector
-                if (!sourceFragment) {
-                    sourceFragment = doc.querySelector(`.${viewTarget}`);
-                }
+                sourceFragment = doc.querySelector(`.${viewTarget}`);
             }
-
-            // Find the target fragment in the current document
-            targetFragment = document.querySelector(`[data-view="${viewTarget}"]`);
-
-            // Apply same fallback strategies for target
-            if (!targetFragment) {
-                this.logger?.warn(`Target fragment data-view="${viewTarget}" not found in current document, trying fallbacks`);
-
-                targetFragment = document.querySelector(`#${viewTarget}`);
-
-                if (!targetFragment && viewTarget === 'main') {
-                    targetFragment = document.querySelector('main') ||
-                                    document.querySelector('[role="main"]') ||
-                                    document.querySelector('#app') ||
-                                    document.querySelector('.main-content');
-                }
-
-                if (!targetFragment) {
-                    targetFragment = document.querySelector(`.${viewTarget}`);
-                }
-            }
-
-            this.logger?.info('Fragment extraction result', {
-                viewTarget,
-                sourceFound: !!sourceFragment,
-                targetFound: !!targetFragment,
-                sourceSelector: sourceFragment?.tagName + (sourceFragment?.className ? '.' + sourceFragment.className : ''),
-                targetSelector: targetFragment?.tagName + (targetFragment?.className ? '.' + targetFragment.className : '')
-            });
-
-        } catch (error) {
-            this.logger?.error('Error extracting target fragment', {error, viewTarget});
-            throw new Error(`Failed to parse HTML for fragment extraction: ${error.message}`);
         }
 
+        // Find the target fragment in the current document
+        targetFragment = document.querySelector(`[data-view="${viewTarget}"]`);
+
+        // Apply same fallback strategies for target
+        if (!targetFragment) {
+            this.logger?.warn(`Target fragment data-view="${viewTarget}" not found in current document, trying fallbacks`);
+
+            targetFragment = document.querySelector(`#${viewTarget}`);
+
+            if (!targetFragment && viewTarget === 'main') {
+                targetFragment = document.querySelector('main') ||
+                                document.querySelector('[role="main"]') ||
+                                document.querySelector('#app') ||
+                                document.querySelector('.main-content');
+            }
+
+            if (!targetFragment) {
+                targetFragment = document.querySelector(`.${viewTarget}`);
+            }
+        }
+
+        this.logger?.info('Fragment extraction result', {
+            viewTarget,
+            sourceFound: !!sourceFragment,
+            targetFound: !!targetFragment,
+            sourceSelector: sourceFragment?.tagName + (sourceFragment?.className ? '.' + sourceFragment.className : ''),
+            targetSelector: targetFragment?.tagName + (targetFragment?.className ? '.' + targetFragment.className : '')
+        });
+
         return { sourceFragment, targetFragment };
+    }
+
+    /**
+     * Replace fragment content with enhanced fragment-based targeting (kept for backwards compatibility)
+     */
+    replaceFragment(html, options = {}) {
+        const {
+            fromNavigation = false,
+            fromPopstate = false,
+            preserveScroll = false,
+            url = null,
+            trigger = 'unknown',
+            viewTarget = 'main'  // Single fragment target
+        } = options;
+
+        // Delegate to the multi-fragment method
+        return this.replaceFragments(html, {
+            fromNavigation,
+            fromPopstate,
+            preserveScroll,
+            url,
+            trigger,
+            viewTargets: [viewTarget]
+        });
     }
 
     /**
