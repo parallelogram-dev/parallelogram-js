@@ -8,7 +8,10 @@
     "browser": "dist/index.umd.js",
     "scripts": {
         "build": "rollup -c && npm run build-css",
-        "build-css": "mkdir -p dist/styles/components && cp src/styles/*.css dist/styles/ && cp src/styles/components/*.css dist/styles/components/ && find dist/styles -name '*.css' ! -name '*.min.css' -exec sh -c 'cleancss -o \"${1%.css}.min.css\" \"$1\"' _ {} \\;",
+        "build-css": "npm run compile-scss && npm run copy-css && npm run minify-css",
+        "compile-scss": "sass src/styles:dist/styles --no-source-map",
+        "copy-css": "mkdir -p dist/styles/components && cp src/styles/*.css dist/styles/ 2>/dev/null || true",
+        "minify-css": "find dist/styles -name '*.css' ! -name '*.min.css' -exec sh -c 'cleancss -o \"${1%.css}.min.css\" \"$1\"' _ {} \\;",
         "copy-to-demo": "mkdir -p demo/dist/styles/components && cp dist/*.min.js demo/dist/ && cp dist/*.min.css demo/dist/ 2>/dev/null || true && cp dist/styles/*.min.css demo/dist/styles/ 2>/dev/null || true && cp dist/styles/components/*.min.css demo/dist/styles/components/ 2>/dev/null || true",
         "demo": "npm run build && npm run copy-to-demo && serve demo -l 3000",
         "prepublishOnly": "npm run build"
@@ -40,8 +43,6 @@
     "directories": {
         "test": "test"
     },
-    "dependencies": {},
-    "peerDependencies": {},
     "devDependencies": {
         "@babel/preset-env": "^7.28.3",
         "@rollup/plugin-babel": "^6.0.4",
@@ -57,6 +58,7 @@
         "rollup-plugin-copy": "^3.5.0",
         "rollup-plugin-delete": "^3.0.1",
         "rollup-plugin-postcss": "^4.0.2",
+        "sass": "^1.92.1",
         "serve": "^14.2.1"
     },
     "repository": {

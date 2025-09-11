@@ -1,8 +1,11 @@
 /* Parallelogram-JS Framework Styles */
-@import './components/toasts.css';
-@import './components/lazy-image.css';
-@import './components/modal.css';
+@import './settings.css';
 @import './components/carousel.css';
+@import './components/datatable.css';
+@import './components/lightbox.css';
+@import './components/lazysrc.css';
+@import './components/modal.css';
+@import './components/toasts.css';
 
 :root {
   --framework-transition-duration: 0.2s;
@@ -12,7 +15,7 @@
   --framework-focus-width: 2px;
 }
 
-[data-lazyimage]:focus-visible,
+[data-lazysrc]:focus-visible,
 [data-modal]:focus-visible {
   outline: var(--framework-focus-width) solid var(--framework-focus-color);
   outline-offset: var(--framework-focus-offset);

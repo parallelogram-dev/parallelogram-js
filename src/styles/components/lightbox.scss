@@ -1,0 +1,373 @@
+// lightbox.scss
+// Lightbox Component Styles using BEM methodology with CSS Custom Properties
+
+// CSS Custom Properties (CSS Variables) with fallbacks
+.lightbox {
+    // Core colors
+    --lightbox-overlay-bg         : rgba(0, 0, 0, 0.9);
+    --lightbox-button-bg          : rgba(0, 0, 0, 0.5);
+    --lightbox-button-bg-hover    : rgba(0, 0, 0, 0.8);
+    --lightbox-button-color       : #ffffff;
+    --lightbox-counter-bg         : rgba(0, 0, 0, 0.5);
+    --lightbox-counter-color      : #ffffff;
+    --lightbox-focus-color        : #007bff;
+
+    // Spacing
+    --lightbox-spacing-xs         : 0.25rem;
+    --lightbox-spacing-sm         : 0.5rem;
+    --lightbox-spacing-md         : 0.75rem;
+    --lightbox-spacing-lg         : 1rem;
+    --lightbox-spacing-xl         : 1.5rem;
+    --lightbox-spacing-xxl        : 2rem;
+
+    // Sizes
+    --lightbox-close-size         : 2rem;
+    --lightbox-nav-size           : 2rem;
+    --lightbox-close-button-size  : auto;
+    --lightbox-nav-button-padding : 1rem;
+
+    // Visual properties
+    --lightbox-border-radius      : 4px;
+    --lightbox-shadow             : 0 4px 20px rgba(0, 0, 0, 0.5);
+    --lightbox-transition         : all 0.2s ease;
+    --lightbox-animation-duration : 0.3s;
+
+    // Typography
+    --lightbox-font-size          : 0.875rem;
+    --lightbox-font-weight        : 300;
+
+    // Z-index
+    --lightbox-z-index            : 9999;
+    --lightbox-z-index-controls   : 10001;
+
+    // Responsive breakpoints (for reference)
+    --lightbox-mobile-breakpoint  : 768px;
+
+    // Mobile specific overrides
+    @media (max-width : 768px) {
+        --lightbox-close-size         : 1.5rem;
+        --lightbox-nav-size           : 1.5rem;
+        --lightbox-close-button-size  : 40px;
+        --lightbox-nav-button-padding : 0.75rem;
+        --lightbox-font-size          : 0.75rem;
+        --lightbox-spacing-lg         : 0.75rem;
+    }
+
+    // High contrast mode
+    @media (prefers-contrast : high) {
+        --lightbox-overlay-bg      : rgba(0, 0, 0, 0.95);
+        --lightbox-button-bg       : rgba(255, 255, 255, 0.9);
+        --lightbox-button-bg-hover : rgba(255, 255, 255, 1);
+        --lightbox-button-color    : #000000;
+        --lightbox-counter-bg      : rgba(255, 255, 255, 0.9);
+        --lightbox-counter-color   : #000000;
+    }
+}
+
+// Mixins using CSS variables
+@mixin lightbox-button {
+    background    : var(--lightbox-button-bg);
+    border        : none;
+    color         : var(--lightbox-button-color);
+    cursor        : pointer;
+    transition    : var(--lightbox-transition);
+    border-radius : var(--lightbox-border-radius);
+
+    &:hover {
+        background : var(--lightbox-button-bg-hover);
+    }
+
+    &:focus {
+        outline        : 2px solid var(--lightbox-focus-color);
+        outline-offset : 2px;
+    }
+}
+
+@mixin lightbox-center {
+    display         : flex;
+    align-items     : center;
+    justify-content : center;
+}
+
+@mixin lightbox-position-center {
+    position  : absolute;
+    left      : 50%;
+    transform : translateX(-50%);
+}
+
+@mixin lightbox-position-vertical-center {
+    position  : absolute;
+    top       : 50%;
+    transform : translateY(-50%);
+}
+
+// Main Lightbox Block
+.lightbox {
+    // Overlay Element
+    &__overlay {
+        position         : fixed;
+        z-index          : var(--lightbox-z-index);
+        top              : 0;
+        left             : 0;
+        width            : 100%;
+        height           : 100%;
+        animation        : lightbox-fade-in var(--lightbox-animation-duration) ease forwards;
+        @include lightbox-center;
+        opacity          : 0;
+        background-color : var(--lightbox-overlay-bg);
+    }
+
+    // Container Element
+    &__container {
+        position   : relative;
+        max-width  : 90vw;
+        max-height : 90vh;
+        @include lightbox-center;
+    }
+
+    // Content Element
+    &__content {
+        @include lightbox-center;
+        max-width  : 100%;
+        max-height : 100%;
+    }
+
+    // Image Element
+    &__image {
+        width         : auto;
+        max-width     : 100%;
+        height        : auto;
+        max-height    : 90vh;
+        border-radius : var(--lightbox-border-radius);
+        box-shadow    : var(--lightbox-shadow);
+        object-fit    : contain;
+    }
+
+    // Close Button
+    &__close {
+        @include lightbox-button;
+        font-size   : var(--lightbox-close-size);
+        font-weight : var(--lightbox-font-weight);
+        line-height : 1;
+        position    : absolute;
+        z-index     : var(--lightbox-z-index-controls);
+        top         : calc(-1 * var(--lightbox-spacing-xxl) - var(--lightbox-spacing-lg));
+        right       : 0;
+        width       : var(--lightbox-close-button-size);
+        height      : var(--lightbox-close-button-size);
+        padding     : var(--lightbox-spacing-sm);
+        background  : none;
+
+        &:hover {
+            opacity : 0.7;
+        }
+
+        // Mobile specific styles
+        @media (max-width : 768px) {
+            top           : 10px;
+            right         : 10px;
+            padding       : 0;
+            border-radius : 50%;
+            @include lightbox-center;
+            background    : var(--lightbox-button-bg);
+        }
+    }
+
+    // Navigation Buttons
+    &__nav {
+        @include lightbox-button;
+        @include lightbox-position-vertical-center;
+        font-size : var(--lightbox-nav-size);
+        z-index   : var(--lightbox-z-index-controls);
+        padding   : var(--lightbox-nav-button-padding);
+
+        // Previous Button Modifier
+        &--prev {
+            left : 20px;
+        }
+
+        // Next Button Modifier
+        &--next {
+            right : 20px;
+        }
+
+        // Hidden State Modifier
+        &--hidden {
+            display : none;
+        }
+
+        // Mobile specific styles
+        @media (max-width : 768px) {
+            font-size : var(--lightbox-nav-size);
+            top       : auto;
+            bottom    : 20px;
+            padding   : var(--lightbox-nav-button-padding);
+            transform : none;
+
+            &--prev {
+                left : 20px;
+            }
+
+            &--next {
+                right : 20px;
+            }
+        }
+    }
+
+    // Counter Element
+    &__counter {
+        @include lightbox-position-center;
+        font-size     : var(--lightbox-font-size);
+        bottom        : calc(-1 * var(--lightbox-spacing-xxl) - var(--lightbox-spacing-lg));
+        padding       : var(--lightbox-spacing-sm) var(--lightbox-spacing-lg);
+        white-space   : nowrap;
+        color         : var(--lightbox-counter-color);
+        border-radius : var(--lightbox-border-radius);
+        background    : var(--lightbox-counter-bg);
+
+        // Mobile specific styles
+        @media (max-width : 768px) {
+            bottom  : 80px;
+            padding : var(--lightbox-spacing-xs) var(--lightbox-spacing-md);
+        }
+    }
+
+    // Responsive modifiers for mobile
+    @media (max-width : 768px) {
+        &__container {
+            max-width  : 95vw;
+            max-height : 95vh;
+        }
+
+        &__image {
+            max-height : 80vh;
+        }
+    }
+}
+
+// Animations
+@keyframes lightbox-fade-in {
+    to {
+        opacity : 1;
+    }
+}
+
+// Touch Device Optimization
+@media (hover : none) and (pointer : coarse) {
+    .lightbox {
+        &__nav {
+            opacity : 0.8;
+        }
+    }
+}
+
+// Reduced Motion Support
+@media (prefers-reduced-motion : reduce) {
+    .lightbox {
+        --lightbox-animation-duration : 0s;
+
+        &__overlay {
+            animation : none;
+            opacity   : 1;
+        }
+    }
+}
+
+// Theme variants using CSS custom properties
+.lightbox {
+    // Light theme variant
+    &--theme-light {
+        --lightbox-overlay-bg      : rgba(255, 255, 255, 0.95);
+        --lightbox-button-bg       : rgba(0, 0, 0, 0.1);
+        --lightbox-button-bg-hover : rgba(0, 0, 0, 0.2);
+        --lightbox-button-color    : #333333;
+        --lightbox-counter-bg      : rgba(0, 0, 0, 0.1);
+        --lightbox-counter-color   : #333333;
+    }
+
+    // Minimal theme variant
+    &--theme-minimal {
+        --lightbox-button-bg  : transparent;
+        --lightbox-counter-bg : transparent;
+        --lightbox-shadow     : none;
+    }
+
+    // High contrast theme
+    &--theme-high-contrast {
+        --lightbox-overlay-bg    : rgba(0, 0, 0, 0.98);
+        --lightbox-button-bg     : rgba(255, 255, 255, 1);
+        --lightbox-button-color  : #000000;
+        --lightbox-counter-bg    : rgba(255, 255, 255, 1);
+        --lightbox-counter-color : #000000;
+    }
+
+    // Size variants
+    &--size-compact {
+        --lightbox-close-size         : 1.5rem;
+        --lightbox-nav-size           : 1.5rem;
+        --lightbox-font-size          : 0.75rem;
+        --lightbox-spacing-lg         : 0.75rem;
+        --lightbox-nav-button-padding : 0.75rem;
+    }
+
+    &--size-large {
+        --lightbox-close-size         : 2.5rem;
+        --lightbox-nav-size           : 2.5rem;
+        --lightbox-font-size          : 1rem;
+        --lightbox-spacing-lg         : 1.5rem;
+        --lightbox-nav-button-padding : 1.5rem;
+    }
+
+    // Animation variants
+    &--animation-fast {
+        --lightbox-animation-duration : 0.15s;
+    }
+
+    &--animation-slow {
+        --lightbox-animation-duration : 0.6s;
+    }
+
+    &--animation-none {
+        --lightbox-animation-duration : 0s;
+    }
+}
+
+// Usage with data attributes (maintains progressive enhancement)
+.lightbox-overlay {
+    @extend .lightbox__overlay;
+}
+
+.lightbox-container {
+    @extend .lightbox__container;
+}
+
+.lightbox-content {
+    @extend .lightbox__content;
+}
+
+.lightbox-image {
+    @extend .lightbox__image;
+}
+
+.lightbox-close {
+    @extend .lightbox__close;
+}
+
+.lightbox-prev {
+    @extend .lightbox__nav;
+    @extend .lightbox__nav--prev;
+}
+
+.lightbox-next {
+    @extend .lightbox__nav;
+    @extend .lightbox__nav--next;
+}
+
+.lightbox-counter {
+    @extend .lightbox__counter;
+}
+
+// State classes for dynamic behavior
+.lightbox-nav-hidden {
+    @extend .lightbox__nav--hidden;
+}
