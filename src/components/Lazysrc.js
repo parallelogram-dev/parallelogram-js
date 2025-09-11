@@ -314,15 +314,10 @@ export default class Lazysrc extends BaseComponent {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const element = entry.target;
-                console.log('Element intersecting:', element);
-
                 const state = this.getState(element);
-                console.log('Retrieved state:', state);
 
-                if (state && !state.isLoaded && !state.isLoading) {
+                if (state && state.result && !state.result.isLoaded && !state.result.isLoading) {
                     this._loadElement(element, state);
-                } else {
-                    console.log('Skipping load - state:', state);
                 }
             }
         });
@@ -335,15 +330,22 @@ export default class Lazysrc extends BaseComponent {
      * @param {Object} state
      */
     async _loadElement(element, state) {
-        if (!state || !state.config) {
+        if (!state || !state.result) {
             this.logger?.error('Invalid state for element', {element, state});
             return;
         }
 
-        if (state.isLoading || state.isLoaded) return;
+        const componentState = state.result; // Get the actual state object
 
-        state.isLoading = true;
-        element.classList.add(state.config.loadingClass);
+        if (!componentState.config) {
+            this.logger?.error('Missing config for element', {element, componentState});
+            return;
+        }
+
+        if (componentState.isLoading || componentState.isLoaded) return;
+
+        componentState.isLoading = true;
+        element.classList.add(componentState.config.loadingClass);
 
         this.eventBus?.emit('lazysrc:loading-start', {
             element,
@@ -353,20 +355,20 @@ export default class Lazysrc extends BaseComponent {
         try {
             // Handle different element types
             if (element.dataset.lazysrcBg) {
-                await this._loadBackgroundImage(element, state);
+                await this._loadBackgroundImage(element, componentState);
             } else if (element.tagName === 'PICTURE') {
-                await this._loadPictureElement(element, state);
+                await this._loadPictureElement(element, componentState);
             } else if (this._isImage(element)) {
-                await this._loadImageElement(element, state);
+                await this._loadImageElement(element, componentState);
             } else {
                 // Generic element with background image
-                await this._loadBackgroundImage(element, state);
+                await this._loadBackgroundImage(element, componentState);
             }
 
-            this._onElementLoaded(element, state);
+            this._onElementLoaded(element, componentState);
 
         } catch (error) {
-            this._onElementError(element, state, error);
+            this._onElementError(element, componentState, error);
         }
     }
 
