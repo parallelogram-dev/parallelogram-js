@@ -12,7 +12,7 @@ export default class Scrollreveal extends BaseComponent {
             rootMargin: '0px',
             once: true,
             delay: 0,
-            stagger: 12.5,             // Default 50ms stagger between elements
+            stagger: 100,             // Default 50ms stagger between elements
             initialState: 'hidden'
         };
     }
