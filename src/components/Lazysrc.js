@@ -314,10 +314,15 @@ export default class Lazysrc extends BaseComponent {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const element = entry.target;
+                console.log('Element intersecting:', element);
+
                 const state = this.getState(element);
+                console.log('Retrieved state:', state);
 
                 if (state && !state.isLoaded && !state.isLoading) {
                     this._loadElement(element, state);
+                } else {
+                    console.log('Skipping load - state:', state);
                 }
             }
         });
