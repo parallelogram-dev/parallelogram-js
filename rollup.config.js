@@ -21,7 +21,9 @@ const componentConfigs = componentFiles.map(file => {
         // OR mark your core as external if you want components to reference it
         external: (id) => {
             // Only mark the main framework as external
-            return id === '@peptolab/parallelogram';
+            return id.includes('BaseComponent') ||
+                id.includes('DevLogger') ||
+                id === '@peptolab/parallelogram';
         },
         plugins: [/* your plugins */]
     };
