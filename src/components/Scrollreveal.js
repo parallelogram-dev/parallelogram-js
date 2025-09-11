@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import {BaseComponent} from '@peptolab/parallelogram';
 
 /**
  * Scrollreveal Component with FIFO Queue Staggering
@@ -164,7 +164,7 @@ export default class Scrollreveal extends BaseComponent {
      */
     _addToRevealQueue(element, state) {
         // Simply push to end of queue
-        this.revealQueue.push({ element, state, timestamp: performance.now() });
+        this.revealQueue.push({element, state, timestamp: performance.now()});
 
         // Process queue if not already processing
         this._processRevealQueue();
@@ -189,29 +189,27 @@ export default class Scrollreveal extends BaseComponent {
      * Process the next element in the queue
      * @private
      */
-    async _processNextInQueue() {
+    _processNextInQueue() {
         if (this.revealQueue.length === 0) {
             this.isProcessingQueue = false;
             return;
         }
 
         // Pop first element from queue (FIFO)
-        const { element, state } = this.revealQueue.shift();
+        const {element, state} = this.revealQueue.shift();
 
         if (state.isRevealing || state.hasBeenRevealed) {
-            // Skip and process next
-            this._scheduleNextQueueItem();
+            // Skip and process next immediately
+            this._scheduleNextQueueItem(0);
             return;
         }
 
-        try {
-            // Reveal this element
-            await this._revealElement(element, state, true);
-        } catch (error) {
-            this.logger?.error('Queue reveal failed', { element, error });
-        }
+        // Start revealing this element (don't await it)
+        this._revealElement(element, state, true).catch(error => {
+            this.logger?.error('Queue reveal failed', {element, error});
+        });
 
-        // Schedule next item with stagger delay
+        // Immediately schedule next item with just the stagger delay
         this._scheduleNextQueueItem(state.stagger);
     }
 
@@ -274,10 +272,10 @@ export default class Scrollreveal extends BaseComponent {
                 timestamp: performance.now()
             });
 
-            this.logger?.debug('Scrollreveal animation completed', { element });
+            this.logger?.debug('Scrollreveal animation completed', {element});
 
         } catch (error) {
-            this.logger?.error('Scrollreveal animation failed', { element, error });
+            this.logger?.error('Scrollreveal animation failed', {element, error});
 
             this.eventBus?.emit('scrollreveal:reveal-error', {
                 element,
@@ -308,7 +306,7 @@ export default class Scrollreveal extends BaseComponent {
             });
 
         } catch (error) {
-            this.logger?.error('Scrollreveal hide animation failed', { element, error });
+            this.logger?.error('Scrollreveal hide animation failed', {element, error});
         }
     }
 
@@ -398,8 +396,8 @@ export default class Scrollreveal extends BaseComponent {
                 resolve();
             };
 
-            element.addEventListener('animationend', handleAnimationEnd, { once: true });
-            element.addEventListener('transitionend', handleAnimationEnd, { once: true });
+            element.addEventListener('animationend', handleAnimationEnd, {once: true});
+            element.addEventListener('transitionend', handleAnimationEnd, {once: true});
 
             element.classList.add(className);
 
@@ -484,7 +482,7 @@ export default class Scrollreveal extends BaseComponent {
             }
         }
 
-        this.logger?.debug('Scrollreveal reset', { element });
+        this.logger?.debug('Scrollreveal reset', {element});
     }
 
     /**
@@ -524,7 +522,7 @@ export default class Scrollreveal extends BaseComponent {
 
         state.customObserver.observe(element);
 
-        this.logger?.info('Scrollreveal threshold updated', { element, threshold });
+        this.logger?.info('Scrollreveal threshold updated', {element, threshold});
     }
 
     /**
