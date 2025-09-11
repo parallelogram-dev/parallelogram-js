@@ -28,7 +28,7 @@
 import { BaseComponent } from '@peptolab/parallelogram';
 import { PModal } from './PModal.js';
 
-export class Modal extends BaseComponent {
+export default class Modal extends BaseComponent {
     /**
      * Default options for modal enhancement
      */

@@ -20,7 +20,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-toast-trigger]')
  *   .forEach(trigger => toasts.mount(trigger));
  */
-export class Toast extends BaseComponent {
+export default class Toast extends BaseComponent {
     /**
      * Default configuration for toast component
      * @returns {Object} Default config
