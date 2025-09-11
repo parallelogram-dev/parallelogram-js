@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Components - Enhancement Framework</title>
+    <link rel="stylesheet" href="demo.css">
+    <link rel="stylesheet" href="dist/styles/index.min.css">
+</head>
+<body>
+    <nav>
+        <div class="nav__container">
+            <h1>Enhancement Framework</h1>
+            <ul class="nav__list">
+                <li><a href="/" class="nav__link">Home</a></li>
+                <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                <li><a href="/media" class="nav__link">Media</a></li>
+                <li><a href="/interactive" class="nav__link" aria-current="page">Interactive</a></li>
+                <li><a href="/performance" class="nav__link">Performance</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="app" class="page-content">
+        <header class="page-header">
+            <h1>Interactive Components</h1>
+            <p>Toggle controls, accessible tabs, and enhanced form interactions.</p>
+        </header>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Accessible Tab Navigation</h2>
+            <p>Progressive enhancement tabs with keyboard navigation and smooth transitions:</p>
+
+            <div data-tabs data-tabs-keyboard="true" data-tabs-autofocus="false">
+                <div data-tabs-list class="tabs__list">
+                    <button data-tab="tab-overview" aria-selected="true" class="tab">Framework Overview</button>
+                    <button data-tab="tab-components" class="tab">Component System</button>
+                    <button data-tab="tab-architecture" class="tab">Architecture</button>
+                    <button data-tab="tab-performance" class="tab">Performance</button>
+                </div>
+                <div data-tabs-panels class="tabs__panels">
+                    <div id="tab-overview" data-tab-panel class="tab__panel">
+                        <h3>Enhancement Framework Overview</h3>
+                        <p>The Enhancement Framework provides a modern approach to building interactive web applications through progressive enhancement and component-based architecture.</p>
+                        <ul>
+                            <li><strong>Progressive Enhancement:</strong> All components work without JavaScript and are enhanced when available</li>
+                            <li><strong>Component Lifecycle:</strong> Automatic mounting, unmounting, and cleanup management</li>
+                            <li><strong>Event-Driven:</strong> Central event bus for loose coupling and monitoring</li>
+                            <li><strong>Performance Focus:</strong> Memory leak prevention and optimization patterns</li>
+                        </ul>
+                        <p>The framework is designed to scale from simple UI enhancements to complex single-page applications.</p>
+                    </div>
+                    <div id="tab-components" data-tab-panel class="tab__panel" style="display: none;">
+                        <h3>Component System Architecture</h3>
+                        <p>Each component extends BaseComponent and follows consistent patterns for initialization, state management, and cleanup:</p>
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                            <h4>Component Lifecycle</h4>
+                            <ol>
+                                <li><strong>Registration:</strong> Component added to registry with selector and priority</li>
+                                <li><strong>Discovery:</strong> PageManager scans DOM for matching elements</li>
+                                <li><strong>Initialization:</strong> _init() method called with element-specific state</li>
+                                <li><strong>Event Setup:</strong> Event listeners attached with proper cleanup</li>
+                                <li><strong>Cleanup:</strong> Automatic teardown when component unmounts</li>
+                            </ol>
+                        </div>
+                        <p>This consistent lifecycle ensures reliable performance and prevents common issues like memory leaks.</p>
+                    </div>
+                    <div id="tab-architecture" data-tab-panel class="tab__panel" style="display: none;">
+                        <h3>Framework Architecture</h3>
+                        <p>The framework consists of several key managers working together:</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                            <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                <h5>RouterManager</h5>
+                                <p>Handles client-side navigation, link enhancement, and loading states.</p>
+                            </div>
+                            <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                <h5>PageManager</h5>
+                                <p>Manages component lifecycle, mounting, and performance monitoring.</p>
+                            </div>
+                            <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                <h5>EventManager</h5>
+                                <p>Central event bus for component communication and system monitoring.</p>
+                            </div>
+                            <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                <h5>ComponentRegistry</h5>
+                                <p>Declarative component configuration with dependency management.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-performance" data-tab-panel class="tab__panel" style="display: none;">
+                        <h3>Performance Optimization</h3>
+                        <p>The framework includes several performance optimization strategies:</p>
+                        <div style="margin: 1rem 0;">
+                            <h4>Memory Management</h4>
+                            <ul>
+                                <li>Automatic cleanup when components unmount</li>
+                                <li>Component pooling for frequently used elements</li>
+                                <li>Weak references to prevent circular dependencies</li>
+                            </ul>
+
+                            <h4>Loading Optimization</h4>
+                            <ul>
+                                <li>Lazy loading of component dependencies</li>
+                                <li>Priority-based component loading</li>
+                                <li>Intersection Observer for viewport-based loading</li>
+                            </ul>
+
+                            <h4>Runtime Performance</h4>
+                            <ul>
+                                <li>Event delegation and efficient DOM queries</li>
+                                <li>Debounced operations for expensive tasks</li>
+                                <li>Circuit breaker patterns for error recovery</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-details">
+                <h3>Tab Component Features</h3>
+                <ul>
+                    <li><strong>Keyboard Navigation:</strong> Arrow keys, Home, End, Enter, and Escape support</li>
+                    <li><strong>Screen Reader Support:</strong> Full ARIA implementation with announcements</li>
+                    <li><strong>Progressive Enhancement:</strong> Works with standard HTML, enhanced with JavaScript</li>
+                    <li><strong>Smooth Transitions:</strong> CSS transitions with configurable timing</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Toggle Components</h2>
+            <p>Flexible toggle functionality for dropdowns, accordions, and interactive UI elements:</p>
+
+            <div class="toggle-demos">
+                <h3>Dropdown Menus</h3>
+                <div class="button__group">
+                    <button data-toggle
+                            data-toggle-target="#dropdown-menu-1"
+                            data-toggle-capture="true"
+                            class="btn btn-primary">
+                        File Menu
+                    </button>
+                    <div id="dropdown-menu-1" class="dropdown-menu">
+                        <a href="#" class="dropdown-item">New File</a>
+                        <a href="#" class="dropdown-item">Open File</a>
+                        <a href="#" class="dropdown-item">Save</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item">Exit</a>
+                    </div>
+
+                    <button data-toggle
+                            data-toggle-target="#dropdown-menu-2"
+                            data-toggle-capture="true"
+                            class="btn btn-secondary">
+                        Edit Menu
+                    </button>
+                    <div id="dropdown-menu-2" class="dropdown-menu">
+                        <a href="#" class="dropdown-item">Undo</a>
+                        <a href="#" class="dropdown-item">Redo</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item">Cut</a>
+                        <a href="#" class="dropdown-item">Copy</a>
+                        <a href="#" class="dropdown-item">Paste</a>
+                    </div>
+
+                    <button data-toggle
+                            data-toggle-target="#dropdown-menu-3"
+                            data-toggle-capture="true"
+                            class="btn btn-accent">
+                        View Menu
+                    </button>
+                    <div id="dropdown-menu-3" class="dropdown-menu">
+                        <a href="#" class="dropdown-item">Zoom In</a>
+                        <a href="#" class="dropdown-item">Zoom Out</a>
+                        <a href="#" class="dropdown-item">Full Screen</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item">Developer Tools</a>
+                    </div>
+                </div>
+
+                <h3>Accordion Panels</h3>
+                <div class="accordion">
+                    <div class="accordion__item">
+                        <button data-toggle
+                                data-toggle-target="#accordion-panel-1"
+                                class="accordion__trigger"
+                                aria-expanded="false">
+                            Getting Started
+                        </button>
+                        <div id="accordion-panel-1" class="accordion__panel">
+                            <div class="accordion__content">
+                                <p>Learn how to integrate the Enhancement Framework into your project:</p>
+                                <ol>
+                                    <li>Install the framework via npm or download the built files</li>
+                                    <li>Import the ComponentRegistry and core managers</li>
+                                    <li>Define your component registry with selectors and loaders</li>
+                                    <li>Initialize the PageManager and RouterManager</li>
+                                    <li>Call scanAndMount() to enhance existing content</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion__item">
+                        <button data-toggle
+                                data-toggle-target="#accordion-panel-2"
+                                class="accordion__trigger"
+                                aria-expanded="false">
+                            Component Development
+                        </button>
+                        <div id="accordion-panel-2" class="accordion__panel">
+                            <div class="accordion__content">
+                                <p>Creating custom components is straightforward:</p>
+                                <ul>
+                                    <li>Extend BaseComponent for consistent lifecycle management</li>
+                                    <li>Implement _init(element) for element-specific setup</li>
+                                    <li>Use this._getDataAttr() for configuration</li>
+                                    <li>Emit events via this.eventBus for monitoring</li>
+                                    <li>Implement proper cleanup in state.cleanup()</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion__item">
+                        <button data-toggle
+                                data-toggle-target="#accordion-panel-3"
+                                class="accordion__trigger"
+                                aria-expanded="false">
+                            Best Practices
+                        </button>
+                        <div id="accordion-panel-3" class="accordion__panel">
+                            <div class="accordion__content">
+                                <p>Follow these guidelines for optimal performance:</p>
+                                <ul>
+                                    <li>Use data attributes for configuration over JavaScript options</li>
+                                    <li>Implement progressive enhancement - HTML first, JavaScript second</li>
+                                    <li>Emit meaningful events for debugging and monitoring</li>
+                                    <li>Handle errors gracefully with fallback behavior</li>
+                                    <li>Test without JavaScript to ensure base functionality works</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Persistent Toggles</h3>
+                <div class="toggle-persistent">
+                    <button data-toggle
+                            data-toggle-target="#sidebar-panel"
+                            class="btn btn-outline">
+                        Toggle Sidebar
+                    </button>
+                    <div id="sidebar-panel" data-toggle-manual="true" class="sidebar-panel">
+                        <h4>Persistent Sidebar</h4>
+                        <p>This panel has data-toggle-manual="true" so it won't auto-close when clicking outside.</p>
+                        <p>This is useful for:</p>
+                        <ul>
+                            <li>Navigation sidebars</li>
+                            <li>Tool panels</li>
+                            <li>Settings panels</li>
+                            <li>Any UI that should stay open</li>
+                        </ul>
+                        <button data-toggle
+                                data-toggle-target="#sidebar-panel"
+                                class="btn btn-sm btn-secondary">
+                            Close Sidebar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-details">
+                <h3>Toggle Component Features</h3>
+                <ul>
+                    <li><strong>Multiple Modes:</strong> Dropdowns with outside-click, accordions, persistent panels</li>
+                    <li><strong>Accessibility:</strong> ARIA states, keyboard navigation, focus management</li>
+                    <li><strong>Event Integration:</strong> Real-time state tracking and debugging</li>
+                    <li><strong>Flexible Configuration:</strong> Data attributes for capture, manual, and animation settings</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Enhanced Form Controls</h2>
+            <p>Progressive enhancement for form interactions and validation:</p>
+
+            <form class="enhanced-form" data-enhanced-form>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required
+                               data-validate="username"
+                               placeholder="Enter username">
+                        <div class="field-help">Must be 3-20 characters, letters and numbers only</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required
+                               data-validate="email"
+                               placeholder="your@email.com">
+                        <div class="field-help">We'll never share your email</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required
+                               data-validate="password"
+                               minlength="8">
+                        <div class="field-help">Minimum 8 characters</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="country-form">Country:</label>
+                        <p-select name="country" id="country-form" placeholder="Select your country">
+                            <option value="">-- Choose Country --</option>
+                            <option value="us">United States</option>
+                            <option value="ca">Canada</option>
+                            <option value="uk">United Kingdom</option>
+                            <option value="de">Germany</option>
+                            <option value="fr">France</option>
+                            <option value="jp">Japan</option>
+                            <option value="au">Australia</option>
+                        </p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="interests">Interests:</label>
+                        <p-select name="interests" id="interests" placeholder="Select interests">
+                            <optgroup label="Technology">
+                                <option value="web-dev">Web Development</option>
+                                <option value="mobile-dev">Mobile Development</option>
+                                <option value="data-science">Data Science</option>
+                            </optgroup>
+                            <optgroup label="Design">
+                                <option value="ui-design">UI Design</option>
+                                <option value="ux-design">UX Design</option>
+                                <option value="graphic-design">Graphic Design</option>
+                            </optgroup>
+                        </p-select>
+                    </div>
+
+                    <div class="form-field form-field--full">
+                        <label for="bio">Bio:</label>
+                        <textarea id="bio" name="bio" rows="4"
+                                  placeholder="Tell us about yourself..."
+                                  data-validate="length"
+                                  data-max-length="500"></textarea>
+                        <div class="field-help">Maximum 500 characters</div>
+                    </div>
+
+                    <div class="form-field form-field--full">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="newsletter" value="yes">
+                            <span class="checkbox-custom"></span>
+                            Subscribe to newsletter
+                        </label>
+                    </div>
+
+                    <div class="form-field form-field--full">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="terms" required>
+                            <span class="checkbox-custom"></span>
+                            I agree to the <a href="#" data-modal data-modal-target="#terms-modal">Terms of Service</a>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </div>
+            </form>
+
+            <div class="feature-details">
+                <h3>Form Enhancement Features</h3>
+                <ul>
+                    <li><strong>Real-time Validation:</strong> Immediate feedback on field changes</li>
+                    <li><strong>Accessible Errors:</strong> Screen reader announcements and ARIA associations</li>
+                    <li><strong>Custom Controls:</strong> Enhanced select, checkbox, and input styling</li>
+                    <li><strong>Progressive Enhancement:</strong> Works without JavaScript, enhanced with it</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-component="demo-section">
+            <h2>Interactive Component Events</h2>
+            <p>Monitor real-time events from interactive components:</p>
+
+            <div id="interactive-events" class="event__log">
+                <div class="event__log-header">
+                    <strong>Interactive Component Events</strong>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="clearInteractiveEvents()" class="btn__small">Clear</button>
+                        <button onclick="exportInteractiveEvents()" class="btn__small">Export</button>
+                    </div>
+                </div>
+                <div class="event__log-content" id="interactive-events-content" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Events will be populated here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Terms Modal -->
+    <p-modal id="terms-modal" data-modal-size="large" data-modal-closable="true">
+        <h2 slot="title">Terms of Service</h2>
+        <div>
+            <h3>Enhancement Framework Demo Terms</h3>
+            <p>This is a demonstration of the Enhancement Framework's modal and form integration capabilities.</p>
+
+            <h4>Component Usage</h4>
+            <p>By using this demo, you acknowledge that:</p>
+            <ul>
+                <li>This is a demonstration environment for showcasing framework capabilities</li>
+                <li>No actual user data is collected or stored</li>
+                <li>The framework is provided as-is for educational and evaluation purposes</li>
+                <li>Performance metrics are collected locally for demonstration only</li>
+            </ul>
+
+            <h4>Framework Features Demonstrated</h4>
+            <ul>
+                <li>Modal integration with form controls</li>
+                <li>Accessible form validation and feedback</li>
+                <li>Progressive enhancement patterns</li>
+                <li>Event-driven component communication</li>
+            </ul>
+        </div>
+        <div slot="actions">
+            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+            <button class="modal__button modal__button--primary" data-modal-close>Accept</button>
+        </div>
+    </p-modal>
+
+    <!-- Toast container -->
+    <p-toasts placement="top-right"></p-toasts>
+
+    <!-- Demo functionality scripts -->
+    <script>
+        // Form handling
+        document.querySelector('[data-enhanced-form]').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            console.log('Form submitted:', data);
+
+            if (window.Toast && window.Toast.show) {
+                window.Toast.show('Form submitted successfully!', 'success');
+            }
+
+            addInteractiveEvent('form:submit', data);
+        });
+
+        // Interactive events logging
+        function addInteractiveEvent(eventType, data) {
+            const container = document.getElementById('interactive-events-content');
+            if (!container) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event__log-item';
+            eventElement.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <strong>${eventType}</strong>
+                        <pre style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                    <small style="color: #999; margin-left: 1rem;">${timestamp}</small>
+                </div>
+            `;
+
+            container.insertBefore(eventElement, container.firstChild);
+
+            // Keep only last 15 events
+            const items = container.querySelectorAll('.event__log-item');
+            if (items.length > 15) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        function clearInteractiveEvents() {
+            const container = document.getElementById('interactive-events-content');
+            if (container) {
+                container.innerHTML = '<div class="event__log-item"><div><em>Event log cleared</em></div></div>';
+            }
+        }
+
+        function exportInteractiveEvents() {
+            const container = document.getElementById('interactive-events-content');
+            if (!container) return;
+
+            const events = Array.from(container.children).map(child => ({
+                timestamp: child.querySelector('small')?.textContent,
+                event: child.querySelector('strong')?.textContent,
+                data: child.querySelector('pre')?.textContent
+            }));
+
+            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `interactive-events-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Listen for component events
+        document.addEventListener('tabs:change', (e) => {
+            addInteractiveEvent('tabs:change', { activeTab: e.detail.activeTab });
+        });
+
+        document.addEventListener('toggle:show', (e) => {
+            addInteractiveEvent('toggle:show', { target: e.target.dataset.toggleTarget });
+        });
+
+        document.addEventListener('toggle:hide', (e) => {
+            addInteractiveEvent('toggle:hide', { target: e.target.dataset.toggleTarget });
+        });
+
+        document.addEventListener('p-select:change', (e) => {
+            addInteractiveEvent('p-select:change', e.detail);
+        });
+
+        // Page-specific component mounting notification
+        if (window.eventBus) {
+            window.eventBus.emit('page:loaded', {
+                page: '/interactive',
+                components: ['tabs', 'toggle', 'select', 'forms'],
+                timestamp: performance.now()
+            });
+        }
+    </script>
+
+    <!-- Load the framework -->
+    <script type="module" src="demo.js"></script>
+</body>
+</html>
