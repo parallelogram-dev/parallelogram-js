@@ -1,38 +1,39 @@
 import { BaseComponent } from '@peptolab/parallelogram';
+
 /**
  * Videoplay Component
  *
  * Progressive enhancement for scroll-triggered video play/pause behavior.
+ * Respects the native autoplay attribute and only manages videos that have it set.
  * Automatically plays videos when they enter the viewport and pauses when they leave.
  *
  * @example
  * HTML:
- * <!-- Basic autoplay on scroll -->
- * <video data-videoplay src="video.mp4" muted loop>
- *   <source src="video.mp4" type="video/mp4">
+ * <!-- No management - user controls manually -->
+ * <video data-videoplay src="video.mp4" controls>
  *   Your browser doesn't support video.
+ * </video>
+ *
+ * <!-- Autoplay on scroll with default settings -->
+ * <video data-videoplay autoplay muted loop src="video.mp4">
  * </video>
  *
  * <!-- Custom configuration -->
  * <video data-videoplay
+ *        autoplay
+ *        muted
+ *        loop
  *        data-videoplay-threshold="0.5"
  *        data-videoplay-autopause="true"
- *        data-videoplay-automute="false"
- *        data-videoplay-background="true"
- *        src="video.mp4" controls>
+ *        data-videoplay-require-interaction="true"
+ *        src="video.mp4">
  * </video>
  *
  * <!-- Target external video -->
  * <div data-videoplay data-video-target="#my-video" data-videoplay-threshold="0.3">
- *   <video id="my-video" src="hero-video.mp4" muted loop></video>
+ *   <video id="my-video" autoplay muted loop src="hero-video.mp4"></video>
  *   <div>Video description and overlay content</div>
  * </div>
- *
- * JavaScript (standalone):
- * import { Videoplay } from './components/Videoplay.js';
- * const videoplay = new Videoplay();
- * document.querySelectorAll('[data-videoplay]')
- *   .forEach(element => videoplay.mount(element));
  */
 export default class Videoplay extends BaseComponent {
     /**
@@ -48,7 +49,8 @@ export default class Videoplay extends BaseComponent {
             restoreVolumeOnPause: false, // Restore volume when pausing
             rootMargin: '0px',       // Root margin for intersection observer
             enableInBackground: false, // Allow playing when page not visible
-            preloadOnMount: true     // Set preload="metadata" when mounting
+            preloadOnMount: true,    // Set preload="metadata" when mounting
+            requireUserInteraction: false // Only manage play/pause after user has interacted with video
         };
     }
 
@@ -130,7 +132,7 @@ export default class Videoplay extends BaseComponent {
             return state;
         }
 
-        // Get configuration from data attributes with terse naming
+        // Get configuration from data attributes
         const playThreshold = this._getDataAttr(element, 'videoplay-threshold', Videoplay.defaults.playThreshold);
         const pauseThreshold = this._getDataAttr(element, 'videoplay-pause-threshold', Videoplay.defaults.pauseThreshold);
         const pauseOnExit = this._getDataAttr(element, 'videoplay-autopause', Videoplay.defaults.pauseOnExit);
@@ -138,6 +140,10 @@ export default class Videoplay extends BaseComponent {
         const restoreVolumeOnPause = this._getDataAttr(element, 'videoplay-restore-volume', Videoplay.defaults.restoreVolumeOnPause);
         const enableInBackground = this._getDataAttr(element, 'videoplay-background', Videoplay.defaults.enableInBackground);
         const preloadOnMount = this._getDataAttr(element, 'videoplay-preload', Videoplay.defaults.preloadOnMount);
+        const requireUserInteraction = this._getDataAttr(element, 'videoplay-require-interaction', Videoplay.defaults.requireUserInteraction);
+
+        // Check if video has native autoplay attribute
+        const hasAutoplay = video.hasAttribute('autoplay');
 
         // Store state
         state.video = video;
@@ -149,11 +155,14 @@ export default class Videoplay extends BaseComponent {
         state.restoreVolumeOnPause = Boolean(restoreVolumeOnPause);
         state.enableInBackground = Boolean(enableInBackground);
         state.preloadOnMount = Boolean(preloadOnMount);
+        state.requireUserInteraction = Boolean(requireUserInteraction);
+        state.hasAutoplay = hasAutoplay;
         state.isPlaying = false;
         state.isIntersecting = false;
         state.intersectionRatio = 0;
         state.originalMuted = video.muted;
         state.originalVolume = video.volume;
+        state.hasUserInteracted = false;
 
         // Set up video properties
         this._setupVideo(video, state);
@@ -172,6 +181,7 @@ export default class Videoplay extends BaseComponent {
         this.eventBus?.emit('videoplay:mount', {
             element,
             video,
+            hasAutoplay: state.hasAutoplay,
             playThreshold: state.playThreshold,
             timestamp: performance.now()
         });
@@ -179,6 +189,7 @@ export default class Videoplay extends BaseComponent {
         this.logger?.info('Videoplay initialized', {
             element,
             video: videoSelector || 'self',
+            hasAutoplay: state.hasAutoplay,
             playThreshold: state.playThreshold,
             pauseOnExit: state.pauseOnExit
         });
@@ -199,7 +210,7 @@ export default class Videoplay extends BaseComponent {
         }
 
         // Ensure video is muted for autoplay if no explicit setting
-        if (state.muteWhenPlaying === null && !video.hasAttribute('muted')) {
+        if (state.muteWhenPlaying === null && state.hasAutoplay && !video.hasAttribute('muted')) {
             // For autoplay to work reliably, videos usually need to be muted
             video.muted = true;
             state.originalMuted = false; // Remember it wasn't originally muted
@@ -221,14 +232,25 @@ export default class Videoplay extends BaseComponent {
             this._emitVideoEvent(video, 'error', { error: e });
         };
 
+        // Track user interaction with video
+        const userInteractionHandler = () => {
+            state.hasUserInteracted = true;
+            this.logger?.debug('User interacted with video', { video });
+        };
+
         video.addEventListener('play', playHandler);
         video.addEventListener('pause', pauseHandler);
         video.addEventListener('error', errorHandler);
+
+        // Listen for user interaction events
+        video.addEventListener('click', userInteractionHandler);
+        video.addEventListener('play', userInteractionHandler);
 
         // Store handlers for cleanup
         state.playHandler = playHandler;
         state.pauseHandler = pauseHandler;
         state.errorHandler = errorHandler;
+        state.userInteractionHandler = userInteractionHandler;
     }
 
     /**
@@ -247,13 +269,17 @@ export default class Videoplay extends BaseComponent {
             state.intersectionRatio = entry.intersectionRatio;
 
             // Determine if should play or pause
+            const canAutoplay = state.hasAutoplay && (!state.requireUserInteraction || state.hasUserInteracted);
+
             const shouldPlay = entry.isIntersecting &&
                              entry.intersectionRatio >= state.playThreshold &&
-                             (this.isPageVisible || state.enableInBackground);
+                             (this.isPageVisible || state.enableInBackground) &&
+                             canAutoplay;
 
             const shouldPause = (!entry.isIntersecting ||
                                entry.intersectionRatio < state.pauseThreshold) &&
-                               state.pauseOnExit;
+                               state.pauseOnExit &&
+                               (!state.requireUserInteraction || state.hasUserInteracted);
 
             if (shouldPlay && !state.isPlaying) {
                 this._playVideo(element, state, 'scroll-in');
@@ -402,7 +428,7 @@ export default class Videoplay extends BaseComponent {
         elements.forEach(element => {
             const state = this.getState(element);
             if (state && !state.isPlaying && state.isIntersecting &&
-                state.intersectionRatio >= state.playThreshold) {
+                state.intersectionRatio >= state.playThreshold && state.hasAutoplay) {
                 this._playVideo(element, state, 'page-visible');
             }
         });
@@ -479,6 +505,10 @@ export default class Videoplay extends BaseComponent {
             if (state.playHandler) video.removeEventListener('play', state.playHandler);
             if (state.pauseHandler) video.removeEventListener('pause', state.pauseHandler);
             if (state.errorHandler) video.removeEventListener('error', state.errorHandler);
+            if (state.userInteractionHandler) {
+                video.removeEventListener('click', state.userInteractionHandler);
+                video.removeEventListener('play', state.userInteractionHandler);
+            }
 
             // Restore original video properties
             video.muted = state.originalMuted;
@@ -497,6 +527,7 @@ export default class Videoplay extends BaseComponent {
         const elements = document.querySelectorAll('[data-videoplay-enhanced="true"]');
         let playingCount = 0;
         let intersectingCount = 0;
+        let autoplayCount = 0;
         let totalVideos = 0;
 
         elements.forEach(element => {
@@ -505,6 +536,7 @@ export default class Videoplay extends BaseComponent {
                 totalVideos++;
                 if (state.isPlaying) playingCount++;
                 if (state.isIntersecting) intersectingCount++;
+                if (state.hasAutoplay) autoplayCount++;
             }
         });
 
@@ -512,6 +544,7 @@ export default class Videoplay extends BaseComponent {
             totalVideos,
             playingCount,
             intersectingCount,
+            autoplayCount,
             pageVisible: this.isPageVisible,
             observerActive: !!this.observer,
             defaults: Videoplay.defaults
