@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import {BaseComponent} from '@peptolab/parallelogram';
 
 /**
  * Lazysrc Component - Standalone lazy loading without external dependencies
@@ -46,9 +46,9 @@ export default class Lazysrc extends BaseComponent {
         return {
             threshold: 0.1,
             rootMargin: '50px',
-            loadingClass: 'lazysrc-loading',
-            loadedClass: 'lazysrc-loaded',
-            errorClass: 'lazysrc-error',
+            loadingClass: 'loading',
+            loadedClass: 'loaded',
+            errorClass: 'error',
             fadeInDuration: 300,
             retryAttempts: 3,
             retryDelay: 1000,
@@ -136,7 +136,7 @@ export default class Lazysrc extends BaseComponent {
      * @returns {Object} Configuration object
      */
     _getConfiguration(element) {
-        const config = { ...Lazysrc.defaults };
+        const config = {...Lazysrc.defaults};
 
         // Threshold
         if (element.dataset.lazysrcThreshold) {
@@ -330,6 +330,11 @@ export default class Lazysrc extends BaseComponent {
      * @param {Object} state
      */
     async _loadElement(element, state) {
+        if (!state || !state.config) {
+            this.logger?.error('Invalid state for element', {element, state});
+            return;
+        }
+
         if (state.isLoading || state.isLoaded) return;
 
         state.isLoading = true;
@@ -544,7 +549,7 @@ export default class Lazysrc extends BaseComponent {
             timestamp: performance.now()
         });
 
-        this.logger?.debug('Element loaded successfully', { element });
+        this.logger?.debug('Element loaded successfully', {element});
     }
 
     /**
@@ -573,7 +578,7 @@ export default class Lazysrc extends BaseComponent {
                 this._loadElement(element, state);
             }, state.config.retryDelay * (attempts + 1)); // Exponential backoff
 
-            this.logger?.info(`Retrying load for element (attempt ${attempts + 1}/${state.config.retryAttempts})`, { element });
+            this.logger?.info(`Retrying load for element (attempt ${attempts + 1}/${state.config.retryAttempts})`, {element});
             return;
         }
 
@@ -583,7 +588,7 @@ export default class Lazysrc extends BaseComponent {
             timestamp: performance.now()
         });
 
-        this.logger?.warn('Element failed to load after retries', { element, error });
+        this.logger?.warn('Element failed to load after retries', {element, error});
     }
 
     /**
