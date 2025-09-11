@@ -1,65 +1,94 @@
+/**
+ * BaseComponent - Production-ready base class with state management
+ */
 export class BaseComponent {
-  constructor(options = {}) {
-    this.eventBus = options.eventBus;
-    this.logger = options.logger;
+  constructor({ eventBus, logger, router }) {
+    this.eventBus = eventBus;
+    this.logger = logger;
+    this.router = router;
     this.elements = new WeakMap();
-    this._elementKeys = new Set();
+    this._keys = null;
   }
 
   mount(element) {
-    if (this.elements.has(element)) {
-      return this.update(element);
-    }
-    try {
-      const state = this._init(element);
-      this.elements.set(element, state);
-      this._elementKeys.add(element);
-      this.logger?.info('Component mounted', element);
-    } catch (error) {
-      this.logger?.error('Failed to mount component', error);
-    }
+    if (this.elements.has(element)) return this.update(element);
+    const state = this._init(element);
+    this.elements.set(element, state);
   }
 
   update(element) {
-    const state = this.elements.get(element);
-    if (!state) return;
-    this.logger?.info('Component updated', element);
+    // Override in subclasses for update logic
   }
 
   unmount(element) {
     const state = this.elements.get(element);
     if (!state) return;
     try {
-      state.cleanup();
+      state.cleanup?.();
+    } finally {
       this.elements.delete(element);
-      this._elementKeys.delete(element);
-    } catch (error) {
-      this.logger?.error('Failed to unmount component', error);
     }
   }
 
-  getState(element) {
-    return this.elements.get(element);
+  destroy() {
+    for (const element of this._elementsKeys()) {
+      this.unmount(element);
+    }
+  }
+
+  _elementsKeys() {
+    if (!this._keys) this._keys = new Set();
+    return this._keys;
+  }
+
+  _track(element) {
+    if (!this._keys) this._keys = new Set();
+    this._keys.add(element);
+  }
+
+  _untrack(element) {
+    this._keys?.delete(element);
   }
 
   _init(element) {
     const controller = new AbortController();
-    return { cleanup: () => controller.abort(), controller };
+    const cleanup = () => {
+      controller.abort();
+      this._untrack(element);
+    };
+    this._track(element);
+    return { cleanup, controller };
   }
 
-  _getDataAttr(element, name, defaultValue) {
-    const value = element.getAttribute(`data-${name}`);
-    if (value === null) return defaultValue;
+  // Helper method for getting state
+  getState(element) {
+    return this.elements.get(element);
+  }
+
+  // Helper method for data attributes
+  _getDataAttr(element, attr, defaultValue) {
+    const value = element.dataset[this._camelCase(attr)];
+    if (value === undefined) return defaultValue;
+
+    // Convert string values to appropriate types
     if (value === 'true') return true;
     if (value === 'false') return false;
-    if (value === '') return true;
-    const numValue = Number(value);
-    if (!isNaN(numValue) && isFinite(numValue)) return numValue;
+    if (!isNaN(value) && value !== '') return Number(value);
     return value;
   }
 
-  _dispatch(element, eventName, detail, bubbles = true) {
-    const event = new CustomEvent(eventName, { detail, bubbles, cancelable: true });
-    return element.dispatchEvent(event);
+  _camelCase(str) {
+    return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+  }
+
+  // Dispatch custom events
+  _dispatch(element, eventType, detail) {
+    const event = new CustomEvent(eventType, {
+      detail,
+      bubbles: true,
+      cancelable: true
+    });
+    element.dispatchEvent(event);
+    this.eventBus?.emit(eventType, { element, ...detail });
   }
 }
