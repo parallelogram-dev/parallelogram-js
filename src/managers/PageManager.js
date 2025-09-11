@@ -31,10 +31,10 @@ export class PageManager {
             trackPerformance: false,
             // Fragment target groups - define which fragments update together
             targetGroups: {
-                //'main': ['main', 'menubar', 'breadcrumb'], // When 'main' is requested, also update nav and breadcrumbs
-                //'panel': ['panel'], // When 'panel' is requested, only update that
-                //'sidebar': ['sidebar', 'toolbar'], // Sidebar updates might also update related toolbar
-                //'modal': ['modal'] // Modal content standalone
+                'main': ['main', 'menubar', 'breadcrumb'], // When 'main' is requested, also update nav and breadcrumbs
+                'panel': ['panel'], // When 'panel' is requested, only update that
+                'sidebar': ['sidebar', 'toolbar'], // Sidebar updates might also update related toolbar
+                'modal': ['modal'] // Modal content standalone
             },
             ...options
         };
@@ -164,7 +164,7 @@ export class PageManager {
     /**
      * Replace multiple fragments content with enhanced fragment-based targeting
      */
-    replaceFragments(html, options = {}) {
+    async replaceFragments(html, options = {}) {
         const {
             fromNavigation = false,
             fromPopstate = false,
@@ -205,7 +205,7 @@ export class PageManager {
             // Process each target fragment
             for (const viewTarget of viewTargets) {
                 try {
-                    const result = this._processSingleFragment(doc, viewTarget, html, options);
+                    const result = await this._processSingleFragment(doc, viewTarget, html, options);
                     replacementResults.push(result);
 
                     if (viewTarget === 'main') {
@@ -229,11 +229,19 @@ export class PageManager {
 
             // Mount components for all successfully updated fragments
             const successfulTargets = replacementResults.filter(r => r.success);
+
             for (const result of successfulTargets) {
                 // Mount components within the updated fragment
                 this.mountAllWithin(result.targetFragment, {
                     priority: 'critical',
                     fragmentTarget: result.viewTarget
+                });
+
+                // Emit dom:content-loaded for router link enhancement
+                this.eventBus.emit('dom:content-loaded', {
+                    fragment: result.targetFragment,
+                    viewTarget: result.viewTarget,
+                    trigger: 'fragment-replacement'
                 });
 
                 // Schedule non-critical component mounting
@@ -289,11 +297,11 @@ export class PageManager {
     }
 
     /**
-     * Process a single fragment replacement
+     * Process a single fragment replacement with transitions
      */
-    _processSingleFragment(doc, viewTarget, originalHtml, options) {
+    async _processSingleFragment(doc, viewTarget, originalHtml, options) {
         // Extract target fragment from parsed HTML and find matching fragment in current document
-        const { sourceFragment, targetFragment } = this._extractTargetFragmentFromDoc(doc, viewTarget);
+        const {sourceFragment, targetFragment} = this._extractTargetFragmentFromDoc(doc, viewTarget);
 
         if (!sourceFragment) {
             throw new Error(`Source fragment with data-view="${viewTarget}" not found in fetched HTML`);
@@ -303,37 +311,193 @@ export class PageManager {
             throw new Error(`Target fragment with data-view="${viewTarget}" not found in current document`);
         }
 
+        // Get transition configuration for this target
+        const transitionConfig = this.options.targetGroupTransitions?.[viewTarget];
+
         // Emit pre-unmount event
         this.eventBus.emit('page:fragment-will-replace', {
             sourceFragment,
             targetFragment,
             viewTarget,
             html: originalHtml,
-            options
+            options,
+            transitionConfig
         });
 
-        // Unmount components only within the target fragment
-        this.unmountAllWithin(targetFragment);
+        try {
+            // 1. OUT transition (if configured)
+            if (transitionConfig?.out) {
+                await this._performFragmentTransition(targetFragment, 'out', transitionConfig);
+            }
 
-        // Replace the target fragment's content with source fragment's content
-        targetFragment.innerHTML = sourceFragment.innerHTML;
+            // 2. Unmount components only within the target fragment
+            this.unmountAllWithin(targetFragment);
 
-        // Copy over any data attributes from the source fragment to target
-        this._copyFragmentAttributes(sourceFragment, targetFragment);
+            // 3. Replace the target fragment's content with source fragment's content
+            targetFragment.innerHTML = sourceFragment.innerHTML;
 
-        // Emit post-mount event
-        this.eventBus.emit('page:fragment-did-replace', {
-            targetFragment,
-            viewTarget,
-            options
-        });
+            // 4. Copy over any data attributes from the source fragment to target
+            this._copyFragmentAttributes(sourceFragment, targetFragment);
+
+            // 5. IN transition (if configured)
+            if (transitionConfig?.in) {
+                await this._performFragmentTransition(targetFragment, 'in', transitionConfig);
+            }
+
+            // Emit post-mount event
+            this.eventBus.emit('page:fragment-did-replace', {
+                targetFragment,
+                viewTarget,
+                options,
+                transitionConfig
+            });
+
+        } catch (transitionError) {
+            this.logger?.error(`Fragment transition failed for ${viewTarget}`, {
+                error: transitionError,
+                viewTarget,
+                transitionConfig
+            });
+
+            // Continue with replacement even if transition fails
+            this.unmountAllWithin(targetFragment);
+            targetFragment.innerHTML = sourceFragment.innerHTML;
+            this._copyFragmentAttributes(sourceFragment, targetFragment);
+        }
 
         return {
             viewTarget,
             success: true,
             sourceFragment,
-            targetFragment
+            targetFragment,
+            transitionConfig
         };
+    }
+
+    /**
+     * Perform fragment transition animation
+     * @private
+     * @param {HTMLElement} fragment - Fragment element
+     * @param {string} direction - 'in' or 'out'
+     * @param {Object} config - Transition configuration
+     */
+    async _performFragmentTransition(fragment, direction, config) {
+        const transitionType = config[direction];
+        const duration = config.duration || 300;
+        const easing = config.easing || 'ease';
+
+        this.logger?.debug(`Performing ${direction} transition: ${transitionType}`, {
+            fragment,
+            duration,
+            easing
+        });
+
+        try {
+            // Check if it's a CSS class-based transition
+            if (typeof transitionType === 'string' && !transitionType.includes('(')) {
+                await this._performCSSTransition(fragment, transitionType, duration);
+            } else {
+                // Use TransitionManager or inline styles
+                await this._performJSTransition(fragment, direction, config);
+            }
+
+            this.eventBus.emit(`page:fragment-transition-${direction}`, {
+                fragment,
+                viewTarget: fragment.dataset.view,
+                transitionType,
+                duration
+            });
+
+        } catch (error) {
+            this.logger?.warn(`Fragment transition failed`, {
+                fragment,
+                direction,
+                transitionType,
+                error
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Perform CSS class-based transition
+     * @private
+     * @param {HTMLElement} fragment - Fragment element
+     * @param {string} className - CSS class name
+     * @param {number} duration - Duration in ms
+     */
+    _performCSSTransition(fragment, className, duration) {
+        return new Promise((resolve) => {
+            const cleanup = () => {
+                fragment.removeEventListener('animationend', handleEnd);
+                fragment.removeEventListener('transitionend', handleEnd);
+                fragment.classList.remove(className);
+                clearTimeout(timeoutId);
+            };
+
+            const handleEnd = () => {
+                cleanup();
+                resolve();
+            };
+
+            // Set up event listeners
+            fragment.addEventListener('animationend', handleEnd, {once: true});
+            fragment.addEventListener('transitionend', handleEnd, {once: true});
+
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                fragment.classList.add(className);
+            });
+
+            // Fallback timeout
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                resolve();
+            }, duration + 100);
+        });
+    }
+
+    /**
+     * Perform JavaScript-based transition
+     * @private
+     * @param {HTMLElement} fragment - Fragment element
+     * @param {string} direction - 'in' or 'out'
+     * @param {Object} config - Transition configuration
+     */
+    async _performJSTransition(fragment, direction, config) {
+        const duration = config.duration || 300;
+        const easing = config.easing || 'ease';
+
+        // Apply transition styles
+        fragment.style.transition = `opacity ${duration}ms ${easing}, transform ${duration}ms ${easing}`;
+
+        if (direction === 'out') {
+            // Fade out with slide
+            fragment.style.opacity = '0';
+            fragment.style.transform = 'translateX(-20px)';
+        } else {
+            // Reset and fade in
+            fragment.style.opacity = '0';
+            fragment.style.transform = 'translateX(20px)';
+
+            // Force reflow then animate in
+            fragment.getBoundingClientRect();
+
+            fragment.style.opacity = '1';
+            fragment.style.transform = 'translateX(0)';
+        }
+
+        // Wait for transition to complete
+        await new Promise(resolve => {
+            setTimeout(() => {
+                fragment.style.transition = '';
+                if (direction === 'in') {
+                    fragment.style.opacity = '';
+                    fragment.style.transform = '';
+                }
+                resolve();
+            }, duration);
+        });
     }
 
     /**
@@ -356,9 +520,9 @@ export class PageManager {
             // Fallback 2: If viewTarget is 'main', try common main selectors
             if (!sourceFragment && viewTarget === 'main') {
                 sourceFragment = doc.querySelector('main') ||
-                                doc.querySelector('[role="main"]') ||
-                                doc.querySelector('#app') ||
-                                doc.querySelector('.main-content');
+                    doc.querySelector('[role="main"]') ||
+                    doc.querySelector('#app') ||
+                    doc.querySelector('.main-content');
             }
 
             // Fallback 3: For other targets, try class-based selector
@@ -378,9 +542,9 @@ export class PageManager {
 
             if (!targetFragment && viewTarget === 'main') {
                 targetFragment = document.querySelector('main') ||
-                                document.querySelector('[role="main"]') ||
-                                document.querySelector('#app') ||
-                                document.querySelector('.main-content');
+                    document.querySelector('[role="main"]') ||
+                    document.querySelector('#app') ||
+                    document.querySelector('.main-content');
             }
 
             if (!targetFragment) {
@@ -396,7 +560,7 @@ export class PageManager {
             targetSelector: targetFragment?.tagName + (targetFragment?.className ? '.' + targetFragment.className : '')
         });
 
-        return { sourceFragment, targetFragment };
+        return {sourceFragment, targetFragment};
     }
 
     /**

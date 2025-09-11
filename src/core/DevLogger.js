@@ -44,7 +44,7 @@ export class DevLogger {
     return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled);
   }
 
-  group(label){ if (this.enabled && console.groupCollapsed) console.groupCollapsed(`[${this.ns}] ${label}`); }
+  group(label){ if (this.enabled && console.groupCollapsed) console.groupCollapsed(`[${this.namespace}] ${label}`); }
   groupEnd(){ if (this.enabled && console.groupEnd) console.groupEnd(); }
 }
 
