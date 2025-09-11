@@ -1,6 +1,6 @@
 {
     "name": "@peptolab/parallelogram",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
     "type": "module",
     "main": "dist/index.js",
