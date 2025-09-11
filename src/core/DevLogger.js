@@ -12,6 +12,12 @@ export class DevLogger {
     return `${new Date().toISOString()} [${this.namespace}] ${level}:`;
   }
 
+  debug(...args) {
+    if (this.enabled) {
+      console.debug(this._getPrefix('DEBUG'), ...args);
+    }
+  }
+
   log(...args) {
     if (this.enabled) {
       console.log(this._getPrefix('LOG'), ...args);
@@ -37,6 +43,9 @@ export class DevLogger {
   child(subNamespace) {
     return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled);
   }
+
+  group(label){ if (this.enabled && console.groupCollapsed) console.groupCollapsed(`[${this.ns}] ${label}`); }
+  groupEnd(){ if (this.enabled && console.groupEnd) console.groupEnd(); }
 }
 
 export function createLogger(namespace, forceEnabled) {
