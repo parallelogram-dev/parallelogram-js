@@ -1,5 +1,4 @@
-import {BaseComponent} from '../core/BaseComponent.js';
-
+import { BaseComponent } from '@peptolab/parallelogram';
 export class Lazyimage extends BaseComponent {
     static get defaults() {
         return {

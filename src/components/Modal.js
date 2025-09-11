@@ -25,7 +25,7 @@
  *   .forEach(trigger => modals.mount(trigger));
  */
 
-import { BaseComponent } from '../core/BaseComponent.js';
+import { BaseComponent } from '@peptolab/parallelogram';
 import { PModal } from './PModal.js';
 
 export class Modal extends BaseComponent {
