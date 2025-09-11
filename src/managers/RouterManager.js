@@ -115,6 +115,7 @@ export class RouterManager {
 
     const link = event.currentTarget;
     const href = link.getAttribute('href');
+    const viewTarget = link.getAttribute('data-view-target') || 'main';
 
     try {
       const url = new URL(href, location.href);
@@ -126,6 +127,7 @@ export class RouterManager {
 
       event.preventDefault();
       this.navigate(url, {
+        viewTarget,
         replace: link.hasAttribute('data-router-replace'),
         trigger: 'link-click',
         element: link

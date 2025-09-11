@@ -67,11 +67,12 @@ export class PageManager {
         });
 
         // Router event handlers
-        this.eventBus.on('router:navigate-success', ({html, url, trigger}) => {
+        this.eventBus.on('router:navigate-success', ({html, url, trigger, viewTarget}) => {
             this.replaceFragment(html, {
                 fromNavigation: true,
                 url,
                 trigger,
+                viewTarget: viewTarget || 'main',
                 preserveScroll: trigger === 'popstate' && this.options.scrollPosition === 'preserve'
             });
         });
@@ -85,6 +86,7 @@ export class PageManager {
                     this.replaceFragment(data, {
                         fromPopstate: true,
                         url,
+                        viewTarget: 'main',
                         preserveScroll: this.options.scrollPosition === 'preserve'
                     });
                 }
@@ -122,7 +124,7 @@ export class PageManager {
     }
 
     /**
-     * Replace fragment content with enhanced options
+     * Replace fragment content with enhanced fragment-based targeting
      */
     replaceFragment(html, options = {}) {
         const {
@@ -130,18 +132,19 @@ export class PageManager {
             fromPopstate = false,
             preserveScroll = false,
             url = null,
-            trigger = 'unknown'
+            trigger = 'unknown',
+            viewTarget = 'main'  // New option for fragment targeting
         } = options;
 
         const startTime = this.options.trackPerformance ? performance.now() : 0;
-        const root = this.container;
 
         this.logger?.group('Fragment replacement', {
             fromNavigation,
             fromPopstate,
             preserveScroll,
             url: url?.toString(),
-            trigger
+            trigger,
+            viewTarget
         });
 
         try {
@@ -154,53 +157,74 @@ export class PageManager {
                 };
             }
 
+            // Parse the incoming HTML to extract the target fragment
+            const { sourceFragment, targetFragment } = this._extractTargetFragment(html, viewTarget);
+
+            if (!sourceFragment) {
+                throw new Error(`Source fragment with data-view="${viewTarget}" not found in fetched HTML`);
+            }
+
+            if (!targetFragment) {
+                throw new Error(`Target fragment with data-view="${viewTarget}" not found in current document`);
+            }
+
             // Emit pre-unmount event
             this.eventBus.emit('page:fragment-will-replace', {
-                root,
+                sourceFragment,
+                targetFragment,
+                viewTarget,
                 html,
                 options,
                 currentUrl: url
             });
 
-            // Unmount all existing components
-            this.unmountAllWithin(root);
+            // Unmount components only within the target fragment
+            this.unmountAllWithin(targetFragment);
 
-            // Parse and insert new content
-            const template = document.createElement('template');
-            template.innerHTML = html.trim();
+            // Replace the target fragment's content with source fragment's content
+            targetFragment.innerHTML = sourceFragment.innerHTML;
 
-            // Validate content before replacement
-            if (!template.content.hasChildNodes()) {
-                throw new Error('Received empty or invalid HTML fragment');
-            }
-
-            root.replaceChildren(...template.content.childNodes);
+            // Copy over any data attributes from the source fragment to target
+            this._copyFragmentAttributes(sourceFragment, targetFragment);
 
             // Emit post-mount event
             this.eventBus.emit('page:fragment-did-replace', {
-                root,
+                targetFragment,
+                viewTarget,
                 options,
                 currentUrl: url
             });
 
-            // Handle scroll restoration
-            this._handleScrollRestoration(scrollPosition, options);
+            // Handle scroll restoration (only if replacing main content)
+            if (viewTarget === 'main') {
+                this._handleScrollRestoration(scrollPosition, options);
+                this._updateDocumentHead(html);
+            }
 
-            // Mount components immediately for critical ones
-            this.mountAllWithin(root, {priority: 'critical'});
+            // Mount components within the updated fragment
+            this.mountAllWithin(targetFragment, {
+                priority: 'critical',
+                fragmentTarget: viewTarget
+            });
 
             // Schedule non-critical component mounting
             if (this.options.mountDelay > 0) {
                 setTimeout(() => {
-                    this.mountAllWithin(root, {priority: 'normal'});
+                    this.mountAllWithin(targetFragment, {
+                        priority: 'normal',
+                        fragmentTarget: viewTarget
+                    });
                 }, this.options.mountDelay);
             } else {
-                this.mountAllWithin(root, {priority: 'normal'});
+                this.mountAllWithin(targetFragment, {
+                    priority: 'normal',
+                    fragmentTarget: viewTarget
+                });
             }
 
             // Start observing DOM changes if not already observing
             if (!this.observer) {
-                this._startObserver(root);
+                this._startObserver(this.container);
             }
 
             // Update performance metrics
@@ -209,22 +233,327 @@ export class PageManager {
                 this.performanceMetrics.fragmentReplacements++;
                 this.logger?.info('Fragment replacement completed', {
                     duration: `${duration.toFixed(2)}ms`,
+                    viewTarget,
                     metrics: this.performanceMetrics
                 });
             }
 
             this.eventBus.emit('page:fragment-replaced', {
-                root,
+                targetFragment,
+                viewTarget,
                 duration: this.options.trackPerformance ? performance.now() - startTime : null,
                 options
             });
 
         } catch (error) {
-            this.logger?.error('Fragment replacement failed', {error, html: html.slice(0, 100)});
-            this.eventBus.emit('page:fragment-replace-error', {root, error, options});
+            this.logger?.error('Fragment replacement failed', {
+                error,
+                viewTarget,
+                html: html.slice(0, 100)
+            });
+            this.eventBus.emit('page:fragment-replace-error', {
+                viewTarget,
+                error,
+                options
+            });
             throw error;
         } finally {
             this.logger?.groupEnd();
+        }
+    }
+
+    /**
+     * Extract target fragment from HTML and find matching fragment in current document
+     */
+    _extractTargetFragment(html, viewTarget) {
+        let sourceFragment = null;
+        let targetFragment = null;
+
+        try {
+            // Parse the incoming HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Find the source fragment in the parsed document
+            sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
+
+            // If not found, try some fallback strategies
+            if (!sourceFragment) {
+                this.logger?.warn(`Fragment data-view="${viewTarget}" not found, trying fallbacks`);
+
+                // Fallback 1: Try to find by ID (common pattern)
+                sourceFragment = doc.querySelector(`#${viewTarget}`);
+
+                // Fallback 2: If viewTarget is 'main', try common main selectors
+                if (!sourceFragment && viewTarget === 'main') {
+                    sourceFragment = doc.querySelector('main') ||
+                                    doc.querySelector('[role="main"]') ||
+                                    doc.querySelector('#app') ||
+                                    doc.querySelector('.main-content');
+                }
+
+                // Fallback 3: For other targets, try class-based selector
+                if (!sourceFragment) {
+                    sourceFragment = doc.querySelector(`.${viewTarget}`);
+                }
+            }
+
+            // Find the target fragment in the current document
+            targetFragment = document.querySelector(`[data-view="${viewTarget}"]`);
+
+            // Apply same fallback strategies for target
+            if (!targetFragment) {
+                this.logger?.warn(`Target fragment data-view="${viewTarget}" not found in current document, trying fallbacks`);
+
+                targetFragment = document.querySelector(`#${viewTarget}`);
+
+                if (!targetFragment && viewTarget === 'main') {
+                    targetFragment = document.querySelector('main') ||
+                                    document.querySelector('[role="main"]') ||
+                                    document.querySelector('#app') ||
+                                    document.querySelector('.main-content');
+                }
+
+                if (!targetFragment) {
+                    targetFragment = document.querySelector(`.${viewTarget}`);
+                }
+            }
+
+            this.logger?.info('Fragment extraction result', {
+                viewTarget,
+                sourceFound: !!sourceFragment,
+                targetFound: !!targetFragment,
+                sourceSelector: sourceFragment?.tagName + (sourceFragment?.className ? '.' + sourceFragment.className : ''),
+                targetSelector: targetFragment?.tagName + (targetFragment?.className ? '.' + targetFragment.className : '')
+            });
+
+        } catch (error) {
+            this.logger?.error('Error extracting target fragment', {error, viewTarget});
+            throw new Error(`Failed to parse HTML for fragment extraction: ${error.message}`);
+        }
+
+        return { sourceFragment, targetFragment };
+    }
+
+    /**
+     * Update document head metadata when replacing main content
+     */
+    _updateDocumentHead(html) {
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const sourceHead = doc.querySelector('head');
+
+            if (!sourceHead) {
+                this.logger?.warn('No head element found in source HTML');
+                return;
+            }
+
+            this.logger?.group('Updating document head metadata');
+
+            // Define which head elements should be updated
+            const updateableSelectors = [
+                'title',
+                'meta[name="description"]',
+                'meta[name="keywords"]',
+                'meta[name="robots"]',
+                'meta[name="author"]',
+                'meta[property^="og:"]',      // Open Graph tags
+                'meta[name^="twitter:"]',     // Twitter Card tags
+                'meta[property^="article:"]', // Article-specific OG tags
+                'link[rel="canonical"]',
+                'link[rel="alternate"]',
+                'meta[name="theme-color"]'
+            ];
+
+            let updatedCount = 0;
+
+            for (const selector of updateableSelectors) {
+                const sourceElements = sourceHead.querySelectorAll(selector);
+
+                if (sourceElements.length === 0) continue;
+
+                // Handle title specially (only one allowed)
+                if (selector === 'title') {
+                    const sourceTitle = sourceElements[0];
+                    if (sourceTitle && sourceTitle.textContent.trim()) {
+                        document.title = sourceTitle.textContent.trim();
+                        updatedCount++;
+                        this.logger?.info('Updated document title', {
+                            newTitle: document.title
+                        });
+                    }
+                    continue;
+                }
+
+                // Handle canonical link specially (only one should exist)
+                if (selector === 'link[rel="canonical"]') {
+                    // Remove existing canonical links
+                    document.querySelectorAll('link[rel="canonical"]').forEach(el => el.remove());
+
+                    const sourceCanonical = sourceElements[0];
+                    if (sourceCanonical && sourceCanonical.href) {
+                        const newCanonical = document.createElement('link');
+                        newCanonical.rel = 'canonical';
+                        newCanonical.href = sourceCanonical.href;
+                        document.head.appendChild(newCanonical);
+                        updatedCount++;
+                        this.logger?.info('Updated canonical URL', {
+                            canonicalUrl: sourceCanonical.href
+                        });
+                    }
+                    continue;
+                }
+
+                // Handle meta tags
+                for (const sourceElement of sourceElements) {
+                    if (sourceElement.tagName.toLowerCase() === 'meta') {
+                        this._updateMetaTag(sourceElement);
+                        updatedCount++;
+                    } else if (sourceElement.tagName.toLowerCase() === 'link') {
+                        this._updateLinkTag(sourceElement);
+                        updatedCount++;
+                    }
+                }
+            }
+
+            // Emit head update event
+            this.eventBus.emit('page:head-updated', {
+                updatedElements: updatedCount,
+                newTitle: document.title
+            });
+
+            this.logger?.info(`Updated ${updatedCount} head elements`);
+
+        } catch (error) {
+            this.logger?.error('Failed to update document head', {error});
+            this.eventBus.emit('page:head-update-error', {error});
+        } finally {
+            this.logger?.groupEnd();
+        }
+    }
+
+    /**
+     * Update or create a meta tag
+     */
+    _updateMetaTag(sourceMetaTag) {
+        const name = sourceMetaTag.getAttribute('name');
+        const property = sourceMetaTag.getAttribute('property');
+        const content = sourceMetaTag.getAttribute('content');
+
+        if (!content) return; // Skip empty content
+
+        let selector;
+        if (name) {
+            selector = `meta[name="${name}"]`;
+        } else if (property) {
+            selector = `meta[property="${property}"]`;
+        } else {
+            return; // Can't identify the meta tag
+        }
+
+        // Remove existing meta tag(s) with same name/property
+        document.querySelectorAll(selector).forEach(el => el.remove());
+
+        // Create new meta tag
+        const newMeta = document.createElement('meta');
+        if (name) newMeta.setAttribute('name', name);
+        if (property) newMeta.setAttribute('property', property);
+        newMeta.setAttribute('content', content);
+
+        // Copy other relevant attributes
+        ['charset', 'http-equiv', 'scheme'].forEach(attr => {
+            if (sourceMetaTag.hasAttribute(attr)) {
+                newMeta.setAttribute(attr, sourceMetaTag.getAttribute(attr));
+            }
+        });
+
+        document.head.appendChild(newMeta);
+
+        this.logger?.debug('Updated meta tag', {
+            selector,
+            content: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+        });
+    }
+
+    /**
+     * Update or create a link tag
+     */
+    _updateLinkTag(sourceLinkTag) {
+        const rel = sourceLinkTag.getAttribute('rel');
+        const href = sourceLinkTag.getAttribute('href');
+
+        if (!rel || !href) return;
+
+        // Don't update critical link tags
+        const criticalRels = ['stylesheet', 'icon', 'manifest', 'preload', 'prefetch'];
+        if (criticalRels.includes(rel)) {
+            this.logger?.debug('Skipping critical link tag', {rel, href});
+            return;
+        }
+
+        const selector = `link[rel="${rel}"]`;
+
+        // For alternate links, also match hreflang if present
+        const hreflang = sourceLinkTag.getAttribute('hreflang');
+        const fullSelector = hreflang ?
+            `link[rel="${rel}"][hreflang="${hreflang}"]` :
+            selector;
+
+        // Remove existing link(s)
+        document.querySelectorAll(fullSelector).forEach(el => el.remove());
+
+        // Create new link tag
+        const newLink = document.createElement('link');
+        newLink.setAttribute('rel', rel);
+        newLink.setAttribute('href', href);
+
+        // Copy other relevant attributes
+        ['hreflang', 'type', 'media', 'sizes'].forEach(attr => {
+            if (sourceLinkTag.hasAttribute(attr)) {
+                newLink.setAttribute(attr, sourceLinkTag.getAttribute(attr));
+            }
+        });
+
+        document.head.appendChild(newLink);
+
+        this.logger?.debug('Updated link tag', {rel, href});
+    }
+
+    /**
+     * Copy relevant attributes from source fragment to target fragment
+     */
+    _copyFragmentAttributes(sourceFragment, targetFragment) {
+        // Attributes to copy (excluding core structural ones)
+        const attributesToCopy = [
+            'data-state',
+            'data-loading',
+            'data-error',
+            'data-version',
+            'aria-live',
+            'aria-label',
+            'aria-describedby'
+        ];
+
+        attributesToCopy.forEach(attr => {
+            if (sourceFragment.hasAttribute(attr)) {
+                targetFragment.setAttribute(attr, sourceFragment.getAttribute(attr));
+            } else {
+                targetFragment.removeAttribute(attr);
+            }
+        });
+
+        // Copy CSS classes if source has any (but preserve existing target classes that might be needed)
+        if (sourceFragment.className) {
+            // Keep important target classes like component mount states
+            const preserveClasses = Array.from(targetFragment.classList).filter(cls =>
+                cls.startsWith('component-') ||
+                cls.startsWith('router-') ||
+                cls.startsWith('page-')
+            );
+
+            targetFragment.className = sourceFragment.className;
+            preserveClasses.forEach(cls => targetFragment.classList.add(cls));
         }
     }
 
@@ -347,7 +676,8 @@ export class PageManager {
         const {
             addedNodes = null,
             priority = 'normal',
-            trigger = 'initial'
+            trigger = 'initial',
+            fragmentTarget = null  // New option to track which fragment is being mounted
         } = options;
 
         const startTime = this.options.trackPerformance ? performance.now() : 0;
@@ -355,7 +685,9 @@ export class PageManager {
         this.logger?.group('Mounting components', {
             priority,
             trigger,
-            addedNodesCount: addedNodes?.length || 0
+            fragmentTarget,
+            addedNodesCount: addedNodes?.length || 0,
+            rootSelector: root.tagName + (root.id ? '#' + root.id : '') + (root.className ? '.' + root.className.split(' ')[0] : '')
         });
 
         try {
@@ -369,13 +701,14 @@ export class PageManager {
 
             for (const config of componentsToMount) {
                 try {
-                    this._mountComponentConfig(config, root, addedNodes);
+                    this._mountComponentConfig(config, root, addedNodes, fragmentTarget);
                 } catch (error) {
                     this.logger?.error(`Failed to mount component ${config.name}`, {error, config});
                     this.eventBus.emit('page:component-mount-error', {
                         componentName: config.name,
                         error,
-                        config
+                        config,
+                        fragmentTarget
                     });
                 }
             }
@@ -385,7 +718,7 @@ export class PageManager {
                 const duration = performance.now() - startTime;
                 this.performanceMetrics.totalMountTime += duration;
                 this.performanceMetrics.averageMountTime =
-                    this.performanceMetrics.totalMountTime / this.performanceMetrics.fragmentReplacements;
+                    this.performanceMetrics.totalMountTime / Math.max(1, this.performanceMetrics.fragmentReplacements);
             }
 
         } finally {
@@ -394,9 +727,9 @@ export class PageManager {
     }
 
     /**
-     * Mount a specific component configuration
+     * Enhanced component mounting with fragment awareness
      */
-    _mountComponentConfig(config, root, addedNodes) {
+    _mountComponentConfig(config, root, addedNodes, fragmentTarget) {
         const scope = addedNodes || [root];
         const elements = scope.flatMap(node => {
             // Handle both direct matches and descendant matches
@@ -422,12 +755,19 @@ export class PageManager {
 
                 instance.mount(element);
                 element.setAttribute('data-component-mounted', config.name);
+
+                // Track which fragment this component belongs to
+                if (fragmentTarget) {
+                    element.setAttribute('data-fragment-target', fragmentTarget);
+                }
+
                 mountedCount++;
 
                 this.eventBus.emit('page:component-mounted', {
                     componentName: config.name,
                     element,
-                    instance
+                    instance,
+                    fragmentTarget
                 });
 
             } catch (error) {
@@ -437,7 +777,9 @@ export class PageManager {
 
         if (mountedCount > 0) {
             this.performanceMetrics.componentMounts += mountedCount;
-            this.logger?.info(`Mounted ${mountedCount} instances of ${config.name}`);
+            this.logger?.info(`Mounted ${mountedCount} instances of ${config.name}`, {
+                fragmentTarget
+            });
         }
     }
 
@@ -458,6 +800,7 @@ export class PageManager {
                         try {
                             instance.unmount(element);
                             element.removeAttribute('data-component-mounted');
+                            element.removeAttribute('data-fragment-target');
                             unmountedCount++;
 
                             this.eventBus.emit('page:component-unmounted', {
@@ -819,9 +1162,7 @@ export class PageManager {
             states[comp.name] = {
                 status: loadingCount > 0 ? 'loading' : mountedCount > 0 ? 'loaded' : 'not-loaded',
                 mountedElements: mountedCount,
-                loadingElements: loadingCount,
-                //mountTime: this.getAverageMountTime(comp.name), // if you track this
-                //errorCount: this.getErrorCount(comp.name) // if you track this
+                loadingElements: loadingCount
             };
         });
         return states;
@@ -829,13 +1170,11 @@ export class PageManager {
 
     getMetrics() {
         return {
-            componentMounts: this.stats?.componentMounts || 0,
-            componentUnmounts: this.stats?.componentUnmounts || 0,
-            averageMountTime: this.stats?.averageMountTime || 0,
-            circuitBreakersOpen: this.stats?.circuitBreakersOpen || 0,
-            pooledInstances: this.stats?.pooledInstances || 0,
-            memoryLeaks: this.stats?.memoryLeaks || 0,
-            healthChecksPassed: this.stats?.healthChecksPassed || 0
+            componentMounts: this.performanceMetrics?.componentMounts || 0,
+            componentUnmounts: this.performanceMetrics?.componentUnmounts || 0,
+            averageMountTime: this.performanceMetrics?.averageMountTime || 0,
+            fragmentReplacements: this.performanceMetrics?.fragmentReplacements || 0,
+            totalMountTime: this.performanceMetrics?.totalMountTime || 0
         };
     }
 
@@ -867,26 +1206,28 @@ export class PageManager {
         this.unmountAllWithin(this.container);
 
         // Clean up component pool
-        for (const [componentName, pool] of this._componentPool) {
-            for (const instance of pool) {
-                if (typeof instance.destroy === 'function') {
-                    try {
-                        instance.destroy();
-                    } catch (error) {
-                        this.logger?.warn(`Error destroying pooled instance of ${componentName}`, {error});
+        if (this._componentPool) {
+            for (const [componentName, pool] of this._componentPool) {
+                for (const instance of pool) {
+                    if (typeof instance.destroy === 'function') {
+                        try {
+                            instance.destroy();
+                        } catch (error) {
+                            this.logger?.warn(`Error destroying pooled instance of ${componentName}`, {error});
+                        }
                     }
                 }
             }
+            this._componentPool.clear();
         }
 
         // Clear all tracking data
         this.instances.clear();
         this.loadingPromises.clear();
         this.retryCount.clear();
-        this._componentPool.clear();
-        this._mountedElements.clear();
-        this._errorCounts.clear();
-        this._circuitBreakers.clear();
+        if (this._mountedElements) this._mountedElements.clear();
+        if (this._errorCounts) this._errorCounts.clear();
+        if (this._circuitBreakers) this._circuitBreakers.clear();
 
         // Remove event listeners
         this.eventBus.off('router:navigate-success');

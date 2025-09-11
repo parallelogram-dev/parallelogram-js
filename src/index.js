@@ -7,6 +7,7 @@ export { RouterManager } from './managers/RouterManager.js';
 export { PageManager } from './managers/PageManager.js';
 export { AlertManager } from './managers/AlertManager.js';
 
+export { PSelect } from './components/PSelect.js';
 export { PToasts } from './components/PToasts.js';
 export { PModal } from './components/PModal.js';
 
@@ -15,3 +16,4 @@ export { Lazyimage } from './components/Lazyimage.js';
 export { Modal } from './components/Modal.js';
 export { Tabs } from './components/Tabs.js';
 export { Toast } from './components/Toast.js';
+export { Toggle } from './components/Toggle.js';

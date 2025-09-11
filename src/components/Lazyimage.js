@@ -20,7 +20,6 @@ export class Lazyimage extends BaseComponent {
 
         const src = this._getDataAttr(element, 'lazyimage-src');
         const threshold = this._getDataAttr(element, 'lazyimage-threshold', Lazyimage.defaults.threshold);
-        const fadeIn = this._getDataAttr(element, 'lazyimage-fadein', Lazyimage.defaults.fadeIn);
         const preferNative = this._getDataAttr(element, 'lazyimage-native', Lazyimage.defaults.preferNativeLoading);
 
         if (!src) {
@@ -30,9 +29,9 @@ export class Lazyimage extends BaseComponent {
 
         // Check if we should use native loading="lazy"
         if (preferNative && this._shouldUseNativeLoading(element, threshold)) {
-            this._setupNativeLoading(element, src, {fadeIn}, state);
+            this._setupNativeLoading(element, src, {}, state);
         } else {
-            this._setupIntersectionObserver(element, src, threshold, {fadeIn}, state);
+            this._setupIntersectionObserver(element, src, threshold, {}, state);
         }
 
         state.src = src;
@@ -155,15 +154,6 @@ export class Lazyimage extends BaseComponent {
 
         element.classList.remove(Lazyimage.defaults.placeholderClass, Lazyimage.defaults.errorClass);
         element.classList.add(Lazyimage.defaults.loadedClass);
-
-        // Apply fade in effect
-        if (options.fadeIn) {
-            element.style.opacity = '0';
-            element.style.transition = 'opacity 0.3s ease-in-out';
-            requestAnimationFrame(() => {
-                element.style.opacity = '1';
-            });
-        }
 
         // Dispatch events
         this._dispatch(element, 'lazy:loaded', {src, strategy: state.strategy});

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Components - Enhancement Framework</title>
+    <link rel="stylesheet" href="demo.css">
+    <link rel="stylesheet" href="dist/styles/index.min.css">
+    <style>
+        /* Navigation styles */
+        nav {
+            background: #1f2937;
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .nav__container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav__container h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .nav__list {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 2rem;
+        }
+
+        .nav__link {
+            color: #d1d5db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav__link:hover {
+            color: white;
+        }
+
+        .nav__link[data-router-enhanced]::after {
+            content: '⚡';
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .nav__link[aria-current="page"] {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        /* Page content styles */
+        .page-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.125rem;
+            color: #6b7280;
+        }
+
+        .demo__section {
+            margin-bottom: 4rem;
+            padding: 2rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .demo__section h2 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .button__group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary { background: #0ea5e9; color: white; }
+        .btn-primary:hover { background: #0284c7; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-accent { background: #8b5cf6; color: white; }
+        .btn-accent:hover { background: #7c3aed; }
+        .btn-outline { background: transparent; color: #0ea5e9; border: 1px solid #0ea5e9; }
+        .btn-outline:hover { background: #0ea5e9; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-info { background: #06b6d4; color: white; }
+        .btn-info:hover { background: #0891b2; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .btn__small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn__small:hover { background: #e5e7eb; }
+
+        .feature-details {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .feature-details h3 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+
+        .form-demo form {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .form-demo label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .event__log {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .event__log-header {
+            background: #374151;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event__log-content {
+            background: white;
+        }
+
+        .event__log-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .event__log-item:last-child {
+            border-bottom: none;
+        }
+
+        .event__log-item pre {
+            background: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0.5rem 0 0 0;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav__container">
+            <h1>Enhancement Framework</h1>
+            <ul class="nav__list">
+                <li><a href="/" class="nav__link">Home</a></li>
+                <li><a href="/ui-components" class="nav__link" aria-current="page">UI Components</a></li>
+                <li><a href="/media" class="nav__link">Media</a></li>
+                <li><a href="/interactive" class="nav__link">Interactive</a></li>
+                <li><a href="/performance" class="nav__link">Performance</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="app" class="page-content">
+        <header class="page-header">
+            <h1>UI Components</h1>
+            <p>Accessible modals, toast notifications, and enhanced form controls.</p>
+        </header>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Enhanced Modal System</h2>
+            <p>Accessible modals with focus management, slot-based content, and multiple sizes:</p>
+
+            <div class="button__group">
+                <button class="btn btn-primary" data-modal data-modal-target="#info-modal">Info Modal</button>
+                <button class="btn btn-secondary" data-modal data-modal-target="#form-modal">Form Modal</button>
+                <button class="btn btn-accent" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
+                <button class="btn btn-outline" data-modal data-modal-target="#large-modal">Large Modal</button>
+            </div>
+
+            <div class="feature-details">
+                <h3>Modal Features</h3>
+                <ul>
+                    <li><strong>Accessibility:</strong> Full ARIA support, focus management, keyboard navigation</li>
+                    <li><strong>Flexible Content:</strong> Slot-based architecture for title, content, and actions</li>
+                    <li><strong>Multiple Sizes:</strong> Small, medium, large, and fullscreen options</li>
+                    <li><strong>Backdrop Control:</strong> Configurable backdrop clicking and escape key handling</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Toast Notification System</h2>
+            <p>Toast notifications that integrate seamlessly with the XToasts web component:</p>
+
+            <div class="button__group">
+                <button class="btn btn-success"
+                        data-toast-trigger="success"
+                        data-toast-message="Component loaded successfully!">Success Toast</button>
+
+                <button class="btn btn-info"
+                        data-toast-trigger="info"
+                        data-toast-message="Router navigation completed">Info Toast</button>
+
+                <button class="btn btn-warning"
+                        data-toast-trigger="warn"
+                        data-toast-message="Component loading is taking longer than expected">Warning Toast</button>
+
+                <button class="btn btn-danger"
+                        data-toast-trigger="error"
+                        data-toast-message="Failed to load component - check console">Error Toast</button>
+            </div>
+
+            <div class="feature-details">
+                <h3>Toast Features</h3>
+                <ul>
+                    <li><strong>XToasts Integration:</strong> Works with existing XToasts web component</li>
+                    <li><strong>AlertManager Bridge:</strong> Seamless integration with AlertManager system</li>
+                    <li><strong>Event Bus:</strong> Emits events for monitoring and logging</li>
+                    <li><strong>Graceful Fallback:</strong> Falls back to browser alerts if toast system unavailable</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Enhanced Select Component</h2>
+            <p>Custom select component with search, accessibility, and form integration:</p>
+
+            <div class="form-demo">
+                <form>
+                    <div>
+                        <label for="country-select">Country:</label>
+                        <p-select name="country" placeholder="Choose a country" id="country-select">
+                            <option value="">-- Select Country --</option>
+                            <option value="us">United States</option>
+                            <option value="ca">Canada</option>
+                            <option value="uk">United Kingdom</option>
+                            <option value="de" disabled>Germany (unavailable)</option>
+                            <option value="fr">France</option>
+                            <option value="jp">Japan</option>
+                        </p-select>
+                    </div>
+
+                    <div>
+                        <label for="priority-select">Priority:</label>
+                        <p-select name="priority" placeholder="Select priority" required id="priority-select">
+                            <option value="">-- Select Priority --</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </p-select>
+                    </div>
+
+                    <div>
+                        <label for="category-select">Category:</label>
+                        <p-select name="category" placeholder="Choose category" id="category-select">
+                            <optgroup label="Technology">
+                                <option value="web-dev">Web Development</option>
+                                <option value="mobile-dev">Mobile Development</option>
+                                <option value="devops">DevOps</option>
+                            </optgroup>
+                            <optgroup label="Design">
+                                <option value="ui-design">UI Design</option>
+                                <option value="ux-design">UX Design</option>
+                                <option value="graphic-design">Graphic Design</option>
+                            </optgroup>
+                        </p-select>
+                    </div>
+                </form>
+
+                <button type="submit" class="btn btn-primary" onclick="handleFormSubmit(event)">Submit Form</button>
+            </div>
+
+            <div class="feature-details">
+                <h3>Select Component Features</h3>
+                <ul>
+                    <li><strong>Native Option Elements:</strong> Uses standard HTML option and optgroup elements</li>
+                    <li><strong>Form Integration:</strong> Full form association with validation support</li>
+                    <li><strong>Accessibility:</strong> Screen reader support, keyboard navigation</li>
+                    <li><strong>Visual Feedback:</strong> Disabled states, hover effects, focus indicators</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Real-time Event System</h2>
+            <p>All UI components communicate through a central event bus:</p>
+
+            <div id="event-log" class="event__log">
+                <div class="event__log-header">
+                    <strong>UI Component Events</strong>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="clearEventLog()" class="btn__small">Clear</button>
+                        <button onclick="exportEventLog()" class="btn__small">Export</button>
+                    </div>
+                </div>
+                <div class="event__log-content" style="max-height: 300px; overflow-y: auto;">
+                    <div class="event__log-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <strong>page:loaded</strong>
+                                <pre>{"page": "/ui-components", "components": ["modal", "toast", "select"]}</pre>
+                            </div>
+                            <small style="color: #999; margin-left: 1rem;">Just now</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Enhanced Modal containers using proper x-modal syntax -->
+    <p-modal id="info-modal" data-modal-size="medium" data-modal-closable="true">
+        <h2 slot="title">UI Components Information</h2>
+        <div>
+            <p>This page demonstrates the UI components available in the Enhancement Framework:</p>
+            <ul>
+                <li><strong>Modals:</strong> Accessible dialog components with slot-based content</li>
+                <li><strong>Toasts:</strong> Notification system with XToasts integration</li>
+                <li><strong>Select:</strong> Enhanced select controls with search and accessibility</li>
+                <li><strong>Event System:</strong> Real-time component communication</li>
+            </ul>
+            <p>All components are progressively enhanced and work without JavaScript for basic functionality.</p>
+        </div>
+        <div slot="actions">
+            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+            <button class="modal__button modal__button--primary" data-modal data-modal-target="#form-modal">Open Form</button>
+        </div>
+    </p-modal>
+
+    <p-modal id="form-modal" data-modal-size="medium" data-modal-closable="true">
+        <h2 slot="title">Enhanced Contact Form</h2>
+        <div>
+            <form data-enhanced-form id="contact-form">
+                <div style="margin-bottom: 1rem;">
+                    <label for="contact-name" style="display: block; margin-bottom: 0.5rem;">Name:</label>
+                    <input type="text" id="contact-name" name="name" required
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="contact-email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
+                    <input type="email" id="contact-email" name="email" required
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="contact-priority" style="display: block; margin-bottom: 0.5rem;">Priority:</label>
+                    <p-select name="inquiry-priority" placeholder="Select priority" id="contact-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </p-select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="contact-message" style="display: block; margin-bottom: 0.5rem;">Message:</label>
+                    <textarea id="contact-message" name="message" rows="4" required
+                              style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+            </form>
+        </div>
+        <div slot="actions">
+            <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
+            <button type="submit" form="contact-form" class="modal__button modal__button--primary">Send Message</button>
+        </div>
+    </p-modal>
+
+    <p-modal id="gallery-modal" data-modal-size="large" data-modal-closable="true">
+        <h2 slot="title">UI Component Gallery</h2>
+        <div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📋</div>
+                    <h4 style="margin: 0.5rem 0;">Modals</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Accessible dialog components</p>
+                </div>
+
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">💬</div>
+                    <h4 style="margin: 0.5rem 0;">Toasts</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Notification system</p>
+                </div>
+
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📝</div>
+                    <h4 style="margin: 0.5rem 0;">Forms</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Enhanced form controls</p>
+                </div>
+
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔄</div>
+                    <h4 style="margin: 0.5rem 0;">Events</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Real-time communication</p>
+                </div>
+            </div>
+        </div>
+        <div slot="actions">
+            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+        </div>
+    </p-modal>
+
+    <p-modal id="large-modal" data-modal-size="large" data-modal-closable="true">
+        <h2 slot="title">Large Modal Example</h2>
+        <div>
+            <h3>Component Architecture Overview</h3>
+            <p>The Enhancement Framework follows a component-based architecture with these key principles:</p>
+
+            <h4>Progressive Enhancement</h4>
+            <p>All components work without JavaScript and are enhanced when the framework loads.</p>
+
+            <h4>Event-Driven Communication</h4>
+            <p>Components communicate through a central event bus for loose coupling and monitoring.</p>
+
+            <h4>Lifecycle Management</h4>
+            <p>The PageManager handles component mounting, unmounting, and cleanup automatically.</p>
+        </div>
+        <div slot="actions">
+            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+            <button class="modal__button modal__button--primary" onclick="window.location.href='/performance'">View Performance</button>
+        </div>
+    </p-modal>
+
+    <!-- Toast container -->
+    <p-toasts placement="top-right"></p-toasts>
+
+    <!-- Demo functionality scripts -->
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            const selects = document.querySelectorAll('p-select[name]');
+
+            selects.forEach(select => {
+                if (select.name && select.getValue()) {
+                    formData.set(select.name, select.getValue());
+                }
+            });
+
+            const data = Object.fromEntries(formData);
+            console.log('Form submitted with data:', data);
+
+            if (window.Toast && window.Toast.show) {
+                window.Toast.show(`Form submitted successfully!`, 'success');
+            } else {
+                alert(`Form submitted! Data: ${JSON.stringify(data)}`);
+            }
+        }
+
+        function clearEventLog() {
+            const eventLogContent = document.querySelector('.event__log-content');
+            if (eventLogContent) {
+                eventLogContent.innerHTML = '<div class="event__log-item"><div><em>Event log cleared</em></div></div>';
+            }
+        }
+
+        function exportEventLog() {
+            const eventLog = document.querySelector('.event__log-content');
+            if (!eventLog) return;
+
+            const events = Array.from(eventLog.children).map(child => ({
+                timestamp: child.querySelector('small')?.textContent,
+                event: child.querySelector('strong')?.textContent,
+                data: child.querySelector('pre')?.textContent
+            }));
+
+            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ui-events-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function addEventToLog(eventType, data) {
+            const eventLogContent = document.querySelector('.event__log-content');
+            if (!eventLogContent) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event__log-item';
+            eventElement.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <strong>${eventType}</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                    <small style="color: #999; margin-left: 1rem;">${timestamp}</small>
+                </div>
+            `;
+
+            eventLogContent.insertBefore(eventElement, eventLogContent.firstChild);
+
+            const items = eventLogContent.querySelectorAll('.event__log-item');
+            if (items.length > 10) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        // Listen for UI component events
+        document.addEventListener('p-select:change', (e) => {
+            addEventToLog('p-select:change', e.detail);
+        });
+
+        document.addEventListener('modal:open', (e) => {
+            addEventToLog('modal:open', { modalId: e.target.id });
+        });
+
+        document.addEventListener('modal:close', (e) => {
+            addEventToLog('modal:close', { modalId: e.target.id });
+        });
+
+        // Page-specific component mounting notification
+        if (window.eventBus) {
+            window.eventBus.emit('page:loaded', {
+                page: '/ui-components',
+                components: ['modal', 'toast', 'select'],
+                timestamp: performance.now()
+            });
+        }
+    </script>
+
+    <!-- Load the framework -->
+    <script type="module" src="demo.js"></script>
+</body>
+</html>
