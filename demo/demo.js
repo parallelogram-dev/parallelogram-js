@@ -20,6 +20,7 @@ async function initFramework() {
 
         const componentRegistry = registry
             .component('lazyimage', '[data-lazyimage]:not([data-lazyimage-complete])')
+            .component('toggle', '[data-toggle]')
             .component('carousel', '[data-carousel]', {
                 dependsOn: ['lazyimage']
             })
@@ -58,12 +59,15 @@ async function initFramework() {
         });
 
         const pageManager = new PageManager({
-            containerSelector: '#app',
+            containerSelector: '[data-view="main"]',
             registry: componentRegistry,
             eventBus,
             logger,
             router,
             options: {
+                targetGroups: {
+                    'main': ['main', 'navbar'], // When 'main' is requested, also update nav and breadcrumbs
+                },
                 enableComponentPooling: true,
                 enableHealthMonitoring: true,
                 trackPerformance: true
