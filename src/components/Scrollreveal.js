@@ -68,6 +68,9 @@ export default class Scrollreveal extends BaseComponent {
         // Set initial state
         this._setInitialState(element, state);
 
+        // Mark as enhanced for status tracking
+        element.setAttribute('data-scrollreveal-enhanced', 'true');
+
         // Create observer with element-specific threshold if needed
         if (state.threshold !== Scrollreveal.defaults.threshold) {
             state.customObserver = new IntersectionObserver(

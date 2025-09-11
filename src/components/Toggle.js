@@ -92,6 +92,9 @@ export default class Toggle extends BaseComponent {
         const clickHandler = (e) => this._handleClick(e, element, state);
         element.addEventListener('click', clickHandler);
 
+        // Mark as enhanced for status tracking
+        element.setAttribute('data-toggle-enhanced', 'true');
+
         // Set up ARIA attributes
         element.setAttribute('aria-expanded', String(state.isOpen));
         if (!element.getAttribute('aria-controls')) {

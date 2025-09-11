@@ -167,6 +167,9 @@ export default class Videoplay extends BaseComponent {
         // Set up video properties
         this._setupVideo(video, state);
 
+        // Mark as enhanced for status tracking
+        element.setAttribute('data-videoplay-enhanced', 'true');
+
         // Start observing
         this.observer.observe(element);
 

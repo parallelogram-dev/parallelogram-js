@@ -1,12 +1,23 @@
 /**
  * BaseComponent - Production-ready base class with state management
+ *
+ * Provides lifecycle helpers, state tracking per element, data-attribute
+ * parsing, and event dispatching. Components should extend this class and
+ * implement _init(element) and optionally update(element).
+ *
+ * @typedef {Object} ComponentState
+ * @property {AbortController} controller - Abort controller for listeners
+ * @property {Function} cleanup - Cleanup function called on unmount
  */
 export class BaseComponent {
   constructor({ eventBus, logger, router }) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
+    // Primary storage for element states
     this.elements = new WeakMap();
+    // Backward-compat alias for older components expecting `states`
+    this.states = this.elements;
     this._keys = null;
   }
 

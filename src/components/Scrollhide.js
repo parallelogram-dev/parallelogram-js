@@ -111,6 +111,9 @@ export default class Scrollhide extends BaseComponent {
         // Initial position check
         this._updateElementState(element, state);
 
+        // Mark as enhanced for status tracking
+        element.setAttribute('data-scrollhide-enhanced', 'true');
+
         this.eventBus?.emit('scrollhide:mount', {
             element,
             target,
