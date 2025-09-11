@@ -45,6 +45,10 @@ export default class Scrollreveal extends BaseComponent {
     }
 
     _init(element) {
+        if (this.revealIndex > 0 && document.querySelectorAll('[data-scrollreveal-enhanced="true"]').length === 0) {
+            this.resetRevealOrder();
+        }
+
         const state = super._init(element);
 
         // Get configuration from data attributes
