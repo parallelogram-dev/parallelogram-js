@@ -26,7 +26,7 @@
  */
 
 import { BaseComponent } from '@peptolab/parallelogram';
-import { PModal } from './PModal.js';
+import { default as PModal } from './PModal.js';
 
 export default class Modal extends BaseComponent {
     /**
