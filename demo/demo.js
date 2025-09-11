@@ -28,7 +28,10 @@ async function initFramework() {
             .component('toast', '[data-toast-trigger][data-toast-message]', {
                 exportName: 'Toast'
             })
+            .component('scrollhide', '[data-scrollhide]')
+            .component('scrollreveal', '[data-scrollreveal]')
             .component('tabs', '[data-tabs]')
+            .component('videoplay', '[data-videoplay]')
             .build();
 
         // Validate registry with logging
