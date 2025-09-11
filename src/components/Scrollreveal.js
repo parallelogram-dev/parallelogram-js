@@ -1,81 +1,34 @@
 import { BaseComponent } from '@peptolab/parallelogram';
+
 /**
- * Scrollreveal Component
+ * Scrollreveal Component with Global Staggering
  *
- * Progressive enhancement for scroll-triggered reveal animations.
- * Integrates with TransitionManager for flexible CSS or JS-based animations.
- *
- * @example
- * HTML:
- * <!-- Basic scroll reveal -->
- * <div data-scrollreveal>
- *   <h2>This will fade in when scrolled into view</h2>
- * </div>
- *
- * <!-- Custom animation configuration -->
- * <section data-scrollreveal
- *          data-reveal-threshold="0.2"
- *          data-reveal-delay="100"
- *          data-transition-y="2rem"
- *          data-transition-duration="500">
- *   Content with custom reveal settings
- * </section>
- *
- * <!-- CSS-based animation -->
- * <div data-scrollreveal
- *      data-scrollreveal-class="slide-up"
- *      data-reveal-once="false">
- *   Uses CSS animation classes
- * </div>
- *
- * <!-- Staggered reveals -->
- * <div data-scrollreveal data-reveal-stagger="150">
- *   <div data-scrollreveal-item>Item 1</div>
- *   <div data-scrollreveal-item>Item 2</div>
- *   <div data-scrollreveal-item>Item 3</div>
- * </div>
- *
- * JavaScript (standalone):
- * import { Scrollreveal } from './components/Scrollreveal.js';
- * const scrollreveal = new Scrollreveal({ transitionManager });
- * document.querySelectorAll('[data-scrollreveal]')
- *   .forEach(element => scrollreveal.mount(element));
+ * Now supports staggering between multiple data-scrollreveal elements
  */
 export default class Scrollreveal extends BaseComponent {
-    /**
-     * Default configuration for scrollreveal component
-     * @returns {Object} Default config
-     */
     static get defaults() {
         return {
-            threshold: 0.1,          // Intersection threshold (0.0 to 1.0)
-            rootMargin: '0px',       // Root margin for intersection observer
-            once: true,              // Only animate once when first seen
-            delay: 0,                // Delay before animation starts (ms)
-            stagger: 0,              // Stagger delay for multiple items (ms)
-            initialState: 'hidden'   // Initial state: 'hidden' or 'visible'
+            threshold: 0.1,
+            rootMargin: '0px',
+            once: true,
+            delay: 0,
+            globalStagger: 0,        // NEW: Stagger delay between separate elements
+            initialState: 'hidden'
         };
     }
 
-    /**
-     * Constructor
-     * @param {Object} options - Component options
-     * @param {Object} options.transitionManager - TransitionManager instance
-     */
     constructor(options = {}) {
         super(options);
-
-        // TransitionManager is optional if using CSS classes
         this.transitionManager = options.transitionManager;
 
-        // Create intersection observer
+        // Track all elements for global staggering
+        this.revealQueue = [];
+        this.globalStaggerDelay = options.globalStagger || 0;
+        this.revealIndex = 0;
+
         this._createObserver();
     }
 
-    /**
-     * Create intersection observer for scroll detection
-     * @private
-     */
     _createObserver() {
         const observerOptions = {
             root: null,
@@ -91,11 +44,6 @@ export default class Scrollreveal extends BaseComponent {
         this.logger?.info('Scrollreveal intersection observer created', observerOptions);
     }
 
-    /**
-     * Initialize the scrollreveal functionality on an element
-     * @param {HTMLElement} element - Element with data-scrollreveal attribute
-     * @returns {Object} State object for this element
-     */
     _init(element) {
         const state = super._init(element);
 
@@ -103,21 +51,21 @@ export default class Scrollreveal extends BaseComponent {
         const threshold = this._getDataAttr(element, 'reveal-threshold', Scrollreveal.defaults.threshold);
         const once = this._getDataAttr(element, 'reveal-once', Scrollreveal.defaults.once);
         const delay = this._getDataAttr(element, 'reveal-delay', Scrollreveal.defaults.delay);
-        const stagger = this._getDataAttr(element, 'reveal-stagger', Scrollreveal.defaults.stagger);
+        const globalStagger = this._getDataAttr(element, 'reveal-global-stagger', this.globalStaggerDelay);
         const initialState = this._getDataAttr(element, 'reveal-initial', Scrollreveal.defaults.initialState);
 
         // Store state
         state.threshold = parseFloat(threshold);
         state.once = Boolean(once);
         state.delay = parseInt(delay, 10);
-        state.stagger = parseInt(stagger, 10);
+        state.globalStagger = parseInt(globalStagger, 10);
         state.initialState = initialState;
         state.hasBeenRevealed = false;
         state.isRevealing = false;
+        state.revealOrder = null; // Will be set when element enters viewport
 
-        // Find reveal items (for staggered animations)
-        const items = element.querySelectorAll('[data-scrollreveal-item]');
-        state.items = items.length > 0 ? Array.from(items) : [element];
+        // For global staggering, each element is treated as a single item
+        state.items = [element];
 
         // Set initial state
         this._setInitialState(element, state);
@@ -146,61 +94,49 @@ export default class Scrollreveal extends BaseComponent {
             } else {
                 this.observer.unobserve(element);
             }
+
+            // Remove from reveal queue
+            this.revealQueue = this.revealQueue.filter(item => item.element !== element);
+
             originalCleanup();
         };
 
         this.eventBus?.emit('scrollreveal:mount', {
             element,
-            itemCount: state.items.length,
             threshold: state.threshold,
+            globalStagger: state.globalStagger,
             timestamp: performance.now()
         });
 
         this.logger?.info('Scrollreveal initialized', {
             element,
-            itemCount: state.items.length,
             threshold: state.threshold,
             once: state.once,
-            stagger: state.stagger
+            globalStagger: state.globalStagger
         });
 
         return state;
     }
 
-    /**
-     * Set initial state for reveal elements
-     * @private
-     * @param {HTMLElement} element - Container element
-     * @param {Object} state - Component state
-     */
     _setInitialState(element, state) {
         if (state.initialState === 'hidden') {
-            state.items.forEach(item => {
-                // Check if using CSS class animation
-                const revealClass = item.dataset.scrollrevealClass ||
-                                  element.dataset.scrollrevealClass;
+            // Check if using CSS class animation
+            const revealClass = element.dataset.scrollrevealClass;
 
-                if (!revealClass) {
-                    // Only set inline styles if not using CSS classes
-                    item.style.opacity = '0';
+            if (!revealClass) {
+                // Only set inline styles if not using CSS classes
+                element.style.opacity = '0';
 
-                    // Get transition settings for initial transform
-                    const y = item.dataset.transitionY ||
-                             (this.transitionManager?.defaults?.y || '1rem');
-                    item.style.transform = `translateY(${y})`;
-                }
+                // Get transition settings for initial transform
+                const y = element.dataset.transitionY || '1rem';
+                element.style.transform = `translateY(${y})`;
+            }
 
-                // Mark as not yet revealed
-                item.setAttribute('data-reveal-state', 'hidden');
-            });
+            // Mark as not yet revealed
+            element.setAttribute('data-reveal-state', 'hidden');
         }
     }
 
-    /**
-     * Handle intersection observer entries
-     * @private
-     * @param {IntersectionObserverEntry[]} entries - Observer entries
-     */
     _handleIntersection(entries) {
         entries.forEach(entry => {
             const element = entry.target;
@@ -209,7 +145,13 @@ export default class Scrollreveal extends BaseComponent {
             if (!state) return;
 
             if (entry.isIntersecting && !state.hasBeenRevealed && !state.isRevealing) {
-                this._revealElement(element, state);
+                // Add to reveal queue for global staggering
+                if (state.globalStagger > 0) {
+                    this._addToRevealQueue(element, state);
+                } else {
+                    // Reveal immediately if no global stagger
+                    this._revealElement(element, state);
+                }
             } else if (!entry.isIntersecting && !state.once && state.hasBeenRevealed) {
                 this._hideElement(element, state);
             }
@@ -217,35 +159,82 @@ export default class Scrollreveal extends BaseComponent {
     }
 
     /**
-     * Reveal an element with animation
+     * Add element to global reveal queue for staggered animation
      * @private
-     * @param {HTMLElement} element - Container element
+     * @param {HTMLElement} element - Element to reveal
      * @param {Object} state - Component state
      */
-    async _revealElement(element, state) {
+    _addToRevealQueue(element, state) {
+        // Assign reveal order
+        state.revealOrder = this.revealIndex++;
+
+        // Add to queue
+        this.revealQueue.push({
+            element,
+            state,
+            timestamp: performance.now()
+        });
+
+        // Process the queue
+        this._processRevealQueue();
+    }
+
+    /**
+     * Process the reveal queue with global staggering
+     * @private
+     */
+    async _processRevealQueue() {
+        // Sort queue by reveal order
+        this.revealQueue.sort((a, b) => a.state.revealOrder - b.state.revealOrder);
+
+        // Process each item with stagger delay
+        for (let i = 0; i < this.revealQueue.length; i++) {
+            const { element, state } = this.revealQueue[i];
+
+            if (state.isRevealing || state.hasBeenRevealed) continue;
+
+            // Calculate total delay: element delay + global stagger
+            const totalDelay = state.delay + (state.revealOrder * state.globalStagger);
+
+            // Reveal with delay
+            setTimeout(() => {
+                if (!state.hasBeenRevealed && !state.isRevealing) {
+                    this._revealElement(element, state, false); // Don't apply element delay again
+                }
+            }, totalDelay);
+        }
+    }
+
+    /**
+     * Reveal an element with animation
+     * @private
+     * @param {HTMLElement} element - Element to reveal
+     * @param {Object} state - Component state
+     * @param {boolean} applyDelay - Whether to apply the element's delay
+     */
+    async _revealElement(element, state, applyDelay = true) {
         state.isRevealing = true;
 
         this.eventBus?.emit('scrollreveal:reveal-start', {
             element,
-            itemCount: state.items.length,
+            revealOrder: state.revealOrder,
             timestamp: performance.now()
         });
 
         try {
-            // Apply base delay
-            if (state.delay > 0) {
+            // Apply element-specific delay only if not already handled by global stagger
+            if (applyDelay && state.delay > 0) {
                 await this._delay(state.delay);
             }
 
-            // Animate items (with stagger if specified)
-            if (state.stagger > 0 && state.items.length > 1) {
-                await this._revealWithStagger(state.items, state.stagger, element);
-            } else {
-                await this._revealItems(state.items, element);
-            }
+            // Animate the element
+            await this._revealItems([element], element);
 
             // Mark as revealed
             state.hasBeenRevealed = true;
+
+            // Remove from queue
+            this.revealQueue = this.revealQueue.filter(item => item.element !== element);
 
             // Stop observing if once is true
             if (state.once) {
@@ -258,13 +247,13 @@ export default class Scrollreveal extends BaseComponent {
 
             this.eventBus?.emit('scrollreveal:reveal-complete', {
                 element,
-                itemCount: state.items.length,
+                revealOrder: state.revealOrder,
                 timestamp: performance.now()
             });
 
             this.logger?.debug('Scrollreveal animation completed', {
                 element,
-                itemCount: state.items.length
+                revealOrder: state.revealOrder
             });
 
         } catch (error) {
@@ -290,35 +279,20 @@ export default class Scrollreveal extends BaseComponent {
         if (state.once) return;
 
         try {
-            await this._hideItems(state.items, element);
+            await this._hideItems([element], element);
             state.hasBeenRevealed = false;
+
+            // Reset reveal order for potential re-staggering
+            state.revealOrder = null;
 
             this.eventBus?.emit('scrollreveal:hide-complete', {
                 element,
-                itemCount: state.items.length,
                 timestamp: performance.now()
             });
 
         } catch (error) {
             this.logger?.error('Scrollreveal hide animation failed', { element, error });
         }
-    }
-
-    /**
-     * Reveal items with stagger effect
-     * @private
-     * @param {HTMLElement[]} items - Items to reveal
-     * @param {number} staggerDelay - Delay between items
-     * @param {HTMLElement} container - Container element
-     */
-    async _revealWithStagger(items, staggerDelay, container) {
-        const promises = items.map((item, index) => {
-            return this._delay(index * staggerDelay).then(() => {
-                return this._revealItems([item], container);
-            });
-        });
-
-        await Promise.all(promises);
     }
 
     /**
@@ -333,8 +307,7 @@ export default class Scrollreveal extends BaseComponent {
 
             try {
                 // Check for CSS class-based animation first
-                const revealClass = item.dataset.scrollrevealClass ||
-                                  container.dataset.scrollrevealClass;
+                const revealClass = item.dataset.scrollrevealClass;
 
                 if (revealClass) {
                     // Use CSS class animation
@@ -344,6 +317,7 @@ export default class Scrollreveal extends BaseComponent {
                     await this.transitionManager.enter(item);
                 } else {
                     // Fallback to simple opacity/transform
+                    item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
                     item.style.opacity = '1';
                     item.style.transform = 'translateY(0)';
                 }
@@ -368,23 +342,16 @@ export default class Scrollreveal extends BaseComponent {
             item.setAttribute('data-reveal-state', 'hiding');
 
             try {
-                // Check for CSS class-based animation first
-                const revealClass = item.dataset.scrollrevealClass ||
-                                  container.dataset.scrollrevealClass;
-                const exitClass = item.dataset.scrollrevealExitClass ||
-                                container.dataset.scrollrevealExitClass;
+                const revealClass = item.dataset.scrollrevealClass;
+                const exitClass = item.dataset.scrollrevealExitClass;
 
                 if (exitClass) {
-                    // Use specific exit class
                     await this._animateWithClass(item, exitClass);
                 } else if (revealClass) {
-                    // Just remove the reveal class
                     item.classList.remove(revealClass);
                 } else if (this.transitionManager) {
-                    // Use TransitionManager JS animation
                     await this.transitionManager.exit(item);
                 } else {
-                    // Fallback to simple opacity/transform
                     const y = item.dataset.transitionY || '1rem';
                     item.style.opacity = '0';
                     item.style.transform = `translateY(${y})`;
@@ -411,18 +378,15 @@ export default class Scrollreveal extends BaseComponent {
             const handleAnimationEnd = () => {
                 element.removeEventListener('animationend', handleAnimationEnd);
                 element.removeEventListener('transitionend', handleAnimationEnd);
-                // Don't automatically remove the class - let CSS handle persistence
                 resolve();
             };
 
-            // Listen for both animation and transition end events
             element.addEventListener('animationend', handleAnimationEnd, { once: true });
             element.addEventListener('transitionend', handleAnimationEnd, { once: true });
 
-            // Add the class to trigger the animation
             element.classList.add(className);
 
-            // Fallback timeout in case events don't fire
+            // Fallback timeout
             setTimeout(() => {
                 element.removeEventListener('animationend', handleAnimationEnd);
                 element.removeEventListener('transitionend', handleAnimationEnd);
@@ -442,92 +406,19 @@ export default class Scrollreveal extends BaseComponent {
     }
 
     /**
-     * Manually trigger reveal animation
-     * @param {HTMLElement} element - Container element
+     * Set global stagger delay for all future elements
+     * @param {number} delay - Stagger delay in milliseconds
      */
-    async reveal(element) {
-        const state = this.getState(element);
-        if (!state || state.hasBeenRevealed || state.isRevealing) return;
-
-        await this._revealElement(element, state);
+    setGlobalStagger(delay) {
+        this.globalStaggerDelay = delay;
     }
 
     /**
-     * Manually trigger hide animation
-     * @param {HTMLElement} element - Container element
+     * Reset the reveal index (useful for resetting stagger order)
      */
-    async hide(element) {
-        const state = this.getState(element);
-        if (!state || !state.hasBeenRevealed) return;
-
-        await this._hideElement(element, state);
-    }
-
-    /**
-     * Reset element to initial state
-     * @param {HTMLElement} element - Container element
-     */
-    reset(element) {
-        const state = this.getState(element);
-        if (!state) return;
-
-        // Reset state
-        state.hasBeenRevealed = false;
-        state.isRevealing = false;
-
-        // Reset visual state
-        this._setInitialState(element, state);
-
-        // Resume observing if needed
-        if (state.once) {
-            if (state.customObserver) {
-                state.customObserver.observe(element);
-            } else {
-                this.observer.observe(element);
-            }
-        }
-
-        this.logger?.debug('Scrollreveal reset', { element });
-    }
-
-    /**
-     * Check if element has been revealed
-     * @param {HTMLElement} element - Container element
-     * @returns {boolean} Whether the element has been revealed
-     */
-    isRevealed(element) {
-        const state = this.getState(element);
-        return state ? state.hasBeenRevealed : false;
-    }
-
-    /**
-     * Update intersection observer threshold
-     * @param {HTMLElement} element - Container element
-     * @param {number} threshold - New threshold (0.0 to 1.0)
-     */
-    updateThreshold(element, threshold) {
-        const state = this.getState(element);
-        if (!state) return;
-
-        state.threshold = threshold;
-
-        // Recreate observer with new threshold
-        if (state.customObserver) {
-            state.customObserver.disconnect();
-        }
-
-        state.customObserver = new IntersectionObserver(
-            this._handleIntersection.bind(this),
-            {
-                root: null,
-                rootMargin: Scrollreveal.defaults.rootMargin,
-                threshold
-            }
-        );
-
-        state.customObserver.observe(element);
-
-        this.logger?.info('Scrollreveal threshold updated', { element, threshold });
+    resetRevealOrder() {
+        this.revealIndex = 0;
+        this.revealQueue = [];
     }
 
     /**
@@ -538,12 +429,10 @@ export default class Scrollreveal extends BaseComponent {
         const elements = document.querySelectorAll('[data-scrollreveal-enhanced="true"]');
         let revealedCount = 0;
         let revealingCount = 0;
-        let totalItems = 0;
 
         elements.forEach(element => {
             const state = this.getState(element);
             if (state) {
-                totalItems += state.items.length;
                 if (state.hasBeenRevealed) revealedCount++;
                 if (state.isRevealing) revealingCount++;
             }
@@ -551,33 +440,28 @@ export default class Scrollreveal extends BaseComponent {
 
         return {
             totalElements: elements.length,
-            totalItems,
             revealedCount,
             revealingCount,
+            queuedCount: this.revealQueue.length,
+            globalStaggerDelay: this.globalStaggerDelay,
             observerActive: !!this.observer,
             defaults: Scrollreveal.defaults
         };
     }
 
-    /**
-     * Clean up intersection observer
-     */
     destroy() {
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
         }
 
+        this.revealQueue = [];
+        this.revealIndex = 0;
+
         super.destroy();
         this.logger?.info('Scrollreveal destroyed');
     }
 
-    /**
-     * Enhance all scrollreveal elements on the page
-     * @param {string} selector - CSS selector for scrollreveal elements
-     * @param {Object} options - Component options
-     * @returns {Scrollreveal} Component instance
-     */
     static enhanceAll(selector = '[data-scrollreveal]', options) {
         const instance = new Scrollreveal(options);
         const elements = document.querySelectorAll(selector);
