@@ -19,10 +19,10 @@ async function initFramework() {
         const registry = ComponentRegistry.create('production');
 
         const componentRegistry = registry
-            .component('lazyimage', '[data-lazyimage]:not([data-lazyimage-complete])')
+            .component('lazysrc', '[data-lazysrc]:not([data-lazysrc-complete])')
             .component('toggle', '[data-toggle]')
             .component('carousel', '[data-carousel]', {
-                dependsOn: ['lazyimage']
+                dependsOn: ['lazysrc']
             })
             .component('modal', '[data-modal][data-modal-target]')
             .component('toast', '[data-toast-trigger][data-toast-message]', {
