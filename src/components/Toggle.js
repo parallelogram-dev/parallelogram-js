@@ -32,7 +32,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * document.querySelectorAll('[data-toggle]')
  *   .forEach(trigger => toggles.mount(trigger));
  */
-export class Toggle extends BaseComponent {
+export default class Toggle extends BaseComponent {
     /**
      * Default configuration for toggle component
      * @returns {Object} Default config

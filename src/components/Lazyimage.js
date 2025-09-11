@@ -1,5 +1,5 @@
 import { BaseComponent } from '@peptolab/parallelogram';
-export class Lazyimage extends BaseComponent {
+export default class Lazyimage extends BaseComponent {
     static get defaults() {
         return {
             threshold: '200px',
