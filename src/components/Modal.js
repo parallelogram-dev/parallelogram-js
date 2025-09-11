@@ -1,13 +1,13 @@
 /**
  * Modal - Modal dialog enhancement component
- * Works with XModal web component and data attributes for modal triggers
+ * Works with PModal web component and data attributes for modal triggers
  * Follows new naming conventions: data-modal-* attributes
  *
  * @example
  * HTML:
  * <button data-modal data-modal-target="#example-modal">Open Modal</button>
  *
- * <x-modal id="example-modal"
+ * <p-modal id="example-modal"
  *          data-modal-size="large"
  *          data-modal-closable="true">
  *   <h2 slot="title">Modal Title</h2>
@@ -16,7 +16,7 @@
  *     <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
  *     <button class="modal__button modal__button--primary">Save</button>
  *   </div>
- * </x-modal>
+ * </p-modal>
  *
  * JavaScript (standalone):
  * import { Modal } from './components/Modal.js';
@@ -26,7 +26,7 @@
  */
 
 import { BaseComponent } from '../core/BaseComponent.js';
-import { XModal } from './XModal.js';
+import { PModal } from './PModal.js';
 
 export class Modal extends BaseComponent {
     /**
@@ -74,9 +74,9 @@ export class Modal extends BaseComponent {
             return state;
         }
 
-        // Ensure it's an x-modal element
-        if (modalElement.tagName.toLowerCase() !== 'x-modal') {
-            this.logger?.warn('Modal: Target is not an x-modal element', {target, element});
+        // Ensure it's an p-modal element
+        if (modalElement.tagName.toLowerCase() !== 'p-modal') {
+            this.logger?.warn('Modal: Target is not an p-modal element', {target, element});
             return state;
         }
 
@@ -195,7 +195,7 @@ export class Modal extends BaseComponent {
     /**
      * Configure modal element with data attributes
      * @private
-     * @param {XModal} modalElement - Modal element
+     * @param {PModal} modalElement - Modal element
      * @param {Object} config - Configuration object
      */
     _configureModal(modalElement, config) {
@@ -288,10 +288,10 @@ export class Modal extends BaseComponent {
     /**
      * Close other open modals
      * @private
-     * @param {XModal} currentModal - Current modal to keep open
+     * @param {PModal} currentModal - Current modal to keep open
      */
     _closeOtherModals(currentModal) {
-        const openModals = document.querySelectorAll('x-modal[open]');
+        const openModals = document.querySelectorAll('p-modal[open]');
         openModals.forEach(modal => {
             if (modal !== currentModal) {
                 modal.close();
@@ -342,7 +342,7 @@ export class Modal extends BaseComponent {
      * @param {Array} [config.actions] - Action buttons
      * @param {string} [config.size] - Modal size
      * @param {Object} [config.options] - Additional options
-     * @returns {Promise<XModal>} Modal element
+     * @returns {Promise<PModal>} Modal element
      */
     static async create({
                             title,
@@ -352,7 +352,7 @@ export class Modal extends BaseComponent {
                             options = {}
                         }) {
         // Create modal element
-        const modal = document.createElement('x-modal');
+        const modal = document.createElement('p-modal');
         modal.id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
         // Configure attributes
