@@ -33,73 +33,20 @@ export class ComponentRegistry {
      * @returns {ComponentRegistry} This instance for chaining
      */
     component(name, selector, options = {}) {
+        if (!options.loader) {
+            throw new Error(`Component '${name}' must provide a loader function`);
+        }
+
         const config = {
             name,
             selector,
             priority: options.priority || this.defaultPriority,
             dependsOn: options.dependsOn,
-            loader: this.createLoader(name, options)
+            loader: options.loader
         };
 
         this.registry.push(config);
         return this;
-    }
-
-    /**
-     * Create a loader function for a component
-     * @private
-     * @param {string} name - Component name
-     * @param {Object} options - Component options
-     * @returns {Function} Async loader function
-     */
-    createLoader(name, options = {}) {
-        const exportName = options.exportName || this.toPascalCase(name);
-        const importPath = this.getImportPath(name, options);
-
-        return async () => {
-            try {
-                const module = await import(importPath);
-
-                // Handle different export patterns
-                if (module[exportName]) {
-                    return { default: module[exportName] };
-                } else if (module.default) {
-                    return module;
-                } else {
-                    throw new Error(`Export '${exportName}' not found in module ${importPath}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to load component '${name}' from ${importPath}: ${error.message}`);
-            }
-        };
-    }
-
-    /**
-     * Get the import path for a component
-     * @private
-     * @param {string} name - Component name
-     * @param {Object} options - Component options
-     * @returns {string} Import path
-     */
-    getImportPath(name, options) {
-        if (options.path) {
-            return options.path;
-        }
-
-        const filename = options.filename || this.getConventionalFilename(name);
-        return `${this.basePath}${filename}`;
-    }
-
-    /**
-     * Get conventional filename for a component
-     * @private
-     * @param {string} name - Component name
-     * @returns {string} Filename
-     */
-    getConventionalFilename(name) {
-        const pascalName = this.toPascalCase(name);
-        const extension = this.useMinified ? '.min' + this.fileExtension : this.fileExtension;
-        return `${pascalName}${extension}`;
     }
 
     /**
@@ -274,7 +221,7 @@ export class ComponentRegistry {
             custom: {}
         };
 
-        const config = { ...presets[preset], ...options };
+        const config = {...presets[preset], ...options};
         return new ComponentRegistry(config);
     }
 }
