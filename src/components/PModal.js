@@ -1,15 +1,15 @@
 /**
- * XModal - Modal dialog web component
+ * PModal - Modal dialog web component
  * Can be used standalone without the framework
  * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
  *
  * @example
- * import './components/XModal.js';
+ * import './components/PModal.js';
  *
  * HTML:
  * <button data-modal data-modal-target="#example-modal">Open Modal</button>
  *
- * <x-modal id="example-modal"
+ * <p-modal id="example-modal"
  *          data-modal-closable="true"
  *          data-modal-backdrop-close="true"
  *          data-modal-keyboard="true">
@@ -19,10 +19,10 @@
  *     <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
  *     <button class="modal__button modal__button--primary">Save</button>
  *   </div>
- * </x-modal>
+ * </p-modal>
  */
 
-export class XModal extends HTMLElement {
+export class PModal extends HTMLElement {
   static get observedAttributes() {
     return ['open', 'data-modal-size', 'data-modal-closable'];
   }
@@ -543,6 +543,6 @@ export class XModal extends HTMLElement {
 }
 
 // Auto-register the web component if not already registered
-if (!customElements.get('x-modal')) {
-  customElements.define('x-modal', XModal);
+if (!customElements.get('p-modal')) {
+  customElements.define('p-modal', PModal);
 }

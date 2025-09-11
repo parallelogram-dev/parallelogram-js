@@ -1,4 +1,4 @@
-import { XToasts } from '../components/XToasts.js';
+import { PToasts } from '../components/PToasts.js';
 
 export class AlertManager {
   constructor({ logger, eventBus, placement = 'top-right', container } = {}) {
@@ -32,11 +32,11 @@ export class AlertManager {
   }
 
   _getOrCreateToastElement(placement, container = document.body) {
-    let toastElement = document.querySelector('x-toasts');
+    let toastElement = document.querySelector('p-toasts');
     if (!toastElement) {
-      toastElement = document.createElement('x-toasts');
+      toastElement = document.createElement('p-toasts');
       container.appendChild(toastElement);
-      this.logger?.info('Created new x-toasts element');
+      this.logger?.info('Created new p-toasts element');
     }
     toastElement.setAttribute('placement', placement);
     return toastElement;

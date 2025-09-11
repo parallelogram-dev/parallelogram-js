@@ -1,214 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhancement Framework Demo - RouterManager & PageManager</title>
-    <link rel="stylesheet" href="demo.css">
-    <link rel="stylesheet" href="dist/styles/index.min.css">
-</head>
-<body>
-    <nav>
-        <div class="nav__container">
-            <h1>Enhancement Framework</h1>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#components">Components</a></li>
-                <li><a href="#router-demo">Router Demo</a></li>
-                <li><a href="#performance">Performance</a></li>
-            </ul>
-        </div>
-    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Enhancement Framework Demo - RouterManager & PageManager</title>
+        <link rel="stylesheet" href="demo.css">
+        <link rel="stylesheet" href="dist/styles/index.min.css">
+        <style>
+            /* Basic tabs styling for demo */
+            .tabs__list {
+                display: flex;
+                gap: 0.25rem;
+                border-bottom: 2px solid #e2e8f0;
+                margin-bottom: 1rem;
+            }
 
-    <main id="app">
-        <section class="hero">
-            <h2>Progressive Enhancement with RouterManager & PageManager</h2>
-            <p>A lightweight framework that enhances your HTML without breaking it, now with advanced routing and component management.</p>
-            <div style="margin-top: 2rem;">
-                <button id="demo-toast" class="btn btn--primary" data-toast-trigger="info" data-toast-message="RouterManager and PageManager working together!">Show Enhanced Toast</button>
-                <button id="demo-progress" class="btn btn--secondary">Show Progress</button>
-                <button class="btn btn--accent" data-modal data-modal-target="#info-modal">Open Enhanced Modal</button>
-                <button id="performance-toggle" class="btn btn--outline">Performance Monitor</button>
+            .tab {
+                all: unset;
+                cursor: pointer;
+                padding: 0.75rem 1rem;
+                border: 1px solid transparent;
+                border-bottom: none;
+                border-radius: 8px 8px 0 0;
+                background: #f8f9fa;
+                color: #6b7280;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
+
+            .tab:hover {
+                background: #e2e8f0;
+                color: #374151;
+            }
+
+            .tab[aria-selected="true"] {
+                background: white;
+                color: #0ea5e9;
+                border-color: #e2e8f0;
+                border-bottom-color: white;
+                margin-bottom: -2px;
+                padding-bottom: calc(0.75rem + 2px);
+            }
+
+            .tab:focus {
+                outline: 2px solid #0ea5e9;
+                outline-offset: 2px;
+            }
+
+            .tabs__panels {
+                min-height: 300px;
+            }
+
+            .tab__panel {
+                background: white;
+                padding: 1.5rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+            }
+
+            .tab__panel h4 {
+                margin-top: 0;
+                color: #1f2937;
+            }
+
+            .tab__panel h5 {
+                margin-top: 1.5rem;
+                margin-bottom: 0.5rem;
+                color: #374151;
+            }
+
+            .tab__panel pre {
+                font-size: 0.875rem;
+                line-height: 1.5;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#components">Components</a></li>
+                    <li><a href="#router-demo">Router Demo</a></li>
+                    <li><a href="#performance">Performance</a></li>
+                </ul>
             </div>
-        </section>
+        </nav>
 
-        <section class="features">
-            <div class="feature__grid">
-                <div class="feature">
-                    <h3>🚀 RouterManager</h3>
-                    <p>Advanced client-side routing with automatic link enhancement, loading states, and error recovery.</p>
+        <main id="app">
+            <section class="hero">
+                <h2>Progressive Enhancement with RouterManager & PageManager</h2>
+                <p>A lightweight framework that enhances your HTML without breaking it, now with advanced routing and component management.</p>
+                <div style="margin-top: 2rem;">
+                    <button id="demo-toast" class="btn btn-primary" data-toast-trigger="info" data-toast-message="RouterManager and PageManager working together!">Show Enhanced Toast</button>
+                    <button id="demo-progress" class="btn btn-secondary">Show Progress</button>
+                    <button class="btn btn-accent" data-modal data-modal-target="#info-modal">Open Enhanced Modal</button>
+                    <button id="performance-toggle" class="btn btn-outline">Performance Monitor</button>
                 </div>
-                <div class="feature">
-                    <h3>📦 PageManager</h3>
-                    <p>Sophisticated component lifecycle management with lazy loading, pooling, and health monitoring.</p>
+            </section>
+
+            <section class="features">
+                <div class="feature__grid">
+                    <div class="feature">
+                        <h3>🚀 RouterManager</h3>
+                        <p>Advanced client-side routing with automatic link enhancement, loading states, and error recovery.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>📦 PageManager</h3>
+                        <p>Sophisticated component lifecycle management with lazy loading, pooling, and health monitoring.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🔄 Component Registry</h3>
+                        <p>Declarative component configuration with dependency management and priority loading.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>📊 Performance Monitoring</h3>
+                        <p>Real-time metrics, memory leak detection, and circuit breaker patterns for production apps.</p>
+                    </div>
                 </div>
-                <div class="feature">
-                    <h3>🔄 Component Registry</h3>
-                    <p>Declarative component configuration with dependency management and priority loading.</p>
+            </section>
+
+            <section class="component__demos">
+                <h2>Enhanced Component Demonstrations</h2>
+
+                <div class="demo__section" data-component="demo-section">
+                    <h3>Component Registry Status</h3>
+                    <p>Real-time view of component loading states managed by PageManager:</p>
+                    <div id="component-registry-display" class="component__registry">
+                        <!-- Populated by JavaScript -->
+                    </div>
                 </div>
-                <div class="feature">
-                    <h3>📊 Performance Monitoring</h3>
-                    <p>Real-time metrics, memory leak detection, and circuit breaker patterns for production apps.</p>
+
+                <div class="demo__section" data-component="demo-section">
+                    <h3>Router-Enhanced Navigation</h3>
+                    <p>These links are automatically enhanced by RouterManager for SPA navigation:</p>
+                    <div class="button__group">
+                        <a href="#section-1" class="btn">Navigate to Section 1</a>
+                        <a href="#section-2" class="btn">Navigate to Section 2</a>
+                        <a href="?demo=advanced" class="btn">Advanced Demo Mode</a>
+                        <a href="/" class="btn" data-router-replace>Refresh Page</a>
+                    </div>
+                    <p><small>Notice the ⚡ icon indicating enhanced links</small></p>
                 </div>
-            </div>
-        </section>
 
-        <section class="component__demos">
-            <h2>Enhanced Component Demonstrations</h2>
+                <div class="demo__section" data-component="demo-section">
+                    <h3>Advanced Image Carousel</h3>
+                    <p>Carousel component with lazy loading, managed by PageManager:</p>
 
-            <div class="demo__section" data-component="demo-section">
-                <h3>Component Registry Status</h3>
-                <p>Real-time view of component loading states managed by PageManager:</p>
-                <div id="component-registry-display" class="component__registry">
-                    <!-- Populated by JavaScript -->
-                </div>
-            </div>
+                    <div class="carousel"
+                         data-carousel
+                         data-carousel-autoplay="true"
+                         data-carousel-delay="4000"
+                         data-carousel-loop="true">
 
-            <div class="demo__section" data-component="demo-section">
-                <h3>Router-Enhanced Navigation</h3>
-                <p>These links are automatically enhanced by RouterManager for SPA navigation:</p>
-                <div class="button__group">
-                    <a href="#section-1" class="btn">Navigate to Section 1</a>
-                    <a href="#section-2" class="btn">Navigate to Section 2</a>
-                    <a href="?demo=advanced" class="btn">Advanced Demo Mode</a>
-                    <a href="/" class="btn" data-router-replace>Refresh Page</a>
-                </div>
-                <p><small>Notice the ⚡ icon indicating enhanced links</small></p>
-            </div>
-
-            <div class="demo__section" data-component="demo-section">
-                <h3>Advanced Image Carousel</h3>
-                <p>Carousel component with lazy loading, managed by PageManager:</p>
-
-                <div class="carousel"
-                     data-carousel
-                     data-carousel-show-dots="true"
-                     data-carousel-autoplay="true"
-                     data-carousel-delay="4000"
-                     data-carousel-loop="true">
-
-                    <div class="carousel__track" data-carousel-track>
-                        <div class="carousel__slide" data-carousel-slide>
-                            <img class="carousel__image"
-                                 src="https://picsum.photos/800/400?random=10"
-                                 alt="Beautiful landscape">
-                            <div class="carousel__caption">Progressive Enhancement in Action</div>
-                        </div>
-                        <div class="carousel__slide" data-carousel-slide>
-                            <img class="carousel__image"
-                                 src="https://picsum.photos/800/400?random=11"
-                                 alt="Urban architecture">
-                            <div class="carousel__caption">RouterManager Navigation</div>
-                        </div>
-                        <div class="carousel__slide" data-carousel-slide>
-                            <img class="carousel__image"
-                                 src="https://picsum.photos/800/400?random=12"
-                                 alt="Nature scene">
-                            <div class="carousel__caption">PageManager Component Lifecycle</div>
-                        </div>
-                        <div class="carousel__slide" data-carousel-slide>
-                            <img class="carousel__image"
-                                 src="https://picsum.photos/800/400?random=13"
-                                 alt="Modern design">
-                            <div class="carousel__caption">Performance Monitoring</div>
+                        <div class="carousel__track" data-carousel-track>
+                            <div class="carousel__slide" data-carousel-slide>
+                                <img class="carousel__image"
+                                     src="https://picsum.photos/800/400?random=10"
+                                     alt="Beautiful landscape">
+                                <div class="carousel__caption">Progressive Enhancement in Action</div>
+                            </div>
+                            <div class="carousel__slide" data-carousel-slide>
+                                <img class="carousel__image"
+                                     src="https://picsum.photos/800/400?random=11"
+                                     alt="Urban architecture">
+                                <div class="carousel__caption">RouterManager Navigation</div>
+                            </div>
+                            <div class="carousel__slide" data-carousel-slide>
+                                <img class="carousel__image"
+                                     src="https://picsum.photos/800/400?random=12"
+                                     alt="Nature scene">
+                                <div class="carousel__caption">PageManager Component Lifecycle</div>
+                            </div>
+                            <div class="carousel__slide" data-carousel-slide>
+                                <img class="carousel__image"
+                                     src="https://picsum.photos/800/400?random=13"
+                                     alt="Modern design">
+                                <div class="carousel__caption">Performance Monitoring</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="demo__section" data-component="demo-section">
-                <h3>Lazy Loading Images with Performance Tracking</h3>
-                <p>Images load as they enter the viewport, with performance metrics tracked by PageManager:</p>
-                <div class="image__grid">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=1"
-                        alt="Random image 1"
-                        class="demo__image"
-                    >
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=2"
-                        alt="Random image 2"
-                        class="demo__image"
-                    >
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=3"
-                        alt="Random image 3"
-                        class="demo__image"
-                    >
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=4"
-                        alt="Random image 4"
-                        class="demo__image"
-                    >
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=5"
-                        alt="Lazy loaded image"
-                        class="demo__image"
-                    >
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazyimage
-                        data-lazyimage-src="https://picsum.photos/400/300?random=6"
-                        alt="Lazy loaded image"
-                        class="demo__image"
-                    >
+                <div class="demo__section" data-component="demo-section">
+                    <h3>Lazy Loading Images with Performance Tracking</h3>
+                    <p>Images load as they enter the viewport, with performance metrics tracked by PageManager:</p>
+                    <div class="image__grid">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=1"
+                            alt="Random image 1"
+                            class="demo__image"
+                        >
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=2"
+                            alt="Random image 2"
+                            class="demo__image"
+                        >
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=3"
+                            alt="Random image 3"
+                            class="demo__image"
+                        >
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=4"
+                            alt="Random image 4"
+                            class="demo__image"
+                        >
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=5"
+                            alt="Lazy loaded image"
+                            class="demo__image"
+                        >
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazyimage
+                            data-lazyimage-src="https://picsum.photos/400/300?random=6"
+                            alt="Lazy loaded image"
+                            class="demo__image"
+                        >
+                    </div>
+                    <p>
+                        <small>Some images use immediate loading, others use lazy loading with Intersection Observer</small>
+                    </p>
                 </div>
-                <p><small>Some images use immediate loading, others use lazy loading with Intersection Observer</small></p>
-            </div>
 
-            <div class="demo__section" data-demo-section>
-                <h3>Enhanced Modal System</h3>
-                <p>Accessible modals with focus management and multiple types:</p>
-                <div class="button__group">
-                    <button class="btn" data-modal data-modal-target="#info-modal">Info Modal</button>
-                    <button class="btn" data-modal data-modal-target="#form-modal">Form Modal</button>
-                    <button class="btn" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
-                    <button class="btn" data-modal data-modal-target="#performance-modal">Performance Dashboard</button>
+                <div class="demo__section" data-demo-section>
+                    <h3>Enhanced Modal System</h3>
+                    <p>Accessible modals with focus management and multiple types:</p>
+                    <div class="button__group">
+                        <button class="btn" data-modal data-modal-target="#info-modal">Info Modal</button>
+                        <button class="btn" data-modal data-modal-target="#form-modal">Form Modal</button>
+                        <button class="btn" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
+                        <button class="btn" data-modal data-modal-target="#performance-modal">Performance Dashboard</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="demo__section" data-demo-section>
-                <h3>Toast Notifications with Event Bus</h3>
-                <div class="button__group">
-                    <button class="btn" data-toast-trigger="info" data-toast-message="Router navigation completed successfully!">Router Success</button>
-                    <button class="btn" data-toast-trigger="success" data-toast-message="Component mounted with PageManager!">Component Success</button>
-                    <button class="btn" data-toast-trigger="warn" data-toast-message="Component loading is taking longer than usual">Performance Warning</button>
-                    <button class="btn" data-toast-trigger="error" data-toast-message="Component failed to load - circuit breaker activated">Component Error</button>
+                <div class="demo__section" data-demo-section>
+                    <h3>Toast Notifications with Event Bus</h3>
+                    <div class="button__group">
+                        <button class="btn" data-toast-trigger="info" data-toast-message="Router navigation completed successfully!">Router Success</button>
+                        <button class="btn" data-toast-trigger="success" data-toast-message="Component mounted with PageManager!">Component Success</button>
+                        <button class="btn" data-toast-trigger="warn" data-toast-message="Component loading is taking longer than usual">Performance Warning</button>
+                        <button class="btn" data-toast-trigger="error" data-toast-message="Component failed to load - circuit breaker activated">Component Error</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="demo__section" data-demo-section>
-                <h3>Real-time Event System</h3>
-                <p>All components communicate through a central event bus with enhanced logging:</p>
-                <div id="event-log" class="event__log">
-                    <div class="event__log-header">
-                        <strong>Enhanced Event Log</strong>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button onclick="clearEventLog()" class="btn__small">Clear</button>
-                            <button onclick="exportEventLog()" class="btn__small">Export</button>
+                <div class="demo__section" data-demo-section>
+                    <h3>Accessible Tabs Component</h3>
+                    <p>Progressive enhancement tabs with keyboard navigation and smooth transitions:</p>
+
+                    <div data-tabs data-tabs-keyboard="true" data-tabs-autofocus="false">
+                        <div data-tabs-list class="tabs__list">
+                            <button data-tab="overview-panel" aria-selected="true" class="tab">Overview</button>
+                            <button data-tab="components-panel" class="tab">Components</button>
+                            <button data-tab="performance-panel" class="tab">Performance</button>
+                            <button data-tab="docs-panel" class="tab">Documentation</button>
+                        </div>
+                        <div data-tabs-panels class="tabs__panels">
+                            <div id="overview-panel" data-tab-panel class="tab__panel">
+                                <h4>Framework Overview</h4>
+                                <p>This enhancement framework provides progressive enhancement for modern web applications with advanced routing, component management, and performance monitoring.</p>
+                                <ul>
+                                    <li>
+                                        <strong>RouterManager:</strong> Client-side routing with automatic link enhancement
+                                    </li>
+                                    <li><strong>PageManager:</strong> Component lifecycle management with lazy loading
+                                    </li>
+                                    <li><strong>Component Registry:</strong> Declarative component configuration</li>
+                                    <li><strong>Event System:</strong> Central event bus for component communication
+                                    </li>
+                                </ul>
+                            </div>
+                            <div id="components-panel" data-tab-panel class="tab__panel" style="display: none;">
+                                <h4>Available Components</h4>
+                                <p>The framework includes several ready-to-use components:</p>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                        <h5>Lazyimage</h5>
+                                        <p>Optimized image loading with native loading="lazy" support and automatic cleanup.</p>
+                                    </div>
+                                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                        <h5>Carousel</h5>
+                                        <p>Image carousel with autoplay, touch support, and accessibility features.</p>
+                                    </div>
+                                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                        <h5>Modal</h5>
+                                        <p>Accessible modals with slot-based content and focus management.</p>
+                                    </div>
+                                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                        <h5>Toast</h5>
+                                        <p>Toast notifications that integrate with AlertManager and PToasts web component.</p>
+                                    </div>
+                                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+                                        <h5>Tabs</h5>
+                                        <p>Accessible tab navigation with keyboard support and smooth transitions.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="performance-panel" data-tab-panel class="tab__panel" style="display: none;">
+                                <h4>Performance Monitoring</h4>
+                                <p>Real-time performance tracking and optimization features:</p>
+                                <div style="margin-top: 1rem;">
+                                    <h5>Component Performance</h5>
+                                    <ul>
+                                        <li>Mount time tracking for all components</li>
+                                        <li>Memory leak detection and prevention</li>
+                                        <li>Automatic cleanup after component lifecycle completion</li>
+                                        <li>Circuit breaker patterns for error recovery</li>
+                                    </ul>
+
+                                    <h5>Router Performance</h5>
+                                    <ul>
+                                        <li>Navigation timing and load state management</li>
+                                        <li>Automatic link enhancement with loading indicators</li>
+                                        <li>Error recovery and retry mechanisms</li>
+                                    </ul>
+
+                                    <div style="margin-top: 1rem;">
+                                        <button class="btn btn-primary" data-modal data-modal-target="#performance-modal">
+                                            View Detailed Metrics
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="docs-panel" data-tab-panel class="tab__panel" style="display: none;">
+                                <h4>Documentation & Examples</h4>
+                                <p>Complete documentation and usage examples:</p>
+
+                                <h5>Quick Start</h5>
+                                <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>import { PageManager, RouterManager, EventManager } from 'enhancement-framework';
+
+// Initialize the framework
+const eventBus = new EventManager();
+const router = new RouterManager({ eventBus });
+const pageManager = new PageManager({
+  containerSelector: '#app',
+  registry: componentRegistry,
+  eventBus,
+  router
+});
+
+// Auto-enhance existing content
+pageManager.scanAndMount();</code></pre>
+
+                                <h5>Component Usage</h5>
+                                <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>// Lazy images
+&lt;img data-lazyimage data-lazyimage-src="image.jpg" alt="Lazy loaded"&gt;
+
+// Toast notifications
+&lt;button data-toast-trigger="success" data-toast-message="Hello!"&gt;Show Toast&lt;/button&gt;
+
+// Tabs
+&lt;div data-tabs&gt;
+  &lt;div data-tabs-list&gt;
+    &lt;button data-tab="panel-1"&gt;Tab 1&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div data-tabs-panels&gt;
+    &lt;div id="panel-1" data-tab-panel&gt;Content&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                            </div>
                         </div>
                     </div>
-                    <div class="event__log-content" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
-            </div>
-        </section>
 
-        <section class="usage__examples">
-            <h2>Enhanced Usage Examples</h2>
+                <div class="demo__section" data-demo-section>
+                    <h3>Real-time Event System</h3>
+                    <p>All components communicate through a central event bus with enhanced logging:</p>
+                    <div id="event-log" class="event__log">
+                        <div class="event__log-header">
+                            <strong>Enhanced Event Log</strong>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="clearEventLog()" class="btn__small">Clear</button>
+                                <button onclick="exportEventLog()" class="btn__small">Export</button>
+                            </div>
+                        </div>
+                        <div class="event__log-content" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </section>
 
-            <div class="example">
-                <h3>RouterManager Integration</h3>
-                <pre><code>import { RouterManager, PageManager, EventManager } from 'enhancement-framework';
+            <section class="usage__examples">
+                <h2>Enhanced Usage Examples</h2>
+
+                <div class="example">
+                    <h3>RouterManager Integration</h3>
+                    <pre><code>import { RouterManager, PageManager, EventManager } from 'enhancement-framework';
 
 const eventBus = new EventManager();
 const router = new RouterManager({
@@ -225,16 +413,16 @@ router.enhanceLinks(); // Auto-detects and enhances navigation links
 
 // Programmatic navigation
 router.navigate('/dashboard', { replace: false });</code></pre>
-            </div>
+                </div>
 
-            <div class="example">
-                <h3>PageManager with Component Registry</h3>
-                <pre><code>const componentRegistry = [
+                <div class="example">
+                    <h3>PageManager with Component Registry</h3>
+                    <pre><code>const componentRegistry = [
   {
     name: 'lazyimage',
     selector: '[data-lazyimage]',
     priority: 'critical',
-    loader: () => import('./LazyImageComponent.js')
+    loader: () => import('./LazyimageComponent.js')
   },
   {
     name: 'carousel',
@@ -257,11 +445,11 @@ const pageManager = new PageManager({
     trackPerformance: true
   }
 });</code></pre>
-            </div>
+                </div>
 
-            <div class="example">
-                <h3>Advanced Component with Lifecycle Hooks</h3>
-                <pre><code>export class AdvancedComponent extends BaseComponent {
+                <div class="example">
+                    <h3>Advanced Component with Lifecycle Hooks</h3>
+                    <pre><code>export class AdvancedComponent extends BaseComponent {
   constructor({ eventBus, logger, config }) {
     super({ eventBus, logger, config });
     this.performanceObserver = new PerformanceObserver(this.handlePerformance.bind(this));
@@ -292,15 +480,15 @@ const pageManager = new PageManager({
     this.performanceObserver.disconnect();
   }
 }</code></pre>
-            </div>
+                </div>
 
-            <div class="example">
-                <h3>Modal Component Usage</h3>
-                <pre><code>// HTML trigger
+                <div class="example">
+                    <h3>Modal Component Usage</h3>
+                    <pre><code>// HTML trigger
 &lt;button data-modal data-modal-target="#example-modal"&gt;Open Modal&lt;/button&gt;
 
 // Modal component with slots
-&lt;x-modal id="example-modal"
+&lt;p-modal id="example-modal"
          data-modal-size="large"
          data-modal-closable="true"&gt;
   &lt;h2 slot="title"&gt;Modal Title&lt;/h2&gt;
@@ -309,186 +497,190 @@ const pageManager = new PageManager({
     &lt;button class="modal__button modal__button--secondary" data-modal-close&gt;Cancel&lt;/button&gt;
     &lt;button class="modal__button modal__button--primary"&gt;Save&lt;/button&gt;
   &lt;/div&gt;
-&lt;/x-modal&gt;
+&lt;/p-modal&gt;
 
 // JavaScript initialization
 import { Modal } from './components/Modal.js';
 const modals = new Modal();
 document.querySelectorAll('[data-modal]')
   .forEach(trigger =&gt; modals.mount(trigger));</code></pre>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 Enhancement Framework. Advanced routing and component management with progressive enhancement.</p>
-    </footer>
-
-    <!-- Performance Monitor Panel -->
-    <div id="performance-panel" class="performance__panel">
-        <h4 style="margin: 0 0 1rem 0;">📊 Performance Dashboard</h4>
-        <div id="performance-metrics">
-            <!-- Populated by JavaScript -->
-        </div>
-        <button onclick="togglePerformancePanel()" class="btn__small" style="margin-top: 1rem;">Close</button>
-    </div>
-
-    <!-- Health Indicator -->
-    <div id="health-indicator" class="health__indicator" data-modal data-modal-target="#performance-modal">
-        🟢 All Systems Operational
-    </div>
-
-    <!-- Enhanced Modal containers using proper x-modal syntax -->
-    <x-modal id="info-modal"
-             data-modal-size="medium"
-             data-modal-closable="true">
-        <h2 slot="title">RouterManager & PageManager Info</h2>
-        <div>
-            <p>This enhanced demo showcases the advanced capabilities of the Enhancement Framework:</p>
-            <ul>
-                <li><strong>RouterManager:</strong> Automatic link enhancement, loading states, error recovery</li>
-                <li><strong>PageManager:</strong> Component lifecycle management, lazy loading, performance monitoring</li>
-                <li><strong>Component Registry:</strong> Declarative component configuration with dependencies</li>
-                <li><strong>Performance Monitoring:</strong> Real-time metrics, memory leak detection, circuit breakers</li>
-            </ul>
-            <p>All components work together through a central event bus for maximum flexibility and observability.</p>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary" data-modal data-modal-target="#performance-modal">View Performance</button>
-        </div>
-    </x-modal>
-
-    <x-modal id="form-modal"
-             data-modal-size="medium"
-             data-modal-closable="true">
-        <h2 slot="title">Enhanced Contact Form</h2>
-        <div>
-            <form data-enhanced-form>
-                <div style="margin-bottom: 1rem;">
-                    <label for="name" style="display: block; margin-bottom: 0.5rem;">Name:</label>
-                    <input type="text" id="name" name="name" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <label for="email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
-                    <input type="email" id="email" name="email" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <label for="component-interest" style="display: block; margin-bottom: 0.5rem;">Interested Components:</label>
-                    <select id="component-interest" name="component-interest" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="router">RouterManager</option>
-                        <option value="page-manager">PageManager</option>
-                        <option value="component-registry">Component Registry</option>
-                        <option value="performance">Performance Monitoring</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <label for="message" style="display: block; margin-bottom: 0.5rem;">Message:</label>
-                    <textarea id="message" name="message" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                </div>
-            </form>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
-            <button type="submit" class="modal__button modal__button--primary" form="enhanced-form">Send Enhanced Message</button>
-        </div>
-    </x-modal>
+            </section>
+        </main>
 
-    <x-modal id="gallery-modal"
-             data-modal-size="large"
-             data-modal-closable="true">
-        <h2 slot="title">Component Gallery</h2>
-        <div>
-            <div class="image__grid">
-                <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=20" alt="RouterManager visualization" style="border-radius: 4px;">
-                <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=21" alt="PageManager diagram" style="border-radius: 4px;">
-                <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=22" alt="Component lifecycle" style="border-radius: 4px;">
-                <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=23" alt="Performance metrics" style="border-radius: 4px;">
-            </div>
-            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">These images are loaded using the lazyimage component managed by PageManager.</p>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary">Download Gallery</button>
-        </div>
-    </x-modal>
+        <footer>
+            <p>&copy; 2024 Enhancement Framework. Advanced routing and component management with progressive enhancement.</p>
+        </footer>
 
-    <x-modal id="performance-modal"
-             data-modal-size="large"
-             data-modal-closable="true">
-        <h2 slot="title">📊 Performance Dashboard</h2>
-        <div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #007bff;">Components</h4>
-                    <div id="component-count" style="font-size: 2rem; font-weight: bold;">-</div>
-                    <small>Registered</small>
-                </div>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #28a745;">Mounted</h4>
-                    <div id="mounted-count" style="font-size: 2rem; font-weight: bold;">-</div>
-                    <small>Active</small>
-                </div>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #ffc107;">Avg Mount Time</h4>
-                    <div id="avg-mount-time" style="font-size: 2rem; font-weight: bold;">-</div>
-                    <small>milliseconds</small>
-                </div>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #17a2b8;">Memory</h4>
-                    <div id="memory-usage" style="font-size: 2rem; font-weight: bold;">-</div>
-                    <small>MB used</small>
-                </div>
-            </div>
-
-            <h4>Component Status</h4>
-            <div id="detailed-performance-metrics" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; max-height: 300px; overflow-y: auto;">
+        <!-- Performance Monitor Panel -->
+        <div id="performance-panel" class="performance__panel">
+            <h4 style="margin: 0 0 1rem 0;">📊 Performance Dashboard</h4>
+            <div id="performance-metrics">
                 <!-- Populated by JavaScript -->
             </div>
+            <button onclick="togglePerformancePanel()" class="btn__small" style="margin-top: 1rem;">Close</button>
         </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" onclick="refreshPerformanceData()">Refresh Data</button>
-            <button class="modal__button modal__button--primary" onclick="downloadPerformanceReport()">Download Report</button>
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+
+        <!-- Health Indicator -->
+        <div id="health-indicator" class="health__indicator" data-modal data-modal-target="#performance-modal">
+            🟢 All Systems Operational
         </div>
-    </x-modal>
 
-    <!-- Toast container -->
-    <x-toasts placement="top-right"></x-toasts>
+        <!-- Enhanced Modal containers using proper p-modal syntax -->
+        <p-modal id="info-modal"
+                 data-modal-size="medium"
+                 data-modal-closable="true">
+            <h2 slot="title">RouterManager & PageManager Info</h2>
+            <div>
+                <p>This enhanced demo showcases the advanced capabilities of the Enhancement Framework:</p>
+                <ul>
+                    <li><strong>RouterManager:</strong> Automatic link enhancement, loading states, error recovery</li>
+                    <li>
+                        <strong>PageManager:</strong> Component lifecycle management, lazy loading, performance monitoring
+                    </li>
+                    <li><strong>Component Registry:</strong> Declarative component configuration with dependencies</li>
+                    <li>
+                        <strong>Performance Monitoring:</strong> Real-time metrics, memory leak detection, circuit breakers
+                    </li>
+                </ul>
+                <p>All components work together through a central event bus for maximum flexibility and observability.</p>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+                <button class="modal__button modal__button--primary" data-modal data-modal-target="#performance-modal">View Performance</button>
+            </div>
+        </p-modal>
 
-    <!-- Additional demo functionality scripts -->
-    <script>
-        // Enhanced demo functions for the new architecture
-        let performancePanelVisible = false;
+        <p-modal id="form-modal"
+                 data-modal-size="medium"
+                 data-modal-closable="true">
+            <h2 slot="title">Enhanced Contact Form</h2>
+            <div>
+                <form data-enhanced-form>
+                    <div style="margin-bottom: 1rem;">
+                        <label for="name" style="display: block; margin-bottom: 0.5rem;">Name:</label>
+                        <input type="text" id="name" name="name" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label for="email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
+                        <input type="email" id="email" name="email" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label for="component-interest" style="display: block; margin-bottom: 0.5rem;">Interested Components:</label>
+                        <select id="component-interest" name="component-interest" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="router">RouterManager</option>
+                            <option value="page-manager">PageManager</option>
+                            <option value="component-registry">Component Registry</option>
+                            <option value="performance">Performance Monitoring</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label for="message" style="display: block; margin-bottom: 0.5rem;">Message:</label>
+                        <textarea id="message" name="message" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="modal__button modal__button--primary" form="enhanced-form">Send Enhanced Message</button>
+            </div>
+        </p-modal>
 
-        function togglePerformancePanel() {
-            const panel = document.getElementById('performance-panel');
-            performancePanelVisible = !performancePanelVisible;
-            panel.classList.toggle('active', performancePanelVisible);
+        <p-modal id="gallery-modal"
+                 data-modal-size="large"
+                 data-modal-closable="true">
+            <h2 slot="title">Component Gallery</h2>
+            <div>
+                <div class="image__grid">
+                    <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=20" alt="RouterManager visualization" style="border-radius: 4px;">
+                    <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=21" alt="PageManager diagram" style="border-radius: 4px;">
+                    <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=22" alt="Component lifecycle" style="border-radius: 4px;">
+                    <img data-lazyimage data-lazyimage-src="https://picsum.photos/200/150?random=23" alt="Performance metrics" style="border-radius: 4px;">
+                </div>
+                <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">These images are loaded using the lazyimage component managed by PageManager.</p>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+                <button class="modal__button modal__button--primary">Download Gallery</button>
+            </div>
+        </p-modal>
 
-            if (performancePanelVisible) {
-                updatePerformancePanel();
+        <p-modal id="performance-modal"
+                 data-modal-size="large"
+                 data-modal-closable="true">
+            <h2 slot="title">📊 Performance Dashboard</h2>
+            <div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #007bff;">Components</h4>
+                        <div id="component-count" style="font-size: 2rem; font-weight: bold;">-</div>
+                        <small>Registered</small>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #28a745;">Mounted</h4>
+                        <div id="mounted-count" style="font-size: 2rem; font-weight: bold;">-</div>
+                        <small>Active</small>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #ffc107;">Avg Mount Time</h4>
+                        <div id="avg-mount-time" style="font-size: 2rem; font-weight: bold;">-</div>
+                        <small>milliseconds</small>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #17a2b8;">Memory</h4>
+                        <div id="memory-usage" style="font-size: 2rem; font-weight: bold;">-</div>
+                        <small>MB used</small>
+                    </div>
+                </div>
+
+                <h4>Component Status</h4>
+                <div id="detailed-performance-metrics" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; map-height: 300px; overflow-y: auto;">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" onclick="refreshPerformanceData()">Refresh Data</button>
+                <button class="modal__button modal__button--primary" onclick="downloadPerformanceReport()">Download Report</button>
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+            </div>
+        </p-modal>
+
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
+
+        <!-- Additional demo functionality scripts -->
+        <script>
+            // Enhanced demo functions for the new architecture
+            let performancePanelVisible = false;
+
+            function togglePerformancePanel() {
+                const panel = document.getElementById('performance-panel');
+                performancePanelVisible = !performancePanelVisible;
+                panel.classList.toggle('active', performancePanelVisible);
+
+                if (performancePanelVisible) {
+                    updatePerformancePanel();
+                }
             }
-        }
 
-        function updatePerformancePanel() {
-            const metricsContainer = document.getElementById('performance-metrics');
-            if (!metricsContainer) return;
+            function updatePerformancePanel() {
+                const metricsContainer = document.getElementById('performance-metrics');
+                if (!metricsContainer) return;
 
-            // Get real metrics from PageManager and other components
-            const pageManagerMetrics = window.pageManager?.getMetrics ? window.pageManager.getMetrics() : {};
-            const routerMetrics = window.router?.getMetrics ? window.router.getMetrics() : {};
-            const componentStates = window.pageManager?.getComponentStates ? window.pageManager.getComponentStates() : {};
+                // Get real metrics from PageManager and other components
+                const pageManagerMetrics = window.pageManager?.getMetrics ? window.pageManager.getMetrics() : {};
+                const routerMetrics = window.router?.getMetrics ? window.router.getMetrics() : {};
+                const componentStates = window.pageManager?.getComponentStates ? window.pageManager.getComponentStates() : {};
 
-            const mountedCount = Object.values(componentStates).filter(state =>
-                state.status === 'loaded' || state.status === 'mounted'
-            ).length;
+                const mountedCount = Object.values(componentStates).filter(state =>
+                    state.status === 'loaded' || state.status === 'mounted'
+                ).length;
 
-            const loadingCount = Object.values(componentStates).filter(state =>
-                state.status === 'loading'
-            ).length;
+                const loadingCount = Object.values(componentStates).filter(state =>
+                    state.status === 'loading'
+                ).length;
 
-            metricsContainer.innerHTML = `
+                metricsContainer.innerHTML = `
                 <div class="performance__metric">
                     <span>Components Mounted:</span>
                     <strong>${mountedCount}</strong>
@@ -510,53 +702,50 @@ document.querySelectorAll('[data-modal]')
                     <strong style="font-size: 0.8rem;">${window.location.pathname}</strong>
                 </div>
             `;
-        }
-
-        function updateComponentRegistry() {
-            const display = document.getElementById('component-registry-display');
-            if (!display) return;
-
-            // Get real component registry from PageManager if available
-            let components = [];
-
-            if (window.pageManager) {
-                const registry = window.pageManager.getComponentRegistry();
-                const componentStates = window.pageManager.getComponentStates();
-
-                components = registry.map(comp => ({
-                    name: comp.name,
-                    status: componentStates[comp.name]?.status || 'unknown',
-                    priority: comp.priority || 'normal', // Real priority from registry
-                    mountTime: componentStates[comp.name]?.mountTime || null,
-                    errorCount: componentStates[comp.name]?.errorCount || 0
-                }));
-            } else {
-                // Fallback message
-                display.innerHTML = '<p style="color: #666;">PageManager not initialized yet</p>';
-                return;
             }
 
-            display.innerHTML = components.map(comp => `...`).join('');
-        }
+            function updateComponentRegistry() {
+                const display = document.getElementById('component-registry-display');
+                if (!display) return;
 
-        function refreshPerformanceData() {
-            // Update performance modal
-            const metrics = window.getPerformanceMetrics ? window.getPerformanceMetrics() : {};
+                // Mock component registry for demo purposes
+                const components = [
+                    {name: 'lazyimage', status: 'loaded', priority: 'critical'},
+                    {name: 'carousel', status: 'loaded', priority: 'normal'},
+                    {name: 'modal', status: 'loaded', priority: 'normal'},
+                    {name: 'toast-trigger', status: 'loaded', priority: 'normal'},
+                    {name: 'enhanced-form', status: 'loading', priority: 'low'}
+                ];
 
-            document.getElementById('component-count').textContent = '5';
-            document.getElementById('mounted-count').textContent = metrics.pageManager?.componentMounts || '4';
-            document.getElementById('avg-mount-time').textContent = (metrics.pageManager?.averageMountTime || 12.5).toFixed(1);
+                display.innerHTML = components.map(comp => `
+                <div class="component__item ${comp.status}">
+                    <div>
+                        <strong>${comp.name}</strong>
+                        <small style="margin-left: 0.5rem; color: #666;">(${comp.priority})</small>
+                    </div>
+                    <span class="component__status ${comp.status}">${comp.status}</span>
+                </div>
+            `).join('');
+            }
 
-            // Memory usage (mock data)
-            const memoryUsage = performance.memory ?
-                (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1) :
-                '~8.2';
-            document.getElementById('memory-usage').textContent = memoryUsage;
+            function refreshPerformanceData() {
+                // Update performance modal
+                const metrics = window.getPerformanceMetrics ? window.getPerformanceMetrics() : {};
 
-            // Detailed metrics
-            const detailedContainer = document.getElementById('detailed-performance-metrics');
-            if (detailedContainer) {
-                detailedContainer.innerHTML = `
+                document.getElementById('component-count').textContent = '5';
+                document.getElementById('mounted-count').textContent = metrics.pageManager?.componentMounts || '4';
+                document.getElementById('avg-mount-time').textContent = (metrics.pageManager?.averageMountTime || 12.5).toFixed(1);
+
+                // Memory usage (mock data)
+                const memoryUsage = performance.memory ?
+                    (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1) :
+                    '~8.2';
+                document.getElementById('memory-usage').textContent = memoryUsage;
+
+                // Detailed metrics
+                const detailedContainer = document.getElementById('detailed-performance-metrics');
+                if (detailedContainer) {
+                    detailedContainer.innerHTML = `
 Component Registry Status:
 - lazyimage: ✅ Loaded (${Math.floor(Math.random() * 20) + 5}ms)
 - carousel: ✅ Loaded (${Math.floor(Math.random() * 30) + 15}ms)
@@ -579,128 +768,128 @@ Event Bus:
 - Total Events: ${Math.floor(Math.random() * 100) + 50}
 - Active Listeners: ${Math.floor(Math.random() * 20) + 15}
                 `.trim();
-            }
-        }
-
-        function downloadPerformanceReport() {
-            const report = {
-                timestamp: new Date().toISOString(),
-                url: window.location.href,
-                userAgent: navigator.userAgent,
-                performance: window.getPerformanceMetrics ? window.getPerformanceMetrics() : {},
-                memoryUsage: performance.memory ? {
-                    used: performance.memory.usedJSHeapSize,
-                    total: performance.memory.totalJSHeapSize,
-                    limit: performance.memory.jsHeapSizeLimit
-                } : null,
-                components: [
-                    'lazyimage', 'carousel', 'modal', 'toast-trigger', 'enhanced-form'
-                ]
-            };
-
-            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `enhancement-framework-report-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function clearEventLog() {
-            const eventLogContent = document.querySelector('.event__log-content');
-            if (eventLogContent) {
-                eventLogContent.innerHTML = '';
-            }
-        }
-
-        function exportEventLog() {
-            const eventLog = document.querySelector('.event__log-content');
-            if (!eventLog) return;
-
-            const events = Array.from(eventLog.children).map(child => ({
-                timestamp: child.querySelector('small')?.textContent,
-                event: child.querySelector('strong')?.textContent,
-                data: child.querySelector('pre')?.textContent
-            }));
-
-            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `event-log-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function updateHealthIndicator() {
-            const indicator = document.getElementById('health-indicator');
-            if (!indicator) return;
-
-            const componentCount = document.querySelectorAll('[data-component]').length;
-            const loadingComponents = document.querySelectorAll('.component--loading').length;
-            const errorComponents = document.querySelectorAll('.component--error').length;
-
-            let status = 'All Systems Operational';
-            let className = '';
-
-            if (errorComponents > 0) {
-                status = `${errorComponents} Component Error${errorComponents > 1 ? 's' : ''}`;
-                className = 'error';
-            } else if (loadingComponents > 0) {
-                status = `${loadingComponents} Component${loadingComponents > 1 ? 's' : ''} Loading`;
-                className = 'warning';
-            }
-
-            indicator.textContent = `${className === 'error' ? '🔴' : className === 'warning' ? '🟡' : '🟢'} ${status}`;
-            indicator.className = `health-indicator ${className}`;
-        }
-
-        // Initialize demo enhancements
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update component registry display
-            updateComponentRegistry();
-
-            // Update health indicator
-            updateHealthIndicator();
-
-            // Performance panel toggle
-            document.getElementById('performance-toggle')?.addEventListener('click', togglePerformancePanel);
-
-            // Periodic updates
-            setInterval(() => {
-                if (performancePanelVisible) {
-                    updatePerformancePanel();
                 }
+            }
+
+            function downloadPerformanceReport() {
+                const report = {
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent,
+                    performance: window.getPerformanceMetrics ? window.getPerformanceMetrics() : {},
+                    memoryUsage: performance.memory ? {
+                        used: performance.memory.usedJSHeapSize,
+                        total: performance.memory.totalJSHeapSize,
+                        limit: performance.memory.jsHeapSizeLimit
+                    } : null,
+                    components: [
+                        'lazyimage', 'carousel', 'modal', 'toast-trigger', 'enhanced-form'
+                    ]
+                };
+
+                const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `enhancement-framework-report-${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function clearEventLog() {
+                const eventLogContent = document.querySelector('.event__log-content');
+                if (eventLogContent) {
+                    eventLogContent.innerHTML = '';
+                }
+            }
+
+            function exportEventLog() {
+                const eventLog = document.querySelector('.event__log-content');
+                if (!eventLog) return;
+
+                const events = Array.from(eventLog.children).map(child => ({
+                    timestamp: child.querySelector('small')?.textContent,
+                    event: child.querySelector('strong')?.textContent,
+                    data: child.querySelector('pre')?.textContent
+                }));
+
+                const blob = new Blob([JSON.stringify(events, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `event-log-${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function updateHealthIndicator() {
+                const indicator = document.getElementById('health-indicator');
+                if (!indicator) return;
+
+                const componentCount = document.querySelectorAll('[data-component]').length;
+                const loadingComponents = document.querySelectorAll('.component--loading').length;
+                const errorComponents = document.querySelectorAll('.component--error').length;
+
+                let status = 'All Systems Operational';
+                let className = '';
+
+                if (errorComponents > 0) {
+                    status = `${errorComponents} Component Error${errorComponents > 1 ? 's' : ''}`;
+                    className = 'error';
+                } else if (loadingComponents > 0) {
+                    status = `${loadingComponents} Component${loadingComponents > 1 ? 's' : ''} Loading`;
+                    className = 'warning';
+                }
+
+                indicator.textContent = `${className === 'error' ? '🔴' : className === 'warning' ? '🟡' : '🟢'} ${status}`;
+                indicator.className = `health-indicator ${className}`;
+            }
+
+            // Initialize demo enhancements
+            document.addEventListener('DOMContentLoaded', function () {
+                // Update component registry display
+                updateComponentRegistry();
+
+                // Update health indicator
                 updateHealthIndicator();
-            }, 2000);
 
-            // Mock some component loading states for demo
-            setTimeout(() => {
-                const enhancedForm = document.querySelector('[data-enhanced-form]');
-                if (enhancedForm) {
-                    enhancedForm.classList.add('component-loading');
-                    setTimeout(() => {
-                        enhancedForm.classList.remove('component-loading');
-                        updateComponentRegistry();
-                    }, 3000);
-                }
-            }, 1000);
-        });
+                // Performance panel toggle
+                document.getElementById('performance-toggle')?.addEventListener('click', togglePerformancePanel);
 
-        // Make functions globally available
-        window.togglePerformancePanel = togglePerformancePanel;
-        window.refreshPerformanceData = refreshPerformanceData;
-        window.downloadPerformanceReport = downloadPerformanceReport;
-        window.clearEventLog = clearEventLog;
-        window.exportEventLog = exportEventLog;
-    </script>
+                // Periodic updates
+                setInterval(() => {
+                    if (performancePanelVisible) {
+                        updatePerformancePanel();
+                    }
+                    updateHealthIndicator();
+                }, 2000);
 
-    <!-- Load the enhanced framework -->
-    <script type="module" src="demo.js"></script>
-</body>
+                // Mock some component loading states for demo
+                setTimeout(() => {
+                    const enhancedForm = document.querySelector('[data-enhanced-form]');
+                    if (enhancedForm) {
+                        enhancedForm.classList.add('component-loading');
+                        setTimeout(() => {
+                            enhancedForm.classList.remove('component-loading');
+                            updateComponentRegistry();
+                        }, 3000);
+                    }
+                }, 1000);
+            });
+
+            // Make functions globally available
+            window.togglePerformancePanel = togglePerformancePanel;
+            window.refreshPerformanceData = refreshPerformanceData;
+            window.downloadPerformanceReport = downloadPerformanceReport;
+            window.clearEventLog = clearEventLog;
+            window.exportEventLog = exportEventLog;
+        </script>
+
+        <!-- Load the enhanced framework -->
+        <script type="module" src="demo.js"></script>
+    </body>
 </html>

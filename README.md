@@ -17,10 +17,10 @@ npm install parallelogram-js
 ```
 
 ```javascript
-import { LazyImage, Modal } from 'parallelogram-js';
+import { Lazyimage, Modal } from 'parallelogram-js';
 import 'parallelogram-js/styles';
 
-LazyImage.enhanceAll();
+Lazyimage.enhanceAll();
 Modal.enhanceAll();
 ```
 

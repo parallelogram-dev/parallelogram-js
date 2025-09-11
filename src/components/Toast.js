@@ -3,7 +3,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
 /**
  * Toast Component
  *
- * Handles data-toast-trigger elements and bridges to the existing XToasts web component
+ * Handles data-toast-trigger elements and bridges to the existing PToasts web component
  * and AlertManager system.
  *
  * @example
@@ -13,7 +13,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *         data-toast-message="Operation completed"
  *         data-toast-duration="5000">Success Toast</button>
  *
- * <x-toasts placement="top-right"></x-toasts>
+ * <p-toasts placement="top-right"></p-toasts>
  *
  * JavaScript (standalone):
  * import { Toast } from './components/Toast.js';
@@ -160,7 +160,7 @@ export class Toast extends BaseComponent {
         } = options;
 
         try {
-            // Use AlertManager if available, otherwise try direct XToasts
+            // Use AlertManager if available, otherwise try direct PToasts
             if (window.alertManager && typeof window.alertManager.show === 'function') {
                 window.alertManager.show({
                     message,
@@ -170,8 +170,8 @@ export class Toast extends BaseComponent {
                     dismissible
                 });
             } else {
-                // Fallback: try to use XToasts directly
-                const toastContainer = document.querySelector('x-toasts');
+                // Fallback: try to use PToasts directly
+                const toastContainer = document.querySelector('p-toasts');
                 if (toastContainer && typeof toastContainer.toast === 'function') {
                     toastContainer.toast({
                         message,
@@ -256,7 +256,7 @@ export class Toast extends BaseComponent {
             mountedTriggers: triggers.length,
             availableTypes: Object.keys(Toast.defaults.typeMapping),
             alertManagerAvailable: !!(window.alertManager && typeof window.alertManager.show === 'function'),
-            xToastsAvailable: !!document.querySelector('x-toasts'),
+            xToastsAvailable: !!document.querySelector('p-toasts'),
             defaults: Toast.defaults
         };
     }

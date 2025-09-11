@@ -1,4 +1,4 @@
-export class XToasts extends HTMLElement {
+export class PToasts extends HTMLElement {
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
@@ -139,6 +139,6 @@ export class XToasts extends HTMLElement {
   }
 }
 
-if (!customElements.get('x-toasts')) {
-  customElements.define('x-toasts', XToasts);
+if (!customElements.get('p-toasts')) {
+  customElements.define('p-toasts', PToasts);
 }
