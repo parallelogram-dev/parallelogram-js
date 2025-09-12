@@ -316,7 +316,7 @@ export default class Lazysrc extends BaseComponent {
                 const element = entry.target;
                 const state = this.getState(element);
 
-                if (state && state.result && !state.result.isLoaded && !state.result.isLoading) {
+                if (state && !state.isLoaded && !state.isLoading) {
                     this._loadElement(element, state);
                 }
             }
