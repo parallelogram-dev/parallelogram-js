@@ -122,7 +122,7 @@ export class DataTable extends BaseComponent {
 
     _setupPagination(element, state) {
         const paginationContainer = document.createElement('div');
-        paginationContainer.className = 'datatable-pagination';
+        paginationContainer.className = 'datatable__pagination';
         element.parentNode.appendChild(paginationContainer);
         state.paginationContainer = paginationContainer;
     }

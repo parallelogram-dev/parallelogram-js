@@ -9,8 +9,8 @@
     "scripts": {
         "build": "rollup -c && npm run build-css",
         "build-css": "npm run compile-scss && npm run minify-css",
-        "compile-scss": "sass src/styles/index.scss:dist/styles/index.css --no-source-map --style=expanded",
-        "compile-scss-components": "sass src/styles/components:dist/styles/components --no-source-map --style=expanded",
+        "compile-scss": "sass src/styles/framework/index.scss:dist/styles/index.css --no-source-map --style=expanded",
+        "compile-scss-components": "sass src/styles/framework/components:dist/styles/components --no-source-map --style=expanded",
         "minify-css": "cleancss -o dist/styles/index.min.css dist/styles/index.css",
         "build-all-css": "npm run compile-scss && npm run compile-scss-components && npm run minify-css",
         "build-demo": "rollup -c rollup.demo.config.js",

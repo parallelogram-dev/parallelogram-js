@@ -1,9 +1,9 @@
 // Metrics Component
+@use '../includes/common';
 .metrics {
     &__grid {
-        display: grid;
+        @extend %grid_common;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
         margin: 2rem 0;
     }
     
@@ -40,7 +40,7 @@
 // Dashboard specific metrics styles
 .dashboard {
     &__actions {
-        display: flex;
+        @extend %flex_row;
         gap: 0.5rem;
         margin-top: 1rem;
     }
