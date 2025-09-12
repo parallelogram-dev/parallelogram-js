@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Performance Dashboard - Enhancement Framework</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.css">
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
 </head>
-<body>
+<body data-demo="performance">
     <nav data-view="navbar">
         <div class="nav__container">
             <h1>Enhancement Framework</h1>
@@ -20,8 +20,8 @@
         </div>
     </nav>
 
-    <main data-view="main" class="page-content">
-        <header class="page-header">
+    <main data-view="main" class="page__content">
+        <header class="page__header">
             <h1>Performance Dashboard</h1>
             <p>Real-time monitoring of framework performance, component lifecycle, and system health.</p>
         </header>
@@ -33,12 +33,12 @@
                     <div class="component__item">
                         <div>
                             <strong>Framework</strong>
-                            <small style="margin-left: 0.5rem; color: #666;">Initializing...</small>
+                            <small class="component__status-text">Initializing...</small>
                         </div>
                         <span class="component__status loading">loading</span>
                     </div>
                 </div>
-                <div class="card-actions">
+                <div class="dashboard__actions">
                     <button onclick="refreshRegistry()" class="btn__small">Refresh</button>
                     <button onclick="exportRegistry()" class="btn__small">Export Data</button>
                 </div>
@@ -47,25 +47,25 @@
             <div class="dashboard-card">
                 <h2>Performance Metrics</h2>
                 <div class="metrics__grid">
-                    <div class="metric__card">
+                    <div class="metrics__card">
                         <h3>Components</h3>
-                        <div class="metric__value" id="total-components">0</div>
-                        <div class="metric__label">Registered</div>
+                        <div class="metrics__value" id="total-components">0</div>
+                        <div class="metrics__label">Registered</div>
                     </div>
-                    <div class="metric__card">
+                    <div class="metrics__card">
                         <h3>Mounted</h3>
-                        <div class="metric__value" id="mounted-components">0</div>
-                        <div class="metric__label">Active</div>
+                        <div class="metrics__value" id="mounted-components">0</div>
+                        <div class="metrics__label">Active</div>
                     </div>
-                    <div class="metric__card">
+                    <div class="metrics__card">
                         <h3>Avg Mount</h3>
-                        <div class="metric__value" id="avg-mount-time">0ms</div>
-                        <div class="metric__label">Load Time</div>
+                        <div class="metrics__value" id="avg-mount-time">0ms</div>
+                        <div class="metrics__label">Load Time</div>
                     </div>
-                    <div class="metric__card">
+                    <div class="metrics__card">
                         <h3>Memory</h3>
-                        <div class="metric__value" id="memory-usage">0MB</div>
-                        <div class="metric__label">JS Heap</div>
+                        <div class="metrics__value" id="memory-usage">0MB</div>
+                        <div class="metrics__label">JS Heap</div>
                     </div>
                 </div>
             </div>
@@ -90,7 +90,7 @@
                         <strong id="avg-navigation-time">0ms</strong>
                     </div>
                 </div>
-                <div class="card-actions">
+                <div class="dashboard__actions">
                     <button onclick="testNavigation()" class="btn__small">Test Navigation</button>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                 <div class="timeline-container">
                     <canvas id="lifecycle-chart" width="800" height="300"></canvas>
                 </div>
-                <div class="card-actions">
+                <div class="dashboard__actions">
                     <button onclick="clearTimeline()" class="btn__small">Clear</button>
                     <button onclick="exportTimeline()" class="btn__small">Export</button>
                 </div>
@@ -210,549 +210,6 @@
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
 
-    <!-- Demo functionality scripts -->
-    <script>
-        let performanceData = {
-            componentMounts: 0,
-            navigationCount: 0,
-            eventCount: 0,
-            mountTimes: [],
-            navigationTimes: [],
-            streamActive: true,
-            recentEvents: new Set()
-        };
-
-        let lifecycleChart;
-        let chartData = [];
-
-        // Initialize performance monitoring
-        function initPerformanceMonitoring() {
-            setupEventListeners();
-            setupChart();
-            startPerformanceUpdates();
-            updateHealthStatus();
-        }
-
-        function setupEventListeners() {
-            // Listen for framework events
-            if (window.eventBus) {
-                window.eventBus.on('*', (eventType, data) => {
-                    handleFrameworkEvent(eventType, data);
-                });
-            }
-
-            // Listen for component lifecycle events
-            document.addEventListener('component:mount', handleComponentEvent);
-            document.addEventListener('component:unmount', handleComponentEvent);
-            document.addEventListener('router:navigate', handleRouterEvent);
-            document.addEventListener('performance:metric', handlePerformanceEvent);
-
-            // Monitor page visibility for performance tracking
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    logEvent('performance', 'page:hidden', { timestamp: performance.now() });
-                } else {
-                    logEvent('performance', 'page:visible', { timestamp: performance.now() });
-                }
-            });
-        }
-
-        function setupChart() {
-            const canvas = document.getElementById('lifecycle-chart');
-            const ctx = canvas.getContext('2d');
-
-            lifecycleChart = {
-                canvas: canvas,
-                ctx: ctx,
-                data: chartData,
-                render: function() {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                    // Draw grid
-                    this.ctx.strokeStyle = '#e2e8f0';
-                    this.ctx.lineWidth = 1;
-
-                    for (let i = 0; i <= 10; i++) {
-                        const y = (this.canvas.height / 10) * i;
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(0, y);
-                        this.ctx.lineTo(this.canvas.width, y);
-                        this.ctx.stroke();
-                    }
-
-                    // Draw timeline data
-                    if (this.data.length > 1) {
-                        this.ctx.strokeStyle = '#0ea5e9';
-                        this.ctx.lineWidth = 2;
-                        this.ctx.beginPath();
-
-                        this.data.forEach((point, i) => {
-                            const x = (this.canvas.width / Math.max(this.data.length - 1, 1)) * i;
-                            const y = this.canvas.height - (point.value / 100) * this.canvas.height;
-
-                            if (i === 0) {
-                                this.ctx.moveTo(x, y);
-                            } else {
-                                this.ctx.lineTo(x, y);
-                            }
-                        });
-
-                        this.ctx.stroke();
-                    }
-                }
-            };
-        }
-
-        function handleFrameworkEvent(eventType, data) {
-            performanceData.eventCount++;
-            performanceData.recentEvents.add(eventType);
-
-            // Keep only last 10 event types
-            if (performanceData.recentEvents.size > 10) {
-                const arr = Array.from(performanceData.recentEvents);
-                performanceData.recentEvents.clear();
-                arr.slice(-10).forEach(e => performanceData.recentEvents.add(e));
-            }
-
-            logEvent('framework', eventType, data);
-
-            // Add to timeline chart
-            chartData.push({
-                timestamp: Date.now(),
-                value: Math.random() * 100, // Mock performance value
-                event: eventType
-            });
-
-            // Keep only last 50 data points
-            if (chartData.length > 50) {
-                chartData.shift();
-            }
-
-            if (lifecycleChart) {
-                lifecycleChart.render();
-            }
-        }
-
-        function handleComponentEvent(event) {
-            if (event.type === 'component:mount') {
-                performanceData.componentMounts++;
-                const mountTime = event.detail?.mountTime || Math.random() * 50;
-                performanceData.mountTimes.push(mountTime);
-            }
-
-            logEvent('component', event.type, event.detail);
-        }
-
-        function handleRouterEvent(event) {
-            performanceData.navigationCount++;
-            const navTime = event.detail?.loadTime || Math.random() * 200;
-            performanceData.navigationTimes.push(navTime);
-
-            logEvent('router', event.type, event.detail);
-        }
-
-        function handlePerformanceEvent(event) {
-            logEvent('performance', event.type, event.detail);
-        }
-
-        function logEvent(category, type, data) {
-            if (!performanceData.streamActive) return;
-
-            const container = document.getElementById('event-stream-content');
-            if (!container) return;
-
-            const timestamp = new Date().toLocaleTimeString();
-            const eventElement = document.createElement('div');
-            eventElement.className = `event-stream-item event-${category}`;
-            eventElement.innerHTML = `
-                <div class="event-time">${timestamp}</div>
-                <div class="event-category">${category}</div>
-                <div class="event-type">${type}</div>
-                <div class="event-data">${JSON.stringify(data || {}, null, 1)}</div>
-            `;
-
-            container.insertBefore(eventElement, container.firstChild);
-
-            // Keep only last 100 events
-            const items = container.querySelectorAll('.event-stream-item');
-            if (items.length > 100) {
-                items[items.length - 1].remove();
-            }
-        }
-
-        function startPerformanceUpdates() {
-            setInterval(updatePerformanceMetrics, 2000);
-            setInterval(updateHealthStatus, 5000);
-        }
-
-        function updatePerformanceMetrics() {
-            // Update component registry
-            if (window.pageManager && window.pageManager.getComponentRegistry) {
-                const registry = window.pageManager.getComponentRegistry();
-                const states = window.pageManager.getComponentStates ? window.pageManager.getComponentStates() : {};
-
-                document.getElementById('total-components').textContent = registry.length;
-
-                const mountedCount = Object.values(states).filter(s => s.status === 'loaded').length;
-                document.getElementById('mounted-components').textContent = mountedCount;
-
-                updateRegistryDisplay(registry, states);
-            }
-
-            // Update performance metrics
-            const avgMountTime = performanceData.mountTimes.length > 0
-                ? Math.round(performanceData.mountTimes.reduce((a, b) => a + b, 0) / performanceData.mountTimes.length)
-                : 0;
-            document.getElementById('avg-mount-time').textContent = avgMountTime + 'ms';
-
-            // Update memory usage
-            if (performance.memory) {
-                const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-                document.getElementById('memory-usage').textContent = memoryMB + 'MB';
-            }
-
-            // Update router stats
-            document.getElementById('current-page').textContent = window.location.pathname;
-            document.getElementById('navigation-count').textContent = performanceData.navigationCount;
-
-            const enhancedLinks = document.querySelectorAll('[data-router-enhanced]').length;
-            document.getElementById('enhanced-links').textContent = enhancedLinks;
-
-            const avgNavTime = performanceData.navigationTimes.length > 0
-                ? Math.round(performanceData.navigationTimes.reduce((a, b) => a + b, 0) / performanceData.navigationTimes.length)
-                : 0;
-            document.getElementById('avg-navigation-time').textContent = avgNavTime + 'ms';
-
-            // Update event bus stats
-            document.getElementById('total-events').textContent = performanceData.eventCount;
-            document.getElementById('active-listeners').textContent = window.eventBus?.listenerCount?.() || 0;
-            document.getElementById('event-queue').textContent = 0; // Mock queue length
-
-            // Update recent events
-            const recentEventsContainer = document.getElementById('recent-events');
-            recentEventsContainer.innerHTML = Array.from(performanceData.recentEvents)
-                .slice(-5)
-                .map(event => `<span class="event-chip">${event}</span>`)
-                .join('');
-        }
-
-        function updateRegistryDisplay(registry, states) {
-            const container = document.getElementById('registry-status');
-            if (!container) return;
-
-            container.innerHTML = registry.map(comp => {
-                const state = states[comp.name] || { status: 'not-loaded' };
-                return `
-                    <div class="component__item">
-                        <div>
-                            <strong>${comp.name}</strong>
-                            <small style="margin-left: 0.5rem; color: #666;">(${comp.priority})</small>
-                        </div>
-                        <span class="component__status ${state.status}">${state.status}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateHealthStatus() {
-            // Framework health
-            const frameworkHealth = window.pageManager && window.router ? 'healthy' : 'error';
-            document.getElementById('health-framework').textContent = frameworkHealth === 'healthy' ? '🟢' : '🔴';
-            document.getElementById('framework-status').textContent = frameworkHealth === 'healthy' ? 'Operational' : 'Error';
-
-            // Router health
-            const routerHealth = window.router ? 'healthy' : 'error';
-            document.getElementById('health-router').textContent = routerHealth === 'healthy' ? '🟢' : '🔴';
-            document.getElementById('router-status').textContent = routerHealth === 'healthy' ? 'Active' : 'Inactive';
-
-            // Components health
-            const componentErrors = document.querySelectorAll('.component__status.error').length;
-            const componentsHealth = componentErrors === 0 ? 'healthy' : 'warning';
-            document.getElementById('health-components').textContent = componentsHealth === 'healthy' ? '🟢' : '🟡';
-            document.getElementById('components-status').textContent = componentsHealth === 'healthy' ? 'All OK' : `${componentErrors} Errors`;
-
-            // Memory health
-            const memoryHealth = performance.memory && performance.memory.usedJSHeapSize < 50 * 1024 * 1024 ? 'healthy' : 'warning';
-            document.getElementById('health-memory').textContent = memoryHealth === 'healthy' ? '🟢' : '🟡';
-            document.getElementById('memory-status').textContent = memoryHealth === 'healthy' ? 'Normal' : 'High Usage';
-        }
-
-        // Utility functions
-        function refreshRegistry() {
-            if (window.pageManager && window.pageManager.scanAndMount) {
-                window.pageManager.scanAndMount();
-                logEvent('performance', 'registry:refresh', { timestamp: performance.now() });
-            }
-        }
-
-        function exportRegistry() {
-            const data = {
-                timestamp: new Date().toISOString(),
-                registry: window.pageManager?.getComponentRegistry() || [],
-                states: window.pageManager?.getComponentStates() || {},
-                metrics: performanceData
-            };
-
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `registry-export-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function testNavigation() {
-            const pages = ['/', '/ui-components', '/media', '/interactive'];
-            const randomPage = pages[Math.floor(Math.random() * pages.length)];
-
-            const startTime = performance.now();
-
-            if (window.router && window.router.navigate) {
-                window.router.navigate(randomPage);
-            } else {
-                window.location.href = randomPage;
-            }
-
-            const endTime = performance.now();
-            logEvent('performance', 'navigation:test', {
-                page: randomPage,
-                duration: endTime - startTime
-            });
-        }
-
-        function runPerformanceTest(testType) {
-            const resultsContainer = document.getElementById('test-results');
-            resultsContainer.innerHTML = `<div class="test-running">Running ${testType} test...</div>`;
-
-            setTimeout(() => {
-                let results;
-
-                switch (testType) {
-                    case 'component-mount':
-                        results = testComponentMountSpeed();
-                        break;
-                    case 'memory-usage':
-                        results = testMemoryUsage();
-                        break;
-                    case 'event-throughput':
-                        results = testEventThroughput();
-                        break;
-                    case 'navigation-speed':
-                        results = testNavigationSpeed();
-                        break;
-                    case 'cleanup-efficiency':
-                        results = testCleanupEfficiency();
-                        break;
-                    default:
-                        results = { error: 'Unknown test type' };
-                }
-
-                displayTestResults(testType, results);
-            }, 1000);
-        }
-
-        function testComponentMountSpeed() {
-            const startTime = performance.now();
-
-            // Simulate component mounting
-            for (let i = 0; i < 100; i++) {
-                const mockElement = document.createElement('div');
-                mockElement.setAttribute('data-test-component', 'true');
-                document.body.appendChild(mockElement);
-                document.body.removeChild(mockElement);
-            }
-
-            const endTime = performance.now();
-
-            return {
-                totalTime: Math.round(endTime - startTime),
-                averageTime: Math.round((endTime - startTime) / 100),
-                componentsPerSecond: Math.round(100000 / (endTime - startTime))
-            };
-        }
-
-        function testMemoryUsage() {
-            const initialMemory = performance.memory?.usedJSHeapSize || 0;
-
-            // Create some objects to test memory
-            const testData = [];
-            for (let i = 0; i < 1000; i++) {
-                testData.push({ id: i, data: new Array(100).fill(Math.random()) });
-            }
-
-            const peakMemory = performance.memory?.usedJSHeapSize || 0;
-
-            // Clean up
-            testData.length = 0;
-
-            setTimeout(() => {
-                if (typeof gc !== 'undefined') gc(); // Force garbage collection if available
-            }, 100);
-
-            const finalMemory = performance.memory?.usedJSHeapSize || 0;
-
-            return {
-                initialMB: Math.round(initialMemory / 1024 / 1024),
-                peakMB: Math.round(peakMemory / 1024 / 1024),
-                finalMB: Math.round(finalMemory / 1024 / 1024),
-                allocatedMB: Math.round((peakMemory - initialMemory) / 1024 / 1024)
-            };
-        }
-
-        function testEventThroughput() {
-            const startTime = performance.now();
-            const eventCount = 1000;
-
-            for (let i = 0; i < eventCount; i++) {
-                document.dispatchEvent(new CustomEvent('test:event', {
-                    detail: { id: i, timestamp: performance.now() }
-                }));
-            }
-
-            const endTime = performance.now();
-
-            return {
-                totalEvents: eventCount,
-                totalTime: Math.round(endTime - startTime),
-                eventsPerSecond: Math.round(eventCount * 1000 / (endTime - startTime))
-            };
-        }
-
-        function testNavigationSpeed() {
-            // Mock navigation test
-            const mockTimes = Array.from({ length: 10 }, () => Math.random() * 100 + 50);
-
-            return {
-                averageTime: Math.round(mockTimes.reduce((a, b) => a + b, 0) / mockTimes.length),
-                minTime: Math.round(Math.min(...mockTimes)),
-                maxTime: Math.round(Math.max(...mockTimes)),
-                samples: mockTimes.length
-            };
-        }
-
-        function testCleanupEfficiency() {
-            const startTime = performance.now();
-
-            // Test cleanup patterns
-            const cleanup = [];
-            for (let i = 0; i < 100; i++) {
-                const mockCleanup = () => {};
-                cleanup.push(mockCleanup);
-            }
-
-            cleanup.forEach(fn => fn());
-            cleanup.length = 0;
-
-            const endTime = performance.now();
-
-            return {
-                cleanupTime: Math.round(endTime - startTime),
-                itemsCleaned: 100,
-                efficiency: 'Excellent'
-            };
-        }
-
-        function displayTestResults(testType, results) {
-            const container = document.getElementById('test-results');
-
-            if (results.error) {
-                container.innerHTML = `<div class="test-error">Error: ${results.error}</div>`;
-                return;
-            }
-
-            const resultHtml = Object.entries(results)
-                .map(([key, value]) => `<div class="test-result-item"><span>${key}:</span> <strong>${value}</strong></div>`)
-                .join('');
-
-            container.innerHTML = `
-                <div class="test-success">
-                    <h4>${testType} Results</h4>
-                    ${resultHtml}
-                </div>
-            `;
-
-            logEvent('performance', `test:${testType}`, results);
-        }
-
-        function toggleEventStream() {
-            performanceData.streamActive = !performanceData.streamActive;
-            const button = document.getElementById('stream-toggle');
-            button.textContent = performanceData.streamActive ? 'Pause Stream' : 'Resume Stream';
-        }
-
-        function clearEventStream() {
-            const container = document.getElementById('event-stream-content');
-            if (container) {
-                container.innerHTML = '<div class="event-stream-item event-info"><div class="event-type">Stream cleared</div></div>';
-            }
-        }
-
-        function exportEventStream() {
-            const events = Array.from(document.querySelectorAll('.event-stream-item')).map(item => ({
-                time: item.querySelector('.event-time')?.textContent,
-                category: item.querySelector('.event-category')?.textContent,
-                type: item.querySelector('.event-type')?.textContent,
-                data: item.querySelector('.event-data')?.textContent
-            }));
-
-            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `event-stream-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function clearTimeline() {
-            chartData.length = 0;
-            if (lifecycleChart) {
-                lifecycleChart.render();
-            }
-        }
-
-        function exportTimeline() {
-            const blob = new Blob([JSON.stringify(chartData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `timeline-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function filterEvents() {
-            const filter = document.getElementById('event-filter').value;
-            const items = document.querySelectorAll('.event-stream-item');
-
-            items.forEach(item => {
-                if (!filter || item.classList.contains(`event-${filter}`)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initPerformanceMonitoring);
-
-        // Page-specific component mounting notification
-        if (window.eventBus) {
-            window.eventBus.emit('page:loaded', {
-                page: '/performance',
-                components: ['performance-dashboard'],
-                timestamp: performance.now()
-            });
-        }
-    </script>
 
     <!-- Load the framework -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>
