@@ -167,6 +167,7 @@ export default class PSelect extends HTMLElement {
           border-radius: 10px;
           border: 1px solid var(--select-border-color);
           background: var(--select-bg);
+          color: var(--select-text);
           cursor: pointer;
         }
         
@@ -207,6 +208,7 @@ export default class PSelect extends HTMLElement {
           right: 0;
           margin-top: 0.25rem;
           background: var(--select-bg);
+          color: var(--select-text);
           border: 1px solid var(--select-border-color);
           border-radius: 10px;
           max-height: 240px;

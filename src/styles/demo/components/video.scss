@@ -1,4 +1,5 @@
 // Video Component Styles
+@use '../includes/common';
 .video {
   &__container {
     position: relative;
@@ -32,11 +33,8 @@
   }
 
   &__demo-container {
-    background: var(--demo-panel-bg, #f8fafc);
-    color: var(--demo-text, #1f2937);
-    border: 1px solid var(--demo-border, #e2e8f0);
+    @extend %panel_surface;
     padding: 2rem;
-    border-radius: 8px;
     margin: 2rem 0;
   }
 

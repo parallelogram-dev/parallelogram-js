@@ -34,19 +34,19 @@ export class DemoUIComponents extends BaseComponent {
     
     setupButtonHandlers() {
         // Handle all buttons with onclick handlers
-        const onclickButtons = this.element.querySelectorAll('[onclick]');
+        const onclickButtons = this.element.querySelectorAll('[data-btn-action]');
         
         onclickButtons.forEach(button => {
-            const onclickValue = button.getAttribute('onclick');
+            const method = button.getAttribute('data-btn-action');
             button.removeAttribute('onclick');
             
-            if (onclickValue.includes('handleFormSubmit')) {
+            if (method.includes('handleFormSubmit')) {
                 this.addEventListener(button, 'click', (event) => this.handleFormSubmit(event));
-            } else if (onclickValue.includes('clearEventLog')) {
+            } else if (method.includes('clearEventLog')) {
                 this.addEventListener(button, 'click', () => this.clearEventLog());
-            } else if (onclickValue.includes('exportEventLog')) {
+            } else if (method.includes('exportEventLog')) {
                 this.addEventListener(button, 'click', () => this.exportEventLog());
-            } else if (onclickValue.includes("window.location.href='/performance'")) {
+            } else if (method.includes("performance")) {
                 this.addEventListener(button, 'click', () => {
                     window.location.href = '/performance';
                 });

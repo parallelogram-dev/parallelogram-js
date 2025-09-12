@@ -290,23 +290,23 @@
                 </div>
             </div>
         </section>
-    </main>
 
-    <!-- Gallery Preview Modal -->
-    <p-modal id="gallery-preview" data-modal-size="large" data-modal-closable="true">
-        <h2 slot="title">Image Preview</h2>
-        <div class="gallery__preview-container">
-            <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image">
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary" onclick="downloadCurrentImage()">Download</button>
-        </div>
-    </p-modal>
+        <!-- Gallery Preview Modal -->
+        <p-modal id="gallery-preview" data-modal-size="large" data-modal-closable="true">
+            <h2 slot="title">Image Preview</h2>
+            <div class="gallery__preview-container">
+                <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image">
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+                <button class="modal__button modal__button--primary" data-btn-action="downloadCurrentImage">Download</button>
+            </div>
+        </p-modal>
+
+    </main>
 
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
-
 
     <!-- Load the framework -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>

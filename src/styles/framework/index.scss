@@ -3,18 +3,11 @@
  * Core framework entry point with consolidated imports and base styles
  */
 
-// Foundation imports
-@use './reset.scss';
-@use './settings.scss';
-
 // Component imports
 @use './components/carousel.scss';
 @use './components/datatable.scss';
 @use './components/lightbox.scss';
-@use './components/form-enhancer.scss';
-@use './components/copy-to-clipboard.scss';
 @use './components/lazysrc.scss';
-@use './components/modal.scss';
 @use './components/toasts.scss';
 
 // Framework-level variables (overrides for settings)
