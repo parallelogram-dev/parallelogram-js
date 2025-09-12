@@ -233,7 +233,7 @@ export default class Lazysrc extends BaseComponent {
      * @param {Object} state
      */
     _setupIntersectionLoading(element, state) {
-        this.logger?.info('Setting up intersection loading for element', {element});
+        this.logger?.info('Setting up intersection loading for element', {element, state});
 
         // Store original sources and clear them to prevent immediate loading
         this._storeAndClearSources(element, state);
@@ -321,51 +321,69 @@ export default class Lazysrc extends BaseComponent {
      * @param {IntersectionObserverEntry[]} entries
      */
     async _handleIntersection(entries) {
-    this.logger?.info('Intersection handler called', { entriesCount: entries.length });
+        this.logger?.info('Intersection handler called', {entriesCount: entries.length});
 
-    for (const entry of entries) {
-        this.logger?.info('Processing intersection entry', {
-            isIntersecting: entry.isIntersecting,
-            element: entry.target,
-            intersectionRatio: entry.intersectionRatio
-        });
-
-        if (entry.isIntersecting) {
-            const element = entry.target;
-            const state = this.getState(element);
-
-            // Await the state Promise
-            const resolvedState = await state;
-
-            this.logger?.info('Resolved state for intersecting element', {
-                hasState: !!resolvedState,
-                hasResult: !!(resolvedState && resolvedState.result)
+        for (const entry of entries) {
+            this.logger?.info('Processing intersection entry', {
+                isIntersecting: entry.isIntersecting,
+                element: entry.target,
+                intersectionRatio: entry.intersectionRatio
             });
 
-            if (resolvedState && resolvedState.result && !resolvedState.result.isLoaded && !resolvedState.result.isLoading) {
-                this.logger?.info('Calling _loadElement for element', { element });
-                this._loadElement(element, resolvedState);
+            if (entry.isIntersecting) {
+                const element = entry.target;
+                const statePromise = this.getState(element);
+
+                // Await the state if it's a Promise
+                const state = statePromise instanceof Promise ? await statePromise : statePromise;
+
+                // Debug logging to understand state structure
+                console.log('State structure debug:', {
+                    wasPromise: statePromise instanceof Promise,
+                    hasState: !!state,
+                    stateKeys: state ? Object.keys(state) : null,
+                    hasConfig: !!(state?.config),
+                    fullState: state
+                });
+
+                this.logger?.info('Resolved state for intersecting element', {
+                    hasState: !!state,
+                    isLoaded: state?.isLoaded,
+                    isLoading: state?.isLoading
+                });
+
+                // Fix: Access properties directly on resolved state
+                if (state && !state.isLoaded && !state.isLoading) {
+                    this.logger?.info('Calling _loadElement for element', {element});
+                    await this._loadElement(element, state);
+                }
             }
         }
     }
-}
 
     /**
      * Load an element
      * @private
      * @param {HTMLElement} element
-     * @param {Object} state
+     * @param {Object} componentState
      */
-    async _loadElement(element, state) {
-        if (!state || !state.result) {
-            this.logger?.error('Invalid state for element', {element, state});
+    async _loadElement(element, componentState) {
+        // Debug logging to understand the state structure
+        console.log('_loadElement called with:', {
+            element,
+            componentState,
+            componentStateKeys: componentState ? Object.keys(componentState) : null,
+            hasConfig: !!(componentState && componentState.config),
+            configKeys: componentState?.config ? Object.keys(componentState.config) : null
+        });
+
+        if (!componentState) {
+            this.logger?.error('Invalid state for element', {element, componentState});
             return;
         }
 
-        const componentState = state.result; // Get the actual state object
-
         if (!componentState.config) {
-            this.logger?.error('Missing config for element', {element, componentState});
+            this.logger?.error('Missing config for element', {element, componentState, componentStateKeys: Object.keys(componentState)});
             return;
         }
 
@@ -650,10 +668,12 @@ export default class Lazysrc extends BaseComponent {
      * Force load a specific element
      * @param {HTMLElement} element - Element to load
      */
-    loadElement(element) {
-        const state = this.getState(element);
+    async loadElement(element) {
+        const statePromise = this.getState(element);
+        const state = statePromise instanceof Promise ? await statePromise : statePromise;
+
         if (state && !state.isLoaded && !state.isLoading) {
-            this._loadElement(element, state);
+            await this._loadElement(element, state);
         }
     }
 
@@ -661,14 +681,17 @@ export default class Lazysrc extends BaseComponent {
      * Force load all lazy elements in container
      * @param {HTMLElement} [container] - Container to search within
      */
-    loadAll(container = document) {
+    async loadAll(container = document) {
         const elements = container.querySelectorAll('[data-lazysrc-enhanced="true"]');
-        elements.forEach(element => {
-            const state = this.getState(element);
+
+        for (const element of elements) {
+            const statePromise = this.getState(element);
+            const state = statePromise instanceof Promise ? await statePromise : statePromise;
+
             if (state && !state.isLoaded && !state.isLoading) {
-                this._loadElement(element, state);
+                await this._loadElement(element, state);
             }
-        });
+        }
     }
 
     /**
@@ -688,8 +711,9 @@ export default class Lazysrc extends BaseComponent {
      * @param {HTMLElement} element - Element to check
      * @returns {boolean} Whether element is loaded
      */
-    isLoaded(element) {
-        const state = this.getState(element);
+    async isLoaded(element) {
+        const statePromise = this.getState(element);
+        const state = statePromise instanceof Promise ? await statePromise : statePromise;
         return state ? state.isLoaded : false;
     }
 
@@ -698,8 +722,9 @@ export default class Lazysrc extends BaseComponent {
      * @param {HTMLElement} element - Element to check
      * @returns {boolean} Whether element is loading
      */
-    isLoading(element) {
-        const state = this.getState(element);
+    async isLoading(element) {
+        const statePromise = this.getState(element);
+        const state = statePromise instanceof Promise ? await statePromise : statePromise;
         return state ? state.isLoading : false;
     }
 
@@ -708,8 +733,9 @@ export default class Lazysrc extends BaseComponent {
      * @param {HTMLElement} element - Element to check
      * @returns {boolean} Whether element has error
      */
-    hasError(element) {
-        const state = this.getState(element);
+    async hasError(element) {
+        const statePromise = this.getState(element);
+        const state = statePromise instanceof Promise ? await statePromise : statePromise;
         return state ? state.hasError : false;
     }
 
