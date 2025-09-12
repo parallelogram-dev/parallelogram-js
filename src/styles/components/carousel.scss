@@ -357,7 +357,7 @@
 }
 
 // High contrast mode
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   .carousel {
     &__arrow {
       border: 2px solid currentColor;
