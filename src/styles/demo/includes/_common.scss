@@ -7,6 +7,12 @@
   margin: 1rem 0;
 }
 
+// Basic grid utility without margins for internal layouts
+%grid_basic {
+  display: grid;
+  gap: 1rem;
+}
+
 // Panel-like item used in copy demos and potentially others
 %demo_item_panel {
   display: flex;
@@ -24,4 +30,19 @@
   color: var(--demo-text, #1f2937);
   border: 1px solid var(--demo-border, #e2e8f0);
   border-radius: 8px;
+}
+
+// Dark code block utility
+%code_block_dark {
+  padding: 0.75rem;
+  background: #1f2937;
+  color: #f3f4f6;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+// Common flex row utility for action/button groups
+%flex_row {
+  display: flex;
+  gap: 1rem;
 }

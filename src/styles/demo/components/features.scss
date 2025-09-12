@@ -2,7 +2,7 @@
 @use '../includes/common';
 .features {
     &__grid {
-        display: grid;
+        @extend %grid_common;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
         margin: 3rem 0;

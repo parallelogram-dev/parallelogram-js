@@ -1,5 +1,5 @@
 // Scroll Reveal Component
-.scroll-reveal {
+.scrollreveal {
     margin: 2rem 0;
     padding: 2rem;
     background: #f8fafc;
@@ -20,7 +20,7 @@
     }
 }
 
-[data-reveal-state="visible"] .scroll-reveal {
+[data-reveal-state="visible"] .scrollreveal {
     opacity: 1;
     transform: translateY(0);
 }

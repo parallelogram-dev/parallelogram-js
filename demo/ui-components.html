@@ -5,230 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UI Components - Enhancement Framework</title>
     <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
-    <style>
-        /* Dark mode variables */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --demo-bg: #111827;
-                --demo-panel-bg: #1f2937;
-                --demo-border: #374151;
-                --demo-text: #ffffff;
-                --demo-text-muted: #d1d5db;
-            }
-        }
-
-        /* Navigation styles */
-        nav {
-            background: #1f2937;
-            color: white;
-            padding: 1rem 0;
-        }
-
-        .nav__container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav__container h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .nav__list {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 2rem;
-        }
-
-        .nav__link {
-            color: #d1d5db;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            position: relative;
-        }
-
-        .nav__link:hover {
-            color: white;
-        }
-
-        .nav__link[data-router-enhanced]::after {
-            content: '⚡';
-            position: absolute;
-            top: -8px;
-            right: -12px;
-            font-size: 10px;
-            opacity: 0.6;
-        }
-
-        .nav__link[aria-current="page"] {
-            color: #60a5fa;
-            font-weight: 600;
-        }
-
-        /* Page content styles */
-        .page-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .page-header h1 {
-            font-size: 2.5rem;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-        }
-
-        .page-header p {
-            font-size: 1.125rem;
-            color: #6b7280;
-        }
-
-        .demo__section {
-            margin-bottom: 4rem;
-            padding: 2rem;
-            background: var(--demo-panel-bg, white);
-            color: var(--demo-text, #1f2937);
-            border: 1px solid var(--demo-border, #e2e8f0);
-            border-radius: 12px;
-        }
-
-        .demo__section h2 {
-            color: var(--demo-text, #1f2937);
-            margin-bottom: 1rem;
-        }
-
-        .button__group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .button {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .button--primary { background: #0ea5e9; color: white; }
-        .button--primary:hover { background: #0284c7; }
-        .button--secondary { background: #6b7280; color: white; }
-        .button--secondary:hover { background: #4b5563; }
-        .button--accent { background: #8b5cf6; color: white; }
-        .button--accent:hover { background: #7c3aed; }
-        .button--outline { background: transparent; color: #0ea5e9; border: 1px solid #0ea5e9; }
-        .button--outline:hover { background: #0ea5e9; color: white; }
-        .button--success { background: #10b981; color: white; }
-        .button--success:hover { background: #059669; }
-        .button--info { background: #06b6d4; color: white; }
-        .button--info:hover { background: #0891b2; }
-        .button--warning { background: #f59e0b; color: white; }
-        .button--warning:hover { background: #d97706; }
-        .button--danger { background: #ef4444; color: white; }
-        .button--danger:hover { background: #dc2626; }
-
-        .btn__small {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .btn__small:hover { background: #e5e7eb; }
-
-        .features__details {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: var(--demo-panel-bg, #f8fafc);
-            color: var(--demo-text, #1f2937);
-            border: 1px solid var(--demo-border, #e2e8f0);
-            border-radius: 8px;
-        }
-
-        .features__details h3 {
-            margin-top: 0;
-            color: var(--demo-text, #1f2937);
-        }
-
-        .form__demo form {
-            background: var(--demo-panel-bg, #f8fafc);
-            color: var(--demo-text, #1f2937);
-            border: 1px solid var(--demo-border, #e2e8f0);
-            padding: 2rem;
-            border-radius: 8px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .form__demo label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--demo-text, #374151);
-        }
-
-        .event__log {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .event__log-header {
-            background: #374151;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .event__log-content {
-            background: white;
-        }
-
-        .event__log-item {
-            padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .event__log-item:last-child {
-            border-bottom: none;
-        }
-
-        .event__log-item pre {
-            background: #f3f4f6;
-            padding: 0.5rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 0.5rem 0 0 0;
-            font-size: 0.8rem;
-        }
-    </style>
 </head>
 <body data-demo="ui-components">
     <nav data-view="navbar">
@@ -352,7 +128,7 @@
                     </div>
                 </form>
 
-                <button type="submit" class="button button--primary" onclick="handleFormSubmit(event)">Submit Form</button>
+                <button data-btn-action="handleFormSubmit" type="submit" class="button button--primary">Submit Form</button>
             </div>
 
             <div class="features__details">
@@ -531,8 +307,8 @@ framework.mount();</pre>
                 <div class="event__log-header">
                     <strong>UI Component Events</strong>
                     <div class="event__log-controls">
-                        <button onclick="clearEventLog()" class="btn__small">Clear</button>
-                        <button onclick="exportEventLog()" class="btn__small">Export</button>
+                        <button data-btn-action="clearEventLog" class="btn__small">Clear</button>
+                        <button data-btn-action="exportEventLog" class="btn__small">Export</button>
                     </div>
                 </div>
                 <div class="event__log-content event__log-content--scrollable">
@@ -548,124 +324,124 @@ framework.mount();</pre>
                 </div>
             </div>
         </section>
-    </main>
 
-    <!-- Enhanced Modal containers using proper x-modal syntax -->
-    <p-modal id="info-modal" data-modal-size="medium" data-modal-closable="true">
-        <h2 slot="title">UI Components Information</h2>
-        <div>
-            <p>This page demonstrates the UI components available in the Enhancement Framework:</p>
-            <ul>
-                <li><strong>Modals:</strong> Accessible dialog components with slot-based content</li>
-                <li><strong>Toasts:</strong> Notification system with XToasts integration</li>
-                <li><strong>Select:</strong> Enhanced select controls with search and accessibility</li>
-                <li><strong>Event System:</strong> Real-time component communication</li>
-            </ul>
-            <p>All components are progressively enhanced and work without JavaScript for basic functionality.</p>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary" data-modal data-modal-target="#form-modal">Open Form</button>
-        </div>
-    </p-modal>
+        <!-- Enhanced Modal containers using proper x-modal syntax -->
+        <p-modal id="info-modal" data-modal-size="medium" data-modal-closable="true">
+            <h2 slot="title">UI Components Information</h2>
+            <div>
+                <p>This page demonstrates the UI components available in the Enhancement Framework:</p>
+                <ul>
+                    <li><strong>Modals:</strong> Accessible dialog components with slot-based content</li>
+                    <li><strong>Toasts:</strong> Notification system with XToasts integration</li>
+                    <li><strong>Select:</strong> Enhanced select controls with search and accessibility</li>
+                    <li><strong>Event System:</strong> Real-time component communication</li>
+                </ul>
+                <p>All components are progressively enhanced and work without JavaScript for basic functionality.</p>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+                <button class="modal__button modal__button--primary" data-modal data-modal-target="#form-modal">Open Form</button>
+            </div>
+        </p-modal>
 
-    <p-modal id="form-modal" data-modal-size="medium" data-modal-closable="true">
-        <h2 slot="title">Enhanced Contact Form</h2>
-        <div>
-            <form data-enhanced-form id="contact-form">
-                <div class="modal__field">
-                    <label for="contact-name" class="modal__label">Name:</label>
-                    <input type="text" id="contact-name" name="name" required
-                           class="modal__input">
-                </div>
+        <p-modal id="form-modal" data-modal-size="medium" data-modal-closable="true">
+            <h2 slot="title">Enhanced Contact Form</h2>
+            <div>
+                <form data-enhanced-form id="contact-form">
+                    <div class="modal__field">
+                        <label for="contact-name" class="modal__label">Name:</label>
+                        <input type="text" id="contact-name" name="name" required
+                               class="modal__input">
+                    </div>
 
-                <div class="modal__field">
-                    <label for="contact-email" class="modal__label">Email:</label>
-                    <input type="email" id="contact-email" name="email" required
-                           class="modal__input">
-                </div>
+                    <div class="modal__field">
+                        <label for="contact-email" class="modal__label">Email:</label>
+                        <input type="email" id="contact-email" name="email" required
+                               class="modal__input">
+                    </div>
 
-                <div class="modal__field">
-                    <label for="contact-priority" class="modal__label">Priority:</label>
-                    <p-select name="inquiry-priority" placeholder="Select priority" id="contact-priority">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                    </p-select>
-                </div>
+                    <div class="modal__field">
+                        <label for="contact-priority" class="modal__label">Priority:</label>
+                        <p-select name="inquiry-priority" placeholder="Select priority" id="contact-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </p-select>
+                    </div>
 
-                <div class="modal__field">
-                    <label for="contact-message" class="modal__label">Message:</label>
-                    <textarea id="contact-message" name="message" rows="4" required
-                              class="modal__textarea"></textarea>
-                </div>
-            </form>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
-            <button type="submit" form="contact-form" class="modal__button modal__button--primary">Send Message</button>
-        </div>
-    </p-modal>
+                    <div class="modal__field">
+                        <label for="contact-message" class="modal__label">Message:</label>
+                        <textarea id="contact-message" name="message" rows="4" required
+                                  class="modal__textarea"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
+                <button type="submit" form="contact-form" class="modal__button modal__button--primary">Send Message</button>
+            </div>
+        </p-modal>
 
-    <p-modal id="gallery-modal" data-modal-size="large" data-modal-closable="true">
-        <h2 slot="title">UI Component Gallery</h2>
-        <div>
-            <div class="modal__gallery-grid">
-                <div class="modal__gallery-item">
-                    <div class="modal__gallery-icon">📋</div>
-                    <h4 class="modal__gallery-title">Modals</h4>
-                    <p class="modal__gallery-description">Accessible dialog components</p>
-                </div>
+        <p-modal id="gallery-modal" data-modal-size="large" data-modal-closable="true">
+            <h2 slot="title">UI Component Gallery</h2>
+            <div>
+                <div class="modal__gallery-grid">
+                    <div class="modal__gallery-item">
+                        <div class="modal__gallery-icon">📋</div>
+                        <h4 class="modal__gallery-title">Modals</h4>
+                        <p class="modal__gallery-description">Accessible dialog components</p>
+                    </div>
 
-                <div class="modal__gallery-item">
-                    <div class="modal__gallery-icon">💬</div>
-                    <h4 class="modal__gallery-title">Toasts</h4>
-                    <p class="modal__gallery-description">Notification system</p>
-                </div>
+                    <div class="modal__gallery-item">
+                        <div class="modal__gallery-icon">💬</div>
+                        <h4 class="modal__gallery-title">Toasts</h4>
+                        <p class="modal__gallery-description">Notification system</p>
+                    </div>
 
-                <div class="modal__gallery-item">
-                    <div class="modal__gallery-icon">📝</div>
-                    <h4 class="modal__gallery-title">Forms</h4>
-                    <p class="modal__gallery-description">Enhanced form controls</p>
-                </div>
+                    <div class="modal__gallery-item">
+                        <div class="modal__gallery-icon">📝</div>
+                        <h4 class="modal__gallery-title">Forms</h4>
+                        <p class="modal__gallery-description">Enhanced form controls</p>
+                    </div>
 
-                <div class="modal__gallery-item">
-                    <div class="modal__gallery-icon">🔄</div>
-                    <h4 class="modal__gallery-title">Events</h4>
-                    <p class="modal__gallery-description">Real-time communication</p>
+                    <div class="modal__gallery-item">
+                        <div class="modal__gallery-icon">🔄</div>
+                        <h4 class="modal__gallery-title">Events</h4>
+                        <p class="modal__gallery-description">Real-time communication</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-        </div>
-    </p-modal>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+            </div>
+        </p-modal>
 
-    <p-modal id="large-modal" data-modal-size="large" data-modal-closable="true">
-        <h2 slot="title">Large Modal Example</h2>
-        <div>
-            <h3>Component Architecture Overview</h3>
-            <p>The Enhancement Framework follows a component-based architecture with these key principles:</p>
+        <p-modal id="large-modal" data-modal-size="large" data-modal-closable="true">
+            <h2 slot="title">Large Modal Example</h2>
+            <div>
+                <h3>Component Architecture Overview</h3>
+                <p>The Enhancement Framework follows a component-based architecture with these key principles:</p>
 
-            <h4>Progressive Enhancement</h4>
-            <p>All components work without JavaScript and are enhanced when the framework loads.</p>
+                <h4>Progressive Enhancement</h4>
+                <p>All components work without JavaScript and are enhanced when the framework loads.</p>
 
-            <h4>Event-Driven Communication</h4>
-            <p>Components communicate through a central event bus for loose coupling and monitoring.</p>
+                <h4>Event-Driven Communication</h4>
+                <p>Components communicate through a central event bus for loose coupling and monitoring.</p>
 
-            <h4>Lifecycle Management</h4>
-            <p>The PageManager handles component mounting, unmounting, and cleanup automatically.</p>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary" onclick="window.location.href='/performance'">View Performance</button>
-        </div>
-    </p-modal>
+                <h4>Lifecycle Management</h4>
+                <p>The PageManager handles component mounting, unmounting, and cleanup automatically.</p>
+            </div>
+            <div slot="actions">
+                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
+                <button class="modal__button modal__button--primary">View Performance</button>
+            </div>
+        </p-modal>
+
+    </main>
 
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
-
 
     <!-- Load the framework -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>

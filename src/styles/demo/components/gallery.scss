@@ -27,9 +27,8 @@
     
     // Modal gallery grid
     &__modal-grid {
-        display: grid;
+        @extend %grid_basic;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
     }
     
     &__modal-item {

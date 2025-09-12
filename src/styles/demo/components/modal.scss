@@ -1,3 +1,4 @@
+@use '../includes/common';
 /**
  * Modal Component Styles
  * BEM methodology: .modal__element--modifier
@@ -359,17 +360,14 @@
 
 // Modal gallery components
 .modal__gallery-grid {
-  display: grid;
+  @extend %grid_basic;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
 }
 
 .modal__gallery-item {
+  @extend %panel_surface;
   text-align: center;
   padding: 1rem;
-  border: 1px solid var(--demo-border, #e2e8f0);
-  border-radius: 8px;
-  background: var(--demo-panel-bg, white);
 }
 
 .modal__gallery-icon {

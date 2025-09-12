@@ -39,8 +39,8 @@
                     </div>
                 </div>
                 <div class="dashboard__actions">
-                    <button onclick="refreshRegistry()" class="btn__small">Refresh</button>
-                    <button onclick="exportRegistry()" class="btn__small">Export Data</button>
+                    <button data-btn-action="refreshRegistry" class="btn__small">Refresh</button>
+                    <button data-btn-action="exportRegistry" class="btn__small">Export Data</button>
                 </div>
             </div>
 
@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="dashboard__actions">
-                    <button onclick="testNavigation()" class="btn__small">Test Navigation</button>
+                    <button data-btn-action="testNavigation" class="btn__small">Test Navigation</button>
                 </div>
             </div>
 
@@ -125,8 +125,8 @@
                     <canvas id="lifecycle-chart" width="800" height="300"></canvas>
                 </div>
                 <div class="dashboard__actions">
-                    <button onclick="clearTimeline()" class="btn__small">Clear</button>
-                    <button onclick="exportTimeline()" class="btn__small">Export</button>
+                    <button data-btn-action="clearTimeline" class="btn__small">Clear</button>
+                    <button data-btn-action="exportTimeline" class="btn__small">Export</button>
                 </div>
             </div>
 
@@ -186,9 +186,9 @@
                 <h2>Real-time Event Stream</h2>
                 <div class="event-stream">
                     <div class="stream-controls">
-                        <button onclick="toggleEventStream()" id="stream-toggle" class="btn__small">Pause Stream</button>
-                        <button onclick="clearEventStream()" class="btn__small">Clear</button>
-                        <button onclick="exportEventStream()" class="btn__small">Export</button>
+                        <button data-btn-action="toggleEventStream" id="stream-toggle" class="btn__small">Pause Stream</button>
+                        <button data-btn-action="clearEventStream" class="btn__small">Clear</button>
+                        <button data-btn-action="exportEventStream" class="btn__small">Export</button>
                         <label class="filter-label">
                             Filter: <select id="event-filter" onchange="filterEvents()">
                                 <option value="">All Events</option>

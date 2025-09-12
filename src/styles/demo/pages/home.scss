@@ -3,7 +3,7 @@
  * Styles specific to the home/index demo page
  */
 
-@use '../demo/base';
+@use '../base';
 
 // Performance panel component
 .performance-panel {
@@ -116,7 +116,7 @@
   strong {
     color: var(--demo-text);
     font-weight: var(--font-weight-semibold, 600);
-    font-family: var(--font-family-mono, monospace);
+    font-family: var(--font-family-mono), monospace;
   }
 }
 

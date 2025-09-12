@@ -82,14 +82,14 @@ export class DemoPerformance extends BaseComponent {
     setupButtonHandlers() {
         // Bind all the button handlers to methods on this class
         const buttonHandlers = {
-            '[onclick="refreshRegistry()"]': () => this.refreshRegistry(),
-            '[onclick="exportRegistry()"]': () => this.exportRegistry(),
-            '[onclick="testNavigation()"]': () => this.testNavigation(),
-            '[onclick="toggleEventStream()"]': () => this.toggleEventStream(),
-            '[onclick="clearEventStream()"]': () => this.clearEventStream(),
-            '[onclick="exportEventStream()"]': () => this.exportEventStream(),
-            '[onclick="clearTimeline()"]': () => this.clearTimeline(),
-            '[onclick="exportTimeline()"]': () => this.exportTimeline()
+            '[data-btn-action="refreshRegistry"]': () => this.refreshRegistry(),
+            '[data-btn-action="exportRegistry"]': () => this.exportRegistry(),
+            '[data-btn-action="testNavigation"]': () => this.testNavigation(),
+            '[data-btn-action="toggleEventStream"]': () => this.toggleEventStream(),
+            '[data-btn-action="clearEventStream"]': () => this.clearEventStream(),
+            '[data-btn-action="exportEventStream"]': () => this.exportEventStream(),
+            '[data-btn-action="clearTimeline"]': () => this.clearTimeline(),
+            '[data-btn-action="exportTimeline"]': () => this.exportTimeline()
         };
         
         Object.entries(buttonHandlers).forEach(([selector, handler]) => {

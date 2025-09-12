@@ -13,7 +13,7 @@
     z-index: 1000;
     overflow-y: auto;
     
-    &--open {
+    &.open {
         right: 0;
     }
 }
