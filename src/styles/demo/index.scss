@@ -61,10 +61,10 @@
 }
 
 .demo-code {
-  font-family: var(--font-family-mono, monospace);
-  background: var(--color-gray-100, #f3f4f6);
-  padding: var(--demo-spacing-xs) var(--demo-spacing-sm);
-  border-radius: var(--border-radius-sm, 0.125rem);
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-gray-800, #1f2937);
+  font-family   : var(--font-family-mono, monospace), serif;
+  background    : var(--color-gray-100, #f3f4f6);
+  padding       : var(--demo-spacing-xs) var(--demo-spacing-sm);
+  border-radius : var(--border-radius-sm, 0.125rem);
+  font-size     : var(--font-size-sm, 0.875rem);
+  color         : var(--color-gray-800, #1f2937);
 }

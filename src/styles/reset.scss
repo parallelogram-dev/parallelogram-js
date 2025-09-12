@@ -226,7 +226,7 @@ hr {
 }
 
 /* High contrast mode support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   :focus-visible {
     outline-width: 3px;
     outline-offset: 1px;

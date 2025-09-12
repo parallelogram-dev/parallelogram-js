@@ -1,0 +1,27 @@
+// Common reusable placeholders for SCSS components
+
+// Grid helper used across multiple demo components
+%grid_common {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+// Panel-like item used in copy demos and potentially others
+%demo_item_panel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--demo-panel-bg, #f8fafc);
+  border: 1px solid var(--demo-border, #e2e8f0);
+  border-radius: 8px;
+}
+
+// Generic panel surface (no layout/padding) for blocks using demo panel variables
+%panel_surface {
+  background: var(--demo-panel-bg, #f8fafc);
+  color: var(--demo-text, #1f2937);
+  border: 1px solid var(--demo-border, #e2e8f0);
+  border-radius: 8px;
+}

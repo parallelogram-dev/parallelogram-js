@@ -1,10 +1,9 @@
 // Gallery Component (BEM)
+@use '../includes/common';
 .gallery {
     &__grid {
-        display: grid;
+        @extend %grid_common;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
     }
     
     &__item {
@@ -34,12 +33,9 @@
     }
     
     &__modal-item {
+        @extend %panel_surface;
         text-align: center;
         padding: 1rem;
-        border: 1px solid var(--demo-border, #e2e8f0);
-        background: var(--demo-panel-bg, white);
-        color: var(--demo-text, #1f2937);
-        border-radius: 8px;
         
         .gallery__icon {
             font-size: 3rem;
