@@ -357,14 +357,12 @@ export default class Lazysrc extends BaseComponent {
      * @param {Object} state
      */
     async _loadElement(element, state) {
-        const resolvedState = await state;
-
-        if (!resolvedState || !resolvedState.result) {
-            this.logger?.error('Invalid state for element', {element, state: resolvedState});
+        if (!state || !state.result) {
+            this.logger?.error('Invalid state for element', {element, state});
             return;
         }
 
-        const componentState = resolvedState.result; // Get the actual state object
+        const componentState = state.result; // Get the actual state object
 
         if (!componentState.config) {
             this.logger?.error('Missing config for element', {element, componentState});
