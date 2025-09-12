@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Media Components - Enhancement Framework</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.css">
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
 </head>
-<body>
+<body data-demo="media">
     <nav data-view="navbar">
         <div class="nav__container">
             <h1>Enhancement Framework</h1>
@@ -20,8 +20,8 @@
         </div>
     </nav>
 
-    <main data-view="main" class="page-content">
-        <header class="page-header">
+    <main data-view="main" class="page__content">
+        <header class="page__header">
             <h1>Media Components</h1>
             <p>Optimized image loading, carousels, and media galleries with performance tracking.</p>
         </header>
@@ -87,7 +87,7 @@
                 </div>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Carousel Features</h3>
                 <ul>
                     <li><strong>Touch Support:</strong> Swipe gestures on mobile devices</li>
@@ -108,8 +108,8 @@
                     src="https://picsum.photos/400/300?random=1"
                     alt="Immediate load image 1"
                     class="demo__image"
-                    style="border: 2px solid #10b981;">
-                <span class="image-label">Immediate Load</span>
+                    class="image__demo image__demo--success">
+                <span class="image__label">Immediate Load</span>
 
                 <img
                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
@@ -117,8 +117,8 @@
                     data-lazysrc-src="https://picsum.photos/400/300?random=2"
                     alt="Lazy loaded image 2"
                     class="demo__image"
-                    style="border: 2px solid #f59e0b;">
-                <span class="image-label">Lazy Load</span>
+                    class="image__demo image__demo--warning">
+                <span class="image__label">Lazy Load</span>
 
                 <img
                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
@@ -127,8 +127,8 @@
                     data-lazysrc-native="true"
                     alt="Native lazy image 3"
                     class="demo__image"
-                    style="border: 2px solid #8b5cf6;">
-                <span class="image-label">Native Lazy</span>
+                    class="image__demo image__demo--accent">
+                <span class="image__label">Native Lazy</span>
 
                 <img
                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
@@ -137,8 +137,8 @@
                     data-lazysrc-threshold="1"
                     alt="Custom threshold image 4"
                     class="demo__image"
-                    style="border: 2px solid #ef4444;">
-                <span class="image-label">Custom Threshold</span>
+                    class="image__demo image__demo--danger">
+                <span class="image__label">Custom Threshold</span>
 
                 <img
                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
@@ -147,8 +147,8 @@
                     data-lazysrc-fadein="true"
                     alt="Fade in image 5"
                     class="demo__image"
-                    style="border: 2px solid #06b6d4;">
-                <span class="image-label">Fade In Effect</span>
+                    class="image__demo image__demo--info">
+                <span class="image__label">Fade In Effect</span>
 
                 <img
                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
@@ -156,10 +156,10 @@
                     data-lazysrc-src="https://picsum.photos/400/300?random=6"
                     alt="Standard lazy image 6"
                     class="demo__image">
-                <span class="image-label">Standard Lazy</span>
+                <span class="image__label">Standard Lazy</span>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Lazy Loading Features</h3>
                 <ul>
                     <li><strong>Smart Strategy:</strong> Automatically chooses native vs custom loading</li>
@@ -249,7 +249,7 @@
                 </div>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Gallery Features</h3>
                 <ul>
                     <li><strong>Modal Integration:</strong> Full-size preview in accessible modals</li>
@@ -265,28 +265,28 @@
             <p>Real-time tracking of media component performance:</p>
 
             <div class="metrics__grid">
-                <div class="metric__card">
+                <div class="metrics__card">
                     <h3>Images Loaded</h3>
-                    <div class="metric__value" id="images-loaded">0</div>
-                    <div class="metric__label">Total images processed</div>
+                    <div class="metrics__value" id="images-loaded">0</div>
+                    <div class="metrics__label">Total images processed</div>
                 </div>
 
-                <div class="metric__card">
+                <div class="metrics__card">
                     <h3>Avg Load Time</h3>
-                    <div class="metric__value" id="avg-load-time">0ms</div>
-                    <div class="metric__label">Average loading duration</div>
+                    <div class="metrics__value" id="avg-load-time">0ms</div>
+                    <div class="metrics__label">Average loading duration</div>
                 </div>
 
-                <div class="metric__card">
+                <div class="metrics__card">
                     <h3>Components Active</h3>
-                    <div class="metric__value" id="active-components">0</div>
-                    <div class="metric__label">Currently mounted</div>
+                    <div class="metrics__value" id="active-components">0</div>
+                    <div class="metrics__label">Currently mounted</div>
                 </div>
 
-                <div class="metric__card">
+                <div class="metrics__card">
                     <h3>Memory Saved</h3>
-                    <div class="metric__value" id="memory-saved">0</div>
-                    <div class="metric__label">Components auto-cleaned</div>
+                    <div class="metrics__value" id="memory-saved">0</div>
+                    <div class="metrics__label">Components auto-cleaned</div>
                 </div>
             </div>
         </section>
@@ -295,8 +295,8 @@
     <!-- Gallery Preview Modal -->
     <p-modal id="gallery-preview" data-modal-size="large" data-modal-closable="true">
         <h2 slot="title">Image Preview</h2>
-        <div style="text-align: center;">
-            <img id="gallery-preview-image" src="" alt="" style="max-width: 100%; height: auto; border-radius: 8px;">
+        <div class="gallery__preview-container">
+            <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image">
         </div>
         <div slot="actions">
             <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
@@ -307,84 +307,6 @@
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
 
-    <!-- Demo functionality scripts -->
-    <script>
-        let mediaMetrics = {
-            imagesLoaded: 0,
-            totalLoadTime: 0,
-            activeComponents: 0,
-            componentsCleaned: 0
-        };
-
-        // Gallery functionality
-        document.addEventListener('click', (e) => {
-            const galleryItem = e.target.closest('[data-gallery-item]');
-            if (galleryItem) {
-                const img = galleryItem.querySelector('img');
-                const fullSrc = img.getAttribute('data-gallery-full');
-                const alt = img.getAttribute('alt');
-
-                const previewImg = document.getElementById('gallery-preview-image');
-                previewImg.src = fullSrc;
-                previewImg.alt = alt;
-            }
-        });
-
-        function downloadCurrentImage() {
-            const previewImg = document.getElementById('gallery-preview-image');
-            if (previewImg.src) {
-                const a = document.createElement('a');
-                a.href = previewImg.src;
-                a.download = 'gallery-image.jpg';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
-        }
-
-        // Listen for lazy image events
-        document.addEventListener('lazy-image:loaded', (e) => {
-            mediaMetrics.imagesLoaded++;
-            updateMetricsDisplay();
-
-            if (window.Toast && window.Toast.show) {
-                window.Toast.show('Image loaded successfully', 'success');
-            }
-        });
-
-        document.addEventListener('lazy-image:detached', (e) => {
-            mediaMetrics.componentsCleaned++;
-            updateMetricsDisplay();
-        });
-
-        // Listen for carousel events
-        document.addEventListener('carousel:slide-change', (e) => {
-            console.log('Carousel slide changed:', e.detail);
-        });
-
-        function updateMetricsDisplay() {
-            document.getElementById('images-loaded').textContent = mediaMetrics.imagesLoaded;
-            document.getElementById('avg-load-time').textContent =
-                mediaMetrics.imagesLoaded > 0
-                    ? Math.round(mediaMetrics.totalLoadTime / mediaMetrics.imagesLoaded) + 'ms'
-                    : '0ms';
-            document.getElementById('active-components').textContent =
-                document.querySelectorAll('[data-lazysrc]:not([data-lazysrc-complete])').length;
-            document.getElementById('memory-saved').textContent = mediaMetrics.componentsCleaned;
-        }
-
-        // Update metrics periodically
-        setInterval(updateMetricsDisplay, 1000);
-
-        // Page-specific component mounting notification
-        if (window.eventBus) {
-            window.eventBus.emit('page:loaded', {
-                page: '/media',
-                components: ['lazysrc', 'carousel', 'modal'],
-                timestamp: performance.now()
-            });
-        }
-    </script>
 
     <!-- Load the framework -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>

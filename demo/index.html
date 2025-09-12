@@ -4,176 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhancement Framework Demo - Home</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.css">
-    <style>
-        /* Navigation styling */
-        .nav__container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav__list {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 2rem;
-        }
-
-        .nav__link {
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            position: relative;
-        }
-
-        .nav__link:hover {
-            color: #0ea5e9;
-        }
-
-        .nav__link[data-router-enhanced] {
-            position: relative;
-        }
-
-        .nav__link[data-router-enhanced]::after {
-            content: '⚡';
-            position: absolute;
-            top: -8px;
-            right: -12px;
-            font-size: 10px;
-            opacity: 0.6;
-        }
-
-        .nav__link[aria-current="page"] {
-            color: #0ea5e9;
-            font-weight: 600;
-        }
-
-        /* Page content area */
-        .page-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* Loading states for router */
-        .router-loading {
-            position: relative;
-            opacity: 0.7;
-        }
-
-        .router-loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: loading-shimmer 1.5s infinite;
-        }
-
-        @keyframes loading-shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Feature grid for home page */
-        .feature__grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
-        }
-
-        .feature {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 2rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .feature:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        .feature h3 {
-            margin-top: 0;
-            color: #1f2937;
-            font-size: 1.25rem;
-        }
-
-        .feature__link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #0ea5e9;
-            text-decoration: none;
-            font-weight: 500;
-            margin-top: 1rem;
-        }
-
-        .feature__link:hover {
-            text-decoration: underline;
-        }
-
-        /* Component registry status */
-        .component__registry {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .component__item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .component__item:last-child {
-            border-bottom: none;
-        }
-
-        .component__status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .component__status.loaded {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .component__status.loading {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .component__status.not-loaded {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .component__status.error {
-            background: #fecaca;
-            color: #dc2626;
-        }
-    </style>
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
 </head>
-<body>
+<body data-demo="home">
     <nav data-view="navbar">
         <div class="nav__container">
             <h1>Enhancement Framework</h1>
@@ -187,7 +20,7 @@
         </div>
     </nav>
 
-    <main data-view="main" class="page-content">
+    <main data-view="main" class="page__content">
         <section class="hero">
             <h2>Progressive Enhancement Framework</h2>
             <p>A comprehensive framework for building modern web applications with RouterManager, PageManager, and component lifecycle management.</p>
@@ -199,7 +32,7 @@
                     <div class="component__item">
                         <div>
                             <strong>Framework</strong>
-                            <small style="margin-left: 0.5rem; color: #666;">Initializing...</small>
+                            <small class="component__status-text">Initializing...</small>
                         </div>
                         <span class="component__status loading">loading</span>
                     </div>
@@ -208,35 +41,35 @@
         </section>
 
         <section class="features">
-            <div class="feature__grid">
-                <div class="feature">
+            <div class="features__grid">
+                <div class="features__item">
                     <h3>🎨 UI Components</h3>
                     <p>Accessible modals with slot-based content, toast notifications with XToasts integration, and form enhancements.</p>
-                    <a href="/ui-components" class="feature__link">
+                    <a href="/ui-components" class="features__link">
                         Explore UI Components →
                     </a>
                 </div>
 
-                <div class="feature">
+                <div class="features__item">
                     <h3>📸 Media Components</h3>
                     <p>Optimized image loading with native lazy loading support, image carousels with touch support, and gallery components.</p>
-                    <a href="/media" class="feature__link">
+                    <a href="/media" class="features__link">
                         View Media Demos →
                     </a>
                 </div>
 
-                <div class="feature">
+                <div class="features__item">
                     <h3>⚡ Interactive Elements</h3>
                     <p>Toggle functionality for dropdowns and accordions, accessible tab navigation, and enhanced form controls.</p>
-                    <a href="/interactive" class="feature__link">
+                    <a href="/interactive" class="features__link">
                         Try Interactive Demos →
                     </a>
                 </div>
 
-                <div class="feature">
+                <div class="features__item">
                     <h3>📊 Performance Monitoring</h3>
                     <p>Real-time component metrics, memory leak detection, circuit breaker patterns, and detailed performance analytics.</p>
-                    <a href="/performance" class="feature__link">
+                    <a href="/performance" class="features__link">
                         View Performance Dashboard →
                     </a>
                 </div>
@@ -247,7 +80,7 @@
             <h2>Quick Start</h2>
             <p>Get started with the Enhancement Framework in just a few lines of code:</p>
 
-            <pre style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; overflow-x: auto;"><code>import { ComponentRegistry } from './dist/esm/index.js';
+            <pre class="code__block"><code>import { ComponentRegistry } from './dist/esm/index.js';
 
 // Create component registry
 const registry = ComponentRegistry.create('dev')
@@ -283,121 +116,20 @@ pageManager.scanAndMount();</code></pre>
 
     <!-- Performance Panel -->
     <div id="performance-panel" class="performance__panel">
-        <h4 style="margin: 0 0 1rem 0;">📊 Live Performance</h4>
+        <h4 class="performance__title">📊 Live Performance</h4>
         <div id="performance-metrics">
             <div class="performance__metric">
                 <span>Framework Status:</span>
                 <strong>Initializing...</strong>
             </div>
         </div>
-        <button onclick="togglePerformancePanel()" class="btn__small" style="margin-top: 1rem;">Close</button>
+        <button data-demo-performance-toggle class="btn__small performance__toggle">Toggle Panel</button>
     </div>
 
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
 
-    <!-- Demo functionality scripts -->
-    <script>
-        let performancePanelVisible = false;
-
-        function togglePerformancePanel() {
-            const panel = document.getElementById('performance-panel');
-            performancePanelVisible = !performancePanelVisible;
-            panel.classList.toggle('active', performancePanelVisible);
-
-            if (performancePanelVisible) {
-                updatePerformancePanel();
-            }
-        }
-
-        function updatePerformancePanel() {
-            const metricsContainer = document.getElementById('performance-metrics');
-            if (!metricsContainer) return;
-
-            const metrics = window.getPerformanceMetrics ? window.getPerformanceMetrics() : {};
-
-            metricsContainer.innerHTML = `
-                <div class="performance__metric">
-                    <span>Current Page:</span>
-                    <strong>${window.location.pathname}</strong>
-                </div>
-                <div class="performance__metric">
-                    <span>Components Mounted:</span>
-                    <strong>${metrics.pageManager?.componentMounts || 0}</strong>
-                </div>
-                <div class="performance__metric">
-                    <span>Router Navigations:</span>
-                    <strong>${metrics.router?.navigationCount || 0}</strong>
-                </div>
-                <div class="performance__metric">
-                    <span>Memory Usage:</span>
-                    <strong>${metrics.memory?.usedMB || 'N/A'} MB</strong>
-                </div>
-            `;
-        }
-
-        function updateComponentRegistry() {
-            const display = document.getElementById('component-registry-display');
-            if (!display) return;
-
-            if (window.pageManager) {
-                const registry = window.pageManager.getComponentRegistry ? window.pageManager.getComponentRegistry() : [];
-                const componentStates = window.pageManager.getComponentStates ? window.pageManager.getComponentStates() : {};
-
-                if (registry.length > 0) {
-                    display.innerHTML = registry.map(comp => {
-                        const state = componentStates[comp.name] || { status: 'not-loaded' };
-                        return `
-                            <div class="component__item">
-                                <div>
-                                    <strong>${comp.name}</strong>
-                                    <small style="margin-left: 0.5rem; color: #666;">(${comp.priority})</small>
-                                </div>
-                                <span class="component__status ${state.status}">${state.status}</span>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    display.innerHTML = `
-                        <div class="component__item">
-                            <div>
-                                <strong>No components registered</strong>
-                                <small style="margin-left: 0.5rem; color: #666;">Check console for errors</small>
-                            </div>
-                            <span class="component__status error">error</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        function updateHealthIndicator() {
-            const indicator = document.getElementById('health-indicator');
-            if (!indicator) return;
-
-            if (window.pageManager && window.router) {
-                const componentCount = document.querySelectorAll('[data-component-mounted]').length;
-                indicator.textContent = `🟢 ${componentCount} Components Active`;
-                indicator.className = 'health__indicator';
-            }
-        }
-
-        // Update displays periodically
-        setInterval(() => {
-            updateComponentRegistry();
-            updateHealthIndicator();
-            if (performancePanelVisible) {
-                updatePerformancePanel();
-            }
-        }, 2000);
-
-        // Make functions globally available
-        window.togglePerformancePanel = togglePerformancePanel;
-        window.updateComponentRegistry = updateComponentRegistry;
-        window.updatePerformancePanel = updatePerformancePanel;
-    </script>
-
-    <!-- Load the framework -->
+    <!-- Load the framework with demo functionality -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>
 </body>
 </html>

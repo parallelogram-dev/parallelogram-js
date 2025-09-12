@@ -1,6 +1,8 @@
 // Static imports for bundling - no dynamic imports needed
 import { ComponentRegistry, EventManager, DevLogger, RouterManager, PageManager } from '../../src/index.js';
+import Modal from '../../src/components/Modal.js';
 import { default as PModal } from '../../src/components/PModal.js';
+import Toast from '../../src/components/Toast.js';
 import { default as PToasts } from '../../src/components/PToasts.js';
 import { default as PSelect } from '../../src/components/PSelect.js';
 import Lazysrc from '../../src/components/Lazysrc.js';
@@ -10,6 +12,16 @@ import Scrollhide from '../../src/components/Scrollhide.js';
 import Scrollreveal from '../../src/components/Scrollreveal.js';
 import Tabs from '../../src/components/Tabs.js';
 import Videoplay from '../../src/components/Videoplay.js';
+import DataTable from '../../src/components/DataTable.js';
+import Lightbox from '../../src/components/Lightbox.js';
+import FormEnhancer from '../../src/components/FormEnhancer.js';
+import CopyToClipboard from '../../src/components/CopyToClipboard.js';
+
+// Demo page classes
+import { DemoHome } from './DemoHome.js';
+import { DemoMedia } from './DemoMedia.js';
+import { DemoPerformance } from './DemoPerformance.js';
+import { DemoUIComponents } from './DemoUIComponents.js';
 
 // Component factory function to replace dynamic loaders
 function createComponentLoader(ComponentClass) {
@@ -38,11 +50,11 @@ async function initFramework() {
                 loader: createComponentLoader(Carousel)
             })
             .component('modal', '[data-modal][data-modal-target]', {
-                loader: createComponentLoader(PModal)
+                loader: createComponentLoader(Modal)
             })
             .component('toast', '[data-toast-trigger][data-toast-message]', {
                 exportName: 'Toast',
-                loader: createComponentLoader(PToasts)
+                loader: createComponentLoader(Toast)
             })
             .component('scrollhide', '[data-scrollhide]', {
                 loader: createComponentLoader(Scrollhide)
@@ -55,6 +67,30 @@ async function initFramework() {
             })
             .component('videoplay', '[data-videoplay]', {
                 loader: createComponentLoader(Videoplay)
+            })
+            .component('datatable', '[data-datatable]', {
+                loader: createComponentLoader(DataTable)
+            })
+            .component('lightbox', '[data-lightbox]', {
+                loader: createComponentLoader(Lightbox)
+            })
+            .component('form-validator', '[data-form-validator]', {
+                loader: createComponentLoader(FormEnhancer)
+            })
+            .component('copy-to-clipboard', '[data-copy-to-clipboard]', {
+                loader: createComponentLoader(CopyToClipboard)
+            })
+            .component('demo-home', '[data-demo="home"]', {
+                loader: createComponentLoader(DemoHome)
+            })
+            .component('demo-media', '[data-demo="media"]', {
+                loader: createComponentLoader(DemoMedia)
+            })
+            .component('demo-performance', '[data-demo="performance"]', {
+                loader: createComponentLoader(DemoPerformance)
+            })
+            .component('demo-ui-components', '[data-demo="ui-components"]', {
+                loader: createComponentLoader(DemoUIComponents)
             })
             .build();
 
@@ -119,6 +155,31 @@ async function initFramework() {
             }
         });
 
+        // Ensure web components are available by referencing the imports
+        // This prevents tree-shaking and ensures custom elements are registered
+        if (PModal && PToasts && PSelect) {
+            logger.debug('Web components loaded and registered', {
+                PModal: customElements.get('p-modal'),
+                PToasts: customElements.get('p-toasts'),
+                PSelect: customElements.get('p-select')
+            });
+            
+            // Wait for custom elements to be defined and then log diagnostic info
+            Promise.all([
+                customElements.whenDefined('p-modal'),
+                customElements.whenDefined('p-toasts'),
+                customElements.whenDefined('p-select')
+            ]).then(() => {
+                logger.info('All custom elements ready', {
+                    modalsInDOM: document.querySelectorAll('p-modal').length,
+                    toastsInDOM: document.querySelectorAll('p-toasts').length,
+                    selectsInDOM: document.querySelectorAll('p-select').length
+                });
+            }).catch(err => {
+                logger.error('Error waiting for custom elements:', err);
+            });
+        }
+        
         // Make available globally for demo functions
         window.pageManager = pageManager;
         window.router = router;
@@ -153,6 +214,17 @@ function setupEventLogging() {
         'videoplay:play',
         'videoplay:pause',
         'carousel:slide-change',
+        'datatable:mounted',
+        'datatable:rendered',
+        'lightbox:mounted',
+        'lightbox:opened',
+        'lightbox:closed',
+        'form-validator:mounted',
+        'form-validator:submit-blocked',
+        'form-validator:submit-valid',
+        'copy-to-clipboard:mounted',
+        'copy-to-clipboard:success',
+        'copy-to-clipboard:error',
         'page:fragments-replaced',
         'router:navigate-success'
     ];
@@ -336,6 +408,7 @@ setInterval(() => {
         `;
     }
 }, 5000); // Update every 5 seconds
+
 
 // Export for global access
 window.initFramework = initFramework;

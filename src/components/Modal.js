@@ -145,8 +145,19 @@ export default class Modal extends BaseComponent {
         // Store the trigger element for focus restoration
         state.modalElement._triggerElement = triggerElement;
 
-        // Open the modal
-        state.modalElement.open();
+        // Open the modal - wait for custom element to be defined if needed
+        if (typeof state.modalElement.open === 'function') {
+            state.modalElement.open();
+        } else {
+            // Fallback: wait for custom element to be fully defined
+            customElements.whenDefined('p-modal').then(() => {
+                if (typeof state.modalElement.open === 'function') {
+                    state.modalElement.open();
+                } else {
+                    console.error('PModal open method not available', state.modalElement);
+                }
+            });
+        }
     }
 
     /**
@@ -157,7 +168,11 @@ export default class Modal extends BaseComponent {
         const state = this.getState(triggerElement);
         if (!state?.modalElement) return;
 
-        state.modalElement.close();
+        if (typeof state.modalElement.close === 'function') {
+            state.modalElement.close();
+        } else {
+            console.error('PModal close method not available', state.modalElement);
+        }
     }
 
     /**
