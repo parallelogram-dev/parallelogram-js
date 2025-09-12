@@ -1,19 +1,12 @@
 // Copy Demo Component (BEM)
+@use '../includes/common';
 .copy-demo {
     &__grid {
-        display: grid;
-        gap: 1rem;
-        margin: 1rem 0;
+        @extend %grid_common;
     }
     
     &__item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        background: var(--demo-panel-bg, #f8fafc);
-        border: 1px solid var(--demo-border, #e2e8f0);
-        border-radius: 8px;
+        @extend %demo_item_panel;
     }
     
     &__content {
