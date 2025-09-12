@@ -4,42 +4,43 @@
  */
 
 // Base demo styles (shared across all pages)
+@use 'reset';
 @use 'base';
 
 // Individual demo page styles
-@use 'home';
-@use 'media';
-@use 'interactive';
-@use 'ui-components';
-@use 'performance';
+@use 'pages/home';
+@use 'pages/media';
+@use 'pages/interactive';
+@use 'pages/ui-components';
+@use 'pages/performance';
 
 // Component styles needed for demo functionality
-@use '../components/carousel.scss';
-@use '../components/modal.scss';
-@use '../components/toasts.scss';
-@use '../components/datatable.scss';
-@use '../components/lightbox.scss';
-@use '../components/form-enhancer.scss';
-@use '../components/copy-to-clipboard.scss';
-@use '../components/lazysrc.scss';
+@use '../framework/components/carousel.scss';
+@use '../framework/components/toasts.scss';
+@use '../framework/components/datatable.scss';
+@use '../framework/components/lightbox.scss';
+@use '../framework/components/tabs.scss';
+@use '../framework/components/lazysrc.scss';
 
 // New BEM-compliant component styles
-@use '../components/button.scss';
-@use '../components/tabs.scss';
-@use '../components/dropdown.scss';
-@use '../components/accordion.scss';
-@use '../components/form.scss';
-@use '../components/sidebar.scss';
-@use '../components/scroll-reveal.scss';
-@use '../components/stagger.scss';
-@use '../components/navbar.scss';
-@use '../components/metrics.scss';
-@use '../components/features.scss';
-@use '../components/table.scss';
-@use '../components/gallery.scss';
-@use '../components/copy-demo.scss';
-@use '../components/video.scss';
-@use '../components/component-status.scss';
+@use './components/button.scss';
+@use './components/dropdown.scss';
+@use './components/accordion.scss';
+@use './components/copy-to-clipboard.scss';
+@use './components/form.scss';
+@use './components/form-enhancer.scss';
+@use './components/modal.scss';
+@use './components/sidebar.scss';
+@use './components/scrollreveal.scss';
+@use './components/stagger.scss';
+@use './components/navbar.scss';
+@use './components/metrics.scss';
+@use './components/features.scss';
+@use './components/table.scss';
+@use './components/gallery.scss';
+@use './components/copy-demo.scss';
+@use './components/video.scss';
+@use './components/component-status.scss';
 
 // Demo-specific utility classes
 .demo-highlight {

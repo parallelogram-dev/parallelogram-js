@@ -34,7 +34,7 @@ th.sortable:hover {
   font-size: 0.8em;
 }
 
-.datatable-pagination {
+.datatable__pagination {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -42,7 +42,7 @@ th.sortable:hover {
   margin-top: 1rem;
 }
 
-.datatable-pagination button {
+.datatable__pagination button {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   background: white;
@@ -53,17 +53,17 @@ th.sortable:hover {
   transition: all 0.2s;
 }
 
-.datatable-pagination button:hover:not(:disabled) {
+.datatable__pagination button:hover:not(:disabled) {
   background: #f3f4f6;
   border-color: #9ca3af;
 }
 
-.datatable-pagination button:disabled {
+.datatable__pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.datatable-pagination button.active {
+.datatable__pagination button.active {
   background: #3b82f6;
   color: white;
   border-color: #3b82f6;

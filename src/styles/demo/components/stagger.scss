@@ -1,8 +1,8 @@
 // Stagger Component
+@use '../includes/common';
 .stagger {
-    display: grid;
+    @extend %grid_common;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
     margin: 2rem 0;
     
     &__item {

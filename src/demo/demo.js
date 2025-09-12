@@ -1,10 +1,10 @@
 // Static imports for bundling - no dynamic imports needed
 import { ComponentRegistry, EventManager, DevLogger, RouterManager, PageManager } from '../../src/index.js';
-import Modal from '../../src/components/Modal.js';
 import { default as PModal } from '../../src/components/PModal.js';
-import Toast from '../../src/components/Toast.js';
 import { default as PToasts } from '../../src/components/PToasts.js';
 import { default as PSelect } from '../../src/components/PSelect.js';
+import Modal from '../../src/components/Modal.js';
+import Toast from '../../src/components/Toast.js';
 import Lazysrc from '../../src/components/Lazysrc.js';
 import Toggle from '../../src/components/Toggle.js';
 import Carousel from '../../src/components/Carousel.js';
@@ -363,10 +363,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px; margin: 1rem 0;">
                 <h4 style="margin: 0 0 1rem 0; color: #495057;">Demo Controls</h4>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button onclick="window.demoUtils.testLazysrc()" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Lazy Loading</button>
-                    <button onclick="window.demoUtils.testScrollReveal()" style="padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Scroll Reveal</button>
-                    <button onclick="window.demoUtils.showComponentStatus()" style="padding: 0.5rem 1rem; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">Component Status</button>
-                    <button onclick="window.demoUtils.loadAllImages()" style="padding: 0.5rem 1rem; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">Load All Images</button>
+                    <button data-btn-action="window.demoUtils.testLazysrc" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Lazy Loading</button>
+                    <button data-btn-action="window.demoUtils.testScrollReveal" style="padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Scroll Reveal</button>
+                    <button data-btn-action="window.demoUtils.showComponentStatus" style="padding: 0.5rem 1rem; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">Component Status</button>
+                    <button data-btn-action="window.demoUtils.loadAllImages" style="padding: 0.5rem 1rem; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">Load All Images</button>
                 </div>
             </div>
         `;
