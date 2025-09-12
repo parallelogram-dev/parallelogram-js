@@ -12,8 +12,9 @@
         "compile-scss": "sass src/styles:dist/styles --no-source-map",
         "copy-css": "mkdir -p dist/styles/components && cp src/styles/*.css dist/styles/ 2>/dev/null || true",
         "minify-css": "find dist/styles -name '*.css' ! -name '*.min.css' -exec sh -c 'cleancss -o \"${1%.css}.min.css\" \"$1\"' _ {} \\;",
-        "copy-to-demo": "mkdir -p demo/dist/styles/components && cp dist/*.min.js demo/dist/ && cp dist/*.min.css demo/dist/ 2>/dev/null || true && cp dist/styles/*.min.css demo/dist/styles/ 2>/dev/null || true && cp dist/styles/components/*.min.css demo/dist/styles/components/ 2>/dev/null || true",
-        "demo": "npm run build && npm run copy-to-demo && serve demo -l 3000",
+        "build-demo": "rollup -c rollup.demo.config.js",
+        "build-demo-css": "postcss src/styles/demo.css --use postcss-import --use cssnano -o demo/dist/parallelogram-demo.min.css",
+        "demo": "npm run build-demo && npm run build-demo-css && serve demo -l 3000",
         "prepublishOnly": "npm run build"
     },
     "keywords": [
@@ -54,6 +55,11 @@
         "cssnano": "^7.1.1",
         "jest": "^29.7.0",
         "jest-environment-jsdom": "^29.7.0",
+        "postcss": "^8.5.6",
+        "postcss-cli": "^11.0.1",
+        "postcss-import": "^16.1.1",
+        "postcss-scss": "^4.0.9",
+        "postcss-strip-inline-comments": "^0.1.5",
         "rollup": "^4.12.0",
         "rollup-plugin-copy": "^3.5.0",
         "rollup-plugin-delete": "^3.0.1",
