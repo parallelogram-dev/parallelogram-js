@@ -1,0 +1,86 @@
+/* Copy to Clipboard Component Styles */
+.copy-success {
+  background-color: #10b981 !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.copy-error {
+  background-color: #ef4444 !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+[data-copy-to-clipboard] {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+[data-copy-to-clipboard]:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Optional: Add a subtle animation on successful copy */
+@keyframes copy-success-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.copy-success {
+  animation: copy-success-pulse 0.3s ease-out;
+}
+
+// Copy Demo Component
+.copy-demo {
+  &__grid {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--demo-panel-bg, #f8fafc);
+    border: 1px solid var(--demo-border, #e2e8f0);
+    border-radius: 8px;
+  }
+
+  &__code {
+    flex: 1;
+    margin: 0;
+    padding: 0.75rem;
+    background: #1f2937;
+    color: #f3f4f6;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  &__command {
+    flex: 1;
+    padding: 0.75rem;
+    background: var(--demo-panel-bg, white);
+    color: var(--demo-text, #1f2937);
+    border: 1px solid var(--demo-border, #e2e8f0);
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+  }
+
+  &__input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--demo-border, #e2e8f0);
+    border-radius: 4px;
+    background: var(--demo-panel-bg, white);
+    color: var(--demo-text, #1f2937);
+
+    &:focus {
+      outline: none;
+      border-color: #0ea5e9;
+    }
+  }
+}

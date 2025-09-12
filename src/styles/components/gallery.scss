@@ -1,0 +1,71 @@
+// Gallery Component (BEM)
+.gallery {
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    &__item {
+        display: block;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    }
+    
+    // Modal gallery grid
+    &__modal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    &__modal-item {
+        text-align: center;
+        padding: 1rem;
+        border: 1px solid var(--demo-border, #e2e8f0);
+        background: var(--demo-panel-bg, white);
+        color: var(--demo-text, #1f2937);
+        border-radius: 8px;
+        
+        .gallery__icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        h4 {
+            margin: 0.5rem 0;
+            color: var(--demo-text, #1f2937);
+        }
+        
+        p {
+            margin: 0;
+            color: var(--demo-text-muted, #666);
+            font-size: 0.9rem;
+        }
+    }
+
+    &__preview-container {
+        text-align: center;
+    }
+
+    &__preview-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+}

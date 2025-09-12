@@ -1,0 +1,40 @@
+// Component Status Styles
+.component {
+  &__status-text {
+    margin-left: 0.5rem;
+    color: var(--demo-text-muted, #666);
+    font-size: 0.875rem;
+  }
+}
+
+// Performance Panel Styles
+.performance {
+  &__title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__toggle {
+    margin-top: 1rem;
+  }
+}
+
+// Code Block Styles
+.code {
+  &__block {
+    background: var(--demo-code-bg, #f8f9fa);
+    color: var(--demo-code-text, #1f2937);
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--demo-border, #e2e8f0);
+    margin: 1rem 0;
+
+    code {
+      background: none;
+      color: inherit;
+      font-family: 'Courier New', monospace;
+    }
+  }
+}

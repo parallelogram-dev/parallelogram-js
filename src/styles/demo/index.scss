@@ -1,0 +1,70 @@
+/**
+ * Demo Styles Entry Point
+ * Imports all demo-specific SCSS files and component styles
+ */
+
+// Base demo styles (shared across all pages)
+@use 'base';
+
+// Individual demo page styles
+@use 'home';
+@use 'media';
+@use 'interactive';
+@use 'ui-components';
+@use 'performance';
+
+// Component styles needed for demo functionality
+@use '../components/carousel.scss';
+@use '../components/modal.scss';
+@use '../components/toasts.scss';
+@use '../components/datatable.scss';
+@use '../components/lightbox.scss';
+@use '../components/form-enhancer.scss';
+@use '../components/copy-to-clipboard.scss';
+@use '../components/lazysrc.scss';
+
+// New BEM-compliant component styles
+@use '../components/button.scss';
+@use '../components/tabs.scss';
+@use '../components/dropdown.scss';
+@use '../components/accordion.scss';
+@use '../components/form.scss';
+@use '../components/sidebar.scss';
+@use '../components/scroll-reveal.scss';
+@use '../components/stagger.scss';
+@use '../components/navbar.scss';
+@use '../components/metrics.scss';
+@use '../components/features.scss';
+@use '../components/table.scss';
+@use '../components/gallery.scss';
+@use '../components/copy-demo.scss';
+@use '../components/video.scss';
+@use '../components/component-status.scss';
+
+// Demo-specific utility classes
+.demo-highlight {
+  background: linear-gradient(120deg, transparent 0%, rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 0%, rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 100%, transparent 100%);
+  padding: 0 var(--demo-spacing-xs);
+}
+
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--demo-spacing-xs) var(--demo-spacing-sm);
+  background: var(--demo-accent);
+  color: var(--color-white, white);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold, 600);
+  border-radius: var(--border-radius-sm, 0.125rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demo-code {
+  font-family: var(--font-family-mono, monospace);
+  background: var(--color-gray-100, #f3f4f6);
+  padding: var(--demo-spacing-xs) var(--demo-spacing-sm);
+  border-radius: var(--border-radius-sm, 0.125rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-gray-800, #1f2937);
+}

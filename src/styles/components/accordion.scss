@@ -1,0 +1,56 @@
+// Accordion Component
+.accordion {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    
+    &__item {
+        border-bottom: 1px solid #e2e8f0;
+        
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+    
+    &__trigger {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        &:hover {
+            background: #f1f5f9;
+        }
+        
+        &::after {
+            content: '+';
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+        
+        &[aria-expanded="true"]::after {
+            transform: rotate(45deg);
+        }
+    }
+    
+    &__panel {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        
+        &--open {
+            max-height: 500px;
+        }
+    }
+    
+    &__content {
+        padding: 1.5rem;
+    }
+}
