@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UI Components - Enhancement Framework</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.css">
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
     <style>
+        /* Dark mode variables */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --demo-bg: #111827;
+                --demo-panel-bg: #1f2937;
+                --demo-border: #374151;
+                --demo-text: #ffffff;
+                --demo-text-muted: #d1d5db;
+            }
+        }
+
         /* Navigation styles */
         nav {
             background: #1f2937;
@@ -87,13 +98,14 @@
         .demo__section {
             margin-bottom: 4rem;
             padding: 2rem;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--demo-panel-bg, white);
+            color: var(--demo-text, #1f2937);
+            border: 1px solid var(--demo-border, #e2e8f0);
             border-radius: 12px;
         }
 
         .demo__section h2 {
-            color: #1f2937;
+            color: var(--demo-text, #1f2937);
             margin-bottom: 1rem;
         }
 
@@ -104,7 +116,7 @@
             margin: 2rem 0;
         }
 
-        .btn {
+        .button {
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
@@ -117,22 +129,22 @@
             gap: 0.5rem;
         }
 
-        .btn-primary { background: #0ea5e9; color: white; }
-        .btn-primary:hover { background: #0284c7; }
-        .btn-secondary { background: #6b7280; color: white; }
-        .btn-secondary:hover { background: #4b5563; }
-        .btn-accent { background: #8b5cf6; color: white; }
-        .btn-accent:hover { background: #7c3aed; }
-        .btn-outline { background: transparent; color: #0ea5e9; border: 1px solid #0ea5e9; }
-        .btn-outline:hover { background: #0ea5e9; color: white; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-info { background: #06b6d4; color: white; }
-        .btn-info:hover { background: #0891b2; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-warning:hover { background: #d97706; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
+        .button--primary { background: #0ea5e9; color: white; }
+        .button--primary:hover { background: #0284c7; }
+        .button--secondary { background: #6b7280; color: white; }
+        .button--secondary:hover { background: #4b5563; }
+        .button--accent { background: #8b5cf6; color: white; }
+        .button--accent:hover { background: #7c3aed; }
+        .button--outline { background: transparent; color: #0ea5e9; border: 1px solid #0ea5e9; }
+        .button--outline:hover { background: #0ea5e9; color: white; }
+        .button--success { background: #10b981; color: white; }
+        .button--success:hover { background: #059669; }
+        .button--info { background: #06b6d4; color: white; }
+        .button--info:hover { background: #0891b2; }
+        .button--warning { background: #f59e0b; color: white; }
+        .button--warning:hover { background: #d97706; }
+        .button--danger { background: #ef4444; color: white; }
+        .button--danger:hover { background: #dc2626; }
 
         .btn__small {
             padding: 0.5rem 1rem;
@@ -146,20 +158,24 @@
 
         .btn__small:hover { background: #e5e7eb; }
 
-        .feature-details {
+        .features__details {
             margin-top: 2rem;
             padding: 1.5rem;
-            background: #f8fafc;
+            background: var(--demo-panel-bg, #f8fafc);
+            color: var(--demo-text, #1f2937);
+            border: 1px solid var(--demo-border, #e2e8f0);
             border-radius: 8px;
         }
 
-        .feature-details h3 {
+        .features__details h3 {
             margin-top: 0;
-            color: #1f2937;
+            color: var(--demo-text, #1f2937);
         }
 
-        .form-demo form {
-            background: #f8fafc;
+        .form__demo form {
+            background: var(--demo-panel-bg, #f8fafc);
+            color: var(--demo-text, #1f2937);
+            border: 1px solid var(--demo-border, #e2e8f0);
             padding: 2rem;
             border-radius: 8px;
             display: grid;
@@ -168,11 +184,11 @@
             margin: 2rem 0;
         }
 
-        .form-demo label {
+        .form__demo label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: #374151;
+            color: var(--demo-text, #374151);
         }
 
         .event__log {
@@ -214,7 +230,7 @@
         }
     </style>
 </head>
-<body>
+<body data-demo="ui-components">
     <nav data-view="navbar">
         <div class="nav__container">
             <h1>Enhancement Framework</h1>
@@ -228,10 +244,10 @@
         </div>
     </nav>
 
-    <main data-view="main" class="page-content">
-        <header class="page-header">
+    <main data-view="main" class="page__content">
+        <header class="page__header">
             <h1>UI Components</h1>
-            <p>Accessible modals, toast notifications, and enhanced form controls.</p>
+            <p>Accessible modals, toast notifications, enhanced form controls, data tables, lightbox galleries, and copy utilities.</p>
         </header>
 
         <section class="demo__section" data-demo-section>
@@ -239,13 +255,13 @@
             <p>Accessible modals with focus management, slot-based content, and multiple sizes:</p>
 
             <div class="button__group">
-                <button class="btn btn-primary" data-modal data-modal-target="#info-modal">Info Modal</button>
-                <button class="btn btn-secondary" data-modal data-modal-target="#form-modal">Form Modal</button>
-                <button class="btn btn-accent" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
-                <button class="btn btn-outline" data-modal data-modal-target="#large-modal">Large Modal</button>
+                <button class="button button--primary" data-modal data-modal-target="#info-modal">Info Modal</button>
+                <button class="button button--secondary" data-modal data-modal-target="#form-modal">Form Modal</button>
+                <button class="button button--accent" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
+                <button class="button button--outline" data-modal data-modal-target="#large-modal">Large Modal</button>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Modal Features</h3>
                 <ul>
                     <li><strong>Accessibility:</strong> Full ARIA support, focus management, keyboard navigation</li>
@@ -261,24 +277,24 @@
             <p>Toast notifications that integrate seamlessly with the XToasts web component:</p>
 
             <div class="button__group">
-                <button class="btn btn-success"
+                <button class="button button--success"
                         data-toast-trigger="success"
                         data-toast-message="Component loaded successfully!">Success Toast</button>
 
-                <button class="btn btn-info"
+                <button class="button button--info"
                         data-toast-trigger="info"
                         data-toast-message="Router navigation completed">Info Toast</button>
 
-                <button class="btn btn-warning"
+                <button class="button button--warning"
                         data-toast-trigger="warn"
                         data-toast-message="Component loading is taking longer than expected">Warning Toast</button>
 
-                <button class="btn btn-danger"
+                <button class="button button--danger"
                         data-toast-trigger="error"
                         data-toast-message="Failed to load component - check console">Error Toast</button>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Toast Features</h3>
                 <ul>
                     <li><strong>XToasts Integration:</strong> Works with existing XToasts web component</li>
@@ -293,7 +309,7 @@
             <h2>Enhanced Select Component</h2>
             <p>Custom select component with search, accessibility, and form integration:</p>
 
-            <div class="form-demo">
+            <div class="form__demo">
                 <form>
                     <div>
                         <label for="country-select">Country:</label>
@@ -336,10 +352,10 @@
                     </div>
                 </form>
 
-                <button type="submit" class="btn btn-primary" onclick="handleFormSubmit(event)">Submit Form</button>
+                <button type="submit" class="button button--primary" onclick="handleFormSubmit(event)">Submit Form</button>
             </div>
 
-            <div class="feature-details">
+            <div class="features__details">
                 <h3>Select Component Features</h3>
                 <ul>
                     <li><strong>Native Option Elements:</strong> Uses standard HTML option and optgroup elements</li>
@@ -351,25 +367,182 @@
         </section>
 
         <section class="demo__section" data-demo-section>
+            <h2>Enhanced Data Table</h2>
+            <p>Sortable, filterable, and paginated data tables with built-in functionality:</p>
+
+            <table data-datatable 
+                   data-datatable-sortable="true" 
+                   data-datatable-filterable="true" 
+                   data-datatable-paginate="5"
+                   class="table--demo">
+                <thead>
+                    <tr>
+                        <th data-sort="name">Name</th>
+                        <th data-sort="email">Email</th>
+                        <th data-sort="date" data-sort-type="date">Join Date</th>
+                        <th data-sort="score" data-sort-type="number">Score</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>John Doe</td><td>john@example.com</td><td>2023-01-15</td><td>95</td><td>Active</td></tr>
+                    <tr><td>Jane Smith</td><td>jane@example.com</td><td>2023-03-22</td><td>87</td><td>Active</td></tr>
+                    <tr><td>Bob Johnson</td><td>bob@example.com</td><td>2023-02-10</td><td>92</td><td>Inactive</td></tr>
+                    <tr><td>Alice Brown</td><td>alice@example.com</td><td>2023-04-05</td><td>78</td><td>Active</td></tr>
+                    <tr><td>Charlie Wilson</td><td>charlie@example.com</td><td>2023-01-28</td><td>89</td><td>Active</td></tr>
+                    <tr><td>Diana Lee</td><td>diana@example.com</td><td>2023-03-15</td><td>96</td><td>Active</td></tr>
+                    <tr><td>Eric Davis</td><td>eric@example.com</td><td>2023-02-20</td><td>83</td><td>Inactive</td></tr>
+                </tbody>
+            </table>
+
+            <div class="features__details">
+                <h3>DataTable Features</h3>
+                <ul>
+                    <li><strong>Sorting:</strong> Click column headers to sort by different data types</li>
+                    <li><strong>Filtering:</strong> Real-time search across all table content</li>
+                    <li><strong>Pagination:</strong> Automatic pagination with configurable page sizes</li>
+                    <li><strong>Data Types:</strong> Support for string, number, and date sorting</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Image Lightbox Gallery</h2>
+            <p>Click images to open them in a fullscreen lightbox with navigation:</p>
+
+            <div class="gallery__grid">
+                <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=1" class="gallery__item">
+                    <img src="https://picsum.photos/150/150?random=1" alt="Demo Image 1">
+                </a>
+                <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=2" class="gallery__item">
+                    <img src="https://picsum.photos/150/150?random=2" alt="Demo Image 2">
+                </a>
+                <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=3" class="gallery__item">
+                    <img src="https://picsum.photos/150/150?random=3" alt="Demo Image 3">
+                </a>
+                <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=4" class="gallery__item">
+                    <img src="https://picsum.photos/150/150?random=4" alt="Demo Image 4">
+                </a>
+            </div>
+
+            <div class="features__details">
+                <h3>Lightbox Features</h3>
+                <ul>
+                    <li><strong>Gallery Navigation:</strong> Arrow keys and click navigation between images</li>
+                    <li><strong>Accessibility:</strong> Keyboard support with Escape to close</li>
+                    <li><strong>Backdrop Control:</strong> Click outside to close (configurable)</li>
+                    <li><strong>Image Counter:</strong> Shows current position in gallery</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Form Enhancement & Validation</h2>
+            <p>Real-time form validation with custom rules and error messages:</p>
+
+            <form data-form-validator data-validate-on-input="true" class="form__demo-container">
+                <div class="form__field">
+                    <label for="user-name" class="form__label">Full Name (required):</label>
+                    <input type="text" id="user-name" name="name" 
+                           data-validate="required|min:2" 
+                           data-validate-message="Please enter your full name (at least 2 characters)"
+                           class="form__input">
+                    <div data-error-for="name" class="form__error"></div>
+                </div>
+
+                <div class="form__field">
+                    <label for="user-email" class="form__label">Email Address:</label>
+                    <input type="email" id="user-email" name="email" 
+                           data-validate="required|email" 
+                           data-validate-message="Please enter a valid email address"
+                           class="form__input">
+                    <div data-error-for="email" class="form__error"></div>
+                </div>
+
+                <div class="form__field">
+                    <label for="user-age" class="form__label">Age (18-100):</label>
+                    <input type="number" id="user-age" name="age" 
+                           data-validate="required|number|minnum:18|maxnum:100" 
+                           class="form__input">
+                    <div data-error-for="age" class="form__error"></div>
+                </div>
+
+                <div class="form__field">
+                    <label for="user-website" class="form__label">Website (optional):</label>
+                    <input type="url" id="user-website" name="website" 
+                           data-validate="url" 
+                           data-validate-message="Please enter a valid URL (e.g., https://example.com)"
+                           class="form__input">
+                    <div data-error-for="website" class="form__error"></div>
+                </div>
+
+                <button type="submit" class="button button--primary">Validate & Submit</button>
+            </form>
+
+            <div class="features__details">
+                <h3>Form Enhancement Features</h3>
+                <ul>
+                    <li><strong>Real-time Validation:</strong> Validates as you type with debouncing</li>
+                    <li><strong>Multiple Rules:</strong> Chain validation rules like required|email|min:5</li>
+                    <li><strong>Custom Messages:</strong> Override default error messages per field</li>
+                    <li><strong>Visual Feedback:</strong> Error and success states with CSS classes</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
+            <h2>Copy to Clipboard</h2>
+            <p>One-click copying with visual feedback and fallback support:</p>
+
+            <div class="copy-demo__grid">
+                <div class="copy-demo__item">
+                    <pre id="code-sample" class="copy-demo__code">const framework = new ParallelogramJS();
+framework.mount();</pre>
+                    <button data-copy-to-clipboard data-copy-target="#code-sample" class="button button--outline">Copy Code</button>
+                </div>
+
+                <div class="copy-demo__item">
+                    <code class="copy-demo__command">npm install @peptolab/parallelogram</code>
+                    <button data-copy-to-clipboard data-copy-text="npm install @peptolab/parallelogram" data-copy-success-message="Copied!" class="button button--outline">Copy Command</button>
+                </div>
+
+                <div class="copy-demo__item">
+                    <input type="text" value="https://github.com/parallelogram-dev/parallelogram-js" readonly class="copy-demo__input">
+                    <button data-copy-to-clipboard data-copy-target="input" data-copy-success-message="URL Copied!" class="button button--outline">Copy URL</button>
+                </div>
+            </div>
+
+            <div class="features__details">
+                <h3>Copy to Clipboard Features</h3>
+                <ul>
+                    <li><strong>Multiple Sources:</strong> Copy from elements, input values, or direct text</li>
+                    <li><strong>Visual Feedback:</strong> Button text changes with success/error states</li>
+                    <li><strong>Fallback Support:</strong> Works in older browsers without Clipboard API</li>
+                    <li><strong>Customizable:</strong> Configure success messages and duration</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="demo__section" data-demo-section>
             <h2>Real-time Event System</h2>
             <p>All UI components communicate through a central event bus:</p>
 
             <div id="event-log" class="event__log">
                 <div class="event__log-header">
                     <strong>UI Component Events</strong>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div class="event__log-controls">
                         <button onclick="clearEventLog()" class="btn__small">Clear</button>
                         <button onclick="exportEventLog()" class="btn__small">Export</button>
                     </div>
                 </div>
-                <div class="event__log-content" style="max-height: 300px; overflow-y: auto;">
+                <div class="event__log-content event__log-content--scrollable">
                     <div class="event__log-item">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div class="event__log-entry">
                             <div>
                                 <strong>page:loaded</strong>
                                 <pre>{"page": "/ui-components", "components": ["modal", "toast", "select"]}</pre>
                             </div>
-                            <small style="color: #999; margin-left: 1rem;">Just now</small>
+                            <small class="event__log-timestamp">Just now</small>
                         </div>
                     </div>
                 </div>
@@ -400,20 +573,20 @@
         <h2 slot="title">Enhanced Contact Form</h2>
         <div>
             <form data-enhanced-form id="contact-form">
-                <div style="margin-bottom: 1rem;">
-                    <label for="contact-name" style="display: block; margin-bottom: 0.5rem;">Name:</label>
+                <div class="modal__field">
+                    <label for="contact-name" class="modal__label">Name:</label>
                     <input type="text" id="contact-name" name="name" required
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                           class="modal__input">
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                    <label for="contact-email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
+                <div class="modal__field">
+                    <label for="contact-email" class="modal__label">Email:</label>
                     <input type="email" id="contact-email" name="email" required
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                           class="modal__input">
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                    <label for="contact-priority" style="display: block; margin-bottom: 0.5rem;">Priority:</label>
+                <div class="modal__field">
+                    <label for="contact-priority" class="modal__label">Priority:</label>
                     <p-select name="inquiry-priority" placeholder="Select priority" id="contact-priority">
                         <option value="low">Low</option>
                         <option value="medium" selected>Medium</option>
@@ -422,10 +595,10 @@
                     </p-select>
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                    <label for="contact-message" style="display: block; margin-bottom: 0.5rem;">Message:</label>
+                <div class="modal__field">
+                    <label for="contact-message" class="modal__label">Message:</label>
                     <textarea id="contact-message" name="message" rows="4" required
-                              style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                              class="modal__textarea"></textarea>
                 </div>
             </form>
         </div>
@@ -438,29 +611,29 @@
     <p-modal id="gallery-modal" data-modal-size="large" data-modal-closable="true">
         <h2 slot="title">UI Component Gallery</h2>
         <div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📋</div>
-                    <h4 style="margin: 0.5rem 0;">Modals</h4>
-                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Accessible dialog components</p>
+            <div class="modal__gallery-grid">
+                <div class="modal__gallery-item">
+                    <div class="modal__gallery-icon">📋</div>
+                    <h4 class="modal__gallery-title">Modals</h4>
+                    <p class="modal__gallery-description">Accessible dialog components</p>
                 </div>
 
-                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">💬</div>
-                    <h4 style="margin: 0.5rem 0;">Toasts</h4>
-                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Notification system</p>
+                <div class="modal__gallery-item">
+                    <div class="modal__gallery-icon">💬</div>
+                    <h4 class="modal__gallery-title">Toasts</h4>
+                    <p class="modal__gallery-description">Notification system</p>
                 </div>
 
-                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📝</div>
-                    <h4 style="margin: 0.5rem 0;">Forms</h4>
-                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Enhanced form controls</p>
+                <div class="modal__gallery-item">
+                    <div class="modal__gallery-icon">📝</div>
+                    <h4 class="modal__gallery-title">Forms</h4>
+                    <p class="modal__gallery-description">Enhanced form controls</p>
                 </div>
 
-                <div style="text-align: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔄</div>
-                    <h4 style="margin: 0.5rem 0;">Events</h4>
-                    <p style="margin: 0; color: #666; font-size: 0.9rem;">Real-time communication</p>
+                <div class="modal__gallery-item">
+                    <div class="modal__gallery-icon">🔄</div>
+                    <h4 class="modal__gallery-title">Events</h4>
+                    <p class="modal__gallery-description">Real-time communication</p>
                 </div>
             </div>
         </div>
@@ -493,105 +666,6 @@
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
 
-    <!-- Demo functionality scripts -->
-    <script>
-        function handleFormSubmit(event) {
-            event.preventDefault();
-
-            const formData = new FormData();
-            const selects = document.querySelectorAll('p-select[name]');
-
-            selects.forEach(select => {
-                if (select.name && select.getValue()) {
-                    formData.set(select.name, select.getValue());
-                }
-            });
-
-            const data = Object.fromEntries(formData);
-            console.log('Form submitted with data:', data);
-
-            if (window.Toast && window.Toast.show) {
-                window.Toast.show(`Form submitted successfully!`, 'success');
-            } else {
-                alert(`Form submitted! Data: ${JSON.stringify(data)}`);
-            }
-        }
-
-        function clearEventLog() {
-            const eventLogContent = document.querySelector('.event__log-content');
-            if (eventLogContent) {
-                eventLogContent.innerHTML = '<div class="event__log-item"><div><em>Event log cleared</em></div></div>';
-            }
-        }
-
-        function exportEventLog() {
-            const eventLog = document.querySelector('.event__log-content');
-            if (!eventLog) return;
-
-            const events = Array.from(eventLog.children).map(child => ({
-                timestamp: child.querySelector('small')?.textContent,
-                event: child.querySelector('strong')?.textContent,
-                data: child.querySelector('pre')?.textContent
-            }));
-
-            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ui-events-${Date.now()}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function addEventToLog(eventType, data) {
-            const eventLogContent = document.querySelector('.event__log-content');
-            if (!eventLogContent) return;
-
-            const timestamp = new Date().toLocaleTimeString();
-            const eventElement = document.createElement('div');
-            eventElement.className = 'event__log-item';
-            eventElement.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <strong>${eventType}</strong>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    </div>
-                    <small style="color: #999; margin-left: 1rem;">${timestamp}</small>
-                </div>
-            `;
-
-            eventLogContent.insertBefore(eventElement, eventLogContent.firstChild);
-
-            const items = eventLogContent.querySelectorAll('.event__log-item');
-            if (items.length > 10) {
-                items[items.length - 1].remove();
-            }
-        }
-
-        // Listen for UI component events
-        document.addEventListener('p-select:change', (e) => {
-            addEventToLog('p-select:change', e.detail);
-        });
-
-        document.addEventListener('modal:open', (e) => {
-            addEventToLog('modal:open', { modalId: e.target.id });
-        });
-
-        document.addEventListener('modal:close', (e) => {
-            addEventToLog('modal:close', { modalId: e.target.id });
-        });
-
-        // Page-specific component mounting notification
-        if (window.eventBus) {
-            window.eventBus.emit('page:loaded', {
-                page: '/ui-components',
-                components: ['modal', 'toast', 'select'],
-                timestamp: performance.now()
-            });
-        }
-    </script>
 
     <!-- Load the framework -->
     <script type="module" src="dist/parallelogram-demo.min.js"></script>

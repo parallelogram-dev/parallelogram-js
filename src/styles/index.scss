@@ -1,0 +1,42 @@
+/**
+ * Parallelogram-JS Framework Main Styles
+ * Core framework entry point with consolidated imports and base styles
+ */
+
+// Foundation imports
+@use './reset.scss';
+@use './settings.scss';
+
+// Component imports
+@use './components/carousel.scss';
+@use './components/datatable.scss';
+@use './components/lightbox.scss';
+@use './components/form-enhancer.scss';
+@use './components/copy-to-clipboard.scss';
+@use './components/lazysrc.scss';
+@use './components/modal.scss';
+@use './components/toasts.scss';
+
+// Framework-level variables (overrides for settings)
+:root {
+  --framework-transition-duration: #{var(--transition-normal, 0.2s)};
+  --framework-transition-easing: #{var(--ease-in-out, ease-in-out)};
+  --framework-focus-color: #{var(--brand-primary, #3b82f6)};
+  --framework-focus-offset: 2px;
+  --framework-focus-width: 2px;
+}
+
+// Global focus styles for framework components
+[data-lazysrc],
+[data-modal],
+[data-carousel],
+[data-lightbox],
+[data-form-enhancer],
+[data-copy-to-clipboard],
+[data-datatable] {
+  &:focus-visible {
+    outline: var(--framework-focus-width) solid var(--framework-focus-color);
+    outline-offset: var(--framework-focus-offset);
+    transition: outline var(--framework-transition-duration) var(--framework-transition-easing);
+  }
+}
