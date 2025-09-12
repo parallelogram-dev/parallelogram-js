@@ -233,12 +233,19 @@ export default class Lazysrc extends BaseComponent {
      * @param {Object} state
      */
     _setupIntersectionLoading(element, state) {
+        this.logger?.info('Setting up intersection loading for element', {element});
+
         // Store original sources and clear them to prevent immediate loading
         this._storeAndClearSources(element, state);
 
         // Update observer threshold if different from default
         if (state.config.threshold !== Lazysrc.defaults.threshold ||
             state.config.rootMargin !== Lazysrc.defaults.rootMargin) {
+
+            this.logger?.info('Creating custom observer for element', {
+                threshold: state.config.threshold,
+                rootMargin: state.config.rootMargin
+            });
 
             // Create custom observer for this element
             state.customObserver = new IntersectionObserver(
@@ -250,8 +257,11 @@ export default class Lazysrc extends BaseComponent {
                 }
             );
             state.customObserver.observe(element);
+            this.logger?.info('Element added to custom observer', {element});
         } else {
+            this.logger?.info('Adding element to default observer', {element});
             this.observer.observe(element);
+            this.logger?.info('Element added to default observer', {element});
         }
     }
 
@@ -311,13 +321,34 @@ export default class Lazysrc extends BaseComponent {
      * @param {IntersectionObserverEntry[]} entries
      */
     _handleIntersection(entries) {
+        this.logger?.info('Intersection handler called', {entriesCount: entries.length});
+
         entries.forEach(entry => {
+            this.logger?.info('Processing intersection entry', {
+                isIntersecting: entry.isIntersecting,
+                element: entry.target,
+                intersectionRatio: entry.intersectionRatio
+            });
+
             if (entry.isIntersecting) {
                 const element = entry.target;
                 const state = this.getState(element);
 
-                if (state && !state.isLoaded && !state.isLoading) {
+                this.logger?.info('State for intersecting element', {
+                    hasState: !!state,
+                    hasResult: !!(state && state.result),
+                    isLoaded: state?.result?.isLoaded,
+                    isLoading: state?.result?.isLoading
+                });
+
+                if (state && state.result && !state.result.isLoaded && !state.result.isLoading) {
+                    this.logger?.info('Calling _loadElement for element', {element});
                     this._loadElement(element, state);
+                } else {
+                    this.logger?.warn('Skipping load for element', {
+                        element,
+                        reason: 'State check failed'
+                    });
                 }
             }
         });
