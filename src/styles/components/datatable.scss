@@ -1,9 +1,9 @@
-// datatable.scss
-// DataTable Component Styles using BEM methodology with CSS Custom Properties
+/* datatable.scss */
+/* DataTable Component Styles using BEM methodology with CSS Custom Properties */
 
-// CSS Custom Properties (CSS Variables) with fallbacks
+/* CSS Custom Properties (CSS Variables) with fallbacks */
 .datatable {
-  // Core colors
+  /* Core colors */
   --datatable-border-color: #dee2e6;
   --datatable-bg-color: #fff;
   --datatable-header-bg: #f8f9fa;
@@ -13,13 +13,13 @@
   --datatable-muted-color: #6c757d;
   --datatable-error-color: #dc3545;
 
-  // Spacing
+  /* Spacing */
   --datatable-spacing-xs: 0.25rem;
   --datatable-spacing-sm: 0.5rem;
   --datatable-spacing-md: 0.75rem;
   --datatable-spacing-lg: 1rem;
 
-  // Visual properties
+  /* Visual properties */
   --datatable-border-radius: 4px;
   --datatable-disabled-opacity: 0.5;
   --datatable-transition: all 0.2s ease;
@@ -29,14 +29,14 @@
   --datatable-font-weight-normal: 400;
   --datatable-font-weight-bold: 600;
 
-  // Z-index
+  /* Z-index */
   --datatable-z-index-loading: 1;
 
-  // Shadow and effects
+  /* Shadow and effects */
   --datatable-box-shadow-focus: 0 0 0 2px rgba(0, 123, 255, 0.25);
   --datatable-row-hover-bg: rgba(0, 123, 255, 0.05);
 
-  // Dark mode overrides (can be set programmatically)
+  /* Dark mode overrides (can be set programmatically) */
   @media (prefers-color-scheme: dark) {
     --datatable-bg-color: #343a40;
     --datatable-header-bg: #495057;
@@ -47,7 +47,7 @@
   }
 }
 
-// Mixins using CSS variables
+/* Mixins using CSS variables */
 @mixin datatable-button {
   padding: var(--datatable-spacing-sm) var(--datatable-spacing-md);
   border: 1px solid var(--datatable-border-color);
@@ -76,14 +76,14 @@
   box-shadow: var(--datatable-box-shadow-focus);
 }
 
-// Main DataTable Block
+/* Main DataTable Block */
 .datatable {
-  // Filter Element
+  /* Filter Element */
   &__filter {
     margin-bottom: var(--datatable-spacing-lg);
   }
 
-  // Search Input
+  /* Search Input */
   &__search {
     padding: var(--datatable-spacing-sm);
     border: 1px solid var(--datatable-border-color);
@@ -107,7 +107,7 @@
     }
   }
 
-  // Table Element
+  /* Table Element */
   &__table {
     width: 100%;
     border-collapse: collapse;
@@ -115,20 +115,20 @@
     background-color: var(--datatable-bg-color);
     color: var(--datatable-text-color);
 
-    // Table Header
+    /* Table Header */
     &-header {
       background-color: var(--datatable-header-bg);
       font-weight: var(--datatable-font-weight-bold);
       border-bottom: 2px solid var(--datatable-border-color);
     }
 
-    // Table Cell (both th and td)
+    /* Table Cell (both th and td) */
     &-cell {
       padding: var(--datatable-spacing-md);
       text-align: left;
       border-bottom: 1px solid var(--datatable-border-color);
 
-      // Sortable Header Modifier
+      /* Sortable Header Modifier */
       &--sortable {
         cursor: pointer;
         user-select: none;
@@ -141,16 +141,16 @@
       }
     }
 
-    // Table Body
+    /* Table Body */
     &-body {
-      // Row Hover State
+      /* Row Hover State */
       .datatable__table-row:hover {
         background-color: var(--datatable-row-hover-bg);
       }
     }
   }
 
-  // Sort Icon
+  /* Sort Icon */
   &__sort-icon {
     margin-left: var(--datatable-spacing-sm);
     font-size: var(--datatable-font-size-sm);
@@ -158,7 +158,7 @@
     font-weight: var(--datatable-font-weight-normal);
   }
 
-  // Pagination Block
+  /* Pagination Block */
   &__pagination {
     display: flex;
     justify-content: center;
@@ -166,7 +166,7 @@
     gap: var(--datatable-spacing-xs);
     margin-top: var(--datatable-spacing-lg);
 
-    // Pagination Button
+    /* Pagination Button */
     &-button {
       @include datatable-button;
 
@@ -178,7 +178,7 @@
     }
   }
 
-  // Loading State Modifier
+  /* Loading State Modifier */
   &--loading {
     position: relative;
     opacity: var(--datatable-disabled-opacity);
@@ -201,13 +201,13 @@
   }
 }
 
-// Animations
+/* Animations */
 @keyframes datatable-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-// Responsive Design
+/* Responsive Design */
 @media (max-width: 768px) {
   .datatable {
     --datatable-font-size: 0.875rem;
@@ -223,9 +223,9 @@
   }
 }
 
-// Theme variants using CSS custom properties
+/* Theme variants using CSS custom properties */
 .datatable {
-  // Light theme variant
+  /* Light theme variant */
   &--theme-light {
     --datatable-bg-color: #ffffff;
     --datatable-header-bg: #f8f9fa;
@@ -234,7 +234,7 @@
     --datatable-hover-bg: #e9ecef;
   }
 
-  // Dark theme variant
+  /* Dark theme variant */
   &--theme-dark {
     --datatable-bg-color: #343a40;
     --datatable-header-bg: #495057;
@@ -244,14 +244,14 @@
     --datatable-muted-color: #adb5bd;
   }
 
-  // Compact size variant
+  /* Compact size variant */
   &--size-compact {
     --datatable-spacing-md: 0.5rem;
     --datatable-spacing-sm: 0.25rem;
     --datatable-font-size: 0.875rem;
   }
 
-  // Large size variant
+  /* Large size variant */
   &--size-large {
     --datatable-spacing-md: 1rem;
     --datatable-spacing-sm: 0.75rem;
@@ -259,7 +259,7 @@
   }
 }
 
-// Usage with data attributes (maintains progressive enhancement)
+/* Usage with data attributes (maintains progressive enhancement) */
 table[data-datatable] {
   @extend .datatable__table;
 

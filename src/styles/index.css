@@ -1,8 +1,8 @@
 /* Parallelogram-JS Framework Styles */
-@import './settings.css';
+@import './settings.scss';
 @import './components/carousel.css';
-@import './components/datatable.css';
-@import './components/lightbox.css';
+@import './components/datatable.scss';
+@import './components/lightbox.scss';
 @import './components/lazysrc.css';
 @import './components/modal.css';
 @import './components/toasts.css';

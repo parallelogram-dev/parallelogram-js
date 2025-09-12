@@ -1,9 +1,9 @@
-// lightbox.scss
-// Lightbox Component Styles using BEM methodology with CSS Custom Properties
+/* lightbox.scss */
+/* Lightbox Component Styles using BEM methodology with CSS Custom Properties */
 
-// CSS Custom Properties (CSS Variables) with fallbacks
+/* CSS Custom Properties (CSS Variables) with fallbacks */
 .lightbox {
-    // Core colors
+    /* Core colors */
     --lightbox-overlay-bg         : rgba(0, 0, 0, 0.9);
     --lightbox-button-bg          : rgba(0, 0, 0, 0.5);
     --lightbox-button-bg-hover    : rgba(0, 0, 0, 0.8);
@@ -12,7 +12,7 @@
     --lightbox-counter-color      : #ffffff;
     --lightbox-focus-color        : #007bff;
 
-    // Spacing
+    /* Spacing */
     --lightbox-spacing-xs         : 0.25rem;
     --lightbox-spacing-sm         : 0.5rem;
     --lightbox-spacing-md         : 0.75rem;
@@ -20,30 +20,30 @@
     --lightbox-spacing-xl         : 1.5rem;
     --lightbox-spacing-xxl        : 2rem;
 
-    // Sizes
+    /* Sizes */
     --lightbox-close-size         : 2rem;
     --lightbox-nav-size           : 2rem;
     --lightbox-close-button-size  : auto;
     --lightbox-nav-button-padding : 1rem;
 
-    // Visual properties
+    /* Visual properties */
     --lightbox-border-radius      : 4px;
     --lightbox-shadow             : 0 4px 20px rgba(0, 0, 0, 0.5);
     --lightbox-transition         : all 0.2s ease;
     --lightbox-animation-duration : 0.3s;
 
-    // Typography
+    /* Typography */
     --lightbox-font-size          : 0.875rem;
     --lightbox-font-weight        : 300;
 
-    // Z-index
+    /* Z-index */
     --lightbox-z-index            : 9999;
     --lightbox-z-index-controls   : 10001;
 
-    // Responsive breakpoints (for reference)
+    /* Responsive breakpoints (for reference) */
     --lightbox-mobile-breakpoint  : 768px;
 
-    // Mobile specific overrides
+    /* Mobile specific overrides */
     @media (max-width : 768px) {
         --lightbox-close-size         : 1.5rem;
         --lightbox-nav-size           : 1.5rem;
@@ -53,7 +53,7 @@
         --lightbox-spacing-lg         : 0.75rem;
     }
 
-    // High contrast mode
+    /* High contrast mode */
     @media (prefers-contrast : high) {
         --lightbox-overlay-bg      : rgba(0, 0, 0, 0.95);
         --lightbox-button-bg       : rgba(255, 255, 255, 0.9);
@@ -64,7 +64,7 @@
     }
 }
 
-// Mixins using CSS variables
+/* Mixins using CSS variables */
 @mixin lightbox-button {
     background    : var(--lightbox-button-bg);
     border        : none;
@@ -101,9 +101,9 @@
     transform : translateY(-50%);
 }
 
-// Main Lightbox Block
+/* Main Lightbox Block */
 .lightbox {
-    // Overlay Element
+    /* Overlay Element */
     &__overlay {
         position         : fixed;
         z-index          : var(--lightbox-z-index);
@@ -117,7 +117,7 @@
         background-color : var(--lightbox-overlay-bg);
     }
 
-    // Container Element
+    /* Container Element */
     &__container {
         position   : relative;
         max-width  : 90vw;
@@ -125,14 +125,14 @@
         @include lightbox-center;
     }
 
-    // Content Element
+    /* Content Element */
     &__content {
         @include lightbox-center;
         max-width  : 100%;
         max-height : 100%;
     }
 
-    // Image Element
+    /* Image Element */
     &__image {
         width         : auto;
         max-width     : 100%;
@@ -143,7 +143,7 @@
         object-fit    : contain;
     }
 
-    // Close Button
+    /* Close Button */
     &__close {
         @include lightbox-button;
         font-size   : var(--lightbox-close-size);
@@ -162,7 +162,7 @@
             opacity : 0.7;
         }
 
-        // Mobile specific styles
+        /* Mobile specific styles */
         @media (max-width : 768px) {
             top           : 10px;
             right         : 10px;
@@ -173,7 +173,7 @@
         }
     }
 
-    // Navigation Buttons
+    /* Navigation Buttons */
     &__nav {
         @include lightbox-button;
         @include lightbox-position-vertical-center;
@@ -181,22 +181,22 @@
         z-index   : var(--lightbox-z-index-controls);
         padding   : var(--lightbox-nav-button-padding);
 
-        // Previous Button Modifier
+        /* Previous Button Modifier */
         &--prev {
             left : 20px;
         }
 
-        // Next Button Modifier
+        /* Next Button Modifier */
         &--next {
             right : 20px;
         }
 
-        // Hidden State Modifier
+        /* Hidden State Modifier */
         &--hidden {
             display : none;
         }
 
-        // Mobile specific styles
+        /* Mobile specific styles */
         @media (max-width : 768px) {
             font-size : var(--lightbox-nav-size);
             top       : auto;
@@ -214,7 +214,7 @@
         }
     }
 
-    // Counter Element
+    /* Counter Element */
     &__counter {
         @include lightbox-position-center;
         font-size     : var(--lightbox-font-size);
@@ -225,14 +225,14 @@
         border-radius : var(--lightbox-border-radius);
         background    : var(--lightbox-counter-bg);
 
-        // Mobile specific styles
+        /* Mobile specific styles */
         @media (max-width : 768px) {
             bottom  : 80px;
             padding : var(--lightbox-spacing-xs) var(--lightbox-spacing-md);
         }
     }
 
-    // Responsive modifiers for mobile
+    /* Responsive modifiers for mobile */
     @media (max-width : 768px) {
         &__container {
             max-width  : 95vw;
@@ -245,14 +245,14 @@
     }
 }
 
-// Animations
+/* Animations */
 @keyframes lightbox-fade-in {
     to {
         opacity : 1;
     }
 }
 
-// Touch Device Optimization
+/* Touch Device Optimization */
 @media (hover : none) and (pointer : coarse) {
     .lightbox {
         &__nav {
@@ -261,7 +261,7 @@
     }
 }
 
-// Reduced Motion Support
+/* Reduced Motion Support */
 @media (prefers-reduced-motion : reduce) {
     .lightbox {
         --lightbox-animation-duration : 0s;
@@ -273,9 +273,9 @@
     }
 }
 
-// Theme variants using CSS custom properties
+/* Theme variants using CSS custom properties */
 .lightbox {
-    // Light theme variant
+    /* Light theme variant */
     &--theme-light {
         --lightbox-overlay-bg      : rgba(255, 255, 255, 0.95);
         --lightbox-button-bg       : rgba(0, 0, 0, 0.1);
@@ -285,14 +285,14 @@
         --lightbox-counter-color   : #333333;
     }
 
-    // Minimal theme variant
+    /* Minimal theme variant */
     &--theme-minimal {
         --lightbox-button-bg  : transparent;
         --lightbox-counter-bg : transparent;
         --lightbox-shadow     : none;
     }
 
-    // High contrast theme
+    /* High contrast theme */
     &--theme-high-contrast {
         --lightbox-overlay-bg    : rgba(0, 0, 0, 0.98);
         --lightbox-button-bg     : rgba(255, 255, 255, 1);
@@ -301,7 +301,7 @@
         --lightbox-counter-color : #000000;
     }
 
-    // Size variants
+    /* Size variants */
     &--size-compact {
         --lightbox-close-size         : 1.5rem;
         --lightbox-nav-size           : 1.5rem;
@@ -318,7 +318,7 @@
         --lightbox-nav-button-padding : 1.5rem;
     }
 
-    // Animation variants
+    /* Animation variants */
     &--animation-fast {
         --lightbox-animation-duration : 0.15s;
     }
@@ -332,7 +332,7 @@
     }
 }
 
-// Usage with data attributes (maintains progressive enhancement)
+/* Usage with data attributes (maintains progressive enhancement) */
 .lightbox-overlay {
     @extend .lightbox__overlay;
 }
@@ -367,7 +367,7 @@
     @extend .lightbox__counter;
 }
 
-// State classes for dynamic behavior
+/* State classes for dynamic behavior */
 .lightbox-nav-hidden {
     @extend .lightbox__nav--hidden;
 }
