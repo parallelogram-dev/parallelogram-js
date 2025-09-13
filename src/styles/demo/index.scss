@@ -22,6 +22,9 @@
 @use '../framework/components/tabs.scss';
 @use '../framework/components/lazysrc.scss';
 
+/*  Animation system (load first to allow overrides) */
+@use './components/animations.scss';
+
 /*  New BEM-compliant component styles */
 @use './components/button.scss';
 @use './components/dropdown.scss';

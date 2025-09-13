@@ -272,11 +272,13 @@
 
   /*  Modifier: Secondary button */
   &--secondary {
-    background: transparent;
-    border-color: var(--modal-panel-border);
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
 
     &:hover:not(:disabled) {
-      background: var(--color-gray-50, #f9fafb);
+      background: var(--color-secondary-hover);
+      border-color: var(--color-secondary-hover);
     }
   }
 
@@ -336,21 +338,21 @@
 .modal__input {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 0.875rem;
 
   &:focus {
     outline: none;
     border-color: var(--modal-button-primary-bg);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: var(--focus-ring-primary);
   }
 }
 
 .modal__textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 0.875rem;
   resize: vertical;
@@ -358,35 +360,35 @@
   &:focus {
     outline: none;
     border-color: var(--modal-button-primary-bg);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: var(--focus-ring-primary);
   }
 }
 
 /*  Modal gallery components */
-.modal__gallery-grid {
+.modal__gallery {
   @extend %grid_basic;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
-.modal__gallery-item {
+.modal__item {
   @extend %panel_surface;
   text-align: center;
   padding: 1rem;
 }
 
-.modal__gallery-icon {
+.modal__icon {
   font-size: 3rem;
   margin-bottom: 0.5rem;
 }
 
-.modal__gallery-title {
+.modal__title {
   margin: 0.5rem 0;
   color: var(--demo-text, #1f2937);
   font-size: 1rem;
   font-weight: 600;
 }
 
-.modal__gallery-description {
+.modal__description {
   margin: 0;
   color: var(--demo-text-muted, #666);
   font-size: 0.9rem;

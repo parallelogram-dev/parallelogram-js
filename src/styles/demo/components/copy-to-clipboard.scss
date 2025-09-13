@@ -1,13 +1,13 @@
 /* Copy to Clipboard Component Styles */
 @use '../includes/common';
-.copy-success {
-  background-color: #10b981 !important;
+.copy-feedback--success {
+  background-color: var(--color-success) !important;
   color: white !important;
   transition: all 0.3s ease;
 }
 
-.copy-error {
-  background-color: #ef4444 !important;
+.copy-feedback--error {
+  background-color: var(--color-error) !important;
   color: white !important;
   transition: all 0.3s ease;
 }
@@ -35,7 +35,7 @@
   }
 }
 
-.copy-success {
+.copy-feedback--success {
   animation: copy-success-pulse 0.3s ease-out;
 }
 
