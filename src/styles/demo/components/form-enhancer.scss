@@ -1,17 +1,17 @@
 /* Form Enhancer Component Styles */
 .error {
-  border-color: #ef4444 !important;
+  border-color: var(--color-error) !important;
   background-color: #fef2f2;
 }
 
 .valid {
-  border-color: #10b981 !important;
+  border-color: var(--color-success) !important;
   background-color: #f0fdf4;
 }
 
 [data-error-for] {
   display: none;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-top: 0.5rem;
   animation: error-fade-in 0.3s ease-out;
@@ -46,16 +46,16 @@ form[data-form-validator] input:focus,
 form[data-form-validator] textarea:focus,
 form[data-form-validator] select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring-primary);
 }
 
 form[data-form-validator] .error:focus {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  border-color: var(--color-error);
+  box-shadow: var(--focus-ring-error);
 }
 
 form[data-form-validator] .valid:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: var(--color-success);
+  box-shadow: var(--focus-ring-success);
 }

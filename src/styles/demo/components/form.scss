@@ -2,10 +2,10 @@
 @use '../includes/common';
 .form {
   &--enhanced {
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 2rem;
     border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
   }
 
   &__grid {
@@ -73,7 +73,7 @@
 
   &__input--modal {
     padding: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
   }
 
   /*  Demo container styles */
@@ -95,7 +95,7 @@
   }
 
   &__error {
-    color: #ef4444;
+    color: var(--color-error);
     font-size: 0.875rem;
     margin-top: 0.5rem;
     display: none;
@@ -115,7 +115,7 @@
   &__custom {
     width: 20px;
     height: 20px;
-    border: 2px solid #d1d5db;
+    border: 2px solid var(--color-border);
     border-radius: 4px;
     position: relative;
   }
@@ -137,48 +137,61 @@
     transition: border-color 0.2s ease;
 
     &--success {
-      border: 2px solid #10b981;
+      border: 2px solid var(--color-success);
     }
 
     &--warning {
-      border: 2px solid #f59e0b;
+      border: 2px solid var(--color-warning);
     }
 
     &--accent {
-      border: 2px solid #8b5cf6;
+      border: 2px solid var(--btn-accent);
     }
 
     &--danger {
-      border: 2px solid #ef4444;
+      border: 2px solid var(--color-error);
     }
 
     &--info {
-      border: 2px solid #06b6d4;
+      border: 2px solid var(--btn-info);
     }
   }
 }
 
 /*  Event log component */
-.event__log {
-  &-controls {
+.event {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--demo-border, #e5e7eb);
+  }
+
+  &__controls {
     display: flex;
     gap: 0.5rem;
   }
 
-  &-content {
+  &__content {
     &--scrollable {
       max-height: 300px;
       overflow-y: auto;
     }
   }
 
-  &-entry {
+  &__item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--demo-border, #f3f4f6);
+  }
+
+  &__entry {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
   }
 
-  &-timestamp {
+  &__timestamp {
     color: var(--demo-text-muted, #999);
     margin-left: 1rem;
     font-size: 0.875rem;

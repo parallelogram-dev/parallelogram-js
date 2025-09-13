@@ -6,7 +6,7 @@
   width: 400px;
   height: 100vh;
   background: white;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--color-border);
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   transition: right 0.3s ease;

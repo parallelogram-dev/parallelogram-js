@@ -6,7 +6,7 @@
         <title>UI Components - Enhancement Framework</title>
         <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
     </head>
-    <body data-demo="ui-components">
+    <body>
         <nav data-view="navbar">
             <div class="nav__container">
                 <h1>Enhancement Framework</h1>
@@ -20,7 +20,7 @@
             </div>
         </nav>
 
-        <main data-view="main" class="page__content">
+        <main data-view="main" data-demo="ui-components" class="page__content">
             <header class="page__header">
                 <h1>UI Components</h1>
                 <p>
@@ -587,22 +587,22 @@ framework.mount();</pre
                 <h2>Real-time Event System</h2>
                 <p>All UI components communicate through a central event bus:</p>
 
-                <div id="event-log" class="event__log">
-                    <div class="event__log-header">
+                <div id="event-log" class="event">
+                    <div class="event__header">
                         <strong>UI Component Events</strong>
-                        <div class="event__log-controls">
+                        <div class="event__controls">
                             <button data-btn-action="clearEventLog" class="btn btn--xs">Clear</button>
                             <button data-btn-action="exportEventLog" class="btn btn--xs">Export</button>
                         </div>
                     </div>
-                    <div class="event__log-content event__log-content--scrollable">
-                        <div class="event__log-item">
-                            <div class="event__log-entry">
+                    <div class="event__content event__content--scrollable">
+                        <div class="event__item">
+                            <div class="event__entry">
                                 <div>
                                     <strong>page:loaded</strong>
                                     <pre>{"page": "/ui-components", "components": ["modal", "toast", "select"]}</pre>
                                 </div>
-                                <small class="event__log-timestamp">Just now</small>
+                                <small class="event__timestamp">Just now</small>
                             </div>
                         </div>
                     </div>
@@ -626,7 +626,7 @@ framework.mount();</pre
                 </div>
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close>Close</button>
-                    <button class="btn btn--primary" data-modal data-modal-target="#form-modal">Open Form</button>
+                    <button class="btn btn--primary" data-modal data-modal-target="#form-modal" data-btn-action="open-form-modal">Open Form</button>
                 </div>
             </p-modal>
 
@@ -682,42 +682,43 @@ framework.mount();</pre
                     </form>
                 </div>
                 <div slot="actions">
-                    <button class="btn btn--secondary" data-modal-close>Cancel</button>
-                    <button type="submit" form="contact-form" class="btn btn--primary">Send Message</button>
+                    <button class="btn btn--secondary" data-modal-close data-btn-action="cancel-form">Cancel</button>
+                    <button type="submit" form="contact-form" class="btn btn--primary" data-btn-action="submit-form">Send Message</button>
                 </div>
             </p-modal>
 
             <p-modal id="gallery-modal" data-modal-size="lg" data-modal-closable="true">
                 <h2 slot="title">UI Component Gallery</h2>
                 <div>
-                    <div class="modal__gallery-grid">
-                        <div class="modal__gallery-item">
-                            <div class="modal__gallery-icon">📋</div>
-                            <h4 class="modal__gallery-title">Modals</h4>
-                            <p class="modal__gallery-description">Accessible dialog components</p>
+                    <div class="modal__gallery">
+                        <div class="modal__item">
+                            <div class="modal__icon">📋</div>
+                            <h4 class="modal__title">Modals</h4>
+                            <p class="modal__description">Accessible dialog components</p>
                         </div>
 
-                        <div class="modal__gallery-item">
-                            <div class="modal__gallery-icon">💬</div>
-                            <h4 class="modal__gallery-title">Toasts</h4>
-                            <p class="modal__gallery-description">Notification system</p>
+                        <div class="modal__item">
+                            <div class="modal__icon">💬</div>
+                            <h4 class="modal__title">Toasts</h4>
+                            <p class="modal__description">Notification system</p>
                         </div>
 
-                        <div class="modal__gallery-item">
-                            <div class="modal__gallery-icon">📝</div>
-                            <h4 class="modal__gallery-title">Forms</h4>
-                            <p class="modal__gallery-description">Enhanced form controls</p>
+                        <div class="modal__item">
+                            <div class="modal__icon">📝</div>
+                            <h4 class="modal__title">Forms</h4>
+                            <p class="modal__description">Enhanced form controls</p>
                         </div>
 
-                        <div class="modal__gallery-item">
-                            <div class="modal__gallery-icon">🔄</div>
-                            <h4 class="modal__gallery-title">Events</h4>
-                            <p class="modal__gallery-description">Real-time communication</p>
+                        <div class="modal__item">
+                            <div class="modal__icon">🔄</div>
+                            <h4 class="modal__title">Events</h4>
+                            <p class="modal__description">Real-time communication</p>
                         </div>
                     </div>
                 </div>
                 <div slot="actions">
-                    <button class="btn btn--secondary" data-modal-close>Close</button>
+                    <button class="btn btn--secondary" data-modal-close data-btn-action="close-gallery">Close</button>
+                    <button class="btn btn--primary" data-btn-action="add-to-collection">Add to Collection</button>
                 </div>
             </p-modal>
 
@@ -737,8 +738,8 @@ framework.mount();</pre
                     <p>The PageManager handles component mounting, unmounting, and cleanup automatically.</p>
                 </div>
                 <div slot="actions">
-                    <button class="btn btn--secondary" data-modal-close>Close</button>
-                    <button class="btn btn--primary">View Performance</button>
+                    <button class="btn btn--secondary" data-modal-close data-btn-action="close-large-modal">Close</button>
+                    <button class="btn btn--primary" data-btn-action="view-performance">📈 View Performance</button>
                 </div>
             </p-modal>
         </main>
@@ -748,37 +749,5 @@ framework.mount();</pre
 
         <!-- Load the framework -->
         <script type="module" src="dist/parallelogram-demo.min.js"></script>
-
-        <script>
-            // Datetime picker demo function
-            function handleDatetimeDemo() {
-                const pickers = document.querySelectorAll('p-datetime');
-                const values = {};
-
-                pickers.forEach(picker => {
-                    const name = picker.getAttribute('name');
-                    const isRange = picker.hasAttribute('range');
-
-                    if (isRange) {
-                        const fromValue = picker.value || 'No start date';
-                        const toValue = picker.getAttribute('range-to-value') || 'No end date';
-                        const rangeTo = picker.getAttribute('range-to');
-                        values[name] = fromValue;
-                        if (rangeTo) {
-                            values[rangeTo] = toValue;
-                        }
-                    } else {
-                        const value = picker.value;
-                        values[name] = value || 'No date selected';
-                    }
-                });
-
-                const results = Object.entries(values)
-                    .map(([name, value]) => `${name}: ${value}`)
-                    .join('\n');
-
-                alert('Selected datetime values:\n\n' + results);
-            }
-        </script>
     </body>
 </html>

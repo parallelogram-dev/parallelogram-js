@@ -121,8 +121,8 @@
     }
   }
 
-  /*  Element: Navigation arrows */
-  &__arrow {
+  /*  Element: Navigation buttons */
+  &__nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -337,7 +337,7 @@
       transition: none;
     }
 
-    &__arrow {
+    &__nav {
       transition: none;
 
       &:hover:not(:disabled) {
@@ -364,7 +364,7 @@
 /*  High contrast mode */
 @media (prefers-contrast: more) {
   .carousel {
-    &__arrow {
+    &__nav {
       border: 2px solid currentColor;
     }
 

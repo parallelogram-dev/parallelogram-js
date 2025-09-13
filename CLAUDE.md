@@ -89,6 +89,38 @@ Components follow a progressive enhancement pattern:
 - **Line endings**: LF (Unix-style) line endings
 - **Prettier**: Use Prettier for automated code formatting
 
+### Event Handling Standards
+
+**CRITICAL**: Proper separation of concerns must be maintained between HTML and JavaScript:
+
+- **NO inline event handlers**: Never use `onclick`, `onchange`, `onsubmit`, etc. in HTML elements
+- **Use data attributes**: Use `data-btn-action`, `data-[component]-[action]` for component-specific events
+- **JavaScript event binding**: All event handlers must be registered in the appropriate JavaScript component class
+- **Event delegation**: Prefer event delegation patterns using `addEventListener` in component classes
+
+```html
+<!-- ✅ CORRECT - Use data attributes -->
+<button class="btn btn--primary" data-btn-action="submit-form">Submit</button>
+<button class="btn btn--secondary" data-modal-close data-btn-action="cancel-form">Cancel</button>
+
+<!-- ❌ INCORRECT - Never use inline event handlers -->
+<button onclick="handleSubmit()">Submit</button>
+<button onmouseover="showTooltip()">Hover Me</button>
+```
+
+```javascript
+// ✅ CORRECT - Handle events in component classes
+setupButtonHandlers() {
+  const actionButtons = this.element.querySelectorAll('[data-btn-action]');
+  actionButtons.forEach(button => {
+    const action = button.getAttribute('data-btn-action');
+    this.addEventListener(button, 'click', event => {
+      this.handleAction(action, button, event);
+    });
+  });
+}
+```
+
 ### Workflow Requirements
 
 1. **Always consult `docs/06-coding-standards.md` before making changes**
@@ -97,6 +129,7 @@ Components follow a progressive enhancement pattern:
    - Size notation (xs/sm/md/lg/xl only)
    - BEM methodology for CSS classes
    - Data attribute patterns (`data-[component]-[param]`)
+   - Event handling (no inline handlers, use data attributes + component classes)
    - Component lifecycle management
    - Accessibility requirements
 4. **Test changes** using `npm run build` and `npm run demo`
