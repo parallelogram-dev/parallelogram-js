@@ -46,7 +46,7 @@ export class AlertManager {
     if (!this.eventBus) return;
     const events = ['toast:show', 'toast:close', 'toast:action'];
     events.forEach(eventName => {
-      this.toastElement.addEventListener(eventName, (event) => {
+      this.toastElement.addEventListener(eventName, event => {
         this.eventBus.emit(`alerts:${eventName.split(':')[1]}`, event.detail);
       });
     });

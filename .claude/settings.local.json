@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run demo:*)",
+      "Bash(npm run build-demo-css:*)",
+      "Bash(npm run build:*)",
+      "Bash(sass:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npm run format:check:*)"
     ],
     "deny": [],
     "ask": []

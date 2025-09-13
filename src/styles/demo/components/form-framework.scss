@@ -1,0 +1,543 @@
+/**
+ * Standardized Form Framework
+ * Provides consistent structure and styling for all form elements
+ *
+ * Structure:
+ * .form__element[--size]
+ *   .form__label[.required|.invalid|.error|.success]
+ *   .form__field
+ *     .form__control
+ *     .form__error (optional)
+ *     .form__help (optional)
+ */
+
+@use '../includes/common';
+
+/*  === FORM VARIABLES === */
+:root {
+  /*  Base sizing */
+  --form-spacing-sm: 0.75rem;
+  --form-spacing-md: 1rem;
+  --form-spacing-lg: 1.25rem;
+
+  /*  Input sizing (using min-height for flexibility) */
+  --form-input-min-height-sm: 2rem;
+  --form-input-min-height-md: 3.125rem;
+  --form-input-min-height-lg: 3.5rem;
+
+  --form-input-padding-sm: 0.5rem 0.75rem;
+  --form-input-padding-md: 0.75rem 1rem;
+  --form-input-padding-lg: 1rem 1.25rem;
+
+  /*  Typography */
+  --form-font-size-sm: 0.875rem;
+  --form-font-size-md: 1rem;
+  --form-font-size-lg: 1.125rem;
+
+  --form-label-font-size-sm: 0.75rem;
+  --form-label-font-size-md: 0.875rem;
+  --form-label-font-size-lg: 1rem;
+
+  /*  Colors */
+  --form-label-color: var(--demo-text, #374151);
+  --form-control-bg: var(--demo-panel-bg, #ffffff);
+  --form-control-border: var(--demo-border, #d1d5db);
+  --form-control-focus: #3b82f6;
+
+  /*  State colors */
+  --form-required-color: #ef4444;
+  --form-error-color: #ef4444;
+  --form-success-color: #10b981;
+  --form-invalid-color: #f59e0b;
+
+  /*  Help and error text */
+  --form-help-color: var(--demo-text-muted, #6b7280);
+  --form-error-text-color: #ef4444;
+}
+
+/*  === BASE FORM ELEMENT === */
+.form__element {
+  margin-bottom: var(--form-spacing-md);
+
+  /*  Size variants */
+  &--sm {
+    margin-bottom: var(--form-spacing-sm);
+
+    .form__label {
+      font-size: var(--form-label-font-size-sm);
+      margin-bottom: 0.375rem;
+    }
+
+    .form__control {
+      min-height: var(--form-input-min-height-sm);
+      padding: var(--form-input-padding-sm);
+      font-size: var(--form-font-size-sm);
+    }
+
+    .form__help,
+    .form__error li {
+      font-size: calc(var(--form-font-size-sm) * 0.875);
+    }
+  }
+
+  &--lg {
+    margin-bottom: var(--form-spacing-lg);
+
+    .form__label {
+      font-size: var(--form-label-font-size-lg);
+      margin-bottom: 0.75rem;
+    }
+
+    .form__control {
+      min-height: var(--form-input-min-height-lg);
+      padding: var(--form-input-padding-lg);
+      font-size: var(--form-font-size-lg);
+    }
+
+    .form__help,
+    .form__error li {
+      font-size: calc(var(--form-font-size-lg) * 0.875);
+    }
+  }
+}
+
+/*  === FORM LABELS === */
+.form__label {
+  display: block;
+  font-size: var(--form-label-font-size-md);
+  font-weight: 500;
+  color: var(--form-label-color);
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+
+  /*  Required indicator */
+  &.required::after {
+    content: ' *';
+    color: var(--form-required-color);
+    font-weight: 600;
+  }
+
+  /*  State classes */
+  &.invalid {
+    color: var(--form-invalid-color);
+  }
+
+  &.error {
+    color: var(--form-error-color);
+  }
+
+  &.success {
+    color: var(--form-success-color);
+  }
+}
+
+/*  === FORM FIELD CONTAINER === */
+.form__field {
+  position: relative;
+
+  /*  Support for compound controls (like date ranges) */
+  &--compound {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .form__separator {
+      color: var(--demo-text-muted, #6b7280);
+      font-weight: 500;
+      user-select: none;
+    }
+  }
+
+  &--inline {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .form__control {
+      margin: 0;
+    }
+  }
+}
+
+/*  === FORM CONTROLS === */
+.form__control {
+  width: 100%;
+  min-height: var(--form-input-min-height-md);
+  padding: var(--form-input-padding-md);
+  font-size: var(--form-font-size-md);
+
+  background: var(--form-control-bg);
+  border: 1px solid var(--form-control-border);
+  border-radius: 6px;
+
+  color: var(--demo-text, #1f2937);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--form-control-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:disabled {
+    background: var(--demo-muted, #f3f4f6);
+    color: var(--demo-text-muted, #9ca3af);
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: var(--demo-text-muted, #9ca3af);
+  }
+
+  /*  Textarea specific */
+  &--textarea {
+    resize: vertical;
+    min-height: 3rem;
+    padding: 0.75rem;
+  }
+
+  /*  Select specific */
+  &--select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  /*  Compound control (for range inputs) */
+  &--compound {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    height: auto;
+    min-height: var(--form-input-min-height-md);
+
+    input {
+      border: none;
+      background: none;
+      padding: 0.25rem 0.5rem;
+      flex: 1;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+}
+
+/*  === BUTTON FRAMEWORK === */
+/*  Base button styles with consistent sizing to match form controls */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  min-height: var(--form-input-min-height-md);
+  padding: var(--form-input-padding-md);
+  font-size: var(--form-font-size-md);
+
+  background: var(--form-control-bg);
+  border: 1px solid var(--form-control-border);
+  border-radius: 6px;
+  color: var(--demo-text, #1f2937);
+
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+
+  &:hover {
+    background: var(--demo-muted, #f3f4f6);
+    border-color: var(--demo-border-hover, #9ca3af);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--form-control-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    background: var(--demo-muted, #f3f4f6);
+    color: var(--demo-text-muted, #9ca3af);
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    &:hover {
+      background: var(--demo-muted, #f3f4f6);
+      border-color: var(--form-control-border);
+    }
+  }
+
+  /*  Size variants matching form controls */
+  &--sm {
+    min-height: var(--form-input-min-height-sm);
+    padding: var(--form-input-padding-sm);
+    font-size: var(--form-font-size-sm);
+  }
+
+  &--lg {
+    min-height: var(--form-input-min-height-lg);
+    padding: var(--form-input-padding-lg);
+    font-size: var(--form-font-size-lg);
+  }
+
+  /*  Style variants */
+  &--primary {
+    background: var(--form-control-focus);
+    border-color: var(--form-control-focus);
+    color: white;
+
+    &:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+  }
+
+  &--secondary {
+    background: var(--demo-text, #374151);
+    border-color: var(--demo-text, #374151);
+    color: white;
+
+    &:hover {
+      background: #1f2937;
+      border-color: #1f2937;
+    }
+  }
+
+  &--success {
+    background: var(--form-success-color);
+    border-color: var(--form-success-color);
+    color: white;
+
+    &:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+  }
+
+  &--danger {
+    background: var(--form-error-color);
+    border-color: var(--form-error-color);
+    color: white;
+
+    &:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    color: var(--form-control-focus);
+    border-color: var(--form-control-focus);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1px solid transparent;
+
+    &:hover {
+      background: var(--demo-muted, #f3f4f6);
+    }
+  }
+
+  /*  Block variant (full width) */
+  &--block {
+    width: 100%;
+  }
+
+  /*  Icon-only buttons */
+  &--icon-only {
+    width: var(--form-input-min-height-md);
+    padding: 0;
+
+    &.btn--sm {
+      width: var(--form-input-min-height-sm);
+    }
+
+    &.btn--lg {
+      width: var(--form-input-min-height-lg);
+    }
+  }
+}
+
+/*  === STATE-BASED CONTROL STYLING === */
+/*  Invalid state */
+.form__label.invalid + .form__field .form__control {
+  border-color: var(--form-invalid-color);
+
+  &:focus {
+    border-color: var(--form-invalid-color);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  }
+}
+
+/*  Error state */
+.form__label.error + .form__field .form__control {
+  border-color: var(--form-error-color);
+
+  &:focus {
+    border-color: var(--form-error-color);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+}
+
+/*  Success state */
+.form__label.success + .form__field .form__control {
+  border-color: var(--form-success-color);
+
+  &:focus {
+    border-color: var(--form-success-color);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+}
+
+/*  === FORM ERROR MESSAGES === */
+.form__error {
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    color: var(--form-error-text-color);
+    font-size: calc(var(--form-font-size-md) * 0.875);
+    line-height: 1.4;
+    margin-bottom: 0.25rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    /*  Icon for errors */
+    &::before {
+      content: '⚠ ';
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+/*  === FORM HELP TEXT === */
+.form__help {
+  margin: 0.5rem 0 0 0;
+  color: var(--form-help-color);
+  font-size: calc(var(--form-font-size-md) * 0.875);
+  line-height: 1.4;
+}
+
+/*  === CHECKBOX & RADIO SPECIFICS === */
+.form__control--checkbox,
+.form__control--radio {
+  width: auto;
+  height: auto;
+  margin-right: 0.5rem;
+}
+
+.form__field--checkbox,
+.form__field--radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  .form__control {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .form__label {
+    margin: 0;
+    font-weight: 400;
+    cursor: pointer;
+    user-select: none;
+  }
+}
+
+/*  === FORM GROUPS === */
+.form__group {
+  margin-bottom: 1.5rem;
+
+  &--inline {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+
+    .form__element {
+      margin-bottom: 0;
+      flex: 1;
+    }
+  }
+
+  &--compact .form__element {
+    margin-bottom: 1rem;
+  }
+}
+
+/*  === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 640px) {
+  .form__group--inline {
+    flex-direction: column;
+    align-items: stretch;
+
+    .form__element {
+      margin-bottom: 1rem;
+    }
+  }
+
+  .form__field--compound {
+    flex-direction: column;
+    align-items: stretch;
+
+    .form__separator {
+      align-self: center;
+      margin: 0.5rem 0;
+    }
+  }
+}
+
+/*  === ACCESSIBILITY ENHANCEMENTS === */
+@media (prefers-reduced-motion: reduce) {
+  .form__control {
+    transition: none;
+  }
+}
+
+/*  High contrast mode support */
+@media (prefers-contrast: high) {
+  .form__control {
+    border-width: 2px;
+  }
+
+  .form__label.required::after {
+    font-weight: 700;
+  }
+}

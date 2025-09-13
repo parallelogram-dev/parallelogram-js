@@ -5,7 +5,7 @@
 
 @use '../base';
 
-// Media metrics display
+/*  Media metrics display */
 .media-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -42,7 +42,7 @@
   }
 }
 
-// Gallery components
+/*  Gallery components */
 .gallery {
   &__grid {
     display: grid;
@@ -127,7 +127,7 @@
   }
 }
 
-// Download button
+/*  Download button */
 .download-btn {
   appearance: none;
   border: 1px solid var(--demo-accent);
@@ -156,21 +156,21 @@
   }
 }
 
-// Carousel enhancements for demo
+/*  Carousel enhancements for demo */
 .carousel {
   margin: var(--demo-spacing-lg) 0;
-  
+
   &__image {
     transition: opacity var(--transition-normal, 0.2s) ease;
-    
+
     &[data-lazysrc-loading] {
       opacity: 0.7;
     }
-    
+
     &[data-lazysrc-loaded] {
       opacity: 1;
     }
-    
+
     &[data-lazysrc-error] {
       opacity: 0.5;
       filter: grayscale(1);
@@ -182,10 +182,10 @@
     font-weight: var(--font-weight-medium, 500);
   }
 
-  // Demo-specific loading indicator
+  /*  Demo-specific loading indicator */
   &--demo-loading {
     position: relative;
-    
+
     &::after {
       content: 'Loading media...';
       position: absolute;
@@ -202,7 +202,7 @@
   }
 }
 
-// Performance indicators
+/*  Performance indicators */
 .performance-indicator {
   display: inline-flex;
   align-items: center;
@@ -211,30 +211,36 @@
   border-radius: var(--border-radius-sm, 0.125rem);
   font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
-  
+
   &--fast {
     background: var(--brand-success, #10b981);
     color: var(--color-white, white);
-    
-    &::before { content: '⚡'; }
+
+    &::before {
+      content: '⚡';
+    }
   }
-  
+
   &--slow {
     background: var(--brand-warning, #f59e0b);
     color: var(--color-white, white);
-    
-    &::before { content: '🐌'; }
+
+    &::before {
+      content: '🐌';
+    }
   }
-  
+
   &--error {
     background: var(--brand-danger, #ef4444);
     color: var(--color-white, white);
-    
-    &::before { content: '⚠'; }
+
+    &::before {
+      content: '⚠';
+    }
   }
 }
 
-// Responsive adjustments
+/*  Responsive adjustments */
 @media (max-width: 768px) {
   .media-metrics {
     grid-template-columns: 1fr;
@@ -249,7 +255,7 @@
 
     &__preview {
       padding: var(--demo-spacing-md);
-      
+
       img {
         max-height: 250px;
       }
@@ -267,7 +273,7 @@
   }
 }
 
-// Dark mode adjustments
+/*  Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .media-metrics__item {
     background: var(--color-gray-700, #374151);

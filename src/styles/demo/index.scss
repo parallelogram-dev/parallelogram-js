@@ -3,18 +3,18 @@
  * Imports all demo-specific SCSS files and component styles
  */
 
-// Base demo styles (shared across all pages)
+/*  Base demo styles (shared across all pages) */
 @use 'reset';
 @use 'base';
 
-// Individual demo page styles
+/*  Individual demo page styles */
 @use 'pages/home';
 @use 'pages/media';
 @use 'pages/interactive';
 @use 'pages/ui-components';
 @use 'pages/performance';
 
-// Component styles needed for demo functionality
+/*  Component styles needed for demo functionality */
 @use '../framework/components/carousel.scss';
 @use '../framework/components/toasts.scss';
 @use '../framework/components/datatable.scss';
@@ -22,7 +22,7 @@
 @use '../framework/components/tabs.scss';
 @use '../framework/components/lazysrc.scss';
 
-// New BEM-compliant component styles
+/*  New BEM-compliant component styles */
 @use './components/button.scss';
 @use './components/dropdown.scss';
 @use './components/accordion.scss';
@@ -41,10 +41,18 @@
 @use './components/copy-demo.scss';
 @use './components/video.scss';
 @use './components/component-status.scss';
+@use './components/form-framework.scss';
+@use '../components/datetime.scss';
 
-// Demo-specific utility classes
+/*  Demo-specific utility classes */
 .demo-highlight {
-  background: linear-gradient(120deg, transparent 0%, rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 0%, rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 100%, transparent 100%);
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 0%,
+    rgba(var(--demo-accent-rgb, 14, 165, 233), 0.2) 100%,
+    transparent 100%
+  );
   padding: 0 var(--demo-spacing-xs);
 }
 
@@ -62,10 +70,10 @@
 }
 
 .demo-code {
-  font-family   : var(--font-family-mono, monospace), serif;
-  background    : var(--color-gray-100, #f3f4f6);
-  padding       : var(--demo-spacing-xs) var(--demo-spacing-sm);
-  border-radius : var(--border-radius-sm, 0.125rem);
-  font-size     : var(--font-size-sm, 0.875rem);
-  color         : var(--color-gray-800, #1f2937);
+  font-family: var(--font-family-mono, monospace), serif;
+  background: var(--color-gray-100, #f3f4f6);
+  padding: var(--demo-spacing-xs) var(--demo-spacing-sm);
+  border-radius: var(--border-radius-sm, 0.125rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-gray-800, #1f2937);
 }

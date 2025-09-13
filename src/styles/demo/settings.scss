@@ -29,8 +29,10 @@
   /* ==========================================
      Typography
      ========================================== */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-family-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono:
+    SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -177,7 +179,7 @@
    ========================================== */
 
 /* Dark Theme Override */
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   /* Update component variables for dark theme */
   --datatable-bg-color: var(--color-gray-800);
   --datatable-header-bg: var(--color-gray-700);
@@ -188,7 +190,7 @@
 }
 
 /* High Contrast Theme */
-:root[data-theme="high-contrast"] {
+:root[data-theme='high-contrast'] {
   --lightbox-overlay-bg: rgba(0, 0, 0, 0.95);
   --lightbox-button-bg: rgba(255, 255, 255, 0.9);
   --lightbox-button-bg-hover: rgba(255, 255, 255, 1);

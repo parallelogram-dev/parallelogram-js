@@ -1,37 +1,29 @@
-// Copy Demo Component (BEM)
+/*  Copy Demo Component (BEM) */
 @use '../includes/common';
 .copy-demo {
-    &__grid {
-        @extend %grid_common;
+  &__grid {
+    @extend %grid_common;
+  }
+
+  &__item {
+    @extend %demo_item_panel;
+  }
+
+  &__content {
+    flex: 1;
+
+    pre {
+      @extend %code_block_dark;
+      margin: 0;
     }
-    
-    &__item {
-        @extend %demo_item_panel;
+
+    code {
+      @extend %code_block_light;
+      display: block;
     }
-    
-    &__content {
-        flex: 1;
-        
-        pre {
-            @extend %code_block_dark;
-            margin: 0;
-        }
-        
-        code {
-            padding: 0.75rem;
-            background: var(--demo-panel-bg, white);
-            border: 1px solid var(--demo-border, #e2e8f0);
-            border-radius: 4px;
-            display: block;
-        }
-        
-        input {
-            padding: 0.75rem;
-            border: 1px solid var(--demo-border, #e2e8f0);
-            border-radius: 4px;
-            background: var(--demo-panel-bg, white);
-            color: var(--demo-text, #1f2937);
-            width: 100%;
-        }
+
+    input {
+      @extend %input_base;
     }
+  }
 }

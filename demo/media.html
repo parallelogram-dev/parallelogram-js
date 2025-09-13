@@ -1,314 +1,332 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Components - Enhancement Framework</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
-</head>
-<body data-demo="media">
-    <nav data-view="navbar">
-        <div class="nav__container">
-            <h1>Enhancement Framework</h1>
-            <ul class="nav__list">
-                <li><a href="/" class="nav__link">Home</a></li>
-                <li><a href="/ui-components" class="nav__link">UI Components</a></li>
-                <li><a href="/media" class="nav__link" aria-current="page">Media</a></li>
-                <li><a href="/interactive" class="nav__link">Interactive</a></li>
-                <li><a href="/performance" class="nav__link">Performance</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <main data-view="main" class="page__content">
-        <header class="page__header">
-            <h1>Media Components</h1>
-            <p>Optimized image loading, carousels, and media galleries with performance tracking.</p>
-        </header>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Advanced Image Carousel</h2>
-            <p>Full-featured carousel with autoplay, touch support, and lazy loading integration:</p>
-
-            <div class="carousel"
-                 data-carousel
-                 data-carousel-autoplay="true"
-                 data-carousel-delay="4000"
-                 data-carousel-loop="true">
-
-                <div class="carousel__track" data-carousel-track>
-                    <div class="carousel__slide" data-carousel-slide>
-                        <img class="carousel__image"
-                             data-lazysrc
-                             data-lazysrc-src="https://picsum.photos/800/400?random=10"
-                             alt="Beautiful landscape"
-                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E">
-                        <div class="carousel__caption">Progressive Enhancement in Action</div>
-                    </div>
-                    <div class="carousel__slide" data-carousel-slide>
-                        <img class="carousel__image"
-                             data-lazysrc
-                             data-lazysrc-src="https://picsum.photos/800/400?random=11"
-                             alt="Urban architecture"
-                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E">
-                        <div class="carousel__caption">RouterManager Navigation</div>
-                    </div>
-                    <div class="carousel__slide" data-carousel-slide>
-                        <img class="carousel__image"
-                             data-lazysrc
-                             data-lazysrc-src="https://picsum.photos/800/400?random=12"
-                             alt="Nature scene"
-                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E">
-                        <div class="carousel__caption">PageManager Component Lifecycle</div>
-                    </div>
-                    <div class="carousel__slide" data-carousel-slide>
-                        <img class="carousel__image"
-                             data-lazysrc
-                             data-lazysrc-src="https://picsum.photos/800/400?random=13"
-                             alt="Modern design"
-                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E">
-                        <div class="carousel__caption">Performance Monitoring</div>
-                    </div>
-                </div>
-
-                <button class="carousel__nav carousel__nav--prev"
-                        data-carousel-prev
-                        aria-label="Previous slide">
-                    ←
-                </button>
-                <button class="carousel__nav carousel__nav--next"
-                        data-carousel-next
-                        aria-label="Next slide">
-                    →
-                </button>
-
-                <div class="carousel__indicators" data-carousel-indicators>
-                    <!-- Dots generated by JavaScript -->
-                </div>
-            </div>
-
-            <div class="features__details">
-                <h3>Carousel Features</h3>
-                <ul>
-                    <li><strong>Touch Support:</strong> Swipe gestures on mobile devices</li>
-                    <li><strong>Keyboard Navigation:</strong> Arrow keys and tab support</li>
-                    <li><strong>Auto-play:</strong> Configurable timing with pause on hover</li>
-                    <li><strong>Lazy Loading:</strong> Images load as needed for performance</li>
-                    <li><strong>Accessibility:</strong> Full ARIA support and screen reader compatibility</li>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Media Components - Enhancement Framework</title>
+        <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    </head>
+    <body data-demo="media">
+        <nav data-view="navbar">
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul class="nav__list">
+                    <li><a href="/" class="nav__link">Home</a></li>
+                    <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                    <li><a href="/media" class="nav__link" aria-current="page">Media</a></li>
+                    <li><a href="/interactive" class="nav__link">Interactive</a></li>
+                    <li><a href="/performance" class="nav__link">Performance</a></li>
                 </ul>
             </div>
-        </section>
+        </nav>
 
-        <section class="demo__section" data-component="demo-section">
-            <h2>Intelligent Lazy Loading</h2>
-            <p>Images load as they enter the viewport with automatic cleanup and performance tracking:</p>
+        <main data-view="main" class="page__content">
+            <header class="page__header">
+                <h1>Media Components</h1>
+                <p>Optimized image loading, carousels, and media galleries with performance tracking.</p>
+            </header>
 
-            <div class="image__grid">
-                <img
-                    src="https://picsum.photos/400/300?random=1"
-                    alt="Immediate load image 1"
-                    class="demo__image"
-                    class="image__demo image__demo--success">
-                <span class="image__label">Immediate Load</span>
+            <section class="demo__section" data-component="demo-section">
+                <h2>Advanced Image Carousel</h2>
+                <p>Full-featured carousel with autoplay, touch support, and lazy loading integration:</p>
 
-                <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                    data-lazysrc
-                    data-lazysrc-src="https://picsum.photos/400/300?random=2"
-                    alt="Lazy loaded image 2"
-                    class="demo__image"
-                    class="image__demo image__demo--warning">
-                <span class="image__label">Lazy Load</span>
+                <div
+                    class="carousel"
+                    data-carousel
+                    data-carousel-autoplay="true"
+                    data-carousel-delay="4000"
+                    data-carousel-loop="true"
+                >
+                    <div class="carousel__track" data-carousel-track>
+                        <div class="carousel__slide" data-carousel-slide>
+                            <img
+                                class="carousel__image"
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/800/400?random=10"
+                                alt="Beautiful landscape"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            />
+                            <div class="carousel__caption">Progressive Enhancement in Action</div>
+                        </div>
+                        <div class="carousel__slide" data-carousel-slide>
+                            <img
+                                class="carousel__image"
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/800/400?random=11"
+                                alt="Urban architecture"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            />
+                            <div class="carousel__caption">RouterManager Navigation</div>
+                        </div>
+                        <div class="carousel__slide" data-carousel-slide>
+                            <img
+                                class="carousel__image"
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/800/400?random=12"
+                                alt="Nature scene"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            />
+                            <div class="carousel__caption">PageManager Component Lifecycle</div>
+                        </div>
+                        <div class="carousel__slide" data-carousel-slide>
+                            <img
+                                class="carousel__image"
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/800/400?random=13"
+                                alt="Modern design"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            />
+                            <div class="carousel__caption">Performance Monitoring</div>
+                        </div>
+                    </div>
 
-                <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                    data-lazysrc
-                    data-lazysrc-src="https://picsum.photos/400/300?random=3"
-                    data-lazysrc-native="true"
-                    alt="Native lazy image 3"
-                    class="demo__image"
-                    class="image__demo image__demo--accent">
-                <span class="image__label">Native Lazy</span>
+                    <button class="carousel__nav carousel__nav--prev" data-carousel-prev aria-label="Previous slide">
+                        ←
+                    </button>
+                    <button class="carousel__nav carousel__nav--next" data-carousel-next aria-label="Next slide">
+                        →
+                    </button>
 
-                <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                    data-lazysrc
-                    data-lazysrc-src="https://picsum.photos/400/300?random=4"
-                    data-lazysrc-threshold="1"
-                    alt="Custom threshold image 4"
-                    class="demo__image"
-                    class="image__demo image__demo--danger">
-                <span class="image__label">Custom Threshold</span>
-
-                <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                    data-lazysrc
-                    data-lazysrc-src="https://picsum.photos/400/300?random=5"
-                    data-lazysrc-fadein="true"
-                    alt="Fade in image 5"
-                    class="demo__image"
-                    class="image__demo image__demo--info">
-                <span class="image__label">Fade In Effect</span>
-
-                <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                    data-lazysrc
-                    data-lazysrc-src="https://picsum.photos/400/300?random=6"
-                    alt="Standard lazy image 6"
-                    class="demo__image">
-                <span class="image__label">Standard Lazy</span>
-            </div>
-
-            <div class="features__details">
-                <h3>Lazy Loading Features</h3>
-                <ul>
-                    <li><strong>Smart Strategy:</strong> Automatically chooses native vs custom loading</li>
-                    <li><strong>Automatic Cleanup:</strong> Components detach after loading to prevent memory leaks</li>
-                    <li><strong>Performance Tracking:</strong> Real-time metrics for load times and failures</li>
-                    <li><strong>Error Recovery:</strong> Configurable retry attempts with exponential backoff</li>
-                    <li><strong>Browser Optimization:</strong> Uses native loading="lazy" when beneficial</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Media Gallery</h2>
-            <p>Interactive photo gallery with modal preview and lazy loading:</p>
-
-            <div class="gallery__grid">
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=20"
-                        alt="Gallery image 1"
-                        data-gallery-full="https://picsum.photos/800/600?random=20">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
+                    <div class="carousel__indicators" data-carousel-indicators>
+                        <!-- Dots generated by JavaScript -->
                     </div>
                 </div>
 
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                <div class="features__details">
+                    <h3>Carousel Features</h3>
+                    <ul>
+                        <li><strong>Touch Support:</strong> Swipe gestures on mobile devices</li>
+                        <li><strong>Keyboard Navigation:</strong> Arrow keys and tab support</li>
+                        <li><strong>Auto-play:</strong> Configurable timing with pause on hover</li>
+                        <li><strong>Lazy Loading:</strong> Images load as needed for performance</li>
+                        <li><strong>Accessibility:</strong> Full ARIA support and screen reader compatibility</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Intelligent Lazy Loading</h2>
+                <p>Images load as they enter the viewport with automatic cleanup and performance tracking:</p>
+
+                <div class="image__grid">
                     <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        src="https://picsum.photos/400/300?random=1"
+                        alt="Immediate load image 1"
+                        class="demo__image"
+                        class="image__demo image__demo--success"
+                    />
+                    <span class="image__label">Immediate Load</span>
+
+                    <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
                         data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=21"
-                        alt="Gallery image 2"
-                        data-gallery-full="https://picsum.photos/800/600?random=21">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
+                        data-lazysrc-src="https://picsum.photos/400/300?random=2"
+                        alt="Lazy loaded image 2"
+                        class="demo__image"
+                        class="image__demo image__demo--warning"
+                    />
+                    <span class="image__label">Lazy Load</span>
+
+                    <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-lazysrc
+                        data-lazysrc-src="https://picsum.photos/400/300?random=3"
+                        data-lazysrc-native="true"
+                        alt="Native lazy image 3"
+                        class="demo__image"
+                        class="image__demo image__demo--accent"
+                    />
+                    <span class="image__label">Native Lazy</span>
+
+                    <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-lazysrc
+                        data-lazysrc-src="https://picsum.photos/400/300?random=4"
+                        data-lazysrc-threshold="1"
+                        alt="Custom threshold image 4"
+                        class="demo__image"
+                        class="image__demo image__demo--danger"
+                    />
+                    <span class="image__label">Custom Threshold</span>
+
+                    <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-lazysrc
+                        data-lazysrc-src="https://picsum.photos/400/300?random=5"
+                        data-lazysrc-fadein="true"
+                        alt="Fade in image 5"
+                        class="demo__image"
+                        class="image__demo image__demo--info"
+                    />
+                    <span class="image__label">Fade In Effect</span>
+
+                    <img
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                        data-lazysrc
+                        data-lazysrc-src="https://picsum.photos/400/300?random=6"
+                        alt="Standard lazy image 6"
+                        class="demo__image"
+                    />
+                    <span class="image__label">Standard Lazy</span>
+                </div>
+
+                <div class="features__details">
+                    <h3>Lazy Loading Features</h3>
+                    <ul>
+                        <li><strong>Smart Strategy:</strong> Automatically chooses native vs custom loading</li>
+                        <li>
+                            <strong>Automatic Cleanup:</strong> Components detach after loading to prevent memory leaks
+                        </li>
+                        <li><strong>Performance Tracking:</strong> Real-time metrics for load times and failures</li>
+                        <li><strong>Error Recovery:</strong> Configurable retry attempts with exponential backoff</li>
+                        <li><strong>Browser Optimization:</strong> Uses native loading="lazy" when beneficial</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Media Gallery</h2>
+                <p>Interactive photo gallery with modal preview and lazy loading:</p>
+
+                <div class="gallery__grid">
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=20"
+                            alt="Gallery image 1"
+                            data-gallery-full="https://picsum.photos/800/600?random=20"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
+                    </div>
+
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=21"
+                            alt="Gallery image 2"
+                            data-gallery-full="https://picsum.photos/800/600?random=21"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
+                    </div>
+
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=22"
+                            alt="Gallery image 3"
+                            data-gallery-full="https://picsum.photos/800/600?random=22"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
+                    </div>
+
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=23"
+                            alt="Gallery image 4"
+                            data-gallery-full="https://picsum.photos/800/600?random=23"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
+                    </div>
+
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=24"
+                            alt="Gallery image 5"
+                            data-gallery-full="https://picsum.photos/800/600?random=24"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
+                    </div>
+
+                    <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
+                        <img
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+                            data-lazysrc
+                            data-lazysrc-src="https://picsum.photos/300/200?random=25"
+                            alt="Gallery image 6"
+                            data-gallery-full="https://picsum.photos/800/600?random=25"
+                        />
+                        <div class="gallery__overlay">
+                            <span>View Full Size</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=22"
-                        alt="Gallery image 3"
-                        data-gallery-full="https://picsum.photos/800/600?random=22">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
+                <div class="features__details">
+                    <h3>Gallery Features</h3>
+                    <ul>
+                        <li><strong>Modal Integration:</strong> Full-size preview in accessible modals</li>
+                        <li><strong>Progressive Loading:</strong> Thumbnails load first, full images on demand</li>
+                        <li><strong>Touch Optimized:</strong> Swipe gestures and mobile-friendly interactions</li>
+                        <li><strong>Performance Focus:</strong> Only loads visible images to save bandwidth</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Media Performance Metrics</h2>
+                <p>Real-time tracking of media component performance:</p>
+
+                <div class="metrics__grid">
+                    <div class="metrics__card">
+                        <h3>Images Loaded</h3>
+                        <div class="metrics__value" id="images-loaded">0</div>
+                        <div class="metrics__label">Total images processed</div>
+                    </div>
+
+                    <div class="metrics__card">
+                        <h3>Avg Load Time</h3>
+                        <div class="metrics__value" id="avg-load-time">0ms</div>
+                        <div class="metrics__label">Average loading duration</div>
+                    </div>
+
+                    <div class="metrics__card">
+                        <h3>Components Active</h3>
+                        <div class="metrics__value" id="active-components">0</div>
+                        <div class="metrics__label">Currently mounted</div>
+                    </div>
+
+                    <div class="metrics__card">
+                        <h3>Memory Saved</h3>
+                        <div class="metrics__value" id="memory-saved">0</div>
+                        <div class="metrics__label">Components auto-cleaned</div>
                     </div>
                 </div>
+            </section>
 
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=23"
-                        alt="Gallery image 4"
-                        data-gallery-full="https://picsum.photos/800/600?random=23">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
-                    </div>
+            <!-- Gallery Preview Modal -->
+            <p-modal id="gallery-preview" data-modal-size="lg" data-modal-closable="true">
+                <h2 slot="title">Image Preview</h2>
+                <div class="gallery__preview-container">
+                    <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image" />
                 </div>
-
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=24"
-                        alt="Gallery image 5"
-                        data-gallery-full="https://picsum.photos/800/600?random=24">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
-                    </div>
+                <div slot="actions">
+                    <button class="btn btn--secondary" data-modal-close>Close</button>
+                    <button class="btn btn--primary" data-btn-action="downloadCurrentImage">Download</button>
                 </div>
+            </p-modal>
+        </main>
 
-                <div class="gallery__item" data-gallery-item data-modal data-modal-target="#gallery-preview">
-                    <img
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Crect fill='%23ddd' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
-                        data-lazysrc
-                        data-lazysrc-src="https://picsum.photos/300/200?random=25"
-                        alt="Gallery image 6"
-                        data-gallery-full="https://picsum.photos/800/600?random=25">
-                    <div class="gallery__overlay">
-                        <span>View Full Size</span>
-                    </div>
-                </div>
-            </div>
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
 
-            <div class="features__details">
-                <h3>Gallery Features</h3>
-                <ul>
-                    <li><strong>Modal Integration:</strong> Full-size preview in accessible modals</li>
-                    <li><strong>Progressive Loading:</strong> Thumbnails load first, full images on demand</li>
-                    <li><strong>Touch Optimized:</strong> Swipe gestures and mobile-friendly interactions</li>
-                    <li><strong>Performance Focus:</strong> Only loads visible images to save bandwidth</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Media Performance Metrics</h2>
-            <p>Real-time tracking of media component performance:</p>
-
-            <div class="metrics__grid">
-                <div class="metrics__card">
-                    <h3>Images Loaded</h3>
-                    <div class="metrics__value" id="images-loaded">0</div>
-                    <div class="metrics__label">Total images processed</div>
-                </div>
-
-                <div class="metrics__card">
-                    <h3>Avg Load Time</h3>
-                    <div class="metrics__value" id="avg-load-time">0ms</div>
-                    <div class="metrics__label">Average loading duration</div>
-                </div>
-
-                <div class="metrics__card">
-                    <h3>Components Active</h3>
-                    <div class="metrics__value" id="active-components">0</div>
-                    <div class="metrics__label">Currently mounted</div>
-                </div>
-
-                <div class="metrics__card">
-                    <h3>Memory Saved</h3>
-                    <div class="metrics__value" id="memory-saved">0</div>
-                    <div class="metrics__label">Components auto-cleaned</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gallery Preview Modal -->
-        <p-modal id="gallery-preview" data-modal-size="large" data-modal-closable="true">
-            <h2 slot="title">Image Preview</h2>
-            <div class="gallery__preview-container">
-                <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image">
-            </div>
-            <div slot="actions">
-                <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-                <button class="modal__button modal__button--primary" data-btn-action="downloadCurrentImage">Download</button>
-            </div>
-        </p-modal>
-
-    </main>
-
-    <!-- Toast container -->
-    <p-toasts placement="top-right"></p-toasts>
-
-    <!-- Load the framework -->
-    <script type="module" src="dist/parallelogram-demo.min.js"></script>
-</body>
+        <!-- Load the framework -->
+        <script type="module" src="dist/parallelogram-demo.min.js"></script>
+    </body>
 </html>

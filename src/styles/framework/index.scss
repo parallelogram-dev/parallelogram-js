@@ -3,14 +3,14 @@
  * Core framework entry point with consolidated imports and base styles
  */
 
-// Component imports
+/* Component imports */
 @use './components/carousel.scss';
 @use './components/datatable.scss';
 @use './components/lightbox.scss';
 @use './components/lazysrc.scss';
 @use './components/toasts.scss';
 
-// Framework-level variables (overrides for settings)
+/* Framework-level variables (overrides for settings) */
 :root {
   --framework-transition-duration: #{var(--transition-normal, 0.2s)};
   --framework-transition-easing: #{var(--ease-in-out, ease-in-out)};
@@ -19,7 +19,7 @@
   --framework-focus-width: 2px;
 }
 
-// Global focus styles for framework components
+/* Global focus styles for framework components */
 [data-lazysrc],
 [data-modal],
 [data-carousel],

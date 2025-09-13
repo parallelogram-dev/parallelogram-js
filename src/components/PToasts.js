@@ -55,19 +55,21 @@ export default class PToasts extends HTMLElement {
           flex: 1;
         }
         
-        button.close {
+        .btn.close {
           all: unset;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           width: 24px;
           height: 24px;
+          min-height: 24px;
           border-radius: 6px;
           font-weight: 700;
           background: rgba(255,255,255,0.1);
+          cursor: pointer;
         }
         
-        button.close:hover {
+        .btn.close:hover {
           background: rgba(255,255,255,0.2);
         }
       </style>  
@@ -98,7 +100,7 @@ export default class PToasts extends HTMLElement {
     }
 
     const closeButton = document.createElement('button');
-    closeButton.className = 'close';
+    closeButton.className = 'btn close';
     closeButton.setAttribute('aria-label', 'Dismiss notification');
     closeButton.textContent = '×';
 
@@ -116,10 +118,12 @@ export default class PToasts extends HTMLElement {
       setTimeout(() => element.remove(), 150);
       this._toasts.delete(id);
 
-      this.dispatchEvent(new CustomEvent('toast:close', {
-        detail: { id, type, message },
-        bubbles: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent('toast:close', {
+          detail: { id, type, message },
+          bubbles: true,
+        })
+      );
     };
 
     closeButton.addEventListener('click', dismiss);
@@ -130,10 +134,12 @@ export default class PToasts extends HTMLElement {
 
     this._toasts.set(id, { element, type, dismiss });
 
-    this.dispatchEvent(new CustomEvent('toast:show', {
-      detail: { id, type, message },
-      bubbles: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent('toast:show', {
+        detail: { id, type, message },
+        bubbles: true,
+      })
+    );
 
     return dismiss;
   }

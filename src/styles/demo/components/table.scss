@@ -1,22 +1,17 @@
-// Table Component (BEM)
+/*  Table Component (BEM) */
+@use '../includes/common';
 .table {
-    &--demo {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-        
-        th {
-            background: var(--demo-panel-bg, #f8fafc);
-            border: 1px solid var(--demo-border, #e2e8f0);
-            padding: 0.75rem;
-            text-align: left;
-            color: var(--demo-text, #1f2937);
-        }
-        
-        td {
-            border: 1px solid var(--demo-border, #e2e8f0);
-            padding: 0.75rem;
-            color: var(--demo-text, #1f2937);
-        }
+  &--demo {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+
+    th {
+      @extend %table_header_cell;
     }
+
+    td {
+      @extend %table_cell_base;
+    }
+  }
 }

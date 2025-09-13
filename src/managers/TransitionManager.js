@@ -1,6 +1,11 @@
 /** TransitionManager (as in previous starter) */
 export class TransitionManager {
-  constructor({ root = document, defaultY = '1rem', defaultDur = 320, defaultEase = 'cubic-bezier(0.22,1,0.36,1)'} = {}) {
+  constructor({
+    root = document,
+    defaultY = '1rem',
+    defaultDur = 320,
+    defaultEase = 'cubic-bezier(0.22,1,0.36,1)',
+  } = {}) {
     this.root = root;
     this.defaults = { y: defaultY, dur: defaultDur, ease: defaultEase };
   }
@@ -15,8 +20,11 @@ export class TransitionManager {
     return this._animateWithJS(el, false);
   }
   _animateWithClass(el, cls) {
-    return new Promise((resolve) => {
-      const done = () => { el.removeEventListener('animationend', done); resolve(); };
+    return new Promise(resolve => {
+      const done = () => {
+        el.removeEventListener('animationend', done);
+        resolve();
+      };
       el.addEventListener('animationend', done, { once: true });
       el.classList.add(cls);
     });
@@ -27,18 +35,24 @@ export class TransitionManager {
     const ease = el.dataset.transitionEase || this.defaults.ease;
     el.style.transition = `opacity ${dur}ms ${ease}, transform ${dur}ms ${ease}`;
     if (isEnter) {
-      el.style.opacity = 0; el.style.transform = `translateY(${y})`;
+      el.style.opacity = 0;
+      el.style.transform = `translateY(${y})`;
       el.getBoundingClientRect();
-      el.style.opacity = 1; el.style.transform = 'translateY(0)';
+      el.style.opacity = 1;
+      el.style.transform = 'translateY(0)';
     } else {
-      el.style.opacity = 1; el.style.transform = 'translateY(0)';
+      el.style.opacity = 1;
+      el.style.transform = 'translateY(0)';
       el.getBoundingClientRect();
-      el.style.opacity = 0; el.style.transform = `translateY(${y})`;
+      el.style.opacity = 0;
+      el.style.transform = `translateY(${y})`;
     }
-    return new Promise((resolve) => setTimeout(() => {
-      el.style.transition = '';
-      resolve();
-    }, dur));
+    return new Promise(resolve =>
+      setTimeout(() => {
+        el.style.transition = '';
+        resolve();
+      }, dur)
+    );
   }
   async swap(container, nextNode) {
     const current = container.firstElementChild;
