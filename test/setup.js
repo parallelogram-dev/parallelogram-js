@@ -2,8 +2,8 @@
 import 'jest-environment-jsdom';
 
 // Global test setup
-global.requestIdleCallback = global.requestIdleCallback || ((cb) => setTimeout(cb, 1));
-global.cancelIdleCallback = global.cancelIdleCallback || ((id) => clearTimeout(id));
+global.requestIdleCallback = global.requestIdleCallback || (cb => setTimeout(cb, 1));
+global.cancelIdleCallback = global.cancelIdleCallback || (id => clearTimeout(id));
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

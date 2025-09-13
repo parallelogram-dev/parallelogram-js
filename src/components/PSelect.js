@@ -1,5 +1,5 @@
 import { TransitionManager } from '../managers/index.js';
-import { default as PToasts } from "./PToasts.js";
+import { default as PToasts } from './PToasts.js';
 
 /**
  * PSelect - Enhanced select/combobox web component
@@ -78,7 +78,7 @@ export default class PSelect extends HTMLElement {
       disabled: false,
       required: false,
       loading: false,
-      error: null
+      error: null,
     };
 
     this._abortController = null;
@@ -92,11 +92,7 @@ export default class PSelect extends HTMLElement {
 
   connectedCallback() {
     this._createAnnouncementRegion();
-
-    // Parse options after a microtask to ensure DOM is ready
-    requestAnimationFrame(() => {
-      this._parseOptionsFromDOM();
-    });
+    this._parseOptionsFromDOM();
 
     if (this.state.src && this.state.min === 0) {
       this._fetchOptions('').catch(this._handleFetchError.bind(this));
@@ -147,65 +143,104 @@ export default class PSelect extends HTMLElement {
       <style>
         :host {
           display: inline-block;
-          --select-border-color: #e2e8f0;
-          --select-focus-color: #93c5fd;
-          --select-bg: #fff;
-          --select-text: #1f2937;
-          --select-placeholder: #64748b;
-        }
-        
-        .root {
           position: relative;
-          min-width: 260px;
+          box-sizing: border-box;
         }
-        
+
+        /* CSS custom properties with fallbacks to parent/theme colors */
+        :host {
+          --select-border-color: var(--border-color, var(--color-border, #e2e8f0));
+          --select-focus-color: var(--accent-color, var(--color-primary, #3b82f6));
+          --select-bg: var(--background-color, var(--color-surface, #fff));
+          --select-text: var(--text-color, var(--color-text, currentColor));
+          --select-placeholder: var(--text-muted, var(--color-text-secondary, #64748b));
+          --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(0,0,0,0.05)));
+          --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.1)));
+          --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(0,0,0,0.1)));
+          --select-padding: 0.45rem 0.6rem;
+          --select-border-radius: 6px;
+          --select-border: 1px solid var(--select-border-color);
+          --select-focus-shadow: 0 0 0 3px var(--focus-shadow-color, rgba(59, 130, 246, 0.1));
+        }
+
+        /* Dark mode adjustments */
+        @media (prefers-color-scheme: dark) {
+          :host {
+            --select-border-color: var(--border-color, var(--color-border, #374151));
+            --select-bg: var(--background-color, var(--color-surface, #1f2937));
+            --select-text: var(--text-color, var(--color-text, #f9fafb));
+            --select-placeholder: var(--text-muted, var(--color-text-secondary, #9ca3af));
+            --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(255,255,255,0.1)));
+            --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.2)));
+            --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(255,255,255,0.1)));
+          }
+        }
+
+        .root {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          background: inherit;
+          color: inherit;
+          font-family: inherit;
+          font-size: inherit;
+          border: inherit;
+          border-radius: inherit;
+          padding: inherit;
+        }
+
         .control {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           display: flex;
           align-items: center;
           gap: 0.4rem;
-          padding: 0.45rem 0.6rem;
-          border-radius: 10px;
-          border: 1px solid var(--select-border-color);
-          background: var(--select-bg);
-          color: var(--select-text);
           cursor: pointer;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          box-sizing: border-box;
+          padding: inherit;
         }
-        
-        .control:focus-within {
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
-          border-color: var(--select-focus-color);
-        }
-        
+
         .input {
           border: 0;
           outline: 0;
           flex: 1;
           min-width: 2ch;
           background: transparent;
-          color: var(--select-text);
+          color: inherit;
           font: inherit;
+          padding: 0;
         }
-        
+
         .input::placeholder {
-          color: var(--select-placeholder);
+          color: inherit;
+          opacity: 0.6;
         }
-        
+
         .arrow {
           pointer-events: none;
           transition: transform 0.15s ease;
           user-select: none;
+          flex-shrink: 0;
+          margin-left: auto;
         }
-        
+
         .control[aria-expanded="true"] .arrow {
           transform: rotate(180deg);
         }
-        
+
         .menu {
           position: absolute;
           z-index: 10;
           left: 0;
           right: 0;
+          top: 100%;
           margin-top: 0.25rem;
           background: var(--select-bg);
           color: var(--select-text);
@@ -213,40 +248,39 @@ export default class PSelect extends HTMLElement {
           border-radius: 10px;
           max-height: 240px;
           overflow: auto;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 10px 30px var(--shadow-color, rgba(0, 0, 0, 0.08));
         }
-        
+
         .option {
           padding: 0.45rem 0.6rem;
           cursor: pointer;
           transition: background-color 0.15s ease;
         }
-        
+
         .option:hover {
-          background: #f1f5f9;
+          background: var(--select-hover-bg);
         }
-        
+
         .option[aria-selected="true"] {
-          background: #eff6ff;
+          background: var(--select-selected-bg);
           font-weight: 500;
         }
-        
+
         .option[aria-current="true"] {
-          background: #e2e8f0;
+          background: var(--select-current-bg);
         }
-        
+
         .option[aria-disabled="true"] {
           opacity: 0.5;
           cursor: not-allowed;
-          color: var(--select-placeholder);
           background: transparent !important;
         }
-        
+
         .noresults {
           padding: 0.6rem;
-          color: var(--select-placeholder);
           font-style: italic;
           text-align: center;
+          opacity: 0.6;
         }
       </style>
       
@@ -273,7 +307,7 @@ export default class PSelect extends HTMLElement {
       control: this.shadowRoot.querySelector('.control'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
-      arrow: this.shadowRoot.querySelector('.arrow')
+      arrow: this.shadowRoot.querySelector('.arrow'),
     };
 
     this._updateDisplay();
@@ -281,7 +315,7 @@ export default class PSelect extends HTMLElement {
 
   _setupEventListeners() {
     // Prevent double-toggle issue by using mousedown instead of click
-    this._els.control.addEventListener('mousedown', (e) => {
+    this._els.control.addEventListener('mousedown', e => {
       if (e.target !== this._els.input) {
         e.preventDefault();
         this._els.input.focus();
@@ -295,16 +329,16 @@ export default class PSelect extends HTMLElement {
       }
     });
 
-    this._els.input.addEventListener('input', (e) => {
+    this._els.input.addEventListener('input', e => {
       this._handleInput(e);
     });
 
-    this._els.input.addEventListener('keydown', (e) => {
+    this._els.input.addEventListener('keydown', e => {
       this._handleKeydown(e);
     });
 
     // Global click handler to close dropdown
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
       if (!this.contains(e.target) && !this.shadowRoot.contains(e.target)) {
         this.close();
       }
@@ -326,7 +360,8 @@ export default class PSelect extends HTMLElement {
   _createAnnouncementRegion() {
     this._announcementRegion = document.createElement('div');
     this._announcementRegion.setAttribute('aria-live', 'polite');
-    this._announcementRegion.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';
+    this._announcementRegion.style.cssText =
+      'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';
     document.body.appendChild(this._announcementRegion);
   }
 
@@ -350,7 +385,7 @@ export default class PSelect extends HTMLElement {
         value,
         label,
         disabled,
-        selected
+        selected,
       };
 
       options.push(optionData);
@@ -408,7 +443,10 @@ export default class PSelect extends HTMLElement {
 
       case 'Enter':
         e.preventDefault();
-        if (this.state.highlightedIndex >= 0 && this.state.highlightedIndex < this.state.filtered.length) {
+        if (
+          this.state.highlightedIndex >= 0 &&
+          this.state.highlightedIndex < this.state.filtered.length
+        ) {
           const option = this.state.filtered[this.state.highlightedIndex];
           if (option && !option.disabled) {
             this.select(option.value);
@@ -523,10 +561,12 @@ export default class PSelect extends HTMLElement {
     this._setFormValue(option.value, option.label);
     this._els.input.value = option.label;
 
-    this.dispatchEvent(new CustomEvent('p-select:change', {
-      detail: { value: option.value, label: option.label },
-      bubbles: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent('p-select:change', {
+        detail: { value: option.value, label: option.label },
+        bubbles: true,
+      })
+    );
 
     this.close();
   }
@@ -565,7 +605,7 @@ export default class PSelect extends HTMLElement {
       options: this.state.options,
       filtered: this.state.filtered,
       value: this.state.value,
-      domOptions: this.querySelectorAll('option').length
+      domOptions: this.querySelectorAll('option').length,
     });
   }
 
@@ -610,7 +650,7 @@ export default class PSelect extends HTMLElement {
       }
 
       if (!option.disabled) {
-        optionEl.addEventListener('click', (e) => {
+        optionEl.addEventListener('click', e => {
           e.preventDefault();
           e.stopPropagation();
           this.select(option.value);

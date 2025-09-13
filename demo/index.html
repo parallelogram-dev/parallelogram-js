@@ -1,86 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhancement Framework Demo - Home</title>
-    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
-</head>
-<body data-demo="home">
-    <nav data-view="navbar">
-        <div class="nav__container">
-            <h1>Enhancement Framework</h1>
-            <ul class="nav__list">
-                <li><a href="/" class="nav__link" aria-current="page">Home</a></li>
-                <li><a href="/ui-components" class="nav__link">UI Components</a></li>
-                <li><a href="/media" class="nav__link">Media</a></li>
-                <li><a href="/interactive" class="nav__link">Interactive</a></li>
-                <li><a href="/performance" class="nav__link">Performance</a></li>
-            </ul>
-        </div>
-    </nav>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Enhancement Framework Demo - Home</title>
+        <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    </head>
+    <body data-demo="home">
+        <nav data-view="navbar">
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul class="nav__list">
+                    <li><a href="/" class="nav__link" aria-current="page">Home</a></li>
+                    <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                    <li><a href="/media" class="nav__link">Media</a></li>
+                    <li><a href="/interactive" class="nav__link">Interactive</a></li>
+                    <li><a href="/performance" class="nav__link">Performance</a></li>
+                </ul>
+            </div>
+        </nav>
 
-    <main data-view="main" class="page__content">
-        <section class="hero">
-            <h2>Progressive Enhancement Framework</h2>
-            <p>A comprehensive framework for building modern web applications with RouterManager, PageManager, and component lifecycle management.</p>
+        <main data-view="main" class="page__content">
+            <section class="hero">
+                <h2>Progressive Enhancement Framework</h2>
+                <p>
+                    A comprehensive framework for building modern web applications with RouterManager, PageManager, and
+                    component lifecycle management.
+                </p>
 
-            <div class="component__registry">
-                <h3>Live Component Registry Status</h3>
-                <p>Real-time view of components managed by PageManager:</p>
-                <div id="component-registry-display">
-                    <div class="component__item">
-                        <div>
-                            <strong>Framework</strong>
-                            <small class="component__status-text">Initializing...</small>
+                <div class="component__registry">
+                    <h3>Live Component Registry Status</h3>
+                    <p>Real-time view of components managed by PageManager:</p>
+                    <div id="component-registry-display">
+                        <div class="component__item">
+                            <div>
+                                <strong>Framework</strong>
+                                <small class="component__status-text">Initializing...</small>
+                            </div>
+                            <span class="component__status loading">loading</span>
                         </div>
-                        <span class="component__status loading">loading</span>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="features">
-            <div class="features__grid">
-                <div class="features__item">
-                    <h3>🎨 UI Components</h3>
-                    <p>Accessible modals with slot-based content, toast notifications with XToasts integration, and form enhancements.</p>
-                    <a href="/ui-components" class="features__link">
-                        Explore UI Components →
-                    </a>
+            <section class="features">
+                <div class="features__grid">
+                    <div class="features__item">
+                        <h3>🎨 UI Components</h3>
+                        <p>
+                            Accessible modals with slot-based content, toast notifications with XToasts integration, and
+                            form enhancements.
+                        </p>
+                        <a href="/ui-components" class="features__link"> Explore UI Components → </a>
+                    </div>
+
+                    <div class="features__item">
+                        <h3>📸 Media Components</h3>
+                        <p>
+                            Optimized image loading with native lazy loading support, image carousels with touch
+                            support, and gallery components.
+                        </p>
+                        <a href="/media" class="features__link"> View Media Demos → </a>
+                    </div>
+
+                    <div class="features__item">
+                        <h3>⚡ Interactive Elements</h3>
+                        <p>
+                            Toggle functionality for dropdowns and accordions, accessible tab navigation, and enhanced
+                            form controls.
+                        </p>
+                        <a href="/interactive" class="features__link"> Try Interactive Demos → </a>
+                    </div>
+
+                    <div class="features__item">
+                        <h3>📊 Performance Monitoring</h3>
+                        <p>
+                            Real-time component metrics, memory leak detection, circuit breaker patterns, and detailed
+                            performance analytics.
+                        </p>
+                        <a href="/performance" class="features__link"> View Performance Dashboard → </a>
+                    </div>
                 </div>
+            </section>
 
-                <div class="features__item">
-                    <h3>📸 Media Components</h3>
-                    <p>Optimized image loading with native lazy loading support, image carousels with touch support, and gallery components.</p>
-                    <a href="/media" class="features__link">
-                        View Media Demos →
-                    </a>
-                </div>
+            <section class="usage">
+                <h2>Quick Start</h2>
+                <p>Get started with the Enhancement Framework in just a few lines of code:</p>
 
-                <div class="features__item">
-                    <h3>⚡ Interactive Elements</h3>
-                    <p>Toggle functionality for dropdowns and accordions, accessible tab navigation, and enhanced form controls.</p>
-                    <a href="/interactive" class="features__link">
-                        Try Interactive Demos →
-                    </a>
-                </div>
-
-                <div class="features__item">
-                    <h3>📊 Performance Monitoring</h3>
-                    <p>Real-time component metrics, memory leak detection, circuit breaker patterns, and detailed performance analytics.</p>
-                    <a href="/performance" class="features__link">
-                        View Performance Dashboard →
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <section class="usage">
-            <h2>Quick Start</h2>
-            <p>Get started with the Enhancement Framework in just a few lines of code:</p>
-
-            <pre class="code__block"><code>import { ComponentRegistry } from './dist/esm/index.js';
+                <pre class="code__block"><code>import { ComponentRegistry } from './dist/esm/index.js';
 
 // Create component registry
 const registry = ComponentRegistry.create('dev')
@@ -106,30 +113,28 @@ const pageManager = new PageManager({
 // Auto-enhance and navigate
 router.enhanceLinks();
 pageManager.scanAndMount();</code></pre>
-        </section>
-    </main>
+            </section>
+        </main>
 
-    <!-- Health Indicator -->
-    <div id="health-indicator" class="health__indicator">
-        🟡 Framework Loading...
-    </div>
+        <!-- Health Indicator -->
+        <div id="health-indicator" class="health__indicator">🟡 Framework Loading...</div>
 
-    <!-- Performance Panel -->
-    <div id="performance-panel" class="performance__panel">
-        <h4 class="performance__title">📊 Live Performance</h4>
-        <div id="performance-metrics">
-            <div class="performance__metric">
-                <span>Framework Status:</span>
-                <strong>Initializing...</strong>
+        <!-- Performance Panel -->
+        <div id="performance-panel" class="performance__panel">
+            <h4 class="performance__title">📊 Live Performance</h4>
+            <div id="performance-metrics">
+                <div class="performance__metric">
+                    <span>Framework Status:</span>
+                    <strong>Initializing...</strong>
+                </div>
             </div>
+            <button data-demo-performance-toggle class="btn btn--xs performance__toggle">Toggle Panel</button>
         </div>
-        <button data-demo-performance-toggle class="btn__small performance__toggle">Toggle Panel</button>
-    </div>
 
-    <!-- Toast container -->
-    <p-toasts placement="top-right"></p-toasts>
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
 
-    <!-- Load the framework with demo functionality -->
-    <script type="module" src="dist/parallelogram-demo.min.js"></script>
-</body>
+        <!-- Load the framework with demo functionality -->
+        <script type="module" src="dist/parallelogram-demo.min.js"></script>
+    </body>
 </html>

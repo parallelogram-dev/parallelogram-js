@@ -1,47 +1,47 @@
-// Metrics Component
+/*  Metrics Component */
 @use '../includes/common';
 .metrics {
-    &__grid {
-        @extend %grid_common;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        margin: 2rem 0;
+  &__grid {
+    @extend %grid_common;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin: 2rem 0;
+  }
+
+  &__card {
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+
+    h3 {
+      margin: 0 0 1rem 0;
+      color: #374151;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    
-    &__card {
-        padding: 1.5rem;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        text-align: center;
-        
-        h3 {
-            margin: 0 0 1rem 0;
-            color: #374151;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-    }
-    
-    &__value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #0ea5e9;
-        margin-bottom: 0.5rem;
-    }
-    
-    &__label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin: 0;
-    }
+  }
+
+  &__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0ea5e9;
+    margin-bottom: 0.5rem;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+  }
 }
 
-// Dashboard specific metrics styles
+/*  Dashboard specific metrics styles */
 .dashboard {
-    &__actions {
-        @extend %flex_row;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
+  &__actions {
+    @extend %flex_row;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
 }

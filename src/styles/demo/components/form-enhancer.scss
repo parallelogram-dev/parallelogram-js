@@ -17,7 +17,7 @@
   animation: error-fade-in 0.3s ease-out;
 }
 
-[data-error-for][style*="block"] {
+[data-error-for][style*='block'] {
   display: block !important;
 }
 
@@ -36,7 +36,10 @@
 form[data-form-validator] input,
 form[data-form-validator] textarea,
 form[data-form-validator] select {
-  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
 }
 
 form[data-form-validator] input:focus,

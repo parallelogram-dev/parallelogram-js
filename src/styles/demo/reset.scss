@@ -31,7 +31,14 @@ html {
 }
 
 body {
-  font-family: var(--font-family-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(
+    --font-family-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif
+  );
   font-size: var(--font-size-base, 1rem);
   line-height: var(--line-height-normal, 1.5);
   color: var(--color-gray-900, #212529);
@@ -42,13 +49,23 @@ body {
 }
 
 /* Typography reset */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--font-weight-semibold, 600);
   line-height: var(--line-height-tight, 1.25);
   color: inherit;
 }
 
-p, blockquote, dl, dd, ol, ul {
+p,
+blockquote,
+dl,
+dd,
+ol,
+ul {
   margin-bottom: var(--spacing-4, 1rem);
 }
 
@@ -59,17 +76,18 @@ blockquote {
 }
 
 /* List reset */
-ol, ul {
+ol,
+ul {
   list-style: none;
 }
 
-ol[role="list"], 
-ul[role="list"] {
+ol[role='list'],
+ul[role='list'] {
   list-style: none;
 }
 
 /* Semantic list styling when appropriate */
-article ol, 
+article ol,
 article ul,
 section ol,
 section ul {
@@ -85,7 +103,11 @@ article ul {
 }
 
 /* Media elements */
-img, picture, video, canvas, svg {
+img,
+picture,
+video,
+canvas,
+svg {
   display: block;
   max-width: 100%;
   height: auto;
@@ -100,7 +122,10 @@ svg {
 }
 
 /* Form elements */
-input, button, textarea, select {
+input,
+button,
+textarea,
+select {
   font: inherit;
   color: inherit;
 }
@@ -115,23 +140,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
-  border: var(--border-width, 1px) solid var(--color-gray-300, #dee2e6);
-  border-radius: var(--border-radius, 0.25rem);
-  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
-}
-
 textarea {
   resize: vertical;
-  border: var(--border-width, 1px) solid var(--color-gray-300, #dee2e6);
-  border-radius: var(--border-radius, 0.25rem);
-  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
-}
-
-select {
-  border: var(--border-width, 1px) solid var(--color-gray-300, #dee2e6);
-  border-radius: var(--border-radius, 0.25rem);
-  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
 }
 
 /* Focus styles */
@@ -158,7 +168,8 @@ table {
   width: 100%;
 }
 
-th, td {
+th,
+td {
   text-align: left;
   vertical-align: top;
   padding: var(--spacing-2, 0.5rem);
@@ -169,8 +180,11 @@ th {
 }
 
 /* Code and pre */
-code, kbd, samp, pre {
-  font-family: var(--font-family-mono, "SFMono-Regular", Consolas, monospace);
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-family-mono, 'SFMono-Regular', Consolas, monospace);
   font-size: 0.875em;
 }
 
@@ -231,8 +245,8 @@ hr {
     outline-width: 3px;
     outline-offset: 1px;
   }
-  
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
   textarea,
   select {
     border-width: var(--border-width-thick, 2px);
@@ -267,8 +281,8 @@ hr {
     text-decoration: underline;
   }
 
-  a[href^="http"]:after {
-    content: " (" attr(href) ")";
+  a[href^='http']:after {
+    content: ' (' attr(href) ')';
   }
 
   img {

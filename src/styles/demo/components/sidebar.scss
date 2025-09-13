@@ -1,19 +1,19 @@
-// Sidebar Component
+/*  Sidebar Component */
 .sidebar {
-    position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100vh;
-    background: white;
-    border-left: 1px solid #e2e8f0;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-    padding: 2rem;
-    transition: right 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
-    
-    &.open {
-        right: 0;
-    }
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  transition: right 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+
+  &.open {
+    right: 0;
+  }
 }

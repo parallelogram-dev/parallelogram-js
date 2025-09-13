@@ -5,7 +5,7 @@ A lightweight, enhancement-first JavaScript framework for progressive web applic
 ## Features
 
 - 🎯 Progressive Enhancement - HTML first, JavaScript enhances
-- 📊 Data-Driven - `data-[component]-[param]` attribute pattern  
+- 📊 Data-Driven - `data-[component]-[param]` attribute pattern
 - 🎨 BEM CSS - `.block__element--modifier` class pattern
 - ♿ Accessible - ARIA attributes, keyboard navigation
 - 🔧 Modular - Use only what you need

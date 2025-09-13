@@ -14,7 +14,7 @@ export class RouterManager {
       fragmentSelector: '[data-router-fragment]',
       loadingClass: 'router-loading',
       errorClass: 'router-error',
-      ...options
+      ...options,
     };
 
     this.controller = null;
@@ -36,7 +36,7 @@ export class RouterManager {
 
     // History events
     window.addEventListener('popstate', this.boundPopState);
-    window.addEventListener('pageshow', (e) => {
+    window.addEventListener('pageshow', e => {
       if (e.persisted) {
         this.eventBus.emit('router:bfcache-restore', { url: this.currentUrl });
       }
@@ -77,7 +77,12 @@ export class RouterManager {
     const href = link.getAttribute('href');
 
     // Skip if external, mailto, tel, etc.
-    if (!href || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) {
+    if (
+      !href ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:') ||
+      href.startsWith('javascript:')
+    ) {
       return false;
     }
 
@@ -130,7 +135,7 @@ export class RouterManager {
         viewTarget,
         replace: link.hasAttribute('data-router-replace'),
         trigger: 'link-click',
-        element: link
+        element: link,
       });
     } catch (error) {
       this.logger?.error('Failed to parse link URL', { href, error });
@@ -146,7 +151,7 @@ export class RouterManager {
     this.eventBus.emit('router:popstate', {
       url,
       state: event.state,
-      trigger: 'popstate'
+      trigger: 'popstate',
     });
   }
 
@@ -176,10 +181,10 @@ export class RouterManager {
         credentials: 'same-origin',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'text/html,application/json,*/*',
-          ...init.headers
+          Accept: 'text/html,application/json,*/*',
+          ...init.headers,
         },
-        ...init
+        ...init,
       });
 
       clearTimeout(timeoutId);
@@ -200,7 +205,7 @@ export class RouterManager {
       this.logger?.info('GET successful', {
         url: requestUrl,
         status: response.status,
-        contentType
+        contentType,
       });
 
       return { response, data };
@@ -224,12 +229,7 @@ export class RouterManager {
    * Navigate to a new URL with enhanced options
    */
   async navigate(url, options = {}) {
-    const {
-      replace = false,
-      trigger = 'programmatic',
-      element = null,
-      force = false
-    } = options;
+    const { replace = false, trigger = 'programmatic', element = null, force = false } = options;
 
     const targetUrl = typeof url === 'string' ? new URL(url, location.href) : url;
     const targetUrlString = targetUrl.toString();
@@ -242,7 +242,9 @@ export class RouterManager {
 
     // Prevent concurrent navigation
     if (this.isNavigating) {
-      this.logger?.warn('Navigation in progress, aborting new navigation', { url: targetUrlString });
+      this.logger?.warn('Navigation in progress, aborting new navigation', {
+        url: targetUrlString,
+      });
       return;
     }
 
@@ -254,7 +256,7 @@ export class RouterManager {
       url: targetUrl,
       trigger,
       element,
-      replace
+      replace,
     });
 
     // Add loading state
@@ -284,13 +286,13 @@ export class RouterManager {
         html: data,
         trigger,
         element,
-        replace
+        replace,
       });
 
       this.logger?.info('Navigation successful', {
         url: targetUrlString,
         trigger,
-        replace
+        replace,
       });
 
       return data;
@@ -305,13 +307,13 @@ export class RouterManager {
         url: targetUrl,
         error,
         trigger,
-        element
+        element,
       });
 
       this.logger?.error('Navigation failed', {
         url: targetUrlString,
         error,
-        trigger
+        trigger,
       });
 
       throw error;
@@ -326,7 +328,7 @@ export class RouterManager {
 
       this.eventBus.emit('router:navigate-end', {
         url: targetUrl,
-        trigger
+        trigger,
       });
     }
   }

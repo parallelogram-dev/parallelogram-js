@@ -4,18 +4,18 @@
  * Progressive enhancement via data-carousel attributes
  */
 
-// Carousel component variables
+/* Carousel component variables */
 :root {
-  // Dimensions
+  /*  Dimensions */
   --carousel-height: 400px;
   --carousel-aspect-ratio: 16 / 9;
 
-  // Timing
+  /*  Timing */
   --carousel-transition-duration: var(--transition-slow, 0.3s);
   --carousel-transition-easing: var(--ease-in-out, ease-in-out);
   --carousel-autoplay-delay: 5000ms;
 
-  // Colors
+  /*  Colors */
   --carousel-arrow-bg: rgba(0, 0, 0, 0.7);
   --carousel-arrow-color: var(--color-white, white);
   --carousel-arrow-hover-bg: rgba(0, 0, 0, 0.9);
@@ -24,24 +24,24 @@
   --carousel-dot-size: 12px;
   --carousel-bg: var(--color-gray-100, #f5f5f5);
 
-  // Shadows
+  /*  Shadows */
   --carousel-shadow: var(--shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.1));
   --carousel-arrow-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.2));
-  
-  // Spacing
+
+  /*  Spacing */
   --carousel-padding: var(--spacing-4, 1rem);
   --carousel-arrow-spacing: var(--spacing-4, 1rem);
   --carousel-dot-spacing: var(--spacing-2, 0.5rem);
-  
-  // Z-index
+
+  /*  Z-index */
   --carousel-z-index: var(--z-index-dropdown, 1000);
-  
-  // Sizes
+
+  /*  Sizes */
   --carousel-arrow-size: 48px;
   --carousel-control-size: 40px;
 }
 
-// Dark mode adjustments
+/*  Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   :root {
     --carousel-arrow-bg: rgba(255, 255, 255, 0.2);
@@ -51,7 +51,7 @@
   }
 }
 
-// Block: Carousel container
+/*  Block: Carousel container */
 .carousel {
   position: relative;
   width: 100%;
@@ -61,7 +61,7 @@
   box-shadow: var(--carousel-shadow);
   background: var(--carousel-bg);
 
-  // Modifiers
+  /*  Modifiers */
   &--fullscreen {
     position: fixed;
     top: 0;
@@ -80,16 +80,17 @@
   }
 
   &--loading {
-    background: linear-gradient(90deg, 
-      var(--color-gray-200, #f0f0f0) 25%, 
-      var(--color-gray-300, #e0e0e0) 50%, 
+    background: linear-gradient(
+      90deg,
+      var(--color-gray-200, #f0f0f0) 25%,
+      var(--color-gray-300, #e0e0e0) 50%,
       var(--color-gray-200, #f0f0f0) 75%
     );
     background-size: 200% 100%;
     animation: carousel-loading 1.5s infinite;
   }
 
-  // Element: Track (slide container)
+  /*  Element: Track (slide container) */
   &__track {
     display: flex;
     width: 100%;
@@ -98,7 +99,7 @@
     will-change: transform;
   }
 
-  // Element: Individual slides
+  /*  Element: Individual slides */
   &__slide {
     flex: 0 0 100%;
     width: 100%;
@@ -120,7 +121,7 @@
     }
   }
 
-  // Element: Navigation arrows
+  /*  Element: Navigation arrows */
   &__arrow {
     position: absolute;
     top: 50%;
@@ -156,10 +157,10 @@
       outline-offset: var(--framework-focus-offset, 2px);
     }
 
-    // Modifiers
+    /*  Modifiers */
     &--prev {
       left: var(--carousel-arrow-spacing);
-      
+
       &::before {
         content: '‹';
         font-size: 1.5em;
@@ -169,7 +170,7 @@
 
     &--next {
       right: var(--carousel-arrow-spacing);
-      
+
       &::before {
         content: '›';
         font-size: 1.5em;
@@ -177,14 +178,14 @@
       }
     }
 
-    &--large {
+    &--lg {
       width: 64px;
       height: 64px;
       font-size: 24px;
     }
   }
 
-  // Element: Dot indicators container
+  /*  Element: Dot indicators container */
   &__dots {
     position: absolute;
     bottom: var(--carousel-arrow-spacing);
@@ -195,7 +196,7 @@
     z-index: 2;
   }
 
-  // Element: Individual dot
+  /*  Element: Individual dot */
   &__dot {
     width: var(--carousel-dot-size);
     height: var(--carousel-dot-size);
@@ -217,8 +218,8 @@
       outline-offset: var(--framework-focus-offset, 2px);
     }
 
-    // Modifiers
-    &--large {
+    /*  Modifiers */
+    &--lg {
       width: 16px;
       height: 16px;
     }
@@ -228,7 +229,7 @@
     }
   }
 
-  // Element: Caption overlay
+  /*  Element: Caption overlay */
   &__caption {
     position: absolute;
     bottom: calc(var(--carousel-arrow-spacing) * 3);
@@ -247,7 +248,7 @@
     }
   }
 
-  // Element: Play/pause control
+  /*  Element: Play/pause control */
   &__control {
     position: absolute;
     top: var(--carousel-arrow-spacing);
@@ -283,7 +284,7 @@
     }
   }
 
-  // Element: Progress bar
+  /*  Element: Progress bar */
   &__progress {
     position: absolute;
     bottom: 0;
@@ -302,13 +303,17 @@
   }
 }
 
-// Loading animation
+/*  Loading animation */
 @keyframes carousel-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-// Responsive adjustments
+/*  Responsive adjustments */
 @media (max-width: 768px) {
   :root {
     --carousel-arrow-size: 40px;
@@ -325,7 +330,7 @@
   }
 }
 
-// Reduced motion support
+/*  Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .carousel {
     &__track {
@@ -334,7 +339,7 @@
 
     &__arrow {
       transition: none;
-      
+
       &:hover:not(:disabled) {
         transform: translateY(-50%);
       }
@@ -342,7 +347,7 @@
 
     &__dot {
       transition: none;
-      
+
       &:hover,
       &--active {
         transform: none;
@@ -356,7 +361,7 @@
   }
 }
 
-// High contrast mode
+/*  High contrast mode */
 @media (prefers-contrast: more) {
   .carousel {
     &__arrow {
@@ -365,7 +370,7 @@
 
     &__dot {
       border: 2px solid var(--color-white, white);
-      
+
       &--active {
         border-color: var(--carousel-dot-active-bg);
       }
@@ -373,7 +378,7 @@
   }
 }
 
-// Focus management for keyboard navigation
+/*  Focus management for keyboard navigation */
 [data-carousel]:focus-within {
   outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
   outline-offset: var(--framework-focus-offset, 2px);

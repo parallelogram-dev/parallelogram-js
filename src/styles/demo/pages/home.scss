@@ -5,7 +5,7 @@
 
 @use '../base';
 
-// Performance panel component
+/*  Performance panel component */
 .performance-panel {
   position: fixed;
   top: var(--demo-spacing-lg);
@@ -68,7 +68,7 @@
   }
 }
 
-// Performance toggle button
+/*  Performance toggle button */
 .performance-toggle {
   appearance: none;
   border: 1px solid var(--demo-border);
@@ -96,7 +96,7 @@
   }
 }
 
-// Performance metrics display
+/*  Performance metrics display */
 .performance__metric {
   display: flex;
   justify-content: space-between;
@@ -120,7 +120,7 @@
   }
 }
 
-// Component registry display
+/*  Component registry display */
 .component-registry {
   margin-top: var(--demo-spacing-lg);
 
@@ -197,7 +197,7 @@
   }
 }
 
-// Responsive adjustments
+/*  Responsive adjustments */
 @media (max-width: 768px) {
   .performance-panel {
     width: calc(100vw - var(--demo-spacing-lg));
