@@ -1,4 +1,4 @@
-import {BaseComponent} from "./BaseComponent.js";
+import { BaseComponent } from './BaseComponent.js';
 
 /**
  * QueuedComponentProxy - Placeholder component for async loading
@@ -9,7 +9,7 @@ export class QueuedComponentProxy extends BaseComponent {
     super({
       eventBus: { on() {}, emit() {} },
       logger: { info() {}, error() {}, enabled: false },
-      router: null
+      router: null,
     });
     this._onMount = onMount;
     this._onUnmount = onUnmount;

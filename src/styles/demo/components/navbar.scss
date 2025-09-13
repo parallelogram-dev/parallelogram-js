@@ -1,29 +1,29 @@
-// Navbar Component
+/*  Navbar Component */
 .navbar {
-    &--demo {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: #1f2937;
-        color: white;
-        padding: 1rem;
-        text-align: center;
-        z-index: 999;
-        transform: translateY(0);
-        transition: transform 0.3s ease;
-        
-        &.scrollhide {
-            transform: translateY(-100%);
-        }
-        
-        &.scrolloverlay {
-            background: rgba(31, 41, 55, 0.95);
-            backdrop-filter: blur(10px);
-        }
+  &--demo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #1f2937;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    z-index: 999;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+
+    &.scrollhide {
+      transform: translateY(-100%);
     }
-    
-    &__spacer {
-        height: 80px;
+
+    &.scrolloverlay {
+      background: rgba(31, 41, 55, 0.95);
+      backdrop-filter: blur(10px);
     }
+  }
+
+  &__spacer {
+    height: 80px;
+  }
 }

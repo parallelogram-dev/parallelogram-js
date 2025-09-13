@@ -12,18 +12,18 @@ export class DemoHome extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
-    
+
     // Bind methods to maintain context
     this.togglePerformancePanel = this.togglePerformancePanel.bind(this);
     this.updatePerformancePanel = this.updatePerformancePanel.bind(this);
     this.updateComponentRegistry = this.updateComponentRegistry.bind(this);
-    
+
     // Set up event listeners
     this._setupEventListeners(element, state.controller.signal);
-    
+
     // Initial component registry update
     this.updateComponentRegistry();
-    
+
     return state;
   }
 
@@ -64,7 +64,7 @@ export class DemoHome extends BaseComponent {
 
     // Dispatch custom event
     this._dispatch(panel, 'demo:performance-panel-toggled', {
-      visible: this.performancePanelVisible
+      visible: this.performancePanelVisible,
     });
   }
 
@@ -99,40 +99,45 @@ export class DemoHome extends BaseComponent {
     if (!display) return;
 
     if (window.pageManager) {
-      const registry = window.pageManager.getComponentRegistry ? 
-        window.pageManager.getComponentRegistry() : [];
-      const componentStates = window.pageManager.getComponentStates ? 
-        window.pageManager.getComponentStates() : {};
+      const registry = window.pageManager.getComponentRegistry
+        ? window.pageManager.getComponentRegistry()
+        : [];
+      const componentStates = window.pageManager.getComponentStates
+        ? window.pageManager.getComponentStates()
+        : {};
 
       if (registry.length > 0) {
-        display.innerHTML = registry.map(comp => {
-          const state = componentStates[comp.name] || { status: 'not-loaded' };
-          const statusClass = `component-status--${state.status}`;
-          
-          return `
+        display.innerHTML = registry
+          .map(comp => {
+            const state = componentStates[comp.name] || { status: 'not-loaded' };
+            const statusClass = `component-status--${state.status}`;
+
+            return `
             <div class="component-registry__item ${statusClass}">
               <div class="component-registry__name">${comp.name}</div>
               <div class="component-registry__status">${state.status}</div>
               <div class="component-registry__selector">${comp.selector}</div>
             </div>
           `;
-        }).join('');
+          })
+          .join('');
       } else {
         display.innerHTML = '<p class="component-registry__empty">No components registered</p>';
       }
     } else {
-      display.innerHTML = '<p class="component-registry__loading">Loading component registry...</p>';
+      display.innerHTML =
+        '<p class="component-registry__loading">Loading component registry...</p>';
     }
   }
 
   _getPerformanceMetrics() {
     // Get metrics from global performance tracking if available
     const metrics = window.getPerformanceMetrics ? window.getPerformanceMetrics() : {};
-    
+
     // Add memory information if available
     if (window.performance && window.performance.memory) {
       metrics.memory = {
-        usedMB: Math.round(window.performance.memory.usedJSHeapSize / 1024 / 1024)
+        usedMB: Math.round(window.performance.memory.usedJSHeapSize / 1024 / 1024),
       };
     }
 

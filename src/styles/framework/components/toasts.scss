@@ -26,7 +26,21 @@ p-toasts {
   pointer-events: none;
 }
 
-p-toasts[placement="top-left"] { top: 0; left: 0; }
-p-toasts[placement="top-right"] { top: 0; right: 0; left: auto; }
-p-toasts[placement="bottom-right"] { bottom: 0; right: 0; left: auto; }
-p-toasts[placement="bottom-left"] { bottom: 0; left: 0; }
+p-toasts[placement='top-left'] {
+  top: 0;
+  left: 0;
+}
+p-toasts[placement='top-right'] {
+  top: 0;
+  right: 0;
+  left: auto;
+}
+p-toasts[placement='bottom-right'] {
+  bottom: 0;
+  right: 0;
+  left: auto;
+}
+p-toasts[placement='bottom-left'] {
+  bottom: 0;
+  left: 0;
+}

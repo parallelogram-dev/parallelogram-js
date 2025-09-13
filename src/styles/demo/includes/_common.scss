@@ -1,19 +1,82 @@
-// Common reusable placeholders for SCSS components
+/*  Common reusable placeholders for SCSS components */
 
-// Grid helper used across multiple demo components
+/*  === LAYOUT PATTERNS === */
+
+/*  Grid helper used across multiple demo components */
 %grid_common {
   display: grid;
   gap: 1rem;
   margin: 1rem 0;
 }
 
-// Basic grid utility without margins for internal layouts
+/*  Basic grid utility without margins for internal layouts */
 %grid_basic {
   display: grid;
   gap: 1rem;
 }
 
-// Panel-like item used in copy demos and potentially others
+/*  Responsive grid with auto-fit columns */
+%grid_responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/*  Common flex row utility for action/button groups */
+%flex_row {
+  display: flex;
+  gap: 1rem;
+}
+
+/*  Flex column with gap */
+%flex_column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/*  Center content flexbox */
+%flex_center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*  === FORM INPUT PATTERNS === */
+
+/*  Standard form input base */
+%input_base {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--demo-border, #d1d5db);
+  border-radius: 4px;
+  background: var(--demo-panel-bg, white);
+  color: var(--demo-text, #1f2937);
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  }
+}
+
+/*  Form label styling */
+%form_label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--demo-text, #1f2937);
+}
+
+/*  Form field container */
+%form_field {
+  margin-bottom: 1.5rem;
+}
+
+/*  === PANEL/SURFACE PATTERNS === */
+
+/*  Panel-like item used in copy demos and potentially others */
 %demo_item_panel {
   display: flex;
   align-items: center;
@@ -24,7 +87,7 @@
   border-radius: 8px;
 }
 
-// Generic panel surface (no layout/padding) for blocks using demo panel variables
+/*  Generic panel surface (no layout/padding) for blocks using demo panel variables */
 %panel_surface {
   background: var(--demo-panel-bg, #f8fafc);
   color: var(--demo-text, #1f2937);
@@ -32,17 +95,133 @@
   border-radius: 8px;
 }
 
-// Dark code block utility
+/*  Panel with standard padding */
+%panel_padded {
+  @extend %panel_surface;
+  padding: 2rem;
+}
+
+/*  Interactive panel with hover effects */
+%panel_interactive {
+  @extend %panel_surface;
+  padding: 2rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/*  === BUTTON PATTERNS === */
+
+/*  Base button styles */
+%button_base {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/*  Small button variant */
+%button_small {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/*  === CODE/TEXT PATTERNS === */
+
+/*  Dark code block utility */
 %code_block_dark {
   padding: 0.75rem;
   background: #1f2937;
   color: #f3f4f6;
   border-radius: 4px;
   overflow-x: auto;
+  font-family: 'Courier New', monospace;
 }
 
-// Common flex row utility for action/button groups
-%flex_row {
-  display: flex;
-  gap: 1rem;
+/*  Light code block utility */
+%code_block_light {
+  padding: 0.75rem;
+  background: var(--demo-panel-bg, white);
+  border: 1px solid var(--demo-border, #e2e8f0);
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  color: var(--demo-text, #1f2937);
+}
+
+/*  Help text styling */
+%help_text {
+  font-size: 0.875rem;
+  color: var(--demo-text-muted, #6b7280);
+  margin-top: 0.25rem;
+}
+
+/*  Section title */
+%section_title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--demo-text, #1f2937);
+  font-weight: 600;
+}
+
+/*  === LIST PATTERNS === */
+
+/*  Feature list styling */
+%feature_list {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+
+  li {
+    margin-bottom: 0.5rem;
+    color: var(--demo-text-muted, #6b7280);
+
+    strong {
+      color: var(--demo-text, #1f2937);
+    }
+  }
+}
+
+/*  === SPACING PATTERNS === */
+
+/*  Standard demo section spacing */
+%demo_section_spacing {
+  margin: 3rem 0;
+}
+
+/*  Standard demo item spacing */
+%demo_item_spacing {
+  margin: 2rem 0;
+}
+
+/*  === TABLE PATTERNS === */
+
+/*  Table cell base */
+%table_cell_base {
+  border: 1px solid var(--demo-border, #e2e8f0);
+  padding: 0.75rem;
+  color: var(--demo-text, #1f2937);
+}
+
+/*  Table header cell */
+%table_header_cell {
+  @extend %table_cell_base;
+  background: var(--demo-panel-bg, #f8fafc);
+  text-align: left;
 }

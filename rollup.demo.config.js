@@ -7,11 +7,11 @@ export default {
   output: {
     file: 'demo/dist/parallelogram-demo.min.js',
     format: 'iife', // Self-executing function for browsers
-    name: 'ParallelogramDemo'
+    name: 'ParallelogramDemo',
   },
   plugins: [
     resolve({ browser: true }),
     commonjs(),
-    terser() // Minify
-  ]
+    terser(), // Minify
+  ],
 };

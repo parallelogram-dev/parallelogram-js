@@ -24,16 +24,22 @@
 
 /* Optional: Add a subtle animation on successful copy */
 @keyframes copy-success-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .copy-success {
   animation: copy-success-pulse 0.3s ease-out;
 }
 
-// Copy Demo Component
+/*  Copy Demo Component */
 .copy-demo {
   &__grid {
     @extend %grid_common;
@@ -50,26 +56,12 @@
   }
 
   &__command {
+    @extend %code_block_light;
     flex: 1;
-    padding: 0.75rem;
-    background: var(--demo-panel-bg, white);
-    color: var(--demo-text, #1f2937);
-    border: 1px solid var(--demo-border, #e2e8f0);
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
   }
 
   &__input {
+    @extend %input_base;
     flex: 1;
-    padding: 0.75rem;
-    border: 1px solid var(--demo-border, #e2e8f0);
-    border-radius: 4px;
-    background: var(--demo-panel-bg, white);
-    color: var(--demo-text, #1f2937);
-
-    &:focus {
-      outline: none;
-      border-color: #0ea5e9;
-    }
   }
 }
