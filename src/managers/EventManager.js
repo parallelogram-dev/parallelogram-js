@@ -13,7 +13,7 @@ export class EventManager {
   }
 
   once(event, callback) {
-    const unsubscribe = this.on(event, (payload) => {
+    const unsubscribe = this.on(event, payload => {
       unsubscribe();
       callback(payload);
     });

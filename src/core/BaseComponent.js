@@ -89,7 +89,7 @@ export class BaseComponent {
   }
 
   _camelCase(str) {
-    return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+    return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
   }
 
   // Dispatch custom events
@@ -97,7 +97,7 @@ export class BaseComponent {
     const event = new CustomEvent(eventType, {
       detail,
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     element.dispatchEvent(event);
     this.eventBus?.emit(eventType, { element, ...detail });

@@ -16,8 +16,8 @@
  *   <h2 slot="title">Modal Title</h2>
  *   <p>Modal content goes here.</p>
  *   <div slot="actions">
- *     <button class="modal__button modal__button--secondary" data-modal-close>Cancel</button>
- *     <button class="modal__button modal__button--primary">Save</button>
+ *     <button class="btn btn--secondary" data-modal-close>Cancel</button>
+ *     <button class="btn btn--primary">Save</button>
  *   </div>
  * </p-modal>
  */
@@ -88,12 +88,20 @@ export default class PModal extends HTMLElement {
         }
 
         /* Panel size modifiers */
-        :host([data-modal-size="small"]) .modal__panel {
+        :host([data-modal-size="sm"]) .modal__panel {
           min-width: min(92vw, 400px);
         }
 
-        :host([data-modal-size="large"]) .modal__panel {
+        :host([data-modal-size="lg"]) .modal__panel {
           min-width: min(92vw, 800px);
+        }
+
+        :host([data-modal-size="xs"]) .modal__panel {
+          min-width: min(92vw, 300px);
+        }
+
+        :host([data-modal-size="xl"]) .modal__panel {
+          min-width: min(92vw, 1000px);
         }
 
         :host([data-modal-size="fullscreen"]) .modal__panel {
@@ -175,7 +183,7 @@ export default class PModal extends HTMLElement {
         }
 
         /* Slotted button styles (BEM classes) */
-        ::slotted(.modal__button) {
+        ::slotted(.btn) {
           appearance: none;
           border: 0;
           border-radius: 10px;
@@ -185,33 +193,34 @@ export default class PModal extends HTMLElement {
           cursor: pointer;
           font-size: 14px;
           font-weight: 500;
+          min-height: 3.125rem;
           transition: all var(--modal-animation-duration) ease;
         }
 
-        ::slotted(.modal__button:hover) {
+        ::slotted(.btn:hover) {
           background: #374151;
         }
 
-        ::slotted(.modal__button--primary) {
+        ::slotted(.btn--primary) {
           background: #60a5fa;
           color: #0b1020;
           font-weight: 700;
         }
 
-        ::slotted(.modal__button--primary:hover) {
+        ::slotted(.btn--primary:hover) {
           background: #3b82f6;
         }
 
-        ::slotted(.modal__button--danger) {
+        ::slotted(.btn--danger) {
           background: #dc2626;
           color: white;
         }
 
-        ::slotted(.modal__button--danger:hover) {
+        ::slotted(.btn--danger:hover) {
           background: #b91c1c;
         }
 
-        ::slotted(.modal__button:disabled) {
+        ::slotted(.btn:disabled) {
           opacity: 0.5;
           cursor: not-allowed;
         }
@@ -244,7 +253,7 @@ export default class PModal extends HTMLElement {
           .modal__backdrop,
           .modal__panel,
           .modal__close,
-          ::slotted(.modal__button) {
+          ::slotted(.btn) {
             animation: none;
             transition: none;
           }
@@ -261,12 +270,12 @@ export default class PModal extends HTMLElement {
             --modal-close-hover-bg: rgba(0, 0, 0, 0.1);
           }
 
-          ::slotted(.modal__button) {
+          ::slotted(.btn) {
             background: #f3f4f6;
             color: #1f2937;
           }
 
-          ::slotted(.modal__button:hover) {
+          ::slotted(.btn:hover) {
             background: #e5e7eb;
           }
         }
@@ -400,10 +409,12 @@ export default class PModal extends HTMLElement {
    */
   _onOpen() {
     // Dispatch open event
-    this.dispatchEvent(new CustomEvent('modal:open', {
-      bubbles: true,
-      detail: { modal: this }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('modal:open', {
+        bubbles: true,
+        detail: { modal: this },
+      })
+    );
 
     // Focus management
     requestAnimationFrame(() => {
@@ -422,10 +433,12 @@ export default class PModal extends HTMLElement {
    */
   _onClose() {
     // Dispatch close event
-    this.dispatchEvent(new CustomEvent('modal:close', {
-      bubbles: true,
-      detail: { modal: this }
-    }));
+    this.dispatchEvent(
+      new CustomEvent('modal:close', {
+        bubbles: true,
+        detail: { modal: this },
+      })
+    );
 
     // Restore body scroll
     document.body.style.overflow = '';
@@ -472,7 +485,7 @@ export default class PModal extends HTMLElement {
       'input:not([disabled])',
       'select:not([disabled])',
       'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"]):not([disabled])'
+      '[tabindex]:not([tabindex="-1"]):not([disabled])',
     ];
 
     return [...this.querySelectorAll(selectors.join(','))];

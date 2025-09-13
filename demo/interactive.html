@@ -1,682 +1,847 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Components - Enhancement Framework</title>
-    <meta name="description" content="Interactive components including tabs, toggles, scroll behaviors, and form enhancements">
-    <meta property="og:title" content="Interactive Components - Enhancement Framework">
-    <meta property="og:description" content="Explore interactive components with progressive enhancement">
-    <meta property="og:type" content="website">
-    <link rel="stylesheet" href="dist/parallelogram-demo.min.css">
-</head>
-<body>
-    <nav data-view="navbar">
-        <div class="nav__container">
-            <h1>Enhancement Framework</h1>
-            <ul class="nav__list">
-                <li><a href="/" class="nav__link">Home</a></li>
-                <li><a href="/ui-components" class="nav__link">UI Components</a></li>
-                <li><a href="/media" class="nav__link">Media</a></li>
-                <li><a href="/interactive" class="nav__link" aria-current="page">Interactive</a></li>
-                <li><a href="/performance" class="nav__link">Performance</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <main data-view="main" class="page__content">
-        <header class="page__header">
-            <h1>Interactive Components</h1>
-            <p>Toggle controls, scroll behaviors, accessible tabs, and enhanced form interactions.</p>
-        </header>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Scroll-Responsive Video Components</h2>
-            <p>Videos that automatically play/pause based on viewport visibility:</p>
-
-            <h3>Auto-Playing Background Video</h3>
-            <div class="video__container">
-                <video data-videoplay
-                       data-videoplay-threshold="0.3"
-                       data-videoplay-autopause="true"
-                       data-videoplay-automute="true"
-                       class="video__background"
-                       muted loop>
-                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
-                    <div class="video__fallback">
-                        <h4>Video Not Supported</h4>
-                        <p>Your browser doesn't support HTML5 video.</p>
-                    </div>
-                </video>
-                <div class="video__overlay">
-                    Plays when 30% visible, pauses when scrolled out
-                </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Interactive Components - Enhancement Framework</title>
+        <meta
+            name="description"
+            content="Interactive components including tabs, toggles, scroll behaviors, and form enhancements"
+        />
+        <meta property="og:title" content="Interactive Components - Enhancement Framework" />
+        <meta property="og:description" content="Explore interactive components with progressive enhancement" />
+        <meta property="og:type" content="website" />
+        <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    </head>
+    <body>
+        <nav data-view="navbar">
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul class="nav__list">
+                    <li><a href="/" class="nav__link">Home</a></li>
+                    <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                    <li><a href="/media" class="nav__link">Media</a></li>
+                    <li><a href="/interactive" class="nav__link" aria-current="page">Interactive</a></li>
+                    <li><a href="/performance" class="nav__link">Performance</a></li>
+                </ul>
             </div>
+        </nav>
 
-            <h3>Video with Custom Controls</h3>
-            <div class="video__demo-container">
-                <div class="video__demo-grid">
-                    <div>
-                        <video data-videoplay
-                               data-videoplay-threshold="0.5"
-                               data-videoplay-autopause="false"
-                               data-videoplay-automute="false"
-                               data-videoplay-background="true"
-                               class="video__player"
-                               controls>
-                            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
-                            Your browser doesn't support video.
+        <main data-view="main" class="page__content">
+            <header class="page__header">
+                <h1>Interactive Components</h1>
+                <p>Toggle controls, scroll behaviors, accessible tabs, and enhanced form interactions.</p>
+            </header>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Scroll-Responsive Video Components</h2>
+                <p>Videos that automatically play/pause based on viewport visibility:</p>
+
+                <h3>Auto-Playing Background Video</h3>
+                <div class="video__container">
+                    <video
+                        data-videoplay
+                        data-videoplay-threshold="0.3"
+                        data-videoplay-autopause="true"
+                        data-videoplay-automute="true"
+                        class="video__background"
+                        muted
+                        loop
+                    >
+                        <source
+                            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                            type="video/mp4"
+                        />
+                        <div class="video__fallback">
+                            <h4>Video Not Supported</h4>
+                            <p>Your browser doesn't support HTML5 video.</p>
+                        </div>
+                    </video>
+                    <div class="video__overlay">Plays when 30% visible, pauses when scrolled out</div>
+                </div>
+
+                <h3>Video with Custom Controls</h3>
+                <div class="video__demo-container">
+                    <div class="video__demo-grid">
+                        <div>
+                            <video
+                                data-videoplay
+                                data-videoplay-threshold="0.5"
+                                data-videoplay-autopause="false"
+                                data-videoplay-automute="false"
+                                data-videoplay-background="true"
+                                class="video__player"
+                                controls
+                            >
+                                <source
+                                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+                                    type="video/mp4"
+                                />
+                                Your browser doesn't support video.
+                            </video>
+                        </div>
+                        <div>
+                            <h4>Advanced Video</h4>
+                            <p>This video:</p>
+                            <ul class="video__features">
+                                <li>Plays when 50% visible</li>
+                                <li>Doesn't auto-pause on exit</li>
+                                <li>Keeps user volume settings</li>
+                                <li>Continues playing in background</li>
+                                <li>Has native controls</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Staggered Video Grid</h3>
+                <div class="video__grid">
+                    <div class="video__grid-item">
+                        <video
+                            data-videoplay
+                            data-videoplay-threshold="0.4"
+                            data-videoplay-automute="true"
+                            class="video__grid-player"
+                            muted
+                            loop
+                        >
+                            <source
+                                src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                                type="video/mp4"
+                            />
                         </video>
+                        <div class="video__grid-label">Video 1</div>
                     </div>
-                    <div>
-                        <h4>Advanced Video</h4>
-                        <p>This video:</p>
-                        <ul class="video__features">
-                            <li>Plays when 50% visible</li>
-                            <li>Doesn't auto-pause on exit</li>
-                            <li>Keeps user volume settings</li>
-                            <li>Continues playing in background</li>
-                            <li>Has native controls</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
 
-            <h3>Staggered Video Grid</h3>
-            <div class="video__grid">
-                <div class="video__grid-item">
-                    <video data-videoplay
-                           data-videoplay-threshold="0.4"
-                           data-videoplay-automute="true"
-                           class="video__grid-player"
-                           muted loop>
-                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
-                    </video>
-                    <div class="video__grid-label">
-                        Video 1
+                    <div class="video__grid-item">
+                        <video
+                            data-videoplay
+                            data-videoplay-threshold="0.4"
+                            data-videoplay-automute="true"
+                            class="video__grid-player"
+                            muted
+                            loop
+                        >
+                            <source
+                                src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+                                type="video/mp4"
+                            />
+                        </video>
+                        <div class="video__grid-label">Video 2</div>
                     </div>
-                </div>
 
-                <div class="video__grid-item">
-                    <video data-videoplay
-                           data-videoplay-threshold="0.4"
-                           data-videoplay-automute="true"
-                           class="video__grid-player"
-                           muted loop>
-                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
-                    </video>
-                    <div class="video__grid-label">
-                        Video 2
+                    <div class="video__grid-item">
+                        <video
+                            data-videoplay
+                            data-videoplay-threshold="0.4"
+                            data-videoplay-automute="true"
+                            class="video__grid-player"
+                            muted
+                            loop
+                        >
+                            <source
+                                src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+                                type="video/mp4"
+                            />
+                        </video>
+                        <div class="video__grid-label">Video 3</div>
                     </div>
                 </div>
 
-                <div class="video__grid-item">
-                    <video data-videoplay
-                           data-videoplay-threshold="0.4"
-                           data-videoplay-automute="true"
-                           class="video__grid-player"
-                           muted loop>
-                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" type="video/mp4">
-                    </video>
-                    <div class="video__grid-label">
-                        Video 3
+                <div class="features__details">
+                    <h3>Video Component Features</h3>
+                    <ul>
+                        <li><strong>Viewport Detection:</strong> Intersection Observer with configurable thresholds</li>
+                        <li><strong>Autoplay Compliance:</strong> Respects browser policies with smart muting</li>
+                        <li>
+                            <strong>Performance Optimized:</strong> Page visibility detection and background control
+                        </li>
+                        <li><strong>Flexible Configuration:</strong> Per-video settings via data attributes</li>
+                    </ul>
+
+                    <h4>Configuration Examples:</h4>
+                    <div class="config__example">
+                        <code>data-videoplay-threshold="0.3"</code> - Play when 30% visible<br />
+                        <code>data-videoplay-autopause="true"</code> - Auto-pause when scrolled out<br />
+                        <code>data-videoplay-automute="true"</code> - Force mute for reliable autoplay<br />
+                        <code>data-videoplay-background="false"</code> - Pause when tab hidden
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="features__details">
-                <h3>Video Component Features</h3>
-                <ul>
-                    <li><strong>Viewport Detection:</strong> Intersection Observer with configurable thresholds</li>
-                    <li><strong>Autoplay Compliance:</strong> Respects browser policies with smart muting</li>
-                    <li><strong>Performance Optimized:</strong> Page visibility detection and background control</li>
-                    <li><strong>Flexible Configuration:</strong> Per-video settings via data attributes</li>
-                </ul>
+            <section class="demo__section" data-component="demo-section">
+                <h2>Accessible Tab Navigation</h2>
+                <p>Progressive enhancement tabs with keyboard navigation and smooth transitions:</p>
 
-                <h4>Configuration Examples:</h4>
-                <div class="config__example">
-                    <code>data-videoplay-threshold="0.3"</code> - Play when 30% visible<br>
-                    <code>data-videoplay-autopause="true"</code> - Auto-pause when scrolled out<br>
-                    <code>data-videoplay-automute="true"</code> - Force mute for reliable autoplay<br>
-                    <code>data-videoplay-background="false"</code> - Pause when tab hidden
-                </div>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Accessible Tab Navigation</h2>
-            <p>Progressive enhancement tabs with keyboard navigation and smooth transitions:</p>
-
-            <div data-tabs data-tabs-keyboard="true" data-tabs-autofocus="false">
-                <div data-tabs-list class="tabs__list">
-                    <button data-tab="tab-overview" aria-selected="true" class="tabs__tab">Framework Overview</button>
-                    <button data-tab="tab-components" class="tabs__tab">Component System</button>
-                    <button data-tab="tab-architecture" class="tabs__tab">Architecture</button>
-                    <button data-tab="tab-performance" class="tabs__tab">Performance</button>
-                </div>
-                <div data-tabs-panels class="tabs__panels">
-                    <div id="tab-overview" data-tab-panel class="tabs__panel">
-                        <h3>Enhancement Framework Overview</h3>
-                        <p>The Enhancement Framework provides a modern approach to building interactive web applications through progressive enhancement and component-based architecture.</p>
-                        <ul>
-                            <li><strong>Progressive Enhancement:</strong> All components work without JavaScript and are enhanced when available</li>
-                            <li><strong>Component Lifecycle:</strong> Automatic mounting, unmounting, and cleanup management</li>
-                            <li><strong>Event-Driven:</strong> Central event bus for loose coupling and monitoring</li>
-                            <li><strong>Performance Focus:</strong> Memory leak prevention and optimization patterns</li>
-                        </ul>
-                        <p>The framework is designed to scale from simple UI enhancements to complex single-page applications.</p>
+                <div data-tabs data-tabs-keyboard="true" data-tabs-autofocus="false">
+                    <div data-tabs-list class="tabs__list">
+                        <button data-tab="tab-overview" aria-selected="true" class="tabs__tab">
+                            Framework Overview
+                        </button>
+                        <button data-tab="tab-components" class="tabs__tab">Component System</button>
+                        <button data-tab="tab-architecture" class="tabs__tab">Architecture</button>
+                        <button data-tab="tab-performance" class="tabs__tab">Performance</button>
                     </div>
-                    <div id="tab-components" data-tab-panel class="tabs__panel tabs__panel--hidden">
-                        <h3>Component System Architecture</h3>
-                        <p>Each component extends BaseComponent and follows consistent patterns for initialization, state management, and cleanup:</p>
-                        <div class="tabs__content-panel">
-                            <h4>Component Lifecycle</h4>
-                            <ol>
-                                <li><strong>Registration:</strong> Component added to registry with selector and priority</li>
-                                <li><strong>Discovery:</strong> PageManager scans DOM for matching elements</li>
-                                <li><strong>Initialization:</strong> _init() method called with element-specific state</li>
-                                <li><strong>Event Setup:</strong> Event listeners attached with proper cleanup</li>
-                                <li><strong>Cleanup:</strong> Automatic teardown when component unmounts</li>
-                            </ol>
-                        </div>
-                        <p>This consistent lifecycle ensures reliable performance and prevents common issues like memory leaks.</p>
-                    </div>
-                    <div id="tab-architecture" data-tab-panel class="tabs__panel tabs__panel--hidden">
-                        <h3>Framework Architecture</h3>
-                        <p>The framework consists of several key managers working together:</p>
-                        <div class="architecture__grid">
-                            <div class="architecture__card">
-                                <h5>RouterManager</h5>
-                                <p>Handles client-side navigation, link enhancement, and loading states.</p>
-                            </div>
-                            <div class="architecture__card">
-                                <h5>PageManager</h5>
-                                <p>Manages component lifecycle, mounting, and performance monitoring.</p>
-                            </div>
-                            <div class="architecture__card">
-                                <h5>EventManager</h5>
-                                <p>Central event bus for component communication and system monitoring.</p>
-                            </div>
-                            <div class="architecture__card">
-                                <h5>ComponentRegistry</h5>
-                                <p>Declarative component configuration with dependency management.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="tab-performance" data-tab-panel class="tabs__panel tabs__panel--hidden">
-                        <h3>Performance Optimization</h3>
-                        <p>The framework includes several performance optimization strategies:</p>
-                        <div class="performance__section">
-                            <h4>Memory Management</h4>
+                    <div data-tabs-panels class="tabs__panels">
+                        <div id="tab-overview" data-tab-panel class="tabs__panel">
+                            <h3>Enhancement Framework Overview</h3>
+                            <p>
+                                The Enhancement Framework provides a modern approach to building interactive web
+                                applications through progressive enhancement and component-based architecture.
+                            </p>
                             <ul>
-                                <li>Automatic cleanup when components unmount</li>
-                                <li>Component pooling for frequently used elements</li>
-                                <li>Weak references to prevent circular dependencies</li>
+                                <li>
+                                    <strong>Progressive Enhancement:</strong> All components work without JavaScript and
+                                    are enhanced when available
+                                </li>
+                                <li>
+                                    <strong>Component Lifecycle:</strong> Automatic mounting, unmounting, and cleanup
+                                    management
+                                </li>
+                                <li>
+                                    <strong>Event-Driven:</strong> Central event bus for loose coupling and monitoring
+                                </li>
+                                <li>
+                                    <strong>Performance Focus:</strong> Memory leak prevention and optimization patterns
+                                </li>
                             </ul>
-
-                            <h4>Loading Optimization</h4>
-                            <ul>
-                                <li>Lazy loading of component dependencies</li>
-                                <li>Priority-based component loading</li>
-                                <li>Intersection Observer for viewport-based loading</li>
-                            </ul>
-
-                            <h4>Runtime Performance</h4>
-                            <ul>
-                                <li>Event delegation and efficient DOM queries</li>
-                                <li>Debounced operations for expensive tasks</li>
-                                <li>Circuit breaker patterns for error recovery</li>
-                            </ul>
+                            <p>
+                                The framework is designed to scale from simple UI enhancements to complex single-page
+                                applications.
+                            </p>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="features__details">
-                <h3>Tab Component Features</h3>
-                <ul>
-                    <li><strong>Keyboard Navigation:</strong> Arrow keys, Home, End, Enter, and Escape support</li>
-                    <li><strong>Screen Reader Support:</strong> Full ARIA implementation with announcements</li>
-                    <li><strong>Progressive Enhancement:</strong> Works with standard HTML, enhanced with JavaScript</li>
-                    <li><strong>Smooth Transitions:</strong> CSS transitions with configurable timing</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Toggle Components</h2>
-            <p>Flexible toggle functionality for dropdowns, accordions, and interactive UI elements:</p>
-
-            <div class="toggles__demo">
-                <h3>Dropdown Menus</h3>
-                <div class="button__group">
-                    <div class="dropdown__container">
-                        <button data-toggle
-                                data-toggle-target="#dropdown-menu-1"
-                                data-toggle-capture="true"
-                                class="button button--primary">
-                            File Menu
-                        </button>
-                        <div id="dropdown-menu-1" class="dropdown__menu">
-                            <a href="#" class="dropdown__item">New File</a>
-                            <a href="#" class="dropdown__item">Open File</a>
-                            <a href="#" class="dropdown__item">Save</a>
-                            <hr class="dropdown__divider">
-                            <a href="#" class="dropdown__item">Exit</a>
-                        </div>
-                    </div>
-
-                    <div style="position: relative;">
-                        <button data-toggle
-                                data-toggle-target="#dropdown-menu-2"
-                                data-toggle-capture="true"
-                                class="button button--secondary">
-                            Edit Menu
-                        </button>
-                        <div id="dropdown-menu-2" class="dropdown__menu">
-                            <a href="#" class="dropdown__item">Undo</a>
-                            <a href="#" class="dropdown__item">Redo</a>
-                            <hr class="dropdown__divider">
-                            <a href="#" class="dropdown__item">Cut</a>
-                            <a href="#" class="dropdown__item">Copy</a>
-                            <a href="#" class="dropdown__item">Paste</a>
-                        </div>
-                    </div>
-
-                    <div style="position: relative;">
-                        <button data-toggle
-                                data-toggle-target="#dropdown-menu-3"
-                                data-toggle-capture="true"
-                                class="button button--accent">
-                            View Menu
-                        </button>
-                        <div id="dropdown-menu-3" class="dropdown__menu">
-                            <a href="#" class="dropdown__item">Zoom In</a>
-                            <a href="#" class="dropdown__item">Zoom Out</a>
-                            <a href="#" class="dropdown__item">Full Screen</a>
-                            <hr class="dropdown__divider">
-                            <a href="#" class="dropdown__item">Developer Tools</a>
-                        </div>
-                    </div>
-                </div>
-
-                <h3>Accordion Panels</h3>
-                <div class="accordion">
-                    <div class="accordion__item">
-                        <button data-toggle
-                                data-toggle-target="#accordion-panel-1"
-                                class="accordion__trigger"
-                                aria-expanded="false">
-                            Getting Started
-                        </button>
-                        <div id="accordion-panel-1" class="accordion__panel">
-                            <div class="accordion__content">
-                                <p>Learn how to integrate the Enhancement Framework into your project:</p>
+                        <div id="tab-components" data-tab-panel class="tabs__panel tabs__panel--hidden">
+                            <h3>Component System Architecture</h3>
+                            <p>
+                                Each component extends BaseComponent and follows consistent patterns for initialization,
+                                state management, and cleanup:
+                            </p>
+                            <div class="tabs__content-panel">
+                                <h4>Component Lifecycle</h4>
                                 <ol>
-                                    <li>Install the framework via npm or download the built files</li>
-                                    <li>Import the ComponentRegistry and core managers</li>
-                                    <li>Define your component registry with selectors and loaders</li>
-                                    <li>Initialize the PageManager and RouterManager</li>
-                                    <li>Call scanAndMount() to enhance existing content</li>
+                                    <li>
+                                        <strong>Registration:</strong> Component added to registry with selector and
+                                        priority
+                                    </li>
+                                    <li><strong>Discovery:</strong> PageManager scans DOM for matching elements</li>
+                                    <li>
+                                        <strong>Initialization:</strong> _init() method called with element-specific
+                                        state
+                                    </li>
+                                    <li><strong>Event Setup:</strong> Event listeners attached with proper cleanup</li>
+                                    <li><strong>Cleanup:</strong> Automatic teardown when component unmounts</li>
                                 </ol>
                             </div>
+                            <p>
+                                This consistent lifecycle ensures reliable performance and prevents common issues like
+                                memory leaks.
+                            </p>
                         </div>
-                    </div>
-
-                    <div class="accordion__item">
-                        <button data-toggle
-                                data-toggle-target="#accordion-panel-2"
-                                class="accordion__trigger"
-                                aria-expanded="false">
-                            Component Development
-                        </button>
-                        <div id="accordion-panel-2" class="accordion__panel">
-                            <div class="accordion__content">
-                                <p>Creating custom components is straightforward:</p>
-                                <ul>
-                                    <li>Extend BaseComponent for consistent lifecycle management</li>
-                                    <li>Implement _init(element) for element-specific setup</li>
-                                    <li>Use this._getDataAttr() for configuration</li>
-                                    <li>Emit events via this.eventBus for monitoring</li>
-                                    <li>Implement proper cleanup in state.cleanup()</li>
-                                </ul>
+                        <div id="tab-architecture" data-tab-panel class="tabs__panel tabs__panel--hidden">
+                            <h3>Framework Architecture</h3>
+                            <p>The framework consists of several key managers working together:</p>
+                            <div class="architecture__grid">
+                                <div class="architecture__card">
+                                    <h5>RouterManager</h5>
+                                    <p>Handles client-side navigation, link enhancement, and loading states.</p>
+                                </div>
+                                <div class="architecture__card">
+                                    <h5>PageManager</h5>
+                                    <p>Manages component lifecycle, mounting, and performance monitoring.</p>
+                                </div>
+                                <div class="architecture__card">
+                                    <h5>EventManager</h5>
+                                    <p>Central event bus for component communication and system monitoring.</p>
+                                </div>
+                                <div class="architecture__card">
+                                    <h5>ComponentRegistry</h5>
+                                    <p>Declarative component configuration with dependency management.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="accordion__item">
-                        <button data-toggle
-                                data-toggle-target="#accordion-panel-3"
-                                class="accordion__trigger"
-                                aria-expanded="false">
-                            Best Practices
-                        </button>
-                        <div id="accordion-panel-3" class="accordion__panel">
-                            <div class="accordion__content">
-                                <p>Follow these guidelines for optimal performance:</p>
+                        <div id="tab-performance" data-tab-panel class="tabs__panel tabs__panel--hidden">
+                            <h3>Performance Optimization</h3>
+                            <p>The framework includes several performance optimization strategies:</p>
+                            <div class="performance__section">
+                                <h4>Memory Management</h4>
                                 <ul>
-                                    <li>Use data attributes for configuration over JavaScript options</li>
-                                    <li>Implement progressive enhancement - HTML first, JavaScript second</li>
-                                    <li>Emit meaningful events for debugging and monitoring</li>
-                                    <li>Handle errors gracefully with fallback behavior</li>
-                                    <li>Test without JavaScript to ensure base functionality works</li>
+                                    <li>Automatic cleanup when components unmount</li>
+                                    <li>Component pooling for frequently used elements</li>
+                                    <li>Weak references to prevent circular dependencies</li>
+                                </ul>
+
+                                <h4>Loading Optimization</h4>
+                                <ul>
+                                    <li>Lazy loading of component dependencies</li>
+                                    <li>Priority-based component loading</li>
+                                    <li>Intersection Observer for viewport-based loading</li>
+                                </ul>
+
+                                <h4>Runtime Performance</h4>
+                                <ul>
+                                    <li>Event delegation and efficient DOM queries</li>
+                                    <li>Debounced operations for expensive tasks</li>
+                                    <li>Circuit breaker patterns for error recovery</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <h3>Persistent Toggles</h3>
-                <div class="toggles__persistent">
-                    <button data-toggle
-                            data-toggle-target="#sidebar-panel"
-                            class="button button--outline">
-                        Toggle Sidebar
-                    </button>
-                    <div id="sidebar-panel" data-toggle-manual="true" class="sidebar">
-                        <h4>Persistent Sidebar</h4>
-                        <p>This panel has data-toggle-manual="true" so it won't auto-close when clicking outside.</p>
-                        <p>This is useful for:</p>
-                        <ul>
-                            <li>Navigation sidebars</li>
-                            <li>Tool panels</li>
-                            <li>Settings panels</li>
-                            <li>Any UI that should stay open</li>
-                        </ul>
-                        <button data-toggle
-                                data-toggle-target="#sidebar-panel"
-                                class="button button--secondary">
-                            Close Sidebar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="features__details">
-                <h3>Toggle Component Features</h3>
-                <ul>
-                    <li><strong>Multiple Modes:</strong> Dropdowns with outside-click, accordions, persistent panels</li>
-                    <li><strong>Accessibility:</strong> ARIA states, keyboard navigation, focus management</li>
-                    <li><strong>Event Integration:</strong> Real-time state tracking and debugging</li>
-                    <li><strong>Flexible Configuration:</strong> Data attributes for capture, manual, and animation settings</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Scroll-Responsive Components</h2>
-            <p>Interactive behaviors triggered by scroll position and direction:</p>
-
-            <h3>Scroll Hide Navigation</h3>
-            <p>A demonstration navbar that hides when scrolling down and shows when scrolling up:</p>
-
-            <div class="navbar__spacer"></div>
-            <nav data-scrollhide
-                 data-scroll-threshold="100"
-                 data-overlay-threshold="150"
-                 class="navbar--demo">
-                <div>Demo Navigation Bar - Scroll down to hide, scroll up to show</div>
-            </nav>
-
-            <div style="margin: 2rem 0;">
-                <p><strong>Instructions:</strong> Scroll down on this page to see the demo navigation bar hide. Scroll back up to see it appear again. The bar also gets a backdrop blur effect when scrolled past the overlay threshold.</p>
-
-                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                    <h4>Configuration Options:</h4>
+                <div class="features__details">
+                    <h3>Tab Component Features</h3>
                     <ul>
-                        <li><code>data-scroll-threshold="100"</code> - Pixels to scroll before hiding/showing</li>
-                        <li><code>data-overlay-threshold="150"</code> - Pixels to scroll before overlay effect</li>
-                        <li><code>data-scrollhide-target="#element"</code> - Target different element (optional)</li>
-                        <li><code>data-scrolled-class="custom-hide"</code> - Custom CSS class for hidden state</li>
+                        <li><strong>Keyboard Navigation:</strong> Arrow keys, Home, End, Enter, and Escape support</li>
+                        <li><strong>Screen Reader Support:</strong> Full ARIA implementation with announcements</li>
+                        <li>
+                            <strong>Progressive Enhancement:</strong> Works with standard HTML, enhanced with JavaScript
+                        </li>
+                        <li><strong>Smooth Transitions:</strong> CSS transitions with configurable timing</li>
                     </ul>
                 </div>
-            </div>
+            </section>
 
-            <h3>Scroll Reveal Animations</h3>
-            <p>Elements that animate into view when scrolled into the viewport:</p>
+            <section class="demo__section" data-component="demo-section">
+                <h2>Toggle Components</h2>
+                <p>Flexible toggle functionality for dropdowns, accordions, and interactive UI elements:</p>
 
-            <div data-scrollreveal
-                 data-reveal-threshold="0.3"
-                 data-reveal-delay="100">
-                <div class="scrollreveal">
-                    <h4>Single Reveal Animation</h4>
-                    <p>This content block reveals with a fade and slide-up animation when 30% of it enters the viewport.</p>
-                </div>
-            </div>
-
-            <div data-scrollreveal
-                 data-reveal-stagger="200"
-                 data-reveal-threshold="0.2">
-                <h4>Staggered Reveal Animation</h4>
-                <p>These items reveal one after another with a 200ms stagger delay:</p>
-                <div class="stagger">
-                    <div data-scrollreveal-item class="stagger__item">
-                        <h5>Item 1</h5>
-                        <p>First to appear</p>
-                    </div>
-                    <div data-scrollreveal-item class="stagger__item">
-                        <h5>Item 2</h5>
-                        <p>Second to appear</p>
-                    </div>
-                    <div data-scrollreveal-item class="stagger__item">
-                        <h5>Item 3</h5>
-                        <p>Third to appear</p>
-                    </div>
-                    <div data-scrollreveal-item class="stagger__item">
-                        <h5>Item 4</h5>
-                        <p>Fourth to appear</p>
-                    </div>
-                </div>
-            </div>
-
-            <div data-scrollreveal
-                 data-reveal-once="false"
-                 data-scrollreveal-class="fade-slide-up">
-                <div data-scrollreveal-item class="scrollreveal--css">
-                    <h4>CSS Animation Reveal</h4>
-                    <p>This uses a custom CSS class for animation and will re-animate each time it enters the viewport (data-reveal-once="false").</p>
-                    <p><strong>Animation:</strong> Fades in with slide-up and scale effect using pure CSS keyframes.</p>
-                </div>
-            </div>
-
-            <div data-scrollreveal
-                 data-reveal-once="false"
-                 data-scrollreveal-class="bounce-in"
-                 data-reveal-delay="500">
-                <div data-scrollreveal-item class="scrollreveal--css">
-                    <h4>Bouncy CSS Animation</h4>
-                    <p>This demonstrates a different CSS animation with a bounce effect and custom threshold.</p>
-                    <p><strong>Animation:</strong> Bounces in with elastic easing when 20% visible.</p>
-                </div>
-            </div>
-
-            <div class="features__details">
-                <h3>Scroll Component Features</h3>
-                <ul>
-                    <li><strong>Scrollhide:</strong> Direction-aware hiding with overlay effects and configurable thresholds</li>
-                    <li><strong>Scrollreveal:</strong> Intersection Observer-based animations with stagger support</li>
-                    <li><strong>Performance Optimized:</strong> RequestAnimationFrame and passive event listeners</li>
-                    <li><strong>Flexible Animation:</strong> CSS classes or JS-based transitions via TransitionManager</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Enhanced Form Controls</h2>
-            <p>Progressive enhancement for form interactions and validation:</p>
-
-            <form class="form--enhanced" data-enhanced-form>
-                <div class="form__grid">
-                    <div class="form__field">
-                        <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" required
-                               data-validate="username"
-                               placeholder="Enter username">
-                        <div class="form__help">Must be 3-20 characters, letters and numbers only</div>
-                    </div>
-
-                    <div class="form__field">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required
-                               data-validate="email"
-                               placeholder="your@email.com">
-                        <div class="form__help">We'll never share your email</div>
-                    </div>
-
-                    <div class="form__field">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required
-                               data-validate="password"
-                               minlength="8">
-                        <div class="form__help">Minimum 8 characters</div>
-                    </div>
-
-                    <div class="form__field">
-                        <label for="country-form">Country:</label>
-                        <p-select name="country" id="country-form" placeholder="Select your country">
-                            <option value="">-- Choose Country --</option>
-                            <option value="us">United States</option>
-                            <option value="ca">Canada</option>
-                            <option value="uk">United Kingdom</option>
-                            <option value="de">Germany</option>
-                            <option value="fr">France</option>
-                            <option value="jp">Japan</option>
-                            <option value="au">Australia</option>
-                        </p-select>
-                    </div>
-
-                    <div class="form__field">
-                        <label for="interests">Interests:</label>
-                        <p-select name="interests" id="interests" placeholder="Select interests">
-                            <optgroup label="Technology">
-                                <option value="web-dev">Web Development</option>
-                                <option value="mobile-dev">Mobile Development</option>
-                                <option value="data-science">Data Science</option>
-                            </optgroup>
-                            <optgroup label="Design">
-                                <option value="ui-design">UI Design</option>
-                                <option value="ux-design">UX Design</option>
-                                <option value="graphic-design">Graphic Design</option>
-                            </optgroup>
-                        </p-select>
-                    </div>
-
-                    <div class="form__field form__field--full">
-                        <label for="bio">Bio:</label>
-                        <textarea id="bio" name="bio" rows="4"
-                                  placeholder="Tell us about yourself..."
-                                  data-validate="length"
-                                  data-max-length="500"></textarea>
-                        <div class="form__help">Maximum 500 characters</div>
-                    </div>
-
-                    <div class="form__field form__field--full">
-                        <label class="checkbox">
-                            <input type="checkbox" name="newsletter" value="yes">
-                            <span class="checkbox__custom"></span>
-                            Subscribe to newsletter
-                        </label>
-                    </div>
-
-                    <div class="form__field form__field--full">
-                        <label class="checkbox">
-                            <input type="checkbox" name="terms" required>
-                            <span class="checkbox__custom"></span>
-                            I agree to the <a href="#" data-modal data-modal-target="#terms-modal">Terms of Service</a>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form__actions">
-                    <button type="button" class="button button--secondary">Cancel</button>
-                    <button type="submit" class="button button--primary">Create Account</button>
-                </div>
-            </form>
-
-            <div class="features__details">
-                <h3>Form Enhancement Features</h3>
-                <ul>
-                    <li><strong>Real-time Validation:</strong> Immediate feedback on field changes</li>
-                    <li><strong>Accessible Errors:</strong> Screen reader announcements and ARIA associations</li>
-                    <li><strong>Custom Controls:</strong> Enhanced select, checkbox, and input styling</li>
-                    <li><strong>Progressive Enhancement:</strong> Works without JavaScript, enhanced with it</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="demo__section" data-component="demo-section">
-            <h2>Interactive Component Events</h2>
-            <p>Monitor real-time events from interactive components:</p>
-
-            <div id="interactive-events" class="event__log">
-                <div class="event__log-header">
-                    <strong>Interactive Component Events</strong>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button data-event-action="clear" class="btn__small">Clear</button>
-                        <button data-event-action="export" class="btn__small">Export</button>
-                    </div>
-                </div>
-                <div class="event__log-content" data-event-content style="max-height: 300px; overflow-y: auto;">
-                    <div class="event__log-item">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <strong>page:loaded</strong>
-                                <pre>{"page": "/interactive", "components": ["tabs", "toggle", "scrollhide", "scrollreveal", "forms"]}</pre>
+                <div class="toggles__demo">
+                    <h3>Dropdown Menus</h3>
+                    <div class="button__group">
+                        <div class="dropdown__container">
+                            <button
+                                data-toggle
+                                data-toggle-target="#dropdown-menu-1"
+                                data-toggle-capture="true"
+                                class="btn btn--primary"
+                            >
+                                File Menu
+                            </button>
+                            <div id="dropdown-menu-1" class="dropdown__menu">
+                                <a href="#" class="dropdown__item">New File</a>
+                                <a href="#" class="dropdown__item">Open File</a>
+                                <a href="#" class="dropdown__item">Save</a>
+                                <hr class="dropdown__divider" />
+                                <a href="#" class="dropdown__item">Exit</a>
                             </div>
-                            <small style="color: #999; margin-left: 1rem;">Page load</small>
+                        </div>
+
+                        <div style="position: relative">
+                            <button
+                                data-toggle
+                                data-toggle-target="#dropdown-menu-2"
+                                data-toggle-capture="true"
+                                class="btn btn--secondary"
+                            >
+                                Edit Menu
+                            </button>
+                            <div id="dropdown-menu-2" class="dropdown__menu">
+                                <a href="#" class="dropdown__item">Undo</a>
+                                <a href="#" class="dropdown__item">Redo</a>
+                                <hr class="dropdown__divider" />
+                                <a href="#" class="dropdown__item">Cut</a>
+                                <a href="#" class="dropdown__item">Copy</a>
+                                <a href="#" class="dropdown__item">Paste</a>
+                            </div>
+                        </div>
+
+                        <div style="position: relative">
+                            <button
+                                data-toggle
+                                data-toggle-target="#dropdown-menu-3"
+                                data-toggle-capture="true"
+                                class="btn btn--accent"
+                            >
+                                View Menu
+                            </button>
+                            <div id="dropdown-menu-3" class="dropdown__menu">
+                                <a href="#" class="dropdown__item">Zoom In</a>
+                                <a href="#" class="dropdown__item">Zoom Out</a>
+                                <a href="#" class="dropdown__item">Full Screen</a>
+                                <hr class="dropdown__divider" />
+                                <a href="#" class="dropdown__item">Developer Tools</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Accordion Panels</h3>
+                    <div class="accordion">
+                        <div class="accordion__item">
+                            <button
+                                data-toggle
+                                data-toggle-target="#accordion-panel-1"
+                                class="accordion__trigger"
+                                aria-expanded="false"
+                            >
+                                Getting Started
+                            </button>
+                            <div id="accordion-panel-1" class="accordion__panel">
+                                <div class="accordion__content">
+                                    <p>Learn how to integrate the Enhancement Framework into your project:</p>
+                                    <ol>
+                                        <li>Install the framework via npm or download the built files</li>
+                                        <li>Import the ComponentRegistry and core managers</li>
+                                        <li>Define your component registry with selectors and loaders</li>
+                                        <li>Initialize the PageManager and RouterManager</li>
+                                        <li>Call scanAndMount() to enhance existing content</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion__item">
+                            <button
+                                data-toggle
+                                data-toggle-target="#accordion-panel-2"
+                                class="accordion__trigger"
+                                aria-expanded="false"
+                            >
+                                Component Development
+                            </button>
+                            <div id="accordion-panel-2" class="accordion__panel">
+                                <div class="accordion__content">
+                                    <p>Creating custom components is straightforward:</p>
+                                    <ul>
+                                        <li>Extend BaseComponent for consistent lifecycle management</li>
+                                        <li>Implement _init(element) for element-specific setup</li>
+                                        <li>Use this._getDataAttr() for configuration</li>
+                                        <li>Emit events via this.eventBus for monitoring</li>
+                                        <li>Implement proper cleanup in state.cleanup()</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion__item">
+                            <button
+                                data-toggle
+                                data-toggle-target="#accordion-panel-3"
+                                class="accordion__trigger"
+                                aria-expanded="false"
+                            >
+                                Best Practices
+                            </button>
+                            <div id="accordion-panel-3" class="accordion__panel">
+                                <div class="accordion__content">
+                                    <p>Follow these guidelines for optimal performance:</p>
+                                    <ul>
+                                        <li>Use data attributes for configuration over JavaScript options</li>
+                                        <li>Implement progressive enhancement - HTML first, JavaScript second</li>
+                                        <li>Emit meaningful events for debugging and monitoring</li>
+                                        <li>Handle errors gracefully with fallback behavior</li>
+                                        <li>Test without JavaScript to ensure base functionality works</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Persistent Toggles</h3>
+                    <div class="toggles__persistent">
+                        <button data-toggle data-toggle-target="#sidebar-panel" class="btn btn--outline">
+                            Toggle Sidebar
+                        </button>
+                        <div id="sidebar-panel" data-toggle-manual="true" class="sidebar">
+                            <h4>Persistent Sidebar</h4>
+                            <p>
+                                This panel has data-toggle-manual="true" so it won't auto-close when clicking outside.
+                            </p>
+                            <p>This is useful for:</p>
+                            <ul>
+                                <li>Navigation sidebars</li>
+                                <li>Tool panels</li>
+                                <li>Settings panels</li>
+                                <li>Any UI that should stay open</li>
+                            </ul>
+                            <button data-toggle data-toggle-target="#sidebar-panel" class="btn btn--secondary">
+                                Close Sidebar
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Add some content to demonstrate scroll effects -->
-        <section class="demo__section" style="margin-bottom: 100vh;">
-            <h2>Scroll Demonstration Area</h2>
-            <p>This extra content allows you to scroll and see the scroll-hide navigation in action. The reveal animations above will trigger as you scroll back up.</p>
-            <div style="height: 50vh; background: linear-gradient(45deg, #f0f9ff, #e0f2fe); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                <div style="text-align: center;">
-                    <h3>Scroll Demo Content</h3>
-                    <p>Keep scrolling to test the navigation hide behavior!</p>
+                <div class="features__details">
+                    <h3>Toggle Component Features</h3>
+                    <ul>
+                        <li>
+                            <strong>Multiple Modes:</strong> Dropdowns with outside-click, accordions, persistent panels
+                        </li>
+                        <li><strong>Accessibility:</strong> ARIA states, keyboard navigation, focus management</li>
+                        <li><strong>Event Integration:</strong> Real-time state tracking and debugging</li>
+                        <li>
+                            <strong>Flexible Configuration:</strong> Data attributes for capture, manual, and animation
+                            settings
+                        </li>
+                    </ul>
                 </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Scroll-Responsive Components</h2>
+                <p>Interactive behaviors triggered by scroll position and direction:</p>
+
+                <h3>Scroll Hide Navigation</h3>
+                <p>A demonstration navbar that hides when scrolling down and shows when scrolling up:</p>
+
+                <div class="navbar__spacer"></div>
+                <nav data-scrollhide data-scroll-threshold="100" data-overlay-threshold="150" class="navbar--demo">
+                    <div>Demo Navigation Bar - Scroll down to hide, scroll up to show</div>
+                </nav>
+
+                <div style="margin: 2rem 0">
+                    <p>
+                        <strong>Instructions:</strong> Scroll down on this page to see the demo navigation bar hide.
+                        Scroll back up to see it appear again. The bar also gets a backdrop blur effect when scrolled
+                        past the overlay threshold.
+                    </p>
+
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0">
+                        <h4>Configuration Options:</h4>
+                        <ul>
+                            <li><code>data-scroll-threshold="100"</code> - Pixels to scroll before hiding/showing</li>
+                            <li><code>data-overlay-threshold="150"</code> - Pixels to scroll before overlay effect</li>
+                            <li>
+                                <code>data-scrollhide-target="#element"</code> - Target different element (optional)
+                            </li>
+                            <li><code>data-scrolled-class="custom-hide"</code> - Custom CSS class for hidden state</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Scroll Reveal Animations</h3>
+                <p>Elements that animate into view when scrolled into the viewport:</p>
+
+                <div data-scrollreveal data-reveal-threshold="0.3" data-reveal-delay="100">
+                    <div class="scrollreveal">
+                        <h4>Single Reveal Animation</h4>
+                        <p>
+                            This content block reveals with a fade and slide-up animation when 30% of it enters the
+                            viewport.
+                        </p>
+                    </div>
+                </div>
+
+                <div data-scrollreveal data-reveal-stagger="200" data-reveal-threshold="0.2">
+                    <h4>Staggered Reveal Animation</h4>
+                    <p>These items reveal one after another with a 200ms stagger delay:</p>
+                    <div class="stagger">
+                        <div data-scrollreveal-item class="stagger__item">
+                            <h5>Item 1</h5>
+                            <p>First to appear</p>
+                        </div>
+                        <div data-scrollreveal-item class="stagger__item">
+                            <h5>Item 2</h5>
+                            <p>Second to appear</p>
+                        </div>
+                        <div data-scrollreveal-item class="stagger__item">
+                            <h5>Item 3</h5>
+                            <p>Third to appear</p>
+                        </div>
+                        <div data-scrollreveal-item class="stagger__item">
+                            <h5>Item 4</h5>
+                            <p>Fourth to appear</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-scrollreveal data-reveal-once="false" data-scrollreveal-class="fade-slide-up">
+                    <div data-scrollreveal-item class="scrollreveal--css">
+                        <h4>CSS Animation Reveal</h4>
+                        <p>
+                            This uses a custom CSS class for animation and will re-animate each time it enters the
+                            viewport (data-reveal-once="false").
+                        </p>
+                        <p>
+                            <strong>Animation:</strong> Fades in with slide-up and scale effect using pure CSS
+                            keyframes.
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    data-scrollreveal
+                    data-reveal-once="false"
+                    data-scrollreveal-class="bounce-in"
+                    data-reveal-delay="500"
+                >
+                    <div data-scrollreveal-item class="scrollreveal--css">
+                        <h4>Bouncy CSS Animation</h4>
+                        <p>This demonstrates a different CSS animation with a bounce effect and custom threshold.</p>
+                        <p><strong>Animation:</strong> Bounces in with elastic easing when 20% visible.</p>
+                    </div>
+                </div>
+
+                <div class="features__details">
+                    <h3>Scroll Component Features</h3>
+                    <ul>
+                        <li>
+                            <strong>Scrollhide:</strong> Direction-aware hiding with overlay effects and configurable
+                            thresholds
+                        </li>
+                        <li>
+                            <strong>Scrollreveal:</strong> Intersection Observer-based animations with stagger support
+                        </li>
+                        <li>
+                            <strong>Performance Optimized:</strong> RequestAnimationFrame and passive event listeners
+                        </li>
+                        <li>
+                            <strong>Flexible Animation:</strong> CSS classes or JS-based transitions via
+                            TransitionManager
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Enhanced Form Controls</h2>
+                <p>Progressive enhancement for form interactions and validation:</p>
+
+                <form class="form--enhanced" data-enhanced-form>
+                    <div class="form__grid">
+                        <div class="form__element">
+                            <label class="form__label required" for="username">Username:</label>
+                            <div class="form__field">
+                                <input
+                                    class="form__control"
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    required
+                                    data-validate="username"
+                                    placeholder="Enter username"
+                                />
+                                <div class="form__help">Must be 3-20 characters, letters and numbers only</div>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label required" for="email">Email:</label>
+                            <div class="form__field">
+                                <input
+                                    class="form__control"
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    data-validate="email"
+                                    placeholder="your@email.com"
+                                />
+                                <div class="form__help">We'll never share your email</div>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label required" for="password">Password:</label>
+                            <div class="form__field">
+                                <input
+                                    class="form__control"
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    required
+                                    data-validate="password"
+                                    minlength="8"
+                                />
+                                <div class="form__help">Minimum 8 characters</div>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="country-form">Country:</label>
+                            <div class="form__field">
+                                <p-select
+                                    class="form__control"
+                                    name="country"
+                                    id="country-form"
+                                    placeholder="Select your country"
+                                    theme="inherit"
+                                >
+                                    <option value="">-- Choose Country --</option>
+                                    <option value="us">United States</option>
+                                    <option value="ca">Canada</option>
+                                    <option value="uk">United Kingdom</option>
+                                    <option value="de">Germany</option>
+                                    <option value="fr">France</option>
+                                    <option value="jp">Japan</option>
+                                    <option value="au">Australia</option>
+                                </p-select>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="interests">Interests:</label>
+                            <div class="form__field">
+                                <p-select
+                                    class="form__control"
+                                    name="interests"
+                                    id="interests"
+                                    placeholder="Select interests"
+                                    theme="inherit"
+                                >
+                                    <optgroup label="Technology">
+                                        <option value="web-dev">Web Development</option>
+                                        <option value="mobile-dev">Mobile Development</option>
+                                        <option value="data-science">Data Science</option>
+                                    </optgroup>
+                                    <optgroup label="Design">
+                                        <option value="ui-design">UI Design</option>
+                                        <option value="ux-design">UX Design</option>
+                                        <option value="graphic-design">Graphic Design</option>
+                                    </optgroup>
+                                </p-select>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="bio">Bio:</label>
+                            <div class="form__field">
+                                <textarea
+                                    class="form__control form__control--textarea"
+                                    id="bio"
+                                    name="bio"
+                                    rows="4"
+                                    placeholder="Tell us about yourself..."
+                                    data-validate="length"
+                                    data-max-length="500"
+                                ></textarea>
+                                <div class="form__help">Maximum 500 characters</div>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <div class="form__field form__field--checkbox">
+                                <input
+                                    class="form__control form__control--checkbox"
+                                    type="checkbox"
+                                    id="newsletter"
+                                    name="newsletter"
+                                    value="yes"
+                                />
+                                <label class="form__label" for="newsletter">Subscribe to newsletter</label>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <div class="form__field form__field--checkbox">
+                                <input
+                                    class="form__control form__control--checkbox"
+                                    type="checkbox"
+                                    id="terms"
+                                    name="terms"
+                                    required
+                                />
+                                <label class="form__label required" for="terms"
+                                    >I agree to the
+                                    <a href="#" data-modal data-modal-target="#terms-modal">Terms of Service</a></label
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form__actions">
+                        <button type="button" class="btn btn--secondary">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Create Account</button>
+                    </div>
+                </form>
+
+                <div class="features__details">
+                    <h3>Form Enhancement Features</h3>
+                    <ul>
+                        <li><strong>Real-time Validation:</strong> Immediate feedback on field changes</li>
+                        <li><strong>Accessible Errors:</strong> Screen reader announcements and ARIA associations</li>
+                        <li><strong>Custom Controls:</strong> Enhanced select, checkbox, and input styling</li>
+                        <li><strong>Progressive Enhancement:</strong> Works without JavaScript, enhanced with it</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>Interactive Component Events</h2>
+                <p>Monitor real-time events from interactive components:</p>
+
+                <div id="interactive-events" class="event__log">
+                    <div class="event__log-header">
+                        <strong>Interactive Component Events</strong>
+                        <div style="display: flex; gap: 0.5rem">
+                            <button data-event-action="clear" class="btn btn--xs">Clear</button>
+                            <button data-event-action="export" class="btn btn--xs">Export</button>
+                        </div>
+                    </div>
+                    <div class="event__log-content" data-event-content style="max-height: 300px; overflow-y: auto">
+                        <div class="event__log-item">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start">
+                                <div>
+                                    <strong>page:loaded</strong>
+                                    <pre>
+{"page": "/interactive", "components": ["tabs", "toggle", "scrollhide", "scrollreveal", "forms"]}</pre
+                                    >
+                                </div>
+                                <small style="color: #999; margin-left: 1rem">Page load</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add some content to demonstrate scroll effects -->
+            <section class="demo__section" style="margin-bottom: 100vh">
+                <h2>Scroll Demonstration Area</h2>
+                <p>
+                    This extra content allows you to scroll and see the scroll-hide navigation in action. The reveal
+                    animations above will trigger as you scroll back up.
+                </p>
+                <div
+                    style="
+                        height: 50vh;
+                        background: linear-gradient(45deg, #f0f9ff, #e0f2fe);
+                        border-radius: 8px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    "
+                >
+                    <div style="text-align: center">
+                        <h3>Scroll Demo Content</h3>
+                        <p>Keep scrolling to test the navigation hide behavior!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Terms Modal -->
+        <p-modal id="terms-modal" data-modal-size="lg" data-modal-closable="true">
+            <h2 slot="title">Terms of Service</h2>
+            <div>
+                <h3>Enhancement Framework Demo Terms</h3>
+                <p>This is a demonstration of the Enhancement Framework's modal and form integration capabilities.</p>
+
+                <h4>Component Usage</h4>
+                <p>By using this demo, you acknowledge that:</p>
+                <ul>
+                    <li>This is a demonstration environment for showcasing framework capabilities</li>
+                    <li>No actual user data is collected or stored</li>
+                    <li>The framework is provided as-is for educational and evaluation purposes</li>
+                    <li>Performance metrics are collected locally for demonstration only</li>
+                </ul>
+
+                <h4>Framework Features Demonstrated</h4>
+                <ul>
+                    <li>Modal integration with form controls</li>
+                    <li>Accessible form validation and feedback</li>
+                    <li>Progressive enhancement patterns</li>
+                    <li>Event-driven component communication</li>
+                </ul>
             </div>
-        </section>
-    </main>
+            <div slot="actions">
+                <button class="btn btn--secondary" data-modal-close>Close</button>
+                <button class="btn btn--primary" data-modal-close>Accept</button>
+            </div>
+        </p-modal>
 
-    <!-- Terms Modal -->
-    <p-modal id="terms-modal" data-modal-size="large" data-modal-closable="true">
-        <h2 slot="title">Terms of Service</h2>
-        <div>
-            <h3>Enhancement Framework Demo Terms</h3>
-            <p>This is a demonstration of the Enhancement Framework's modal and form integration capabilities.</p>
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
 
-            <h4>Component Usage</h4>
-            <p>By using this demo, you acknowledge that:</p>
-            <ul>
-                <li>This is a demonstration environment for showcasing framework capabilities</li>
-                <li>No actual user data is collected or stored</li>
-                <li>The framework is provided as-is for educational and evaluation purposes</li>
-                <li>Performance metrics are collected locally for demonstration only</li>
-            </ul>
-
-            <h4>Framework Features Demonstrated</h4>
-            <ul>
-                <li>Modal integration with form controls</li>
-                <li>Accessible form validation and feedback</li>
-                <li>Progressive enhancement patterns</li>
-                <li>Event-driven component communication</li>
-            </ul>
-        </div>
-        <div slot="actions">
-            <button class="modal__button modal__button--secondary" data-modal-close>Close</button>
-            <button class="modal__button modal__button--primary" data-modal-close>Accept</button>
-        </div>
-    </p-modal>
-
-    <!-- Toast container -->
-    <p-toasts placement="top-right"></p-toasts>
-
-    <!-- Load the framework -->
-    <script type="module" src="dist/parallelogram-demo.min.js"></script>
-</body>
+        <!-- Load the framework -->
+        <script type="module" src="dist/parallelogram-demo.min.js"></script>
+    </body>
 </html>

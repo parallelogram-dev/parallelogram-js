@@ -1,70 +1,47 @@
-// Features Component
+/*  Features Component */
 @use '../includes/common';
 .features {
-    &__grid {
-        @extend %grid_common;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin: 3rem 0;
+  &__grid {
+    @extend %grid_responsive;
+    gap: 2rem;
+    @extend %demo_section_spacing;
+  }
+
+  &__item {
+    @extend %panel_interactive;
+    border-radius: 12px;
+
+    h3 {
+      @extend %section_title;
     }
-    
-    &__item {
-        padding: 2rem;
-        background: var(--demo-panel-bg, white);
-        color: var(--demo-text, #1f2937);
-        border: 1px solid var(--demo-border, #e2e8f0);
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        
-        &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        h3 {
-            color: var(--demo-text, #1f2937);
-            margin-bottom: 1rem;
-        }
-        
-        p {
-            color: var(--demo-text-muted, #6b7280);
-            margin-bottom: 1.5rem;
-        }
+
+    p {
+      color: var(--demo-text-muted, #6b7280);
+      margin-bottom: 1.5rem;
     }
-    
-    &__link {
-        color: var(--demo-accent, #0ea5e9);
-        text-decoration: none;
-        font-weight: 500;
-        
-        &:hover {
-            text-decoration: underline;
-        }
+  }
+
+  &__link {
+    color: var(--demo-accent, #0ea5e9);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
     }
-    
-    &__details {
-        @extend %panel_surface;
-        margin-top: 2rem;
-        padding: 1.5rem;
-        
-        h3 {
-            margin-top: 0;
-            color: var(--demo-text, #1f2937);
-        }
-        
-        ul {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-            
-            li {
-                margin-bottom: 0.5rem;
-                color: var(--demo-text-muted, #6b7280);
-                
-                strong {
-                    color: var(--demo-text, #1f2937);
-                }
-            }
-        }
+  }
+
+  &__details {
+    @extend %panel_surface;
+    margin-top: 2rem;
+    padding: 1.5rem;
+
+    h3 {
+      @extend %section_title;
     }
+
+    ul {
+      @extend %feature_list;
+    }
+  }
 }

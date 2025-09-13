@@ -33,384 +33,411 @@ import { BaseComponent } from '@peptolab/parallelogram';
  *   .forEach(element => scrollhide.mount(element));
  */
 export default class Scrollhide extends BaseComponent {
-    /**
-     * Default configuration for scrollhide component
-     * @returns {Object} Default config
-     */
-    static get defaults() {
-        return {
-            scrollThreshold: 50,     // Pixels scrolled before hiding/showing
-            overlayThreshold: 100,   // Pixels scrolled before adding overlay class
-            scrolledClass: 'scrollhide',      // Class added when element should hide
-            overlayClass: 'scrolloverlay',    // Class added for overlay effect
-            debounceMs: 16,          // Scroll event debouncing (60fps)
-            passive: true            // Use passive scroll listeners
-        };
+  /**
+   * Default configuration for scrollhide component
+   * @returns {Object} Default config
+   */
+  static get defaults() {
+    return {
+      scrollThreshold: 50, // Pixels scrolled before hiding/showing
+      overlayThreshold: 100, // Pixels scrolled before adding overlay class
+      scrolledClass: 'scrollhide', // Class added when element should hide
+      overlayClass: 'scrolloverlay', // Class added for overlay effect
+      debounceMs: 16, // Scroll event debouncing (60fps)
+      passive: true, // Use passive scroll listeners
+    };
+  }
+
+  /**
+   * Initialize the scrollhide functionality on an element
+   * @param {HTMLElement} element - Element with data-scrollhide attribute
+   * @returns {Object} State object for this element
+   */
+  _init(element) {
+    const state = super._init(element);
+
+    // Get target element (could be self or specified target)
+    const targetSelector = this._getDataAttr(element, 'scrollhide-target');
+    const target = targetSelector ? document.querySelector(targetSelector) : element;
+
+    if (!target) {
+      this.logger?.warn('Scrollhide: Target element not found', {
+        selector: targetSelector,
+        element,
+      });
+      return state;
     }
 
-    /**
-     * Initialize the scrollhide functionality on an element
-     * @param {HTMLElement} element - Element with data-scrollhide attribute
-     * @returns {Object} State object for this element
-     */
-    _init(element) {
-        const state = super._init(element);
+    // Get configuration from data attributes
+    const scrollThreshold = this._getDataAttr(
+      element,
+      'scroll-threshold',
+      Scrollhide.defaults.scrollThreshold
+    );
+    const overlayThreshold = this._getDataAttr(
+      element,
+      'overlay-threshold',
+      Scrollhide.defaults.overlayThreshold
+    );
+    const scrolledClass = this._getDataAttr(
+      element,
+      'scrolled-class',
+      Scrollhide.defaults.scrolledClass
+    );
+    const overlayClass = this._getDataAttr(
+      element,
+      'overlay-class',
+      Scrollhide.defaults.overlayClass
+    );
+    const debounceMs = this._getDataAttr(element, 'debounce', Scrollhide.defaults.debounceMs);
 
-        // Get target element (could be self or specified target)
-        const targetSelector = this._getDataAttr(element, 'scrollhide-target');
-        const target = targetSelector ? document.querySelector(targetSelector) : element;
+    // Store state
+    state.target = target;
+    state.targetSelector = targetSelector;
+    state.scrollThreshold = parseInt(scrollThreshold, 10);
+    state.overlayThreshold = parseInt(overlayThreshold, 10);
+    state.scrolledClass = scrolledClass;
+    state.overlayClass = overlayClass;
+    state.currentY = 0;
+    state.lastY = 0;
+    state.ticking = false;
 
-        if (!target) {
-            this.logger?.warn('Scrollhide: Target element not found', {
-                selector: targetSelector,
-                element
-            });
-            return state;
-        }
+    // Create throttled scroll handler
+    const scrollHandler = this._createScrollHandler(element, state);
+    const throttledHandler = this._throttle(scrollHandler, debounceMs);
 
-        // Get configuration from data attributes
-        const scrollThreshold = this._getDataAttr(element, 'scroll-threshold', Scrollhide.defaults.scrollThreshold);
-        const overlayThreshold = this._getDataAttr(element, 'overlay-threshold', Scrollhide.defaults.overlayThreshold);
-        const scrolledClass = this._getDataAttr(element, 'scrolled-class', Scrollhide.defaults.scrolledClass);
-        const overlayClass = this._getDataAttr(element, 'overlay-class', Scrollhide.defaults.overlayClass);
-        const debounceMs = this._getDataAttr(element, 'debounce', Scrollhide.defaults.debounceMs);
+    // Set up scroll listener
+    window.addEventListener('scroll', throttledHandler, {
+      passive: Scrollhide.defaults.passive,
+    });
 
-        // Store state
-        state.target = target;
-        state.targetSelector = targetSelector;
-        state.scrollThreshold = parseInt(scrollThreshold, 10);
-        state.overlayThreshold = parseInt(overlayThreshold, 10);
-        state.scrolledClass = scrolledClass;
-        state.overlayClass = overlayClass;
-        state.currentY = 0;
-        state.lastY = 0;
-        state.ticking = false;
+    // Store handler for cleanup
+    state.scrollHandler = throttledHandler;
 
-        // Create throttled scroll handler
-        const scrollHandler = this._createScrollHandler(element, state);
-        const throttledHandler = this._throttle(scrollHandler, debounceMs);
+    // Setup cleanup
+    const originalCleanup = state.cleanup;
+    state.cleanup = () => {
+      window.removeEventListener('scroll', state.scrollHandler);
+      if (state.animationFrame) {
+        cancelAnimationFrame(state.animationFrame);
+      }
+      originalCleanup();
+    };
 
-        // Set up scroll listener
-        window.addEventListener('scroll', throttledHandler, {
-            passive: Scrollhide.defaults.passive
+    // Initial position check
+    this._updateElementState(element, state);
+
+    // Mark as enhanced for status tracking
+    element.setAttribute('data-scrollhide-enhanced', 'true');
+
+    this.eventBus?.emit('scrollhide:mount', {
+      element,
+      target,
+      scrollThreshold: state.scrollThreshold,
+      overlayThreshold: state.overlayThreshold,
+      timestamp: performance.now(),
+    });
+
+    this.logger?.info('Scrollhide initialized', {
+      element,
+      target: targetSelector || 'self',
+      scrollThreshold: state.scrollThreshold,
+      overlayThreshold: state.overlayThreshold,
+    });
+
+    return state;
+  }
+
+  /**
+   * Create scroll event handler for an element
+   * @private
+   * @param {HTMLElement} element - Element with scrollhide
+   * @param {Object} state - Component state
+   * @returns {Function} Scroll handler function
+   */
+  _createScrollHandler(element, state) {
+    return () => {
+      if (!state.ticking) {
+        state.animationFrame = requestAnimationFrame(() => {
+          this._onScroll(element, state);
+          state.ticking = false;
         });
+        state.ticking = true;
+      }
+    };
+  }
 
-        // Store handler for cleanup
-        state.scrollHandler = throttledHandler;
+  /**
+   * Handle scroll events
+   * @private
+   * @param {HTMLElement} element - Element with scrollhide
+   * @param {Object} state - Component state
+   */
+  _onScroll(element, state) {
+    state.currentY = window.scrollY;
 
-        // Setup cleanup
-        const originalCleanup = state.cleanup;
-        state.cleanup = () => {
-            window.removeEventListener('scroll', state.scrollHandler);
-            if (state.animationFrame) {
-                cancelAnimationFrame(state.animationFrame);
-            }
-            originalCleanup();
-        };
+    this._updateElementState(element, state);
 
-        // Initial position check
-        this._updateElementState(element, state);
+    // Update last position for next comparison
+    state.lastY = state.currentY;
+  }
 
-        // Mark as enhanced for status tracking
-        element.setAttribute('data-scrollhide-enhanced', 'true');
+  /**
+   * Update element state based on scroll position
+   * @private
+   * @param {HTMLElement} element - Element with scrollhide
+   * @param {Object} state - Component state
+   */
+  _updateElementState(element, state) {
+    const {
+      target,
+      currentY,
+      lastY,
+      scrollThreshold,
+      overlayThreshold,
+      scrolledClass,
+      overlayClass,
+    } = state;
 
-        this.eventBus?.emit('scrollhide:mount', {
-            element,
-            target,
-            scrollThreshold: state.scrollThreshold,
-            overlayThreshold: state.overlayThreshold,
-            timestamp: performance.now()
-        });
-
-        this.logger?.info('Scrollhide initialized', {
-            element,
-            target: targetSelector || 'self',
-            scrollThreshold: state.scrollThreshold,
-            overlayThreshold: state.overlayThreshold
-        });
-
-        return state;
+    // Handle overlay class (for background/styling effects)
+    const hasOverlay = target.classList.contains(overlayClass);
+    if (currentY > overlayThreshold && !hasOverlay) {
+      target.classList.add(overlayClass);
+      this._emitStateChange(element, 'overlay-added', { scrollY: currentY });
+    } else if (currentY <= overlayThreshold && hasOverlay) {
+      target.classList.remove(overlayClass);
+      this._emitStateChange(element, 'overlay-removed', { scrollY: currentY });
     }
 
-    /**
-     * Create scroll event handler for an element
-     * @private
-     * @param {HTMLElement} element - Element with scrollhide
-     * @param {Object} state - Component state
-     * @returns {Function} Scroll handler function
-     */
-    _createScrollHandler(element, state) {
-        return () => {
-            if (!state.ticking) {
-                state.animationFrame = requestAnimationFrame(() => {
-                    this._onScroll(element, state);
-                    state.ticking = false;
-                });
-                state.ticking = true;
-            }
-        };
+    // Handle scroll hide/show behavior
+    const isHidden = target.classList.contains(scrolledClass);
+
+    // Show element when at top of page
+    if (currentY <= 0) {
+      if (isHidden) {
+        target.classList.remove(scrolledClass);
+        this._emitStateChange(element, 'shown', { scrollY: currentY, reason: 'top' });
+      }
+      return;
     }
 
-    /**
-     * Handle scroll events
-     * @private
-     * @param {HTMLElement} element - Element with scrollhide
-     * @param {Object} state - Component state
-     */
-    _onScroll(element, state) {
-        state.currentY = window.scrollY;
+    // Hide element when scrolling down past threshold
+    if (currentY > scrollThreshold && currentY > lastY && !isHidden) {
+      target.classList.add(scrolledClass);
+      this._emitStateChange(element, 'hidden', { scrollY: currentY, reason: 'scroll-down' });
+    }
+    // Show element when scrolling up
+    else if (currentY < lastY && isHidden) {
+      target.classList.remove(scrolledClass);
+      this._emitStateChange(element, 'shown', { scrollY: currentY, reason: 'scroll-up' });
+    }
+  }
 
-        this._updateElementState(element, state);
+  /**
+   * Emit state change events
+   * @private
+   * @param {HTMLElement} element - Element with scrollhide
+   * @param {string} action - Action that occurred
+   * @param {Object} data - Additional event data
+   */
+  _emitStateChange(element, action, data) {
+    const state = this.getState(element);
 
-        // Update last position for next comparison
-        state.lastY = state.currentY;
+    // DOM event
+    this._dispatch(element, `scrollhide:${action}`, {
+      target: state.target,
+      ...data,
+    });
+
+    // Framework event
+    this.eventBus?.emit(`scrollhide:${action}`, {
+      element,
+      target: state.target,
+      timestamp: performance.now(),
+      ...data,
+    });
+
+    this.logger?.debug(`Scrollhide ${action}`, {
+      element,
+      target: state.targetSelector || 'self',
+      ...data,
+    });
+  }
+
+  /**
+   * Manually show the element
+   * @param {HTMLElement} element - Element with scrollhide
+   */
+  show(element) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    state.target.classList.remove(state.scrolledClass);
+    this._emitStateChange(element, 'shown', {
+      scrollY: state.currentY,
+      reason: 'manual',
+    });
+  }
+
+  /**
+   * Manually hide the element
+   * @param {HTMLElement} element - Element with scrollhide
+   */
+  hide(element) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    state.target.classList.add(state.scrolledClass);
+    this._emitStateChange(element, 'hidden', {
+      scrollY: state.currentY,
+      reason: 'manual',
+    });
+  }
+
+  /**
+   * Toggle element visibility
+   * @param {HTMLElement} element - Element with scrollhide
+   */
+  toggle(element) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    if (this.isHidden(element)) {
+      this.show(element);
+    } else {
+      this.hide(element);
+    }
+  }
+
+  /**
+   * Check if element is currently hidden
+   * @param {HTMLElement} element - Element with scrollhide
+   * @returns {boolean} Whether the element is hidden
+   */
+  isHidden(element) {
+    const state = this.getState(element);
+    return state ? state.target.classList.contains(state.scrolledClass) : false;
+  }
+
+  /**
+   * Check if element has overlay effect active
+   * @param {HTMLElement} element - Element with scrollhide
+   * @returns {boolean} Whether the overlay is active
+   */
+  hasOverlay(element) {
+    const state = this.getState(element);
+    return state ? state.target.classList.contains(state.overlayClass) : false;
+  }
+
+  /**
+   * Get current scroll position
+   * @param {HTMLElement} element - Element with scrollhide
+   * @returns {number} Current scroll Y position
+   */
+  getScrollPosition(element) {
+    const state = this.getState(element);
+    return state ? state.currentY : window.scrollY;
+  }
+
+  /**
+   * Update thresholds dynamically
+   * @param {HTMLElement} element - Element with scrollhide
+   * @param {Object} options - New threshold values
+   * @param {number} [options.scrollThreshold] - New scroll threshold
+   * @param {number} [options.overlayThreshold] - New overlay threshold
+   */
+  updateThresholds(element, { scrollThreshold, overlayThreshold }) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    if (typeof scrollThreshold === 'number') {
+      state.scrollThreshold = scrollThreshold;
     }
 
-    /**
-     * Update element state based on scroll position
-     * @private
-     * @param {HTMLElement} element - Element with scrollhide
-     * @param {Object} state - Component state
-     */
-    _updateElementState(element, state) {
-        const { target, currentY, lastY, scrollThreshold, overlayThreshold, scrolledClass, overlayClass } = state;
-
-        // Handle overlay class (for background/styling effects)
-        const hasOverlay = target.classList.contains(overlayClass);
-        if (currentY > overlayThreshold && !hasOverlay) {
-            target.classList.add(overlayClass);
-            this._emitStateChange(element, 'overlay-added', { scrollY: currentY });
-        } else if (currentY <= overlayThreshold && hasOverlay) {
-            target.classList.remove(overlayClass);
-            this._emitStateChange(element, 'overlay-removed', { scrollY: currentY });
-        }
-
-        // Handle scroll hide/show behavior
-        const isHidden = target.classList.contains(scrolledClass);
-
-        // Show element when at top of page
-        if (currentY <= 0) {
-            if (isHidden) {
-                target.classList.remove(scrolledClass);
-                this._emitStateChange(element, 'shown', { scrollY: currentY, reason: 'top' });
-            }
-            return;
-        }
-
-        // Hide element when scrolling down past threshold
-        if (currentY > scrollThreshold && currentY > lastY && !isHidden) {
-            target.classList.add(scrolledClass);
-            this._emitStateChange(element, 'hidden', { scrollY: currentY, reason: 'scroll-down' });
-        }
-        // Show element when scrolling up
-        else if (currentY < lastY && isHidden) {
-            target.classList.remove(scrolledClass);
-            this._emitStateChange(element, 'shown', { scrollY: currentY, reason: 'scroll-up' });
-        }
+    if (typeof overlayThreshold === 'number') {
+      state.overlayThreshold = overlayThreshold;
     }
 
-    /**
-     * Emit state change events
-     * @private
-     * @param {HTMLElement} element - Element with scrollhide
-     * @param {string} action - Action that occurred
-     * @param {Object} data - Additional event data
-     */
-    _emitStateChange(element, action, data) {
-        const state = this.getState(element);
+    // Re-evaluate current state with new thresholds
+    this._updateElementState(element, state);
 
-        // DOM event
-        this._dispatch(element, `scrollhide:${action}`, {
-            target: state.target,
-            ...data
-        });
+    this.logger?.info('Scrollhide thresholds updated', {
+      element,
+      scrollThreshold: state.scrollThreshold,
+      overlayThreshold: state.overlayThreshold,
+    });
+  }
 
-        // Framework event
-        this.eventBus?.emit(`scrollhide:${action}`, {
-            element,
-            target: state.target,
-            timestamp: performance.now(),
-            ...data
-        });
+  /**
+   * Create a throttled function
+   * @private
+   * @param {Function} func - Function to throttle
+   * @param {number} delay - Delay in milliseconds
+   * @returns {Function} Throttled function
+   */
+  _throttle(func, delay) {
+    let timeoutId = null;
+    let lastExecTime = 0;
 
-        this.logger?.debug(`Scrollhide ${action}`, {
-            element,
-            target: state.targetSelector || 'self',
-            ...data
-        });
-    }
+    return function (...args) {
+      const currentTime = Date.now();
 
-    /**
-     * Manually show the element
-     * @param {HTMLElement} element - Element with scrollhide
-     */
-    show(element) {
-        const state = this.getState(element);
-        if (!state) return;
+      if (currentTime - lastExecTime > delay) {
+        func.apply(this, args);
+        lastExecTime = currentTime;
+      } else {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(
+          () => {
+            func.apply(this, args);
+            lastExecTime = Date.now();
+          },
+          delay - (currentTime - lastExecTime)
+        );
+      }
+    };
+  }
 
-        state.target.classList.remove(state.scrolledClass);
-        this._emitStateChange(element, 'shown', {
-            scrollY: state.currentY,
-            reason: 'manual'
-        });
-    }
+  /**
+   * Get component status and statistics
+   * @returns {Object} Component status
+   */
+  getStatus() {
+    const elements = document.querySelectorAll('[data-scrollhide-enhanced="true"]');
+    let hiddenCount = 0;
+    let overlayCount = 0;
 
-    /**
-     * Manually hide the element
-     * @param {HTMLElement} element - Element with scrollhide
-     */
-    hide(element) {
-        const state = this.getState(element);
-        if (!state) return;
+    elements.forEach(element => {
+      const state = this.getState(element);
+      if (state) {
+        if (this.isHidden(element)) hiddenCount++;
+        if (this.hasOverlay(element)) overlayCount++;
+      }
+    });
 
-        state.target.classList.add(state.scrolledClass);
-        this._emitStateChange(element, 'hidden', {
-            scrollY: state.currentY,
-            reason: 'manual'
-        });
-    }
+    return {
+      totalElements: elements.length,
+      hiddenCount,
+      overlayCount,
+      currentScrollY: window.scrollY,
+      defaults: Scrollhide.defaults,
+    };
+  }
 
-    /**
-     * Toggle element visibility
-     * @param {HTMLElement} element - Element with scrollhide
-     */
-    toggle(element) {
-        const state = this.getState(element);
-        if (!state) return;
+  /**
+   * Enhance all scrollhide elements on the page
+   * @param {string} selector - CSS selector for scrollhide elements
+   * @param {Object} options - Component options
+   * @returns {Scrollhide} Component instance
+   */
+  static enhanceAll(selector = '[data-scrollhide]', options) {
+    const instance = new Scrollhide(options);
+    const elements = document.querySelectorAll(selector);
 
-        if (this.isHidden(element)) {
-            this.show(element);
-        } else {
-            this.hide(element);
-        }
-    }
+    elements.forEach(element => {
+      instance.mount(element);
+    });
 
-    /**
-     * Check if element is currently hidden
-     * @param {HTMLElement} element - Element with scrollhide
-     * @returns {boolean} Whether the element is hidden
-     */
-    isHidden(element) {
-        const state = this.getState(element);
-        return state ? state.target.classList.contains(state.scrolledClass) : false;
-    }
-
-    /**
-     * Check if element has overlay effect active
-     * @param {HTMLElement} element - Element with scrollhide
-     * @returns {boolean} Whether the overlay is active
-     */
-    hasOverlay(element) {
-        const state = this.getState(element);
-        return state ? state.target.classList.contains(state.overlayClass) : false;
-    }
-
-    /**
-     * Get current scroll position
-     * @param {HTMLElement} element - Element with scrollhide
-     * @returns {number} Current scroll Y position
-     */
-    getScrollPosition(element) {
-        const state = this.getState(element);
-        return state ? state.currentY : window.scrollY;
-    }
-
-    /**
-     * Update thresholds dynamically
-     * @param {HTMLElement} element - Element with scrollhide
-     * @param {Object} options - New threshold values
-     * @param {number} [options.scrollThreshold] - New scroll threshold
-     * @param {number} [options.overlayThreshold] - New overlay threshold
-     */
-    updateThresholds(element, { scrollThreshold, overlayThreshold }) {
-        const state = this.getState(element);
-        if (!state) return;
-
-        if (typeof scrollThreshold === 'number') {
-            state.scrollThreshold = scrollThreshold;
-        }
-
-        if (typeof overlayThreshold === 'number') {
-            state.overlayThreshold = overlayThreshold;
-        }
-
-        // Re-evaluate current state with new thresholds
-        this._updateElementState(element, state);
-
-        this.logger?.info('Scrollhide thresholds updated', {
-            element,
-            scrollThreshold: state.scrollThreshold,
-            overlayThreshold: state.overlayThreshold
-        });
-    }
-
-    /**
-     * Create a throttled function
-     * @private
-     * @param {Function} func - Function to throttle
-     * @param {number} delay - Delay in milliseconds
-     * @returns {Function} Throttled function
-     */
-    _throttle(func, delay) {
-        let timeoutId = null;
-        let lastExecTime = 0;
-
-        return function (...args) {
-            const currentTime = Date.now();
-
-            if (currentTime - lastExecTime > delay) {
-                func.apply(this, args);
-                lastExecTime = currentTime;
-            } else {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                    lastExecTime = Date.now();
-                }, delay - (currentTime - lastExecTime));
-            }
-        };
-    }
-
-    /**
-     * Get component status and statistics
-     * @returns {Object} Component status
-     */
-    getStatus() {
-        const elements = document.querySelectorAll('[data-scrollhide-enhanced="true"]');
-        let hiddenCount = 0;
-        let overlayCount = 0;
-
-        elements.forEach(element => {
-            const state = this.getState(element);
-            if (state) {
-                if (this.isHidden(element)) hiddenCount++;
-                if (this.hasOverlay(element)) overlayCount++;
-            }
-        });
-
-        return {
-            totalElements: elements.length,
-            hiddenCount,
-            overlayCount,
-            currentScrollY: window.scrollY,
-            defaults: Scrollhide.defaults
-        };
-    }
-
-    /**
-     * Enhance all scrollhide elements on the page
-     * @param {string} selector - CSS selector for scrollhide elements
-     * @param {Object} options - Component options
-     * @returns {Scrollhide} Component instance
-     */
-    static enhanceAll(selector = '[data-scrollhide]', options) {
-        const instance = new Scrollhide(options);
-        const elements = document.querySelectorAll(selector);
-
-        elements.forEach(element => {
-            instance.mount(element);
-        });
-
-        return instance;
-    }
+    return instance;
+  }
 }

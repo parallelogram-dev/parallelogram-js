@@ -1,0 +1,72 @@
+/*  Datetime Picker Demo Component Styles */
+.datetime {
+  &__demo {
+    margin: 2rem 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__label {
+    display: block;
+    font-weight: 500;
+    color: var(--demo-text, #1f2937);
+    font-size: 0.875rem;
+  }
+
+  &__help {
+    font-size: 0.75rem;
+    color: var(--demo-text-muted, #6b7280);
+    font-style: italic;
+  }
+
+  /*  Integration with p-datetime web component */
+  p-datetime {
+    width: 100%;
+
+    /*  CSS custom properties for theming to match demo */
+    --p-surface: var(--demo-panel-bg, #fff);
+    --p-border: var(--demo-border, #e5e7eb);
+    --p-radius: 8px;
+    --p-shadow: var(--demo-shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.12));
+    --p-accent: var(--demo-accent, #3b82f6);
+    --p-primary: var(--demo-text, #111);
+    --p-muted: var(--demo-panel-bg, #f8f9fb);
+  }
+
+  /*  Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    &__label {
+      color: var(--demo-text, #ffffff);
+    }
+
+    &__help {
+      color: var(--demo-text-muted, #d1d5db);
+    }
+
+    p-datetime {
+      --p-surface: var(--demo-panel-bg, #1f2937);
+      --p-border: var(--demo-border, #374151);
+      --p-primary: var(--demo-text, #ffffff);
+      --p-muted: var(--demo-panel-bg, #374151);
+    }
+  }
+
+  /*  Responsive adjustments */
+  @media (max-width: 768px) {
+    &__grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+}
