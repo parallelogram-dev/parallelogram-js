@@ -54,6 +54,14 @@ export class PageManager {
       averageMountTime: 0,
     };
 
+    // Session-persistent component tracking
+    this.sessionTracking = {
+      componentsLoaded: new Set(), // Components that have been loaded this session
+      loadHistory: [], // History of component loads with timestamps
+      mountCount: new Map(), // Total mount count per component
+      lastMountTime: new Map(), // Last mount time per component
+    };
+
     // Throttled update function for batch operations
     this.throttledUpdate = this._createThrottledFunction(
       this._processBatchedUpdates.bind(this),
@@ -1149,6 +1157,7 @@ export class PageManager {
     if (!(loaderResult instanceof Promise)) {
       const instance = this._createInstance(loaderResult.default, config);
       this.instances.set(config.name, instance);
+      this._trackComponentLoad(config.name);
       return instance;
     }
 
@@ -1197,6 +1206,7 @@ export class PageManager {
         }
 
         this.instances.set(config.name, realInstance);
+        this._trackComponentLoad(config.name);
         this.loadingPromises.delete(config.name);
         this.retryCount.delete(config.name);
 
@@ -1417,21 +1427,39 @@ export class PageManager {
   }
 
   getComponentStates() {
-    // Return current state of all components
+    // Return current state of all components based on actual instances
     const states = {};
+    const loadingStatus = this.getLoadingStatus();
+
     this.registry.forEach(comp => {
+      const instance = this.instances.get(comp.name);
+      const isLoading = loadingStatus.loading.includes(comp.name);
+      const hasRetries = loadingStatus.retries[comp.name] > 0;
+
+      // Count actual DOM elements that match this component's selector
       const elements = document.querySelectorAll(comp.selector);
-      const mountedCount = elements.length;
-      const loadingCount = Array.from(elements).filter(el =>
-        el.classList.contains('component--loading')
-      ).length;
+      const elementCount = elements.length;
+
+      let status = 'not-loaded';
+      if (isLoading) {
+        status = 'loading';
+      } else if (instance) {
+        status = 'loaded';
+      } else if (elementCount > 0) {
+        status = 'available'; // Elements exist but component not instantiated yet
+      }
 
       states[comp.name] = {
-        status: loadingCount > 0 ? 'loading' : mountedCount > 0 ? 'loaded' : 'not-loaded',
-        mountedElements: mountedCount,
-        loadingElements: loadingCount,
+        status,
+        hasInstance: !!instance,
+        instanceType: instance ? instance.constructor.name : null,
+        elementsFound: elementCount,
+        isLoading,
+        retryCount: loadingStatus.retries[comp.name] || 0,
+        selector: comp.selector,
       };
     });
+
     return states;
   }
 
@@ -1442,6 +1470,44 @@ export class PageManager {
       averageMountTime: this.performanceMetrics?.averageMountTime || 0,
       fragmentReplacements: this.performanceMetrics?.fragmentReplacements || 0,
       totalMountTime: this.performanceMetrics?.totalMountTime || 0,
+    };
+  }
+
+  /**
+   * Track component loading for session persistence
+   */
+  _trackComponentLoad(componentName) {
+    const now = Date.now();
+
+    // Add to session tracking
+    this.sessionTracking.componentsLoaded.add(componentName);
+    this.sessionTracking.loadHistory.push({
+      component: componentName,
+      timestamp: now,
+      page: window.location.pathname,
+    });
+
+    // Update counts
+    const currentCount = this.sessionTracking.mountCount.get(componentName) || 0;
+    this.sessionTracking.mountCount.set(componentName, currentCount + 1);
+    this.sessionTracking.lastMountTime.set(componentName, now);
+
+    // Keep history to reasonable size (last 100 loads)
+    if (this.sessionTracking.loadHistory.length > 100) {
+      this.sessionTracking.loadHistory.shift();
+    }
+  }
+
+  /**
+   * Get session tracking data for performance dashboard
+   */
+  getSessionTracking() {
+    return {
+      totalComponentsLoaded: this.sessionTracking.componentsLoaded.size,
+      componentsLoadedThisSession: Array.from(this.sessionTracking.componentsLoaded),
+      loadHistory: [...this.sessionTracking.loadHistory],
+      mountCounts: Object.fromEntries(this.sessionTracking.mountCount),
+      lastMountTimes: Object.fromEntries(this.sessionTracking.lastMountTime),
     };
   }
 

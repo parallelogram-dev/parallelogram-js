@@ -42,17 +42,17 @@
   --form-label-color: var(--demo-text, #374151);
   --form-control-bg: var(--demo-panel-bg, #ffffff);
   --form-control-border: var(--demo-border, #d1d5db);
-  --form-control-focus: #3b82f6;
+  --form-control-focus: var(--color-primary);
 
   /*  State colors */
-  --form-required-color: #ef4444;
-  --form-error-color: #ef4444;
-  --form-success-color: #10b981;
-  --form-invalid-color: #f59e0b;
+  --form-required-color: var(--color-error);
+  --form-error-color: var(--color-error);
+  --form-success-color: var(--color-success);
+  --form-invalid-color: var(--color-warning);
 
   /*  Help and error text */
   --form-help-color: var(--demo-text-muted, #6b7280);
-  --form-error-text-color: #ef4444;
+  --form-error-text-color: var(--color-error);
 }
 
 /*  === BASE FORM ELEMENT === */
@@ -179,7 +179,7 @@
   &:focus {
     outline: none;
     border-color: var(--form-control-focus);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: var(--focus-ring-primary);
   }
 
   &:disabled {
@@ -264,7 +264,7 @@
   &:focus {
     outline: none;
     border-color: var(--form-control-focus);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: var(--focus-ring-primary);
   }
 
   &:active {
@@ -303,8 +303,8 @@
     color: white;
 
     &:hover {
-      background: #2563eb;
-      border-color: #2563eb;
+      background: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
     }
 
     &:focus {
@@ -313,13 +313,17 @@
   }
 
   &--secondary {
-    background: var(--demo-text, #374151);
-    border-color: var(--demo-text, #374151);
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
     color: white;
 
     &:hover {
-      background: #1f2937;
-      border-color: #1f2937;
+      background: var(--color-secondary-hover);
+      border-color: var(--color-secondary-hover);
+    }
+
+    &:focus {
+      box-shadow: var(--focus-ring-secondary);
     }
   }
 
@@ -334,7 +338,7 @@
     }
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      box-shadow: var(--focus-ring-success);
     }
   }
 
@@ -349,7 +353,7 @@
     }
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+      box-shadow: var(--focus-ring-error);
     }
   }
 
@@ -399,7 +403,7 @@
 
   &:focus {
     border-color: var(--form-invalid-color);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    box-shadow: var(--focus-ring-warning);
   }
 }
 
@@ -409,7 +413,7 @@
 
   &:focus {
     border-color: var(--form-error-color);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    box-shadow: var(--focus-ring-error);
   }
 }
 
@@ -419,7 +423,7 @@
 
   &:focus {
     border-color: var(--form-success-color);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    box-shadow: var(--focus-ring-success);
   }
 }
 

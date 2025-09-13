@@ -8,20 +8,20 @@
     margin: 2rem 0;
   }
 
-  &__background {
+  &__source {
     width: 100%;
     height: 300px;
     object-fit: cover;
   }
 
   &__fallback {
-    background: #1f2937;
+    background: var(--color-text-dark);
     color: white;
     padding: 2rem;
     text-align: center;
   }
 
-  &__overlay {
+  &__caption {
     position: absolute;
     bottom: 1rem;
     left: 1rem;
@@ -52,8 +52,19 @@
 
   &__player {
     width: 100%;
-    max-width: 400px;
     border-radius: 8px;
+
+    // For demo grid context
+    &--grid {
+      height: auto;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+
+    // For standalone demo context
+    &--demo {
+      max-width: 400px;
+    }
   }
 
   &__features {
@@ -64,5 +75,30 @@
     li {
       margin-bottom: 0.25rem;
     }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  &__element {
+    @extend %panel_surface;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  &__label {
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--demo-text, #1f2937);
+    font-size: 0.875rem;
   }
 }

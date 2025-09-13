@@ -329,6 +329,13 @@ export default class PModal extends HTMLElement {
     document.addEventListener('keydown', this._onKeydown);
     this.addEventListener('focusin', this._onFocus);
 
+    // Handle slotted buttons with data-modal-close attribute
+    this.addEventListener('click', (event) => {
+      if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
+        this.close();
+      }
+    });
+
     // Set ARIA attributes
     this._elements.panel.setAttribute('aria-labelledby', this._getTitleId());
   }

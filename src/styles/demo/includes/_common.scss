@@ -1,5 +1,63 @@
 /*  Common reusable placeholders for SCSS components */
 
+/*  === STANDARDIZED COLOR SYSTEM === */
+:root {
+  /* State Colors */
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info: #0ea5e9;
+
+  /* Interactive Colors */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-secondary: #f97316;
+  --color-secondary-hover: #ea580c;
+
+  /* Surface Colors */
+  --color-border: #e2e8f0;
+  --color-border-light: #f3f4f6;
+  --color-surface: #f8fafc;
+  --color-surface-hover: #f1f5f9;
+
+  /* Text Colors */
+  --color-text-dark: #1f2937;
+  --color-text-medium: #374151;
+  --color-text-muted: #6b7280;
+
+  /* Focus States */
+  --focus-ring-primary: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --focus-ring-secondary: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  --focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  --focus-ring-success: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  --focus-ring-warning: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  --focus-ring-info: 0 0 0 3px rgba(14, 165, 233, 0.1);
+
+  /* Button Variants */
+  --btn-info: #06b6d4;
+  --btn-info-hover: #0891b2;
+  --btn-accent: #8b5cf6;
+  --btn-accent-hover: #7c3aed;
+}
+
+/*  === DARK MODE SUPPORT === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Surface Colors - darker in dark mode */
+    --color-surface: #1f2937;
+    --color-surface-hover: #374151;
+    --color-border: #374151;
+    --color-border-light: #4b5563;
+
+    /* Text Colors - lighter in dark mode */
+    --color-text-dark: #f9fafb;
+    --color-text-medium: #e5e7eb;
+    --color-text-muted: #9ca3af;
+
+    /* Focus rings stay the same - they work on both backgrounds */
+  }
+}
+
 /*  === LAYOUT PATTERNS === */
 
 /*  Grid helper used across multiple demo components */
@@ -48,16 +106,16 @@
 %input_base {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--demo-border, #d1d5db);
+  border: 1px solid var(--demo-border, var(--color-border));
   border-radius: 4px;
   background: var(--demo-panel-bg, white);
-  color: var(--demo-text, #1f2937);
+  color: var(--demo-text, var(--color-text-dark));
   transition: border-color 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    border-color: var(--color-info);
+    box-shadow: var(--focus-ring-info);
   }
 }
 
@@ -66,7 +124,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--demo-text, #1f2937);
+  color: var(--demo-text, var(--color-text-dark));
 }
 
 /*  Form field container */
@@ -82,16 +140,16 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: var(--demo-panel-bg, #f8fafc);
-  border: 1px solid var(--demo-border, #e2e8f0);
+  background: var(--demo-panel-bg, var(--color-surface));
+  border: 1px solid var(--demo-border, var(--color-border));
   border-radius: 8px;
 }
 
 /*  Generic panel surface (no layout/padding) for blocks using demo panel variables */
 %panel_surface {
-  background: var(--demo-panel-bg, #f8fafc);
-  color: var(--demo-text, #1f2937);
-  border: 1px solid var(--demo-border, #e2e8f0);
+  background: var(--demo-panel-bg, var(--color-surface));
+  color: var(--demo-text, var(--color-text-dark));
+  border: 1px solid var(--demo-border, var(--color-border));
   border-radius: 8px;
 }
 
@@ -148,8 +206,8 @@
 /*  Dark code block utility */
 %code_block_dark {
   padding: 0.75rem;
-  background: #1f2937;
-  color: #f3f4f6;
+  background: var(--color-text-dark);
+  color: var(--color-border-light);
   border-radius: 4px;
   overflow-x: auto;
   font-family: 'Courier New', monospace;
@@ -159,17 +217,17 @@
 %code_block_light {
   padding: 0.75rem;
   background: var(--demo-panel-bg, white);
-  border: 1px solid var(--demo-border, #e2e8f0);
+  border: 1px solid var(--demo-border, var(--color-border));
   border-radius: 4px;
   overflow-x: auto;
   font-family: 'Courier New', monospace;
-  color: var(--demo-text, #1f2937);
+  color: var(--demo-text, var(--color-text-dark));
 }
 
 /*  Help text styling */
 %help_text {
   font-size: 0.875rem;
-  color: var(--demo-text-muted, #6b7280);
+  color: var(--demo-text-muted, var(--color-text-muted));
   margin-top: 0.25rem;
 }
 
@@ -177,7 +235,7 @@
 %section_title {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: var(--demo-text, #1f2937);
+  color: var(--demo-text, var(--color-text-dark));
   font-weight: 600;
 }
 
@@ -190,10 +248,10 @@
 
   li {
     margin-bottom: 0.5rem;
-    color: var(--demo-text-muted, #6b7280);
+    color: var(--demo-text-muted, var(--color-text-muted));
 
     strong {
-      color: var(--demo-text, #1f2937);
+      color: var(--demo-text, var(--color-text-dark));
     }
   }
 }
@@ -214,14 +272,14 @@
 
 /*  Table cell base */
 %table_cell_base {
-  border: 1px solid var(--demo-border, #e2e8f0);
+  border: 1px solid var(--demo-border, var(--color-border));
   padding: 0.75rem;
-  color: var(--demo-text, #1f2937);
+  color: var(--demo-text, var(--color-text-dark));
 }
 
 /*  Table header cell */
 %table_header_cell {
   @extend %table_cell_base;
-  background: var(--demo-panel-bg, #f8fafc);
+  background: var(--demo-panel-bg, var(--color-surface));
   text-align: left;
 }

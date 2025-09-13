@@ -6,23 +6,23 @@
 
 /*  Additional button variants for demo (beyond the core .btn framework) */
 .btn--info {
-  background: #06b6d4;
-  border-color: #06b6d4;
+  background: var(--btn-info);
+  border-color: var(--btn-info);
   color: white;
 
   &:hover {
-    background: #0891b2;
-    border-color: #0891b2;
+    background: var(--btn-info-hover);
+    border-color: var(--btn-info-hover);
   }
 
   &:focus {
-    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+    box-shadow: var(--focus-ring-info);
   }
 }
 
 .btn--warning {
-  background: #f59e0b;
-  border-color: #f59e0b;
+  background: var(--color-warning);
+  border-color: var(--color-warning);
   color: white;
 
   &:hover {
@@ -31,22 +31,22 @@
   }
 
   &:focus {
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    box-shadow: var(--focus-ring-warning);
   }
 }
 
 .btn--accent {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
+  background: var(--btn-accent);
+  border-color: var(--btn-accent);
   color: white;
 
   &:hover {
-    background: #7c3aed;
-    border-color: #7c3aed;
+    background: var(--btn-accent-hover);
+    border-color: var(--btn-accent-hover);
   }
 
   &:focus {
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    box-shadow: var(--focus-ring-warning);
   }
 }
 

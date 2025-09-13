@@ -370,7 +370,8 @@ export default class Scrollreveal extends BaseComponent {
         if (exitClass) {
           await this._animateWithClass(item, exitClass);
         } else if (revealClass) {
-          item.classList.remove(revealClass);
+          const classNames = revealClass.split(' ').filter(cls => cls.trim());
+          item.classList.remove(...classNames);
         } else if (this.transitionManager) {
           await this.transitionManager.exit(item);
         } else {
@@ -406,7 +407,8 @@ export default class Scrollreveal extends BaseComponent {
       element.addEventListener('animationend', handleAnimationEnd, { once: true });
       element.addEventListener('transitionend', handleAnimationEnd, { once: true });
 
-      element.classList.add(className);
+      const classNames = className.split(' ').filter(cls => cls.trim());
+      element.classList.add(...classNames);
 
       // Fallback timeout
       setTimeout(() => {

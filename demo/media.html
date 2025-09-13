@@ -6,7 +6,7 @@
         <title>Media Components - Enhancement Framework</title>
         <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
     </head>
-    <body data-demo="media">
+    <body>
         <nav data-view="navbar">
             <div class="nav__container">
                 <h1>Enhancement Framework</h1>
@@ -20,7 +20,7 @@
             </div>
         </nav>
 
-        <main data-view="main" class="page__content">
+        <main data-view="main" data-demo="media" class="page__content">
             <header class="page__header">
                 <h1>Media Components</h1>
                 <p>Optimized image loading, carousels, and media galleries with performance tracking.</p>
@@ -313,8 +313,8 @@
             <!-- Gallery Preview Modal -->
             <p-modal id="gallery-preview" data-modal-size="lg" data-modal-closable="true">
                 <h2 slot="title">Image Preview</h2>
-                <div class="gallery__preview-container">
-                    <img id="gallery-preview-image" src="" alt="" class="gallery__preview-image" />
+                <div class="gallery__preview">
+                    <img id="gallery-preview-image" src="" alt="" />
                 </div>
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close>Close</button>

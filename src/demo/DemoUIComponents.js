@@ -30,6 +30,7 @@ export class DemoUIComponents extends BaseComponent {
     this.addEventListener(document, 'modal:close', e => {
       this.addEventToLog('modal:close', { modalId: e.target.id });
     });
+
   }
 
   setupButtonHandlers() {
@@ -50,8 +51,124 @@ export class DemoUIComponents extends BaseComponent {
         this.addEventListener(button, 'click', () => {
           window.location.href = '/performance';
         });
+      } else {
+        // Handle modal action buttons
+        this.addEventListener(button, 'click', event => {
+          // Only prevent default for actions that shouldn't trigger default behavior
+          if (button.type !== 'submit') {
+            event.preventDefault();
+          }
+          this.handleModalAction(method, button);
+        });
       }
     });
+  }
+
+  handleModalAction(action, button) {
+    switch (action) {
+      case 'open-form-modal':
+        this.handleOpenFormModal();
+        break;
+      case 'cancel-form':
+        this.handleCancelForm();
+        break;
+      case 'submit-form':
+        this.handleSubmitForm(button);
+        break;
+      case 'close-gallery':
+        this.handleCloseGallery();
+        break;
+      case 'add-to-collection':
+        this.handleAddToCollection(button);
+        break;
+      case 'close-large-modal':
+        this.handleCloseLargeModal();
+        break;
+      case 'view-performance':
+        this.handleViewPerformance(button);
+        break;
+    }
+  }
+
+  handleOpenFormModal() {
+    this.addEventToLog('modal:action', { action: 'open-form-modal', timestamp: Date.now() });
+
+    // Dispatch custom event for other components to listen to
+    this.emit('demo:form-modal-open', { modalType: 'form' });
+  }
+
+  handleCancelForm() {
+    this.addEventToLog('modal:action', { action: 'cancel-form', timestamp: Date.now() });
+  }
+
+  handleSubmitForm(button) {
+    // Animated loading sequence
+    const originalText = button.textContent;
+    button.textContent = 'Sending...';
+    button.disabled = true;
+
+    setTimeout(() => {
+      button.textContent = 'Sent!';
+      button.style.background = 'var(--color-success)';
+
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+        button.style.background = '';
+      }, 2000);
+    }, 1500);
+
+    this.addEventToLog('modal:action', { action: 'submit-form', timestamp: Date.now() });
+  }
+
+  handleCloseGallery() {
+    this.addEventToLog('modal:action', { action: 'close-gallery', timestamp: Date.now() });
+  }
+
+  handleAddToCollection(button) {
+    const originalText = button.textContent;
+    button.textContent = 'Added!';
+    button.disabled = true;
+    button.style.background = 'var(--color-success)';
+
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.disabled = false;
+      button.style.background = '';
+    }, 2000);
+
+    this.addEventToLog('modal:action', { action: 'add-to-collection', item: 'gallery-item', timestamp: Date.now() });
+  }
+
+  handleCloseLargeModal() {
+    this.addEventToLog('modal:action', { action: 'close-large-modal', timestamp: Date.now() });
+  }
+
+  handleViewPerformance(button) {
+    const originalText = button.textContent;
+    button.textContent = '📊 Loading...';
+    button.disabled = true;
+
+    setTimeout(() => {
+      button.textContent = '✅ Report Ready';
+      button.style.background = 'var(--color-success)';
+
+      // Mock performance report
+      this.addEventToLog('performance:report', {
+        loadTime: '1.2s',
+        components: 15,
+        events: 47,
+        timestamp: Date.now()
+      });
+
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+        button.style.background = '';
+      }, 3000);
+    }, 2000);
+
+    this.addEventToLog('modal:action', { action: 'view-performance', timestamp: Date.now() });
   }
 
   handleFormSubmit(event) {

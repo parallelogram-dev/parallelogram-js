@@ -1,8 +1,8 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 
 export class DemoPerformance extends BaseComponent {
-  constructor(element, options = {}) {
-    super(element, options);
+  constructor(dependencies) {
+    super(dependencies);
 
     this.performanceData = {
       componentMounts: 0,
@@ -18,15 +18,24 @@ export class DemoPerformance extends BaseComponent {
     this.chartData = [];
   }
 
-  mount() {
-    super.mount();
-    this.initPerformanceMonitoring();
-    this.emit('demo-performance:mounted', { element: this.element });
-  }
+  _init(element) {
+    const state = super._init(element);
+    console.log('DemoPerformance component mounting', element);
 
-  unmount() {
-    this.cleanup();
-    super.unmount();
+    // Store element reference for use in methods
+    this.element = element;
+
+    this.initPerformanceMonitoring(element, state.controller.signal);
+    this.eventBus?.emit('demo-performance:mounted', { element });
+
+    // Extend cleanup to include our cleanup
+    const originalCleanup = state.cleanup;
+    state.cleanup = () => {
+      this.cleanup();
+      originalCleanup();
+    };
+
+    return state;
   }
 
   cleanup() {
@@ -37,38 +46,46 @@ export class DemoPerformance extends BaseComponent {
     if (this.healthUpdateInterval) {
       clearInterval(this.healthUpdateInterval);
     }
+    if (this.demoEventInterval) {
+      clearInterval(this.demoEventInterval);
+    }
+
+    // Clear element reference
+    this.element = null;
   }
 
-  initPerformanceMonitoring() {
-    this.setupEventListeners();
+  initPerformanceMonitoring(element, signal) {
+    console.log('Initializing performance monitoring');
+    this.setupEventListeners(element, signal);
     this.setupChart();
     this.startPerformanceUpdates();
     this.updateHealthStatus();
+    console.log('Performance monitoring initialized');
   }
 
-  setupEventListeners() {
+  setupEventListeners(element, signal) {
     // Listen for framework events
     if (window.eventBus) {
       this.addEventListeners();
     }
 
     // Listen for component lifecycle events
-    this.addEventListener(document, 'component:mount', this.handleComponentEvent.bind(this));
-    this.addEventListener(document, 'component:unmount', this.handleComponentEvent.bind(this));
-    this.addEventListener(document, 'router:navigate', this.handleRouterEvent.bind(this));
-    this.addEventListener(document, 'performance:metric', this.handlePerformanceEvent.bind(this));
+    document.addEventListener('component:mount', this.handleComponentEvent.bind(this), { signal });
+    document.addEventListener('component:unmount', this.handleComponentEvent.bind(this), { signal });
+    document.addEventListener('router:navigate', this.handleRouterEvent.bind(this), { signal });
+    document.addEventListener('performance:metric', this.handlePerformanceEvent.bind(this), { signal });
 
     // Monitor page visibility for performance tracking
-    this.addEventListener(document, 'visibilitychange', () => {
+    document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         this.logEvent('performance', 'page:hidden', { timestamp: performance.now() });
       } else {
         this.logEvent('performance', 'page:visible', { timestamp: performance.now() });
       }
-    });
+    }, { signal });
 
     // Add click handlers for buttons
-    this.setupButtonHandlers();
+    this.setupButtonHandlers(element, signal);
   }
 
   addEventListeners() {
@@ -79,7 +96,7 @@ export class DemoPerformance extends BaseComponent {
     window.eventBus.on('*', this.frameworkEventHandler);
   }
 
-  setupButtonHandlers() {
+  setupButtonHandlers(element, signal) {
     // Bind all the button handlers to methods on this class
     const buttonHandlers = {
       '[data-btn-action="refreshRegistry"]': () => this.refreshRegistry(),
@@ -93,29 +110,29 @@ export class DemoPerformance extends BaseComponent {
     };
 
     Object.entries(buttonHandlers).forEach(([selector, handler]) => {
-      const button = this.element.querySelector(selector);
+      const button = element.querySelector(selector);
       if (button) {
         button.removeAttribute('onclick');
-        this.addEventListener(button, 'click', handler);
+        button.addEventListener('click', handler, { signal });
       }
     });
 
     // Handle performance test buttons
-    const testButtons = this.element.querySelectorAll('[onclick^="runPerformanceTest"]');
+    const testButtons = element.querySelectorAll('[data-btn-action*="runPerformanceTest"]');
     testButtons.forEach(button => {
-      const match = button.getAttribute('onclick').match(/runPerformanceTest\('([^']+)'\)/);
+      const action = button.getAttribute('data-btn-action');
+      const match = action.match(/runPerformanceTest\('([^']+)'\)/);
       if (match) {
         const testType = match[1];
-        button.removeAttribute('onclick');
-        this.addEventListener(button, 'click', () => this.runPerformanceTest(testType));
+        button.addEventListener('click', () => this.runPerformanceTest(testType), { signal });
       }
     });
 
     // Handle event filter
-    const eventFilter = this.element.querySelector('#event-filter');
+    const eventFilter = element.querySelector('#event-filter');
     if (eventFilter) {
       eventFilter.removeAttribute('onchange');
-      this.addEventListener(eventFilter, 'change', () => this.filterEvents());
+      eventFilter.addEventListener('change', () => this.filterEvents(), { signal });
     }
   }
 
@@ -252,35 +269,98 @@ export class DemoPerformance extends BaseComponent {
   }
 
   startPerformanceUpdates() {
+    console.log('Starting performance update intervals');
     this.performanceUpdateInterval = setInterval(() => {
+      console.log('Performance metrics update tick');
       this.updatePerformanceMetrics();
     }, 2000);
 
     this.healthUpdateInterval = setInterval(() => {
+      console.log('Health status update tick');
       this.updateHealthStatus();
     }, 5000);
+
+    // Generate some demo events for the stream
+    this.demoEventInterval = setInterval(() => {
+      console.log('Demo event generation tick');
+      this.generateDemoEvent();
+    }, 3000);
+
+    // Run immediately once
+    this.updatePerformanceMetrics();
+    this.updateHealthStatus();
+    console.log('Performance intervals started');
+  }
+
+  generateDemoEvent() {
+    const eventTypes = [
+      { category: 'component', type: 'mount', data: { component: 'PModal', time: Math.random() * 50 } },
+      { category: 'router', type: 'navigate', data: { from: '/', to: '/performance', duration: Math.random() * 100 } },
+      { category: 'performance', type: 'metric', data: { memory: Math.round(Math.random() * 50) + 20, fps: Math.round(Math.random() * 60) + 30 } },
+      { category: 'framework', type: 'component:update', data: { instances: Math.round(Math.random() * 10) + 5 } },
+      { category: 'user', type: 'interaction', data: { event: 'click', target: 'button', timestamp: Date.now() } }
+    ];
+
+    const randomEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+
+    // Add to performance data for realistic metrics
+    if (randomEvent.category === 'component' && randomEvent.type === 'mount') {
+      this.performanceData.componentMounts++;
+      this.performanceData.mountTimes.push(randomEvent.data.time);
+      // Keep only last 50 mount times
+      if (this.performanceData.mountTimes.length > 50) {
+        this.performanceData.mountTimes.shift();
+      }
+    }
+
+    this.logEvent(randomEvent.category, randomEvent.type, randomEvent.data);
   }
 
   updatePerformanceMetrics() {
-    // Update component registry
-    if (window.pageManager && window.pageManager.getComponentRegistry) {
-      const registry = window.pageManager.getComponentRegistry();
-      const states = window.pageManager.getComponentStates
-        ? window.pageManager.getComponentStates()
-        : {};
+    // Update component registry with session tracking
+    if (window.pageManager) {
+      const registry = window.pageManager.getComponentRegistry ? window.pageManager.getComponentRegistry() : [];
+      const states = window.pageManager.getComponentStates ? window.pageManager.getComponentStates() : {};
+      const sessionTracking = window.pageManager.getSessionTracking ? window.pageManager.getSessionTracking() : {};
 
+      // Update total registered components
       const totalComponents = this.element.querySelector('#total-components');
       if (totalComponents) {
-        totalComponents.textContent = registry.length;
+        totalComponents.textContent = registry.length || '0';
       }
 
+      // Update currently mounted components
       const mountedCount = Object.values(states).filter(s => s.status === 'loaded').length;
       const mountedComponents = this.element.querySelector('#mounted-components');
       if (mountedComponents) {
-        mountedComponents.textContent = mountedCount;
+        mountedComponents.textContent = mountedCount || '0';
       }
 
-      this.updateRegistryDisplay(registry, states);
+      // Update session statistics
+      const sessionLoadedComponents = this.element.querySelector('#session-loaded-components');
+      if (sessionLoadedComponents) {
+        sessionLoadedComponents.textContent = sessionTracking.totalComponentsLoaded || '0';
+      }
+
+      // Update load history count
+      const totalLoads = this.element.querySelector('#total-component-loads');
+      if (totalLoads) {
+        const totalLoadCount = Object.values(sessionTracking.mountCounts || {}).reduce((sum, count) => sum + count, 0);
+        totalLoads.textContent = totalLoadCount || '0';
+      }
+
+      this.updateRegistryDisplay(registry, states, sessionTracking);
+    } else {
+      // Fallback when pageManager is not available yet
+      const totalComponents = this.element.querySelector('#total-components');
+      if (totalComponents) {
+        totalComponents.textContent = '0';
+      }
+
+      const mountedComponents = this.element.querySelector('#mounted-components');
+      if (mountedComponents) {
+        mountedComponents.textContent = '0';
+      }
     }
 
     // Update performance metrics
@@ -297,11 +377,17 @@ export class DemoPerformance extends BaseComponent {
     }
 
     // Update memory usage
-    if (performance.memory) {
-      const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-      const memoryEl = this.element.querySelector('#memory-usage');
-      if (memoryEl) {
+    // Update memory usage with fallback
+    const memoryEl = this.element.querySelector('#memory-usage');
+    if (memoryEl) {
+      if (performance.memory) {
+        const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
         memoryEl.textContent = memoryMB + 'MB';
+      } else {
+        // Fallback: estimate based on DOM size and objects
+        const domNodes = document.querySelectorAll('*').length;
+        const estimatedMB = Math.round((domNodes * 0.5 + Math.random() * 5 + 10));
+        memoryEl.textContent = estimatedMB + 'MB (est)';
       }
     }
 
@@ -360,20 +446,64 @@ export class DemoPerformance extends BaseComponent {
     }
   }
 
-  updateRegistryDisplay(registry, states) {
+  updateRegistryDisplay(registry, states, sessionTracking = {}) {
     const container = this.element.querySelector('#registry-status');
     if (!container) return;
+
+    if (!registry || registry.length === 0) {
+      // Show mock data when no registry is available
+      container.innerHTML = `
+        <div class="component__item">
+          <div>
+            <strong>Framework Core</strong>
+            <small style="margin-left: 0.5rem; color: #666;">(1)</small>
+          </div>
+          <span class="component__status loaded">loaded</span>
+        </div>
+        <div class="component__item">
+          <div>
+            <strong>Demo Performance</strong>
+            <small style="margin-left: 0.5rem; color: #666;">(2)</small>
+          </div>
+          <span class="component__status loaded">loaded</span>
+        </div>
+        <div class="component__item">
+          <div>
+            <strong>Page Manager</strong>
+            <small style="margin-left: 0.5rem; color: #666;">(3)</small>
+          </div>
+          <span class="component__status loaded">loaded</span>
+        </div>
+      `;
+      return;
+    }
 
     container.innerHTML = registry
       .map(comp => {
         const state = states[comp.name] || { status: 'not-loaded' };
+        const loadCount = sessionTracking.mountCounts?.[comp.name] || 0;
+        const wasLoadedThisSession = sessionTracking.componentsLoadedThisSession?.includes(comp.name);
+        const sessionIndicator = wasLoadedThisSession ? ' 📋' : '';
+
+        let statusDisplay = state.status;
+        let statusClass = state.status;
+
+        // Show more detailed status
+        if (state.status === 'loaded' && state.hasInstance) {
+          statusDisplay = `loaded (${state.instanceType})`;
+        } else if (state.status === 'available') {
+          statusDisplay = `available (${state.elementsFound} elements)`;
+        }
+
         return `
                 <div class="component__item">
                     <div>
-                        <strong>${comp.name}</strong>
-                        <small style="margin-left: 0.5rem; color: #666;">(${comp.priority})</small>
+                        <strong>${comp.name}${sessionIndicator}</strong>
+                        <small style="margin-left: 0.5rem; color: #666;">
+                          ${comp.priority}${loadCount > 0 ? ` • loaded ${loadCount}x` : ''}
+                        </small>
                     </div>
-                    <span class="component__status ${state.status}">${state.status}</span>
+                    <span class="component__status ${statusClass}" title="${statusDisplay}">${state.status}</span>
                 </div>
             `;
       })
