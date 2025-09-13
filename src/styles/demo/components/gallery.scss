@@ -27,42 +27,42 @@
     }
   }
 
-  /*  Modal gallery grid */
-  &__modal-grid {
+  /*  Gallery in modal context */
+  &__modal {
     @extend %grid_basic;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+    .gallery__item {
+      @extend %panel_surface;
+      text-align: center;
+      padding: 1rem;
+
+      .gallery__icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      h4 {
+        margin: 0.5rem 0;
+        color: var(--demo-text, #1f2937);
+      }
+
+      p {
+        margin: 0;
+        color: var(--demo-text-muted, #666);
+        font-size: 0.9rem;
+      }
+    }
   }
 
-  &__modal-item {
-    @extend %panel_surface;
+  &__preview {
     text-align: center;
-    padding: 1rem;
 
-    .gallery__icon {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-      display: block;
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
     }
-
-    h4 {
-      margin: 0.5rem 0;
-      color: var(--demo-text, #1f2937);
-    }
-
-    p {
-      margin: 0;
-      color: var(--demo-text-muted, #666);
-      font-size: 0.9rem;
-    }
-  }
-
-  &__preview-container {
-    text-align: center;
-  }
-
-  &__preview-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
   }
 }

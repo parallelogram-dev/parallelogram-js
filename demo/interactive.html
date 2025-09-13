@@ -45,6 +45,7 @@
                         data-videoplay-autopause="true"
                         data-videoplay-automute="true"
                         class="video__background"
+                        autoplay
                         muted
                         loop
                     >
@@ -70,7 +71,8 @@
                                 data-videoplay-autopause="false"
                                 data-videoplay-automute="false"
                                 data-videoplay-background="true"
-                                class="video__player"
+                                class="video__player video__player--demo"
+                                autoplay
                                 controls
                             >
                                 <source
@@ -96,12 +98,13 @@
 
                 <h3>Staggered Video Grid</h3>
                 <div class="video__grid">
-                    <div class="video__grid-item">
+                    <div class="video__element">
                         <video
                             data-videoplay
                             data-videoplay-threshold="0.4"
                             data-videoplay-automute="true"
-                            class="video__grid-player"
+                            class="video__player video__player--grid"
+                            autoplay
                             muted
                             loop
                         >
@@ -110,15 +113,16 @@
                                 type="video/mp4"
                             />
                         </video>
-                        <div class="video__grid-label">Video 1</div>
+                        <div class="video__label">Video 1</div>
                     </div>
 
-                    <div class="video__grid-item">
+                    <div class="video__element">
                         <video
                             data-videoplay
                             data-videoplay-threshold="0.4"
                             data-videoplay-automute="true"
-                            class="video__grid-player"
+                            class="video__player video__player--grid"
+                            autoplay
                             muted
                             loop
                         >
@@ -127,15 +131,16 @@
                                 type="video/mp4"
                             />
                         </video>
-                        <div class="video__grid-label">Video 2</div>
+                        <div class="video__label">Video 2</div>
                     </div>
 
-                    <div class="video__grid-item">
+                    <div class="video__element">
                         <video
                             data-videoplay
                             data-videoplay-threshold="0.4"
                             data-videoplay-automute="true"
-                            class="video__grid-player"
+                            class="video__player video__player--grid"
+                            autoplay
                             muted
                             loop
                         >
@@ -144,7 +149,7 @@
                                 type="video/mp4"
                             />
                         </video>
-                        <div class="video__grid-label">Video 3</div>
+                        <div class="video__label">Video 3</div>
                     </div>
                 </div>
 
@@ -511,7 +516,7 @@
                 <h3>Scroll Reveal Animations</h3>
                 <p>Elements that animate into view when scrolled into the viewport:</p>
 
-                <div data-scrollreveal data-reveal-threshold="0.3" data-reveal-delay="100">
+                <div data-scrollreveal data-scrollreveal-threshold="0.3" data-scrollreveal-delay="100">
                     <div class="scrollreveal">
                         <h4>Single Reveal Animation</h4>
                         <p>
@@ -521,54 +526,51 @@
                     </div>
                 </div>
 
-                <div data-scrollreveal data-reveal-stagger="200" data-reveal-threshold="0.2">
+                <div>
                     <h4>Staggered Reveal Animation</h4>
                     <p>These items reveal one after another with a 200ms stagger delay:</p>
                     <div class="stagger">
-                        <div data-scrollreveal-item class="stagger__item">
+                        <div data-scrollreveal data-scrollreveal-delay="0" data-scrollreveal-threshold="0.2" class="stagger__item">
                             <h5>Item 1</h5>
                             <p>First to appear</p>
                         </div>
-                        <div data-scrollreveal-item class="stagger__item">
+                        <div data-scrollreveal data-scrollreveal-delay="200" data-scrollreveal-threshold="0.2" class="stagger__item">
                             <h5>Item 2</h5>
                             <p>Second to appear</p>
                         </div>
-                        <div data-scrollreveal-item class="stagger__item">
+                        <div data-scrollreveal data-scrollreveal-delay="400" data-scrollreveal-threshold="0.2" class="stagger__item">
                             <h5>Item 3</h5>
                             <p>Third to appear</p>
                         </div>
-                        <div data-scrollreveal-item class="stagger__item">
+                        <div data-scrollreveal data-scrollreveal-delay="600" data-scrollreveal-threshold="0.2" class="stagger__item">
                             <h5>Item 4</h5>
                             <p>Fourth to appear</p>
                         </div>
                     </div>
                 </div>
 
-                <div data-scrollreveal data-reveal-once="false" data-scrollreveal-class="fade-slide-up">
-                    <div data-scrollreveal-item class="scrollreveal--css">
-                        <h4>CSS Animation Reveal</h4>
-                        <p>
-                            This uses a custom CSS class for animation and will re-animate each time it enters the
-                            viewport (data-reveal-once="false").
-                        </p>
-                        <p>
-                            <strong>Animation:</strong> Fades in with slide-up and scale effect using pure CSS
-                            keyframes.
-                        </p>
-                    </div>
+                <div data-scrollreveal data-scrollreveal-once="false" data-scrollreveal-class="animate animate--fade-slide-up" class="scrollreveal--css">
+                    <h4>CSS Animation Reveal</h4>
+                    <p>
+                        This uses a custom CSS class for animation and will re-animate each time it enters the
+                        viewport (data-reveal-once="false").
+                    </p>
+                    <p>
+                        <strong>Animation:</strong> Fades in with slide-up and scale effect using pure CSS
+                        keyframes.
+                    </p>
                 </div>
 
                 <div
                     data-scrollreveal
-                    data-reveal-once="false"
-                    data-scrollreveal-class="bounce-in"
-                    data-reveal-delay="500"
+                    data-scrollreveal-once="false"
+                    data-scrollreveal-class="animate animate--bounce-in"
+                    data-scrollreveal-delay="500"
+                    class="scrollreveal--css"
                 >
-                    <div data-scrollreveal-item class="scrollreveal--css">
-                        <h4>Bouncy CSS Animation</h4>
-                        <p>This demonstrates a different CSS animation with a bounce effect and custom threshold.</p>
-                        <p><strong>Animation:</strong> Bounces in with elastic easing when 20% visible.</p>
-                    </div>
+                    <h4>Bouncy CSS Animation</h4>
+                    <p>This demonstrates a different CSS animation with a bounce effect and custom threshold.</p>
+                    <p><strong>Animation:</strong> Bounces in with elastic easing when 20% visible.</p>
                 </div>
 
                 <div class="features__details">
@@ -759,16 +761,16 @@
                 <h2>Interactive Component Events</h2>
                 <p>Monitor real-time events from interactive components:</p>
 
-                <div id="interactive-events" class="event__log">
-                    <div class="event__log-header">
+                <div id="interactive-events" class="event">
+                    <div class="event__header">
                         <strong>Interactive Component Events</strong>
                         <div style="display: flex; gap: 0.5rem">
                             <button data-event-action="clear" class="btn btn--xs">Clear</button>
                             <button data-event-action="export" class="btn btn--xs">Export</button>
                         </div>
                     </div>
-                    <div class="event__log-content" data-event-content style="max-height: 300px; overflow-y: auto">
-                        <div class="event__log-item">
+                    <div class="event__content event__content--scrollable" data-event-content>
+                        <div class="event__item">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start">
                                 <div>
                                     <strong>page:loaded</strong>

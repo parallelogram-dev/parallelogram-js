@@ -26,4 +26,22 @@
       @extend %input_base;
     }
   }
+
+  &__code {
+    @extend %code_block_dark;
+    margin: 0 0 1rem 0;
+    border-radius: 6px;
+  }
+
+  &__command {
+    @extend %code_block_light;
+    display: block;
+    margin: 0 0 1rem 0;
+    padding: 0.75rem;
+    border-radius: 6px;
+  }
+
+  &__input {
+    @extend %input_base;
+  }
 }
