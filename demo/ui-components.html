@@ -301,7 +301,7 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn--primary" onclick="handleDatetimeDemo()">
+                    <button type="button" class="btn btn--primary" data-btn-action="handleDatetimeDemo">
                         Show Selected Values
                     </button>
                 </div>
@@ -412,18 +412,30 @@
                 <p>Click images to open them in a fullscreen lightbox with navigation:</p>
 
                 <div class="gallery__grid">
-                    <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=1" class="gallery__item">
-                        <img src="https://picsum.photos/150/150?random=1" alt="Demo Image 1" />
-                    </a>
-                    <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=2" class="gallery__item">
-                        <img src="https://picsum.photos/150/150?random=2" alt="Demo Image 2" />
-                    </a>
-                    <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=3" class="gallery__item">
-                        <img src="https://picsum.photos/150/150?random=3" alt="Demo Image 3" />
-                    </a>
-                    <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=4" class="gallery__item">
-                        <img src="https://picsum.photos/150/150?random=4" alt="Demo Image 4" />
-                    </a>
+                    <figure class="gallery__item">
+                        <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=1">
+                            <img src="https://picsum.photos/150/150?random=1" alt="Demo Image 1" />
+                        </a>
+                        <figcaption>Gallery Image 1</figcaption>
+                    </figure>
+                    <figure class="gallery__item">
+                        <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=2">
+                            <img src="https://picsum.photos/150/150?random=2" alt="Demo Image 2" />
+                        </a>
+                        <figcaption>Gallery Image 2</figcaption>
+                    </figure>
+                    <figure class="gallery__item">
+                        <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=3">
+                            <img src="https://picsum.photos/150/150?random=3" alt="Demo Image 3" />
+                        </a>
+                        <figcaption>Gallery Image 3</figcaption>
+                    </figure>
+                    <figure class="gallery__item">
+                        <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=4">
+                            <img src="https://picsum.photos/150/150?random=4" alt="Demo Image 4" />
+                        </a>
+                        <figcaption>Gallery Image 4</figcaption>
+                    </figure>
                 </div>
 
                 <div class="features__details">

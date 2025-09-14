@@ -4,12 +4,18 @@ import { BaseComponent } from '@peptolab/parallelogram';
  * Lightbox Component - Image/media gallery viewer
  *
  * @example
- * <a data-lightbox="gallery" href="large1.jpg">
- *   <img src="thumb1.jpg" alt="Image 1">
- * </a>
- * <a data-lightbox="gallery" href="large2.jpg">
- *   <img src="thumb2.jpg" alt="Image 2">
- * </a>
+ * <figure>
+ *   <a data-lightbox="gallery" href="large1.jpg">
+ *     <img src="thumb1.jpg" alt="Image 1">
+ *   </a>
+ *   <figcaption>Click to view larger image</figcaption>
+ * </figure>
+ * <figure>
+ *   <a data-lightbox="gallery" href="large2.jpg">
+ *     <img src="thumb2.jpg" alt="Image 2">
+ *   </a>
+ *   <figcaption>Gallery image 2</figcaption>
+ * </figure>
  */
 export class Lightbox extends BaseComponent {
   static get defaults() {
