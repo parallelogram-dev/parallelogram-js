@@ -3,6 +3,9 @@
  * Imports all demo-specific SCSS files and component styles
  */
 
+/*  Settings and variables (must be first) */
+@use 'settings';
+
 /*  Base demo styles (shared across all pages) */
 @use 'reset';
 @use 'base';
@@ -25,6 +28,9 @@
 /*  Animation system (load first to allow overrides) */
 @use './components/animations.scss';
 
+/*  Form framework (base .btn styles - must load before button variants) */
+@use './components/form-framework.scss';
+
 /*  New BEM-compliant component styles */
 @use './components/button.scss';
 @use './components/dropdown.scss';
@@ -44,7 +50,6 @@
 @use './components/copy-demo.scss';
 @use './components/video.scss';
 @use './components/component-status.scss';
-@use './components/form-framework.scss';
 @use '../components/datetime.scss';
 
 /*  Demo-specific utility classes */
