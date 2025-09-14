@@ -1,39 +1,47 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 
 export class DemoUIComponents extends BaseComponent {
-  constructor(element, options = {}) {
-    super(element, options);
+  constructor(options = {}) {
+    super(options);
   }
 
-  mount() {
-    super.mount();
-    this.setupEventListeners();
-    this.setupButtonHandlers();
+  _init(element) {
+    const state = super._init(element);
+    
+    console.log('DemoUIComponents component initializing for element:', element);
+    
+    this.element = element;
+    this.setupEventListeners(state);
+    this.setupButtonHandlers(state);
     this.notifyPageLoaded();
-    this.emit('demo-ui-components:mounted', { element: this.element });
+    
+    if (this.eventBus) {
+      this.eventBus.emit('demo-ui-components:mounted', { element });
+    }
+    
+    return state;
   }
 
-  unmount() {
-    super.unmount();
-  }
-
-  setupEventListeners() {
+  setupEventListeners(state) {
+    const { controller } = state;
+    
     // Listen for UI component events
-    this.addEventListener(document, 'p-select:change', e => {
+    document.addEventListener('p-select:change', e => {
       this.addEventToLog('p-select:change', e.detail);
-    });
+    }, { signal: controller.signal });
 
-    this.addEventListener(document, 'modal:open', e => {
+    document.addEventListener('modal:open', e => {
       this.addEventToLog('modal:open', { modalId: e.target.id });
-    });
+    }, { signal: controller.signal });
 
-    this.addEventListener(document, 'modal:close', e => {
+    document.addEventListener('modal:close', e => {
       this.addEventToLog('modal:close', { modalId: e.target.id });
-    });
-
+    }, { signal: controller.signal });
   }
 
-  setupButtonHandlers() {
+  setupButtonHandlers(state) {
+    const { controller } = state;
+    
     // Handle all buttons with onclick handlers
     const onclickButtons = this.element.querySelectorAll('[data-btn-action]');
 
@@ -42,24 +50,26 @@ export class DemoUIComponents extends BaseComponent {
       button.removeAttribute('onclick');
 
       if (method.includes('handleFormSubmit')) {
-        this.addEventListener(button, 'click', event => this.handleFormSubmit(event));
+        button.addEventListener('click', event => this.handleFormSubmit(event), { signal: controller.signal });
       } else if (method.includes('clearEventLog')) {
-        this.addEventListener(button, 'click', () => this.clearEventLog());
+        button.addEventListener('click', () => this.clearEventLog(), { signal: controller.signal });
       } else if (method.includes('exportEventLog')) {
-        this.addEventListener(button, 'click', () => this.exportEventLog());
+        button.addEventListener('click', () => this.exportEventLog(), { signal: controller.signal });
+      } else if (method.includes('handleDatetimeDemo')) {
+        button.addEventListener('click', () => this.handleDatetimeDemo(), { signal: controller.signal });
       } else if (method.includes('performance')) {
-        this.addEventListener(button, 'click', () => {
+        button.addEventListener('click', () => {
           window.location.href = '/performance';
-        });
+        }, { signal: controller.signal });
       } else {
         // Handle modal action buttons
-        this.addEventListener(button, 'click', event => {
+        button.addEventListener('click', event => {
           // Only prevent default for actions that shouldn't trigger default behavior
           if (button.type !== 'submit') {
             event.preventDefault();
           }
           this.handleModalAction(method, button);
-        });
+        }, { signal: controller.signal });
       }
     });
   }
@@ -93,8 +103,10 @@ export class DemoUIComponents extends BaseComponent {
   handleOpenFormModal() {
     this.addEventToLog('modal:action', { action: 'open-form-modal', timestamp: Date.now() });
 
-    // Dispatch custom event for other components to listen to
-    this.emit('demo:form-modal-open', { modalType: 'form' });
+      // Dispatch custom event for other components to listen to
+    if (this.eventBus) {
+      this.eventBus.emit('demo:form-modal-open', { modalType: 'form' });
+    }
   }
 
   handleCancelForm() {
@@ -193,6 +205,25 @@ export class DemoUIComponents extends BaseComponent {
     }
   }
 
+  handleDatetimeDemo() {
+    const datetimePickers = document.querySelectorAll('p-datetime');
+    const values = {};
+
+    datetimePickers.forEach((picker, index) => {
+      const name = picker.getAttribute('name') || `datetime-${index}`;
+      const value = picker.getValue ? picker.getValue() : picker.value;
+      values[name] = value;
+    });
+
+    this.addEventToLog('datetime:demo-values', values);
+
+    if (window.Toast && window.Toast.show) {
+      window.Toast.show(`Datetime values: ${JSON.stringify(values)}`, 'info');
+    } else {
+      alert(`Datetime values: ${JSON.stringify(values)}`);
+    }
+  }
+
   clearEventLog() {
     const eventLogContent = this.element.querySelector('.event__log-content');
     if (eventLogContent) {
@@ -244,6 +275,13 @@ export class DemoUIComponents extends BaseComponent {
     const items = eventLogContent.querySelectorAll('.event__log-item');
     if (items.length > 10) {
       items[items.length - 1].remove();
+    }
+  }
+
+  // Emit helper for backward compatibility
+  emit(eventType, detail) {
+    if (this.eventBus) {
+      this.eventBus.emit(eventType, detail);
     }
   }
 

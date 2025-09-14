@@ -37,7 +37,7 @@ export default class PToasts extends HTMLElement {
         
         .toast.info { background: #111827; }
         .toast.success { background: #065f46; }
-        .toast.warn { background: #7c2d12; }
+        .toast.warning { background: #7c2d12; }
         .toast.error { background: #7f1d1d; }
         
         @keyframes toast-in { 
