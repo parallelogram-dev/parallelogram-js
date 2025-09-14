@@ -9,10 +9,19 @@
  *      data-carousel-autoplay-delay="5000"
  *      data-carousel-loop="true"
  *      data-carousel-show-dots="true">
- *   <div class="carousel-track">
- *     <div class="carousel-slide">Slide 1</div>
- *     <div class="carousel-slide">Slide 2</div>
- *     <div class="carousel-slide">Slide 3</div>
+ *   <div class="carousel-track" data-carousel-track>
+ *     <figure class="carousel-slide" data-carousel-slide>
+ *       <img src="image1.jpg" alt="Description 1" />
+ *       <figcaption>Caption for slide 1</figcaption>
+ *     </figure>
+ *     <figure class="carousel-slide" data-carousel-slide>
+ *       <img src="image2.jpg" alt="Description 2" />
+ *       <figcaption>Caption for slide 2</figcaption>
+ *     </figure>
+ *     <figure class="carousel-slide" data-carousel-slide>
+ *       <img src="image3.jpg" alt="Description 3" />
+ *       <figcaption>Caption for slide 3</figcaption>
+ *     </figure>
  *   </div>
  * </div>
  *

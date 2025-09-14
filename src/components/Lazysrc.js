@@ -1,27 +1,36 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '../core/BaseComponent.js';
 
 /**
  * Lazysrc Component - Standalone lazy loading without external dependencies
  *
  * @example
  * HTML:
- * <!-- Basic lazy image -->
- * <img data-lazysrc data-lazysrc-src="image.jpg" alt="Description">
+ * <!-- Basic lazy image with semantic markup -->
+ * <figure>
+ *   <img data-lazysrc data-lazysrc-src="image.jpg" alt="Description">
+ *   <figcaption>Image caption</figcaption>
+ * </figure>
  *
  * <!-- Responsive lazy image with srcset -->
- * <img data-lazysrc
- *      src="placeholder.jpg"
- *      data-lazysrc-src="image.jpg"
- *      data-lazysrc-srcset="image-320.jpg 320w, image-640.jpg 640w, image-1280.jpg 1280w"
- *      data-lazysrc-sizes="(max-width: 320px) 280px, (max-width: 640px) 600px, 1200px"
- *      alt="Description">
+ * <figure>
+ *   <img data-lazysrc
+ *        src="placeholder.jpg"
+ *        data-lazysrc-src="image.jpg"
+ *        data-lazysrc-srcset="image-320.jpg 320w, image-640.jpg 640w, image-1280.jpg 1280w"
+ *        data-lazysrc-sizes="(max-width: 320px) 280px, (max-width: 640px) 600px, 1200px"
+ *        alt="Description">
+ *   <figcaption>Responsive image caption</figcaption>
+ * </figure>
  *
  * <!-- Native HTML with progressive enhancement -->
- * <img data-lazysrc
- *      src="image.jpg"
- *      srcset="image-320.jpg 320w, image-640.jpg 640w"
- *      sizes="(max-width: 640px) 600px, 1200px"
- *      alt="Description">
+ * <figure>
+ *   <img data-lazysrc
+ *        src="image.jpg"
+ *        srcset="image-320.jpg 320w, image-640.jpg 640w"
+ *        sizes="(max-width: 640px) 600px, 1200px"
+ *        alt="Description">
+ *   <figcaption>Progressive enhancement example</figcaption>
+ * </figure>
  *
  * <!-- Picture element with sources -->
  * <picture data-lazysrc>
@@ -114,7 +123,8 @@ export default class Lazysrc extends BaseComponent {
       originalCleanup();
     };
 
-    this.eventBus?.emit('lazysrc:mounted', {
+    // Emit via custom event instead of eventBus
+    this._dispatch(element, 'lazysrc:mounted', {
       element,
       config,
       timestamp: performance.now(),
@@ -392,9 +402,11 @@ export default class Lazysrc extends BaseComponent {
     if (componentState.isLoading || componentState.isLoaded) return;
 
     componentState.isLoading = true;
+    componentState.loadStartTime = performance.now(); // Track when loading started
     element.classList.add(componentState.config.loadingClass);
 
-    this.eventBus?.emit('lazysrc:loading-start', {
+    // Emit via custom event
+    this._dispatch(element, 'lazysrc:loading-start', {
       element,
       timestamp: performance.now(),
     });
@@ -580,8 +592,14 @@ export default class Lazysrc extends BaseComponent {
     state.isLoaded = true;
     state.hasError = false;
 
+    // Calculate load time
+    const loadTime = state.loadStartTime ? performance.now() - state.loadStartTime : 0;
+
     element.classList.remove(state.config.loadingClass);
     element.classList.add(state.config.loadedClass);
+    
+    // Mark element as complete
+    element.setAttribute('data-lazysrc-complete', 'true');
 
     // Apply fade-in effect
     if (state.config.fadeInDuration > 0) {
@@ -597,12 +615,21 @@ export default class Lazysrc extends BaseComponent {
     // Clear retry attempts
     this.loadingAttempts.delete(element);
 
-    this.eventBus?.emit('lazysrc:loaded', {
+    // Emit via custom event
+    this._dispatch(element, 'lazysrc:loaded', {
       element,
       timestamp: performance.now(),
+      loadTime: Math.round(loadTime),
     });
 
-    this.logger?.debug('Element loaded successfully', { element });
+    this.logger?.debug('Element loaded successfully', { element, loadTime });
+    
+    // Auto-detach after successful load if configured
+    if (state.config.autoDetach !== false) {
+      setTimeout(() => {
+        this._detachElement(element, state);
+      }, 100);
+    }
   }
 
   /**
@@ -641,7 +668,8 @@ export default class Lazysrc extends BaseComponent {
       return;
     }
 
-    this.eventBus?.emit('lazysrc:error', {
+    // Emit via custom event
+    this._dispatch(element, 'lazysrc:error', {
       element,
       error: error?.message || 'Load failed',
       timestamp: performance.now(),
@@ -773,6 +801,31 @@ export default class Lazysrc extends BaseComponent {
       supportsNative: this._supportsNativeLoading(),
       defaults: Lazysrc.defaults,
     };
+  }
+
+  /**
+   * Detach element from component after loading
+   * @private
+   * @param {HTMLElement} element
+   * @param {Object} state
+   */
+  _detachElement(element, state) {
+    // Only detach if already loaded
+    if (!state.isLoaded) return;
+    
+    // Clean up state
+    if (state.customObserver) {
+      state.customObserver.disconnect();
+      state.customObserver = null;
+    }
+    
+    // Emit detached event via custom event
+    this._dispatch(element, 'lazysrc:detached', {
+      element,
+      timestamp: performance.now(),
+    });
+    
+    this.logger?.debug('Element detached after loading', { element });
   }
 
   /**

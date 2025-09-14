@@ -1,8 +1,8 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 
 export class DemoMedia extends BaseComponent {
-  constructor(element, options = {}) {
-    super(element, options);
+  constructor(options = {}) {
+    super(options);
 
     this.mediaMetrics = {
       imagesLoaded: 0,
@@ -10,68 +10,70 @@ export class DemoMedia extends BaseComponent {
       activeComponents: 0,
       componentsCleaned: 0,
     };
-
-    this.metricsInterval = null;
   }
 
-  mount() {
-    super.mount();
-    this.setupEventListeners();
-    this.setupButtonHandlers();
-    this.initializeMetricsTracking();
+  _init(element) {
+    const state = super._init(element);
+    
+    console.log('DemoMedia component initializing for element:', element);
+    
+    this.element = element;
+    this.setupEventListeners(state);
+    this.setupButtonHandlers(state);
+    this.initializeMetricsDisplay();
     this.notifyPageLoaded();
-    this.emit('demo-media:mounted', { element: this.element });
-  }
-
-  unmount() {
-    this.cleanup();
-    super.unmount();
-  }
-
-  cleanup() {
-    if (this.metricsInterval) {
-      clearInterval(this.metricsInterval);
+    
+    if (this.eventBus) {
+      this.eventBus.emit('demo-media:mounted', { element });
     }
+    
+    return state;
   }
 
-  setupEventListeners() {
+  setupEventListeners(state) {
+    const { controller } = state;
+    
     // Gallery functionality
-    this.addEventListener(document, 'click', e => {
+    document.addEventListener('click', e => {
       this.handleGalleryClick(e);
-    });
+    }, { signal: controller.signal });
 
     // Listen for lazy image events
-    this.addEventListener(document, 'lazy-image:loaded', e => {
+    document.addEventListener('lazysrc:loaded', e => {
+      console.log('lazysrc:loaded event received', e.detail);
       this.mediaMetrics.imagesLoaded++;
+      if (e.detail && e.detail.loadTime) {
+        this.mediaMetrics.totalLoadTime += e.detail.loadTime;
+      }
       this.updateMetricsDisplay();
 
       if (window.Toast && window.Toast.show) {
         window.Toast.show('Image loaded successfully', 'success');
       }
-    });
+    }, { signal: controller.signal });
+    
+    document.addEventListener('lazysrc:loading-start', e => {
+      this.updateMetricsDisplay();
+    }, { signal: controller.signal });
 
-    this.addEventListener(document, 'lazy-image:detached', e => {
+    document.addEventListener('lazysrc:detached', e => {
       this.mediaMetrics.componentsCleaned++;
       this.updateMetricsDisplay();
-    });
+    }, { signal: controller.signal });
 
     // Listen for carousel events
-    this.addEventListener(document, 'carousel:slide-change', e => {
+    document.addEventListener('carousel:slide-change', e => {
       console.log('Carousel slide changed:', e.detail);
-    });
+    }, { signal: controller.signal });
   }
 
-  setupButtonHandlers() {
-    // Handle all buttons with onclick handlers
-    const onclickButtons = this.element.querySelectorAll('[onclick]');
-
-    onclickButtons.forEach(button => {
-      const onclickValue = button.getAttribute('onclick');
-      button.removeAttribute('onclick');
-
-      if (onclickValue.includes('downloadCurrentImage')) {
-        this.addEventListener(button, 'click', () => this.downloadCurrentImage());
-      }
+  setupButtonHandlers(state) {
+    const { controller } = state;
+    
+    // Handle download button
+    const downloadButtons = this.element.querySelectorAll('[data-btn-action="downloadCurrentImage"]');
+    downloadButtons.forEach(button => {
+      button.addEventListener('click', () => this.downloadCurrentImage(), { signal: controller.signal });
     });
   }
 
@@ -116,9 +118,8 @@ export class DemoMedia extends BaseComponent {
 
     const activeComponentsEl = document.getElementById('active-components');
     if (activeComponentsEl) {
-      activeComponentsEl.textContent = document.querySelectorAll(
-        '[data-lazysrc]:not([data-lazysrc-complete])'
-      ).length;
+      const activeCount = document.querySelectorAll('[data-lazysrc]:not([data-lazysrc-complete])').length;
+      activeComponentsEl.textContent = activeCount;
     }
 
     const memorySavedEl = document.getElementById('memory-saved');
@@ -127,13 +128,9 @@ export class DemoMedia extends BaseComponent {
     }
   }
 
-  initializeMetricsTracking() {
-    // Update metrics periodically
-    this.metricsInterval = setInterval(() => {
-      this.updateMetricsDisplay();
-    }, 1000);
-
-    // Initial update
+  initializeMetricsDisplay() {
+    console.log('Initializing metrics display');
+    // Just do initial display update
     this.updateMetricsDisplay();
   }
 
@@ -145,6 +142,13 @@ export class DemoMedia extends BaseComponent {
         components: ['lazysrc', 'carousel', 'modal'],
         timestamp: performance.now(),
       });
+    }
+  }
+
+  // Emit helper for backward compatibility
+  emit(eventType, detail) {
+    if (this.eventBus) {
+      this.eventBus.emit(eventType, detail);
     }
   }
 
