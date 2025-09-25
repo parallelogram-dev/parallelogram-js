@@ -51,7 +51,8 @@
  * const picker = document.querySelector('p-datetime');
  * picker.value = '2024-01-15T14:30:00.000Z';
  * picker.addEventListener('change', (e) => {
- *   console.log('Selected:', e.detail.value);
+ *   // Handle the selected datetime value
+ *   const selectedValue = e.detail.value;
  * });
  */
 export default class PDatetime extends HTMLElement {

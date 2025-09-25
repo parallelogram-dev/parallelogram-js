@@ -346,7 +346,7 @@ export default class Lazysrc extends BaseComponent {
         const state = statePromise instanceof Promise ? await statePromise : statePromise;
 
         // Debug logging to understand state structure
-        console.log('State structure debug:', {
+        this.logger?.debug('State structure debug:', {
           wasPromise: statePromise instanceof Promise,
           hasState: !!state,
           stateKeys: state ? Object.keys(state) : null,
@@ -377,7 +377,7 @@ export default class Lazysrc extends BaseComponent {
    */
   async _loadElement(element, componentState) {
     // Debug logging to understand the state structure
-    console.log('_loadElement called with:', {
+    this.logger?.debug('_loadElement called with:', {
       element,
       componentState,
       componentStateKeys: componentState ? Object.keys(componentState) : null,

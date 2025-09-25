@@ -11,7 +11,19 @@
       "Bash(npm publish:*)",
       "Bash(npm version:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(for file in /Users/peptolab/Sites/parallelogram-js/src/components/*.js)",
+      "Bash(if grep -q \"console\\.\" \"$file\")",
+      "Bash(fi)",
+      "Bash(if grep -q \"this\\.logger\\?\\.\" \"$file\")",
+      "Bash(then echo \"✅ HAS LOGGER USAGE\")",
+      "Bash(done)",
+      "Bash(if ! grep -q \"console\\.\" \"$file\")",
+      "Bash(! grep -q \"this\\.logger\\?\\.\" \"$file\")",
+      "Bash(do if grep -q \"console\\.\" \"$file\")",
+      "Bash(then echo \"✅ HAS CONSOLE USAGE: $file\")",
+      "Bash(if ! find /Users/peptolab/Sites/parallelogram-js/src/components/ -name \"*.js\" -exec grep -l \"console\\.\" {} ;)",
+      "Bash(then echo \"✅ NO CONSOLE USAGE FOUND IN COMPONENTS\")"
     ],
     "deny": [],
     "ask": []
