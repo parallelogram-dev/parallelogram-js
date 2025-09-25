@@ -16,6 +16,7 @@
                     <li><a href="/media" class="nav__link">Media</a></li>
                     <li><a href="/interactive" class="nav__link">Interactive</a></li>
                     <li><a href="/performance" class="nav__link">Performance</a></li>
+                    <li><a href="/uploader" class="nav__link">Uploader</a></li>
                 </ul>
             </div>
         </nav>
@@ -119,16 +120,25 @@ pageManager.scanAndMount();</code></pre>
         <!-- Health Indicator -->
         <div id="health-indicator" class="health__indicator">🟡 Framework Loading...</div>
 
+        <!-- Floating Performance Toggle Button (always visible) -->
+        <button data-demo-performance-toggle class="performance__toggle-fab" title="Toggle Performance Panel">
+            📊
+        </button>
+
         <!-- Performance Panel -->
-        <div id="performance-panel" class="performance__panel">
-            <h4 class="performance__title">📊 Live Performance</h4>
-            <div id="performance-metrics">
-                <div class="performance__metric">
-                    <span>Framework Status:</span>
-                    <strong>Initializing...</strong>
+        <div id="performance-panel" class="performance-panel">
+            <div class="performance-panel__header">
+                <h3>📊 Live Performance</h3>
+                <button class="performance-panel__close" aria-label="Close performance panel"></button>
+            </div>
+            <div class="performance-panel__content">
+                <div id="performance-metrics">
+                    <div class="performance__metric">
+                        <span>Framework Status:</span>
+                        <strong>Initializing...</strong>
+                    </div>
                 </div>
             </div>
-            <button data-demo-performance-toggle class="btn btn--xs performance__toggle">Toggle Panel</button>
         </div>
         </main>
 
