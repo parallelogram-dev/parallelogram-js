@@ -601,12 +601,14 @@ export default class PSelect extends HTMLElement {
   }
 
   debug() {
-    console.log('PSelect Debug:', {
+    // Debug information available via component inspection
+    // Use browser dev tools to inspect this.state for debugging
+    return {
       options: this.state.options,
       filtered: this.state.filtered,
       value: this.state.value,
       domOptions: this.querySelectorAll('option').length,
-    });
+    };
   }
 
   _setFormValue(value, label) {
