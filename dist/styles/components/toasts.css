@@ -1,0 +1,49 @@
+:root {
+  --toast-z-index: 2147483647;
+  --toast-padding: 12px;
+  --toast-gap: 8px;
+  --toast-min-width: 300px;
+  --toast-max-width: 500px;
+  --toast-item-padding: 10px 12px;
+  --toast-border-radius: 8px;
+  --toast-text-color: #ffffff;
+  --toast-bg-info: #111827;
+  --toast-bg-success: #065f46;
+  --toast-bg-warn: #7c2d12;
+  --toast-bg-error: #7f1d1d;
+  --toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --toast-font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  --toast-animation-duration: 0.18s;
+}
+
+p-toasts {
+  position: fixed;
+  inset: auto auto auto 0;
+  padding: var(--toast-padding);
+  z-index: var(--toast-z-index);
+  display: grid;
+  gap: var(--toast-gap);
+  pointer-events: none;
+}
+
+p-toasts[placement=top-left] {
+  top: 0;
+  left: 0;
+}
+
+p-toasts[placement=top-right] {
+  top: 0;
+  right: 0;
+  left: auto;
+}
+
+p-toasts[placement=bottom-right] {
+  bottom: 0;
+  right: 0;
+  left: auto;
+}
+
+p-toasts[placement=bottom-left] {
+  bottom: 0;
+  left: 0;
+}
