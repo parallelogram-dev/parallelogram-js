@@ -1,4 +1,4 @@
-import { BaseComponent } from '../core/BaseComponent.js';
+import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
  * Uploader - File upload component with drag & drop, progress tracking, and sortable file management
