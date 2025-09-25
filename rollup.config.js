@@ -32,10 +32,16 @@ const componentConfigs = componentFiles.map(file => {
 });
 
 export default [
-  // Core framework build
+  // Core framework build - ESM
   {
     input: 'src/index.js',
     output: { file: 'dist/index.esm.js', format: 'esm' },
+  },
+
+  // Core framework build - CommonJS
+  {
+    input: 'src/index.js',
+    output: { file: 'dist/index.cjs', format: 'cjs' },
   },
 
   // Individual component builds
