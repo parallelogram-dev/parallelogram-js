@@ -23,12 +23,14 @@ import DataTable from '../../src/components/DataTable.js';
 import Lightbox from '../../src/components/Lightbox.js';
 import FormEnhancer from '../../src/components/FormEnhancer.js';
 import CopyToClipboard from '../../src/components/CopyToClipboard.js';
+import Uploader from '../../src/components/Uploader.js';
 
 // Demo page classes
 import { DemoHome } from './DemoHome.js';
 import { DemoMedia } from './DemoMedia.js';
 import { DemoPerformance } from './DemoPerformance.js';
 import { DemoUIComponents } from './DemoUIComponents.js';
+import { DemoFileUploader } from './DemoFileUploader.js';
 
 // Component factory function to replace dynamic loaders
 function createComponentLoader(ComponentClass) {
@@ -87,6 +89,9 @@ async function initFramework() {
       .component('copy-to-clipboard', '[data-copy-to-clipboard]', {
         loader: createComponentLoader(CopyToClipboard),
       })
+      .component('uploader', '[data-uploader]', {
+        loader: createComponentLoader(Uploader),
+      })
       .component('demo-home', '[data-demo="home"]', {
         loader: createComponentLoader(DemoHome),
       })
@@ -98,6 +103,9 @@ async function initFramework() {
       })
       .component('demo-ui-components', '[data-demo="ui-components"]', {
         loader: createComponentLoader(DemoUIComponents),
+      })
+      .component('demo-uploader', '[data-demo="uploader"]', {
+        loader: createComponentLoader(DemoFileUploader),
       })
       .build();
 
