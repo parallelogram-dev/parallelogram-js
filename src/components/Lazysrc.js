@@ -1,4 +1,4 @@
-import { BaseComponent } from '../core/BaseComponent.js';
+import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
  * Lazysrc Component - Standalone lazy loading without external dependencies
