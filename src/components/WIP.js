@@ -589,7 +589,7 @@ export class FormValidator extends BaseComponent {
  *
  * @example
  * <button data-copy-to-clipboard data-copy-target="#code-block">Copy Code</button>
- * <pre id="code-block">console.log('Hello World');</pre>
+ * <pre id="code-block">logger?.info('Hello World');</pre>
  */
 export class CopyToClipboard extends BaseComponent {
   static get defaults() {
