@@ -24,14 +24,31 @@ export class DemoHome extends BaseComponent {
     // Initial component registry update
     this.updateComponentRegistry();
 
+    // Start with performance panel hidden (will be toggled by FAB button)
+    this.performancePanelVisible = false;
+    const panel = document.getElementById('performance-panel');
+    if (panel) {
+      panel.classList.remove('active');
+    }
+
     return state;
   }
 
   _setupEventListeners(element, signal) {
-    // Performance panel toggle button
-    const toggleButton = element.querySelector('[data-demo-performance-toggle]');
+    // Floating performance toggle button (outside main element)
+    const toggleButton = document.querySelector('[data-demo-performance-toggle]');
     if (toggleButton) {
       toggleButton.addEventListener('click', this.togglePerformancePanel, { signal });
+    }
+
+    // Performance panel close button
+    const closeButton = document.querySelector('.performance-panel__close');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        if (this.performancePanelVisible) {
+          this.togglePerformancePanel();
+        }
+      }, { signal });
     }
 
     // Update performance panel periodically when visible

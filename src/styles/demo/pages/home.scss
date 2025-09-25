@@ -68,8 +68,45 @@
   }
 }
 
-/*  Performance toggle button */
-.performance-toggle {
+/*  Floating Performance Toggle Button (FAB) */
+.performance__toggle-fab {
+  position: fixed;
+  bottom: var(--demo-spacing-lg);
+  right: var(--demo-spacing-lg);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--demo-accent);
+  color: var(--color-white, white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-normal, 0.2s) ease;
+  z-index: var(--z-index-modal, 1050);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background: color-mix(in srgb, var(--demo-accent) 85%, white);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus-visible {
+    outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+    outline-offset: var(--framework-focus-offset, 2px);
+  }
+}
+
+/*  Performance toggle button (legacy - deprecated) */
+.performance__toggle {
   appearance: none;
   border: 1px solid var(--demo-border);
   background: var(--demo-panel-bg);
@@ -204,6 +241,14 @@
     right: var(--demo-spacing-sm);
     top: var(--demo-spacing-sm);
     transform: translateX(calc(100% + var(--demo-spacing-sm)));
+  }
+
+  .performance__toggle-fab {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    bottom: var(--demo-spacing-md);
+    right: var(--demo-spacing-md);
   }
 
   .component-registry__item {

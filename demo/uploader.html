@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Uploader - Enhancement Framework</title>
+        <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    </head>
+    <body>
+        <nav data-view="navbar">
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul class="nav__list">
+                    <li><a href="/" class="nav__link">Home</a></li>
+                    <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                    <li><a href="/media" class="nav__link">Media</a></li>
+                    <li><a href="/interactive" class="nav__link">Interactive</a></li>
+                    <li><a href="/performance" class="nav__link">Performance</a></li>
+                    <li><a href="/uploader" class="nav__link" aria-current="page">Uploader</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main data-view="main" data-demo="uploader" class="page__content">
+            <header class="page__header">
+                <h1>Uploader Component</h1>
+                <p>
+                    Modern file upload component with drag & drop, progress tracking, sortable file management, 
+                    and inline editing. Fully customizable via data attributes with accessibility support.
+                </p>
+            </header>
+
+            <section class="demo__section" data-demo-section>
+                <h2>Basic File Uploader</h2>
+                <p>Simple image uploader with drag & drop support and basic file management:</p>
+
+                <div class="demo__container">
+                    <div data-uploader 
+                         data-uploader-max-files="3" 
+                         data-uploader-upload-url="/api/upload" 
+                         data-uploader-sequence-url="/api/sequence"
+                         data-uploader-accept-types="image/*"
+                         data-uploader-max-file-size="5242880"
+                         data-uploader-input-name="images">
+                        
+                        <!-- Existing file with proper uploader structure -->
+                        <div class="uploader__file uploader__file--show">
+                            <progress class="uploader__progress" max="100" value="0"></progress>
+                            <input type="hidden" value="demo1" name="images">
+                            
+                            <picture class="uploader__preview uploader__preview--show">
+                                <img alt="" src="https://picsum.photos/200/200?random=1">
+                            </picture>
+                            
+                            <div data-panel="info" class="uploader__panel uploader__panel--show">
+                                <div class="uploader__body">
+                                    <p class="uploader__title">Sample Image 1</p>
+                                    <p class="uploader__caption"></p>
+                                    <p class="uploader__link"></p>
+                                    <p class="uploader__filename">sample1.jpg</p>
+                                </div>
+                                <div class="uploader__actions">
+                                    <button class="uploader__btn uploader__btn--update" type="button">Update</button>Edit Title/Caption
+                                    <button class="uploader__btn uploader__btn--link" type="button">Link</button>Edit website link
+                                    <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>Delete
+                                </div>
+                            </div>
+                            
+                            <div data-panel="error" class="uploader__panel">
+                                <div class="uploader__body">
+                                    <p class="uploader__title">Upload Error</p>
+                                    <p class="uploader__info"></p>
+                                </div>
+                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
+                            </div>
+                            
+                            <div data-panel="rename" class="uploader__panel">
+                                <div class="uploader__body">
+                                    <input name="title" class="uploader__input" placeholder="Title" type="text">
+                                    <textarea rows="6" name="caption" class="uploader__input" placeholder="Caption"></textarea>
+                                </div>
+                                <button class="uploader__btn uploader__btn--confirm" type="button">Confirm</button>
+                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
+                            </div>
+                            
+                            <div data-panel="link" class="uploader__panel">
+                                <div class="uploader__body">
+                                    <input name="link" class="uploader__input" placeholder="E.g. https://example.com" type="text">
+                                </div>
+                                <button class="uploader__btn uploader__btn--confirm" type="button">Confirm</button>
+                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
+                            </div>
+                            
+                            <div data-panel="delete" class="uploader__panel">
+                                <div class="uploader__body">
+                                    <p class="uploader__title">Delete this file?</p>
+                                </div>
+                                <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>
+                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
+                            </div>
+                        </div>
+                        
+                        <div class="uploader__selector uploader__selector--show" data-uploader-selector>
+                            <input type="file" multiple accept="image/*" class="uploader__fileinput" id="basic-files">
+                            <label class="uploader__label" for="basic-files">
+                                + Add images by selecting or dragging here
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features__details">
+                    <h3>Basic Features</h3>
+                    <ul>
+                        <li><strong>Drag & Drop:</strong> Drop files directly onto the upload area</li>
+                        <li><strong>File Validation:</strong> Automatic type and size validation</li>
+                        <li><strong>Progress Tracking:</strong> Real-time upload progress bars</li>
+                        <li><strong>Image Previews:</strong> Automatic thumbnail generation</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-demo-section>
+                <h2>Advanced File Uploader</h2>
+                <p>Full-featured uploader with sorting, editing, and multiple file types:</p>
+
+                <div class="demo__container">
+                    <div data-uploader
+                         data-upload-url="/api/upload"
+                         data-sequence-url="/api/sequence"
+                         data-max-files="10"
+                         data-input-name="documents"
+                         data-accept-types="*/*"
+                         data-max-file-size="10485760"
+                         data-allow-edit="true"
+                         data-allow-sort="true"
+                         data-class-name="advanced-uploader">
+                        
+                        <div data-upload-dropzone>
+                            <input type="file" multiple data-upload-input id="advanced-files">
+                            <label for="advanced-files" data-upload-label>
+                                <div class="uploader__dropzone-icon">📁</div>
+                                <div class="uploader__dropzone-text">Drop any files here or click to browse</div>
+                                <div class="uploader__dropzone-hint">Up to 10 files, 10MB each • Drag to reorder • Click to edit</div>
+                            </label>
+                        </div>
+                        
+                        <div data-upload-files></div>
+                        
+                        <!-- Pre-loaded files for demo -->
+                        <input type="hidden" 
+                               data-file-id="doc1"
+                               data-file-title="Project Proposal"
+                               data-file-filename="proposal.pdf"
+                               data-file-info="2.1 MB • PDF Document"
+                               data-file-type="document">
+                               
+                        <input type="hidden" 
+                               data-file-id="doc2"
+                               data-file-title="Budget Spreadsheet"
+                               data-file-filename="budget.xlsx"
+                               data-file-info="890 KB • Excel File"
+                               data-file-type="document">
+                               
+                        <input type="hidden" 
+                               data-file-id="img1"
+                               data-file-title="Team Photo"
+                               data-file-filename="team.jpg"
+                               data-file-preview="https://picsum.photos/200/200?random=2"
+                               data-file-info="1.5 MB • JPEG Image"
+                               data-file-type="image">
+                    </div>
+                </div>
+
+                <div class="features__details">
+                    <h3>Advanced Features</h3>
+                    <ul>
+                        <li><strong>Sortable Files:</strong> Drag and drop to reorder files</li>
+                        <li><strong>Inline Editing:</strong> Edit file titles and metadata</li>
+                        <li><strong>Multiple File Types:</strong> Support for documents, images, and more</li>
+                        <li><strong>Customizable UI:</strong> Custom class names and styling</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-demo-section>
+                <h2>Gallery Uploader</h2>
+                <p>Specialized uploader for photo galleries with strict image requirements:</p>
+
+                <div class="demo__container">
+                    <div data-uploader
+                         data-upload-url="/api/gallery-upload"
+                         data-sequence-url="/api/gallery-sequence"
+                         data-max-files="12"
+                         data-input-name="gallery"
+                         data-accept-types="image/jpeg,image/png,image/webp"
+                         data-max-file-size="20971520"
+                         data-allow-edit="true"
+                         data-allow-sort="true"
+                         data-class-name="gallery-uploader">
+                        
+                        <div data-upload-dropzone>
+                            <input type="file" multiple accept="image/jpeg,image/png,image/webp" data-upload-input id="gallery-files">
+                            <label for="gallery-files" data-upload-label>
+                                <div class="uploader__dropzone-icon">🖼️</div>
+                                <div class="uploader__dropzone-text">Add photos to your gallery</div>
+                                <div class="uploader__dropzone-hint">JPEG, PNG, WebP only • Up to 12 photos • 20MB max each</div>
+                            </label>
+                        </div>
+                        
+                        <div data-upload-files></div>
+                        
+                        <!-- Gallery demo files -->
+                        <input type="hidden" 
+                               data-file-id="gallery1"
+                               data-file-title="Mountain Landscape"
+                               data-file-filename="mountain.jpg"
+                               data-file-preview="https://picsum.photos/200/200?random=10"
+                               data-file-info="3.2 MB • 4000×3000"
+                               data-file-type="image">
+                               
+                        <input type="hidden" 
+                               data-file-id="gallery2"
+                               data-file-title="City Skyline"
+                               data-file-filename="city.jpg"
+                               data-file-preview="https://picsum.photos/200/200?random=11"
+                               data-file-info="2.8 MB • 3840×2160"
+                               data-file-type="image">
+                               
+                        <input type="hidden" 
+                               data-file-id="gallery3"
+                               data-file-title="Ocean Sunset"
+                               data-file-filename="sunset.jpg"
+                               data-file-preview="https://picsum.photos/200/200?random=12"
+                               data-file-info="4.1 MB • 5000×3333"
+                               data-file-type="image">
+                    </div>
+                </div>
+
+                <div class="features__details">
+                    <h3>Gallery Features</h3>
+                    <ul>
+                        <li><strong>Image-Only:</strong> Strict file type validation for images</li>
+                        <li><strong>High Resolution:</strong> Support for large image files up to 20MB</li>
+                        <li><strong>Visual Organization:</strong> Sortable grid layout for galleries</li>
+                        <li><strong>Metadata Editing:</strong> Add titles and descriptions to photos</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-demo-section>
+                <h2>Event Monitoring</h2>
+                <p>Real-time monitoring of file uploader events:</p>
+
+                <div id="file-uploader-events" class="event">
+                    <div class="event__header">
+                        <strong>File Uploader Events</strong>
+                        <div class="event__controls">
+                            <button data-btn-action="clearEventLog" class="btn btn--xs">Clear</button>
+                        </div>
+                    </div>
+                    <div class="event__content event__content--scrollable">
+                        <div class="event__item">
+                            <div class="event__entry">
+                                <div>
+                                    <strong>uploader:mounted</strong>
+                                    <pre>{"maxFiles": 5, "allowEdit": true}</pre>
+                                </div>
+                                <small class="event__timestamp">Just now</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features__details">
+                    <h3>Available Events</h3>
+                    <ul>
+                        <li><code>uploader:mounted</code> - Component initialized</li>
+                        <li><code>uploader:files-added</code> - New files added to queue</li>
+                        <li><code>uploader:upload-progress</code> - Upload progress updates</li>
+                        <li><code>uploader:file-uploaded</code> - File successfully uploaded</li>
+                        <li><code>uploader:file-error</code> - Upload or validation error</li>
+                        <li><code>uploader:file-updated</code> - File metadata updated</li>
+                        <li><code>uploader:file-deleted</code> - File removed</li>
+                        <li><code>uploader:files-reordered</code> - Files reordered by drag & drop</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="demo__section" data-demo-section>
+                <h2>API Integration</h2>
+                <p>The FileUploader component expects specific API endpoints:</p>
+
+                <div class="api__documentation">
+                    <h3>Upload Endpoint</h3>
+                    <div class="code__block">
+                        <strong>POST</strong> <code>/api/upload</code>
+                        <pre>
+FormData:
+- action: "upload"
+- file: [File object]
+
+Response:
+{
+  "id": "unique_file_id",
+  "title": "File Title",
+  "filename": "original.jpg", 
+  "preview": "/path/to/thumb.jpg",
+  "info": "1.2 MB • 1920×1080",
+  "type": "image"
+}</pre>
+                    </div>
+
+                    <h3>Update Endpoint</h3>
+                    <div class="code__block">
+                        <strong>POST</strong> <code>/api/upload</code>
+                        <pre>
+FormData:
+- action: "update"
+- id: "file_id"
+- title: "New Title"
+
+Response:
+{
+  "id": "file_id",
+  "title": "Updated Title",
+  "info": "Additional info"
+}</pre>
+                    </div>
+
+                    <h3>Delete Endpoint</h3>
+                    <div class="code__block">
+                        <strong>POST</strong> <code>/api/upload</code>
+                        <pre>
+FormData:
+- action: "delete"
+- id: "file_id"
+
+Response: 200 OK</pre>
+                    </div>
+
+                    <h3>Sequence Endpoint</h3>
+                    <div class="code__block">
+                        <strong>POST</strong> <code>/api/sequence</code>
+                        <pre>
+JSON:
+{
+  "sequence": ["file_id_1", "file_id_2", "file_id_3"]
+}
+
+Response: 200 OK</pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
+
+        <!-- Load the framework -->
+        <script type="module" src="dist/parallelogram-demo.min.js"></script>
+    </body>
+</html>
