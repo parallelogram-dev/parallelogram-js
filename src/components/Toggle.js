@@ -4,6 +4,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  *
  * Progressive enhancement for toggle functionality with show/hide states.
  * Supports dropdowns, modals, accordion panels, and other toggleable content.
+ * Includes auto-close functionality for navigation links.
  *
  * @example
  * HTML:
@@ -18,7 +19,22 @@ import { BaseComponent } from '@peptolab/parallelogram';
  *         data-toggle-capture="true">Dropdown</button>
  * <div id="dropdown" class="dropdown">Menu items</div>
  *
- * <!-- Manual toggle (won't auto-close) -->
+ * <!-- Navigation menu that auto-closes when links are clicked -->
+ * <button data-toggle data-toggle-target="#navbar-navigation">Menu</button>
+ * <nav id="navbar-navigation">
+ *   <a href="/page1">Page 1</a>
+ *   <a href="/page2">Page 2</a>
+ *   <a href="#section">Anchor link (won't close)</a>
+ *   <a href="https://external.com" target="_blank">External (won't close)</a>
+ * </nav>
+ *
+ * <!-- Disable navigation auto-close -->
+ * <button data-toggle
+ *         data-toggle-target="#persistent-nav"
+ *         data-toggle-close-navigation="false">Persistent Nav</button>
+ * <nav id="persistent-nav">Navigation links won't auto-close this</nav>
+ *
+ * <!-- Manual toggle (won't auto-close at all) -->
  * <button data-toggle data-toggle-target="#persistent">Persistent Toggle</button>
  * <div id="persistent" data-toggle-manual="true">This won't auto-close</div>
  *
@@ -47,6 +63,7 @@ export default class Toggle extends BaseComponent {
       multiple: false, // Allow multiple toggles open at once
       animateToggle: true,
       closeOnEscape: true,
+      closeOnNavigation: true, // Auto-close when navigation links are clicked
     };
   }
 
@@ -82,6 +99,11 @@ export default class Toggle extends BaseComponent {
       'toggle-animate',
       Toggle.defaults.animateToggle
     );
+    const closeOnNavigation = this._getDataAttr(
+      element,
+      'toggle-close-navigation',
+      Toggle.defaults.closeOnNavigation
+    );
 
     // Store state
     state.target = target;
@@ -90,6 +112,7 @@ export default class Toggle extends BaseComponent {
     state.manual = manual;
     state.multiple = multiple;
     state.animateToggle = animateToggle;
+    state.closeOnNavigation = closeOnNavigation;
     state.isOpen = target.classList.contains(Toggle.defaults.openClass);
     state.transitionTimer = null;
 
@@ -204,8 +227,8 @@ export default class Toggle extends BaseComponent {
     // Update classes and ARIA
     this._updateElementStates(element, state, true);
 
-    // Set up global listeners for outside click capture
-    if (state.capture) {
+    // Set up global listeners for outside click capture or navigation link detection
+    if (state.capture || state.closeOnNavigation) {
       this._setupGlobalListeners(element, state);
     }
 
@@ -336,8 +359,14 @@ export default class Toggle extends BaseComponent {
    * @param {Object} state - Component state
    */
   _setupGlobalListeners(element, state) {
-    // Prevent clicks inside the target from closing
+    // Handle clicks inside the target
     const targetClickHandler = e => {
+      // Check for navigation links if closeOnNavigation is enabled
+      if (state.closeOnNavigation && !state.manual && this._isNavigationLink(e.target)) {
+        this.hide(element);
+        return;
+      }
+      // Otherwise prevent clicks inside the target from closing
       e.stopPropagation();
     };
 
@@ -371,6 +400,35 @@ export default class Toggle extends BaseComponent {
       document.removeEventListener('click', state.documentClickHandler);
       state.documentClickHandler = null;
     }
+  }
+
+  /**
+   * Check if an element is a navigation link that should trigger toggle closure
+   * @private
+   * @param {HTMLElement} element - Element to check
+   * @returns {boolean} Whether the element is a navigation link
+   */
+  _isNavigationLink(element) {
+    // Walk up the DOM tree to find a link element
+    let current = element;
+    while (current && current !== document.body) {
+      if (current.tagName === 'A') {
+        const href = current.getAttribute('href');
+        // Check if it's a navigation link (has href and causes page navigation)
+        if (href &&
+            !href.startsWith('#') &&
+            !href.startsWith('javascript:') &&
+            !href.startsWith('mailto:') &&
+            !href.startsWith('tel:') &&
+            !current.hasAttribute('download') &&
+            current.getAttribute('target') !== '_blank') {
+          return true;
+        }
+        break;
+      }
+      current = current.parentElement;
+    }
+    return false;
   }
 
   /**
