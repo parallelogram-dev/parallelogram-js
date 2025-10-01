@@ -255,16 +255,21 @@ class Carousel extends BaseComponent {
 
 ### 3. Performance Optimizations
 
+BaseComponent provides built-in `_debounce` and `_throttle` utility methods to optimize performance:
+
 ```javascript
 class DataTable extends BaseComponent {
   _init(element) {
     const state = {
       // ... other state
 
-      // Debounced methods for performance
+      // Debounced search - delays execution until user stops typing
       debouncedSearch: this._debounce(this._performSearch.bind(this), 300),
 
-      // Cached DOM queries
+      // Throttled scroll handler - limits execution rate
+      throttledScroll: this._throttle(this._handleScroll.bind(this), 100),
+
+      // Cached DOM queries for performance
       cachedElements: {
         tbody: element.querySelector('tbody'),
         headers: [...element.querySelectorAll('th')],
@@ -272,17 +277,44 @@ class DataTable extends BaseComponent {
       },
     };
 
+    // Use debounced search on input
+    state.cachedElements.searchInput?.addEventListener('input', state.debouncedSearch);
+
     return state;
   }
 
-  _debounce(func, delay) {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
+  _performSearch(query) {
+    // Search logic here
+    console.log('Searching for:', query);
+  }
+
+  _handleScroll(event) {
+    // Scroll handling logic
+    console.log('Scrolled to:', window.scrollY);
   }
 }
+```
+
+**Debounce vs Throttle:**
+
+- **`_debounce(func, wait)`** - Delays execution until after `wait` milliseconds have elapsed since the last call
+  - **Use for:** Search inputs, resize handlers, form validation
+  - **Example:** Wait 300ms after user stops typing before searching
+
+- **`_throttle(func, limit)`** - Ensures function is called at most once per `limit` milliseconds
+  - **Use for:** Scroll handlers, mouse move tracking, resize events
+  - **Example:** Update scroll position at most once every 100ms
+
+```javascript
+// Debounce example - waits for user to stop typing
+searchInput.addEventListener('input', this._debounce((e) => {
+  this.search(e.target.value);
+}, 300));
+
+// Throttle example - limits scroll handler execution rate
+window.addEventListener('scroll', this._throttle(() => {
+  this.updateScrollPosition();
+}, 100));
 ```
 
 ## State Storage Patterns
@@ -371,36 +403,60 @@ class ComponentWithSharedState extends BaseComponent {
 
 ## Component Helper Methods
 
+BaseComponent provides a comprehensive set of utility methods to eliminate code duplication across components.
+
 ### 1. DOM Utilities
 
 ```javascript
-// BaseComponent provides helper methods
 class MyComponent extends BaseComponent {
   _init(element) {
-    // Get related elements
-    const target = this._getTarget(element);
-    const triggers = this._getTriggers(element);
+    // Get target element from data attribute with validation
+    const target = this._getTargetElement(element, 'component-target', { required: true });
+    if (!target) return this._init(element);
 
-    // Parse data attributes
-    const config = this._parseDataAttributes(element);
+    // Parse multiple data attributes into config object
+    const config = this._getConfigFromAttrs(element, {
+      threshold: 'component-threshold',
+      duration: 'component-duration',
+      autoplay: 'component-autoplay'
+    });
 
     // Generate unique IDs
-    const id = this._generateId('my-component');
+    const id = element.id || this._generateId('my-component');
 
-    return { target, triggers, config, id };
-  }
+    // Create DOM elements
+    const button = this._createElement('button', {
+      className: 'component__button',
+      'aria-label': 'Close',
+      dataset: { action: 'close' }
+    }, 'Close');
 
-  _getTarget(element) {
-    const selector = element.dataset.target;
-    return selector ? document.querySelector(selector) : null;
-  }
-
-  _getTriggers(element) {
-    const id = element.id;
-    return id ? [...document.querySelectorAll(`[data-target="#${id}"]`)] : [];
+    return { target, config, id, button };
   }
 }
 ```
+
+**Available DOM Methods:**
+
+- **`_getTargetElement(element, dataAttr, options)`** - Get target element from data attribute
+  - `element` - Element containing the data attribute
+  - `dataAttr` - Attribute name without 'data-' prefix
+  - `options.required` - Whether to log warning if not found
+
+- **`_getConfigFromAttrs(element, mapping)`** - Parse multiple data attributes at once
+  - `element` - Element with data attributes
+  - `mapping` - Object mapping config keys to attribute names
+  - Returns configuration object with type conversion
+
+- **`_generateId(prefix)`** - Generate unique ID with optional prefix
+  - `prefix` - String prefix (default: 'elem')
+  - Returns: `prefix-timestamp-random`
+
+- **`_createElement(tag, attributes, content)`** - Create element with attributes
+  - `tag` - HTML tag name
+  - `attributes` - Object with attributes (className, style, dataset, etc.)
+  - `content` - Text content or HTMLElement child
+  - Returns: HTMLElement
 
 ### 2. Event Dispatching
 
@@ -419,7 +475,202 @@ _dispatchEvent(element, eventName, detail = {}) {
 }
 ```
 
-### 3. Animation Helpers
+### 3. Performance Utilities
+
+BaseComponent includes built-in `_debounce` and `_throttle` methods for optimizing event handlers:
+
+```javascript
+class SearchComponent extends BaseComponent {
+  _init(element) {
+    const state = super._init(element);
+
+    const searchInput = element.querySelector('[data-search]');
+
+    // Debounce search - waits until user stops typing
+    const debouncedSearch = this._debounce((e) => {
+      this.performSearch(e.target.value);
+    }, 300);
+
+    searchInput.addEventListener('input', debouncedSearch, {
+      signal: state.controller.signal
+    });
+
+    return state;
+  }
+
+  performSearch(query) {
+    // API call or heavy processing
+    console.log('Searching for:', query);
+  }
+}
+```
+
+```javascript
+class ScrollComponent extends BaseComponent {
+  _init(element) {
+    const state = super._init(element);
+
+    // Throttle scroll - limits execution rate
+    const throttledScroll = this._throttle(() => {
+      this.updateScrollPosition();
+    }, 100);
+
+    window.addEventListener('scroll', throttledScroll, {
+      signal: state.controller.signal,
+      passive: true
+    });
+
+    return state;
+  }
+
+  updateScrollPosition() {
+    // Update UI based on scroll position
+    console.log('Scroll position:', window.scrollY);
+  }
+}
+```
+
+**Available Performance Methods:**
+
+- `_debounce(func, wait = 300)` - Delays execution until after wait milliseconds
+- `_throttle(func, limit = 100)` - Limits execution to once per limit milliseconds
+- `_delay(ms)` - Returns promise that resolves after milliseconds
+
+### 4. State Validation
+
+```javascript
+class MyComponent extends BaseComponent {
+  toggle(element) {
+    // Validate state exists before proceeding
+    const state = this._requireState(element, 'toggle');
+    if (!state) return;
+
+    // Continue with logic
+    state.isOpen = !state.isOpen;
+    this._updateUI(element, state);
+  }
+
+  async loadData(element) {
+    const state = this._requireState(element, 'loadData');
+    if (!state) return;
+
+    // Use delay helper for timing operations
+    await this._delay(500);
+
+    // Fetch and update
+    const data = await fetch('/api/data');
+    state.data = await data.json();
+  }
+}
+```
+
+**Available State Methods:**
+
+- `_requireState(element, methodName)` - Validate state exists and log warning if not
+- `getState(element)` - Get state for element without validation
+
+### 5. Animation & Transition Helpers
+
+BaseComponent provides utilities for smooth animations and transitions:
+
+```javascript
+class AnimatedComponent extends BaseComponent {
+  async show(element) {
+    const state = this._requireState(element, 'show');
+    if (!state) return;
+
+    // Fade in element
+    state.target.style.display = 'block';
+    await this._fadeIn(state.target, 300);
+
+    // Wait for user interaction
+    await this._delay(2000);
+
+    // Fade out
+    await this._fadeOut(state.target, 300);
+    state.target.style.display = 'none';
+  }
+
+  async transition(element) {
+    const state = this._requireState(element, 'transition');
+    if (!state) return;
+
+    // Add transition class
+    state.target.classList.add('transitioning');
+
+    // Wait for CSS transition to complete
+    await this._waitForTransition(state.target, 500);
+
+    // Cleanup
+    state.target.classList.remove('transitioning');
+  }
+}
+```
+
+**Available Animation Methods:**
+
+- `_fadeIn(element, duration = 300)` - Fade element from opacity 0 to 1
+- `_fadeOut(element, duration = 300)` - Fade element from opacity 1 to 0
+- `_waitForTransition(element, timeout = 2000)` - Wait for CSS transition/animation to complete
+- `_delay(ms)` - Simple delay using promises
+
+### 6. Focus Management
+
+For modals, dialogs, and other components requiring focus control:
+
+```javascript
+class ModalComponent extends BaseComponent {
+  _init(element) {
+    const state = super._init(element);
+
+    // Store trigger for focus restoration
+    state.triggerElement = null;
+
+    return state;
+  }
+
+  open(element, triggerElement) {
+    const state = this._requireState(element, 'open');
+    if (!state) return;
+
+    // Save trigger for later restoration
+    state.triggerElement = triggerElement;
+
+    // Open modal
+    element.classList.add('open');
+
+    // Focus first focusable element
+    const focusable = this._getFocusableElements(element);
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    }
+
+    // Setup focus trap
+    element.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        this._trapFocus(element, e);
+      }
+    }, { signal: state.controller.signal });
+  }
+
+  close(element) {
+    const state = this._requireState(element, 'close');
+    if (!state) return;
+
+    // Close modal
+    element.classList.remove('open');
+
+    // Restore focus to trigger
+    this._restoreFocus(state.triggerElement);
+  }
+}
+```
+
+**Available Focus Methods:**
+
+- `_getFocusableElements(container)` - Get all focusable elements in container
+- `_trapFocus(container, event)` - Trap Tab key within container
+- `_restoreFocus(element)` - Restore focus with requestAnimationFrame
 
 ```javascript
 _animate(element, animation) {
@@ -435,13 +686,13 @@ _animate(element, animation) {
 }
 
 async _transition(element, state, newState) {
-  // Animate out
+  /* Animate out */
   await this._animate(element, 'fade-out');
 
-  // Update state
+  /* Update state */
   this._setState(element, state, newState);
 
-  // Animate in
+  /* Animate in */
   await this._animate(element, 'fade-in');
 }
 ```

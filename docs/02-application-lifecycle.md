@@ -283,6 +283,251 @@ element.addEventListener('focusin', this._handleFocus.bind(this), {
 - Event handling chains are established
 - Component communication channels are active
 
+## Understanding AbortController and Signals
+
+### What is `state.controller.signal`?
+
+The `signal` property comes from the **AbortController API**, a browser-native feature that provides a clean way to cancel event listeners and asynchronous operations. This is fundamental to preventing memory leaks in the framework.
+
+### How It Works
+
+```javascript
+// 1. Create an AbortController in component state
+const controller = new AbortController();
+
+// 2. Get the signal from the controller
+const signal = controller.signal;
+
+// 3. Pass signal to event listeners
+element.addEventListener('click', handler, { signal });
+element.addEventListener('scroll', handler, { signal });
+window.addEventListener('resize', handler, { signal });
+
+// 4. Later, abort removes ALL listeners automatically
+controller.abort();
+```
+
+### Signal Use Cases in Components
+
+#### Context 1: Event Listeners (Primary Use)
+
+```javascript
+_init(element) {
+  const state = {
+    controller: new AbortController(),
+  };
+
+  // Multiple listeners, all managed by one controller
+  element.addEventListener('click', this.handleClick, {
+    signal: state.controller.signal
+  });
+
+  element.addEventListener('input', this.handleInput, {
+    signal: state.controller.signal
+  });
+
+  document.addEventListener('keydown', this.handleKeydown, {
+    signal: state.controller.signal
+  });
+
+  return state;
+}
+
+// All listeners removed with one call
+unmount(element) {
+  const state = this.elements.get(element);
+  state.controller.abort(); // Cleanup complete!
+}
+```
+
+#### Context 2: Fetch Requests
+
+```javascript
+async loadData(element) {
+  const state = this.getState(element);
+
+  try {
+    const response = await fetch('/api/data', {
+      signal: state.controller.signal
+    });
+
+    const data = await response.json();
+    this.updateUI(data);
+  } catch (error) {
+    // AbortError thrown if component unmounts during fetch
+    if (error.name === 'AbortError') {
+      console.log('Request cancelled - component unmounted');
+    }
+  }
+}
+```
+
+#### Context 3: Timers and Intervals
+
+```javascript
+_init(element) {
+  const state = {
+    controller: new AbortController(),
+  };
+
+  // Set up auto-refresh timer
+  const intervalId = setInterval(() => {
+    this.refresh(element);
+  }, 5000);
+
+  // Clean up timer when signal aborts
+  state.controller.signal.addEventListener('abort', () => {
+    clearInterval(intervalId);
+  });
+
+  return state;
+}
+```
+
+#### Context 4: Mutation Observers
+
+```javascript
+_init(element) {
+  const state = {
+    controller: new AbortController(),
+  };
+
+  // Watch for DOM changes
+  const observer = new MutationObserver(mutations => {
+    this.handleMutations(mutations);
+  });
+
+  observer.observe(element, { childList: true });
+
+  // Disconnect observer on cleanup
+  state.controller.signal.addEventListener('abort', () => {
+    observer.disconnect();
+  });
+
+  return state;
+}
+```
+
+#### Context 5: Intersection Observers
+
+```javascript
+_init(element) {
+  const state = {
+    controller: new AbortController(),
+  };
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        this.loadContent(element);
+      }
+    });
+  });
+
+  observer.observe(element);
+
+  state.controller.signal.addEventListener('abort', () => {
+    observer.disconnect();
+  });
+
+  return state;
+}
+```
+
+### Benefits of Using AbortController
+
+1. **No Memory Leaks** - All event listeners are automatically removed when components unmount
+2. **Single Cleanup Point** - One `abort()` call handles all cleanup
+3. **Browser Native** - No custom cleanup logic needed
+4. **Prevents Errors** - Stops callbacks from running after component removal
+5. **Standards Compliant** - Uses modern web platform APIs
+
+### Common Pattern in Components
+
+```javascript
+class MyComponent extends BaseComponent {
+  _init(element) {
+    // Create state with AbortController
+    const state = {
+      controller: new AbortController(),
+      config: this._getDataAttr(element, 'config'),
+      isActive: false,
+    };
+
+    // Use signal for all event listeners
+    this.setupEventListeners(element, state.controller.signal);
+
+    return state;
+  }
+
+  setupEventListeners(element, signal) {
+    // All listeners use the same signal
+    element.addEventListener('click', () => {
+      this.handleClick(element);
+    }, { signal });
+
+    document.addEventListener('scroll', () => {
+      this.handleScroll(element);
+    }, { signal });
+
+    window.addEventListener('resize', () => {
+      this.handleResize(element);
+    }, { signal });
+  }
+
+  // Cleanup happens automatically in BaseComponent.unmount()
+  // which calls state.controller.abort()
+}
+```
+
+### Real-World Example: DemoPerformance Component
+
+```javascript
+setupButtonHandlers(element, signal) {
+  // Button handlers with automatic cleanup
+  const refreshButton = element.querySelector('[data-btn-action="refresh"]');
+  refreshButton?.addEventListener('click', () => {
+    this.refreshRegistry();
+  }, { signal });
+
+  const exportButton = element.querySelector('[data-btn-action="export"]');
+  exportButton?.addEventListener('click', () => {
+    this.exportRegistry();
+  }, { signal });
+
+  // When navigating away from performance page,
+  // state.controller.abort() removes all these listeners
+}
+```
+
+### What Happens During Unmount
+
+```javascript
+// BaseComponent.unmount() - automatically called by framework
+unmount(element) {
+  const state = this.elements.get(element);
+  if (!state) return;
+
+  try {
+    // 1. Call component-specific cleanup
+    state.cleanup?.();
+
+    // 2. Abort signal - removes ALL listeners attached with this signal
+    state.controller.abort();
+
+    // 3. All event listeners are removed
+    // 4. All fetch requests are cancelled
+    // 5. All observers are disconnected
+    // 6. All timers with abort listeners are cleared
+  } finally {
+    // 7. Remove state from WeakMap (allows garbage collection)
+    this.elements.delete(element);
+  }
+}
+```
+
+This pattern ensures clean, leak-free component lifecycle management throughout the application.
+
 ## Phase 6: Application Ready
 
 ### Step 13: Ready State

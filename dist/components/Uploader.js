@@ -37,14 +37,25 @@ class Uploader extends BaseComponent {
       allowEdit: element.dataset.uploaderAllowEdit !== 'false',
       allowSort: element.dataset.uploaderAllowSort !== 'false'
     };
-    
+
+    // Default to native XMLHttpRequest (can be overridden via setXHR method)
+    this.XHRConstructor = XMLHttpRequest;
+
     // Initialize file tracking
     this.files = new Map();
     
     // Get DOM elements
     this.selector = element.querySelector('[data-uploader-selector]');
     this.fileInput = element.querySelector('.uploader__fileinput');
-    
+
+    if (this.logger) {
+      this.logger.debug('Uploader initialized', {
+        selector: !!this.selector,
+        fileInput: !!this.fileInput,
+        config: this.config
+      });
+    }
+
     // Set up event listeners
     this._setupEventListeners(state.controller.signal);
     
@@ -53,12 +64,40 @@ class Uploader extends BaseComponent {
     
     return state;
   }
-  
+
+  /**
+   * Set custom XHR constructor for uploads (useful for mocking/testing)
+   * @param {Function} XHRClass - Constructor function for XMLHttpRequest or mock
+   */
+  setXHR(XHRClass) {
+    this.XHRConstructor = XHRClass;
+    if (this.logger) {
+      this.logger.debug('Custom XHR constructor set', {
+        isMock: XHRClass !== XMLHttpRequest
+      });
+    }
+  }
+
   _setupEventListeners(signal) {
-    if (!this.fileInput || !this.selector) return;
-    
+    if (!this.fileInput || !this.selector) {
+      if (this.logger) {
+        this.logger.warn('Cannot set up event listeners - missing elements', {
+          fileInput: !!this.fileInput,
+          selector: !!this.selector
+        });
+      }
+      return;
+    }
+
+    if (this.logger) {
+      this.logger.debug('Setting up Uploader event listeners');
+    }
+
     // File input change
     this.fileInput.addEventListener('change', (e) => {
+      if (this.logger) {
+        this.logger.debug('File input changed', { fileCount: e.target.files.length });
+      }
       this._handleFileSelect(e);
     }, { signal });
     
@@ -150,15 +189,31 @@ class Uploader extends BaseComponent {
   _createFileElement(fileData) {
     const div = document.createElement('div');
     div.className = 'uploader__file uploader__file--show';
-    
+
     div.innerHTML = `
       <progress class="uploader__progress" max="100" value="${fileData.progress}"></progress>
       <input type="hidden" value="${fileData.id}" name="${this.config.inputName}">
-      
+
+      <div class="uploader__upload-overlay">
+        <div class="uploader__upload-progress">
+          <div class="uploader__upload-circle">
+            <svg class="uploader__progress-ring" width="120" height="120">
+              <circle class="uploader__progress-ring-bg" cx="60" cy="60" r="54" />
+              <circle class="uploader__progress-ring-bar" cx="60" cy="60" r="54" />
+            </svg>
+            <div class="uploader__progress-text">
+              <span class="uploader__progress-percent">0%</span>
+              <span class="uploader__progress-label">Uploading...</span>
+            </div>
+          </div>
+          <p class="uploader__upload-filename">${fileData.file ? fileData.file.name : ''}</p>
+        </div>
+      </div>
+
       <picture class="uploader__preview">
         <img alt="" src="" style="display: none;">
       </picture>
-      
+
       <div data-panel="info" class="uploader__panel uploader__panel--show">
         <div class="uploader__body">
           <p class="uploader__title"></p>
@@ -168,10 +223,10 @@ class Uploader extends BaseComponent {
         </div>
         <div class="uploader__actions">
           ${this.config.allowEdit ? `
-            <button class="uploader__btn uploader__btn--update" type="button">Update</button>Edit Title/Caption
-            <button class="uploader__btn uploader__btn--link" type="button">Link</button>Edit website link
+            <button class="uploader__btn uploader__btn--update" type="button">Edit Title/Caption</button>
+            <button class="uploader__btn uploader__btn--link" type="button">Edit Link</button>
           ` : ''}
-          <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>Delete
+          <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>
         </div>
       </div>
       
@@ -215,18 +270,15 @@ class Uploader extends BaseComponent {
   _performUpload(fileData) {
     const formData = new FormData();
     formData.append('file', fileData.file);
-    
-    const xhr = new XMLHttpRequest();
+
+    const xhr = new this.XHRConstructor();
     
     // Progress tracking
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const progress = (e.loaded / e.total) * 100;
         fileData.progress = progress;
-        const progressBar = fileData.element.querySelector('.uploader__progress');
-        if (progressBar) {
-          progressBar.value = progress;
-        }
+        this._updateProgress(fileData.element, progress);
       }
     });
     
@@ -253,25 +305,55 @@ class Uploader extends BaseComponent {
     xhr.send(formData);
   }
   
+  _updateProgress(element, progress) {
+    /* Update small progress bar */
+    const progressBar = element.querySelector('.uploader__progress');
+    if (progressBar) {
+      progressBar.value = progress;
+    }
+
+    /* Update large circular progress indicator */
+    const percentText = element.querySelector('.uploader__progress-percent');
+    if (percentText) {
+      percentText.textContent = Math.round(progress) + '%';
+    }
+
+    /* Update SVG circle progress */
+    const progressRing = element.querySelector('.uploader__progress-ring-bar');
+    if (progressRing) {
+      const radius = 54;
+      const circumference = 2 * Math.PI * radius;
+      const offset = circumference - (progress / 100) * circumference;
+      progressRing.style.strokeDashoffset = offset;
+    }
+  }
+
   _handleUploadSuccess(fileData, response) {
     fileData.state = 'uploaded';
     fileData.serverData = response;
-    
-    // Update UI
+
+    /* Hide upload overlay */
+    const overlay = fileData.element.querySelector('.uploader__upload-overlay');
+    if (overlay) {
+      overlay.classList.add('uploader__upload-overlay--hidden');
+      setTimeout(() => overlay.remove(), 300);
+    }
+
+    /* Update UI */
     const preview = fileData.element.querySelector('.uploader__preview img');
     if (preview && response.preview) {
       preview.src = response.preview;
       preview.style.display = 'block';
       fileData.element.querySelector('.uploader__preview').classList.add('uploader__preview--show');
     }
-    
-    // Update hidden input with server ID
+
+    /* Update hidden input with server ID */
     const hiddenInput = fileData.element.querySelector('input[type="hidden"]');
     if (hiddenInput && response.id) {
       hiddenInput.value = response.id;
     }
-    
-    // Hide progress bar
+
+    /* Hide progress bar */
     const progress = fileData.element.querySelector('.uploader__progress');
     if (progress) {
       progress.style.display = 'none';
