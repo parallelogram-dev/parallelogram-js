@@ -59,22 +59,49 @@ export class DemoFileUploader extends BaseComponent {
   }
   
   _setupMockAPI() {
-    // Inject MockXHR into all Uploader components on this page
-    if (window.MockXHR) {
-      const uploaders = document.querySelectorAll('[data-uploader]');
-      uploaders.forEach(uploaderEl => {
-        // Get component instance from element
-        const instance = uploaderEl.__componentInstance;
-        if (instance && instance.setXHR) {
-          instance.setXHR(window.MockXHR);
-          if (this.logger) {
-            this.logger.debug('MockXHR injected into Uploader component');
-          }
-        }
-      });
-    } else if (this.logger) {
-      this.logger.warn('MockXHR not available globally');
+    /* Inject MockXHR into all Uploader components on this page */
+    if (!window.MockXHR) {
+      if (this.logger) {
+        this.logger.warn('MockXHR not available globally');
+      }
+      return;
     }
+
+    if (this.logger) {
+      this.logger.debug('Setting up MockXHR injection');
+    }
+
+    /* Find all uploader elements and inject MockXHR */
+    const uploaders = document.querySelectorAll('[data-uploader]');
+
+    if (this.logger) {
+      this.logger.debug('Found uploader elements', { count: uploaders.length });
+    }
+
+    uploaders.forEach((uploaderEl, index) => {
+      /* Get component instance from element */
+      const instance = uploaderEl.__componentInstance;
+
+      if (this.logger) {
+        this.logger.debug(`Uploader ${index}`, {
+          element: !!uploaderEl,
+          hasInstance: !!instance,
+          hasSetXHR: instance ? !!instance.setXHR : false
+        });
+      }
+
+      if (instance && instance.setXHR) {
+        instance.setXHR(window.MockXHR);
+        if (this.logger) {
+          this.logger.info('MockXHR injected into Uploader component', { index });
+        }
+      } else if (this.logger) {
+        this.logger.warn('Could not inject MockXHR - will use lazy initialization', {
+          index,
+          hasInstance: !!instance
+        });
+      }
+    });
   }
   
   async _handleMockUpload(url, options) {
