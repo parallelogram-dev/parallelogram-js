@@ -44,7 +44,9 @@
                          data-uploader-accept-types="image/*"
                          data-uploader-max-file-size="5242880"
                          data-uploader-input-name="images">
-                        
+
+                        <!-- Files container for sortable list -->
+                        <div data-uploader-files>
                         <!-- Existing file with proper uploader structure -->
                         <div class="uploader__file uploader__file--show">
                             <progress class="uploader__progress" max="100" value="0"></progress>
@@ -101,7 +103,8 @@
                                 <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
                             </div>
                         </div>
-                        
+                        </div><!-- /data-uploader-files -->
+
                         <div class="uploader__selector uploader__selector--show" data-uploader-selector>
                             <input type="file" multiple accept="image/*" class="uploader__fileinput" id="basic-files">
                             <label class="uploader__label" for="basic-files">
@@ -122,7 +125,7 @@
                 </div>
             </section>
 
-            <section class="demo__section" data-demo-section>
+            <!-- <section class="demo__section" data-demo-section>
                 <h2>Advanced File Uploader</h2>
                 <p>Full-featured uploader with sorting, editing, and multiple file types:</p>
 
@@ -137,7 +140,7 @@
                          data-allow-edit="true"
                          data-allow-sort="true"
                          data-class-name="advanced-uploader">
-                        
+
                         <div data-upload-dropzone>
                             <input type="file" multiple data-upload-input id="advanced-files">
                             <label for="advanced-files" data-upload-label>
@@ -146,25 +149,24 @@
                                 <div class="uploader__dropzone-hint">Up to 10 files, 10MB each • Drag to reorder • Click to edit</div>
                             </label>
                         </div>
-                        
+
                         <div data-upload-files></div>
-                        
-                        <!-- Pre-loaded files for demo -->
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="doc1"
                                data-file-title="Project Proposal"
                                data-file-filename="proposal.pdf"
                                data-file-info="2.1 MB • PDF Document"
                                data-file-type="document">
-                               
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="doc2"
                                data-file-title="Budget Spreadsheet"
                                data-file-filename="budget.xlsx"
                                data-file-info="890 KB • Excel File"
                                data-file-type="document">
-                               
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="img1"
                                data-file-title="Team Photo"
                                data-file-filename="team.jpg"
@@ -183,9 +185,9 @@
                         <li><strong>Customizable UI:</strong> Custom class names and styling</li>
                     </ul>
                 </div>
-            </section>
+            </section> -->
 
-            <section class="demo__section" data-demo-section>
+            <!-- <section class="demo__section" data-demo-section>
                 <h2>Gallery Uploader</h2>
                 <p>Specialized uploader for photo galleries with strict image requirements:</p>
 
@@ -200,7 +202,7 @@
                          data-allow-edit="true"
                          data-allow-sort="true"
                          data-class-name="gallery-uploader">
-                        
+
                         <div data-upload-dropzone>
                             <input type="file" multiple accept="image/jpeg,image/png,image/webp" data-upload-input id="gallery-files">
                             <label for="gallery-files" data-upload-label>
@@ -209,27 +211,26 @@
                                 <div class="uploader__dropzone-hint">JPEG, PNG, WebP only • Up to 12 photos • 20MB max each</div>
                             </label>
                         </div>
-                        
+
                         <div data-upload-files></div>
-                        
-                        <!-- Gallery demo files -->
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="gallery1"
                                data-file-title="Mountain Landscape"
                                data-file-filename="mountain.jpg"
                                data-file-preview="https://picsum.photos/200/200?random=10"
                                data-file-info="3.2 MB • 4000×3000"
                                data-file-type="image">
-                               
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="gallery2"
                                data-file-title="City Skyline"
                                data-file-filename="city.jpg"
                                data-file-preview="https://picsum.photos/200/200?random=11"
                                data-file-info="2.8 MB • 3840×2160"
                                data-file-type="image">
-                               
-                        <input type="hidden" 
+
+                        <input type="hidden"
                                data-file-id="gallery3"
                                data-file-title="Ocean Sunset"
                                data-file-filename="sunset.jpg"
@@ -248,7 +249,7 @@
                         <li><strong>Metadata Editing:</strong> Add titles and descriptions to photos</li>
                     </ul>
                 </div>
-            </section>
+            </section> -->
 
             <section class="demo__section" data-demo-section>
                 <h2>Event Monitoring</h2>
