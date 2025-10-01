@@ -37,81 +37,45 @@
                 <p>Simple image uploader with drag & drop support and basic file management:</p>
 
                 <div class="demo__container">
-                    <div data-uploader
-                         data-uploader-max-files="3"
-                         data-uploader-upload-url="/api/upload"
-                         data-uploader-sequence-url="/api/sequence"
-                         data-uploader-accept-types="image/*"
-                         data-uploader-max-file-size="5242880"
-                         data-uploader-input-name="images">
+                    <p-uploader max-files="3"
+                                upload-url="/api/upload"
+                                sequence-url="/api/sequence"
+                                accept-types="image/*"
+                                max-file-size="5242880"
+                                input-name="images">
 
-                        <!-- Files container for sortable list -->
-                        <div data-uploader-files>
-                        <!-- Existing file with proper uploader structure -->
-                        <div class="uploader__file uploader__file--show">
-                            <progress class="uploader__progress" max="100" value="0"></progress>
-                            <input type="hidden" value="demo1" name="images">
-                            
-                            <picture class="uploader__preview uploader__preview--show">
-                                <img alt="" src="https://picsum.photos/200/200?random=1">
-                            </picture>
-                            
-                            <div data-panel="info" class="uploader__panel uploader__panel--show">
-                                <div class="uploader__body">
-                                    <p class="uploader__title">Sample Image 1</p>
-                                    <p class="uploader__caption"></p>
-                                    <p class="uploader__link"></p>
-                                    <p class="uploader__filename">sample1.jpg</p>
-                                </div>
-                                <div class="uploader__actions">
-                                    <button class="uploader__btn uploader__btn--update" type="button">Edit Title/Caption</button>
-                                    <button class="uploader__btn uploader__btn--link" type="button">Edit Link</button>
-                                    <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>
-                                </div>
-                            </div>
-                            
-                            <div data-panel="error" class="uploader__panel">
-                                <div class="uploader__body">
-                                    <p class="uploader__title">Upload Error</p>
-                                    <p class="uploader__info"></p>
-                                </div>
-                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
-                            </div>
-                            
-                            <div data-panel="rename" class="uploader__panel">
-                                <div class="uploader__body">
-                                    <input name="title" class="uploader__input" placeholder="Title" type="text">
-                                    <textarea rows="6" name="caption" class="uploader__input" placeholder="Caption"></textarea>
-                                </div>
-                                <button class="uploader__btn uploader__btn--confirm" type="button">Confirm</button>
-                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
-                            </div>
-                            
-                            <div data-panel="link" class="uploader__panel">
-                                <div class="uploader__body">
-                                    <input name="link" class="uploader__input" placeholder="E.g. https://example.com" type="text">
-                                </div>
-                                <button class="uploader__btn uploader__btn--confirm" type="button">Confirm</button>
-                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
-                            </div>
-                            
-                            <div data-panel="delete" class="uploader__panel">
-                                <div class="uploader__body">
-                                    <p class="uploader__title">Delete this file?</p>
-                                </div>
-                                <button class="uploader__btn uploader__btn--delete" type="button">Delete</button>
-                                <button class="uploader__btn uploader__btn--cancel" type="button">Cancel</button>
-                            </div>
-                        </div>
-                        </div><!-- /data-uploader-files -->
+                        <!-- Field definitions for ALL files -->
+                        <p-uploader-fields slot="field-definitions">
+                            <p-uploader-field key="title" label="Title" type="text" required maxlength="100"></p-uploader-field>
+                            <p-uploader-field key="caption" label="Caption" type="textarea" maxlength="500"></p-uploader-field>
+                            <p-uploader-field key="link" label="Link" type="url"></p-uploader-field>
+                        </p-uploader-fields>
 
-                        <div class="uploader__selector uploader__selector--show" data-uploader-selector>
-                            <input type="file" multiple accept="image/*" class="uploader__fileinput" id="basic-files">
-                            <label class="uploader__label" for="basic-files">
-                                + Add images by selecting or dragging here
-                            </label>
-                        </div>
-                    </div>
+                        <p-uploader-file file-id="demo1"
+                                        filename="sample1.jpg"
+                                        preview="https://picsum.photos/200/200?random=1"
+                                        state="uploaded">
+                            <p-uploader-data key="title">Beautiful Landscape</p-uploader-data>
+                            <p-uploader-data key="caption">A stunning view captured at sunset</p-uploader-data>
+                            <p-uploader-data key="link">https://example.com/photo1</p-uploader-data>
+                        </p-uploader-file>
+
+                        <p-uploader-file file-id="demo2"
+                                        filename="sample2.jpg"
+                                        preview="https://picsum.photos/200/200?random=2"
+                                        state="uploaded">
+                            <p-uploader-data key="title">Urban Architecture</p-uploader-data>
+                            <p-uploader-data key="caption">Modern building design</p-uploader-data>
+                        </p-uploader-file>
+
+                        <p-uploader-file file-id="demo3"
+                                        filename="error-file.jpg"
+                                        preview="https://picsum.photos/200/200?random=3"
+                                        state="error"
+                                        error="Upload failed: File size exceeds 5MB limit">
+                            <p-uploader-data key="title">Failed Upload</p-uploader-data>
+                        </p-uploader-file>
+                    </p-uploader>
                 </div>
 
                 <div class="features__details">
@@ -300,17 +264,18 @@
                         <strong>POST</strong> <code>/api/upload</code>
                         <pre>
 FormData:
-- action: "upload"
 - file: [File object]
 
 Response:
 {
   "id": "unique_file_id",
-  "title": "File Title",
-  "filename": "original.jpg", 
+  "filename": "original.jpg",
   "preview": "/path/to/thumb.jpg",
-  "info": "1.2 MB • 1920×1080",
-  "type": "image"
+  "fields": {
+    "title": "File Title",
+    "caption": "Optional caption",
+    "link": "https://example.com"
+  }
 }</pre>
                     </div>
 
@@ -318,16 +283,18 @@ Response:
                     <div class="code__block">
                         <strong>POST</strong> <code>/api/upload</code>
                         <pre>
-FormData:
-- action: "update"
-- id: "file_id"
-- title: "New Title"
+JSON:
+{
+  "id": "file_id",
+  "field": "title",
+  "value": "New Title"
+}
 
 Response:
 {
   "id": "file_id",
-  "title": "Updated Title",
-  "info": "Additional info"
+  "field": "title",
+  "value": "New Title"
 }</pre>
                     </div>
 

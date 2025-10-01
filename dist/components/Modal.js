@@ -1,6 +1,91 @@
 import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
+ */
+
+
+/**
+ * Generate unique ID with optional prefix
+ * @param {string} prefix - Prefix for the ID
+ * @returns {string} Unique ID
+ */
+function generateId(prefix = 'elem') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Get all focusable elements within a container
+ * @param {HTMLElement} container - Container to search within
+ * @returns {HTMLElement[]} Array of focusable elements
+ */
+function getFocusableElements(container = document) {
+  const selectors = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"]):not([disabled])'
+  ];
+  return Array.from(container.querySelectorAll(selectors.join(',')));
+}
+
+/**
+ * Trap focus within a container (for modals, dialogs, etc.)
+ * @param {HTMLElement} container - Container to trap focus within
+ * @param {KeyboardEvent} event - Tab key event
+ */
+function trapFocus(container, event) {
+  const focusable = getFocusableElements(container);
+  if (!focusable.length) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = container.contains(document.activeElement) ? document.activeElement : null;
+
+  if (event.shiftKey && (active === first || !active)) {
+    last.focus();
+    event.preventDefault();
+  } else if (!event.shiftKey && active === last) {
+    first.focus();
+    event.preventDefault();
+  }
+}
+
+/**
+ * Create element with attributes and content
+ * @param {string} tag - HTML tag name
+ * @param {Object} attributes - Element attributes
+ * @param {string|HTMLElement} content - Text content or child element
+ * @returns {HTMLElement} Created element
+ */
+function createElement(tag, attributes = {}, content = '') {
+  const element = document.createElement(tag);
+
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key === 'className' || key === 'class') {
+      element.className = value;
+    } else if (key === 'style' && typeof value === 'object') {
+      Object.assign(element.style, value);
+    } else if (key === 'dataset' && typeof value === 'object') {
+      Object.assign(element.dataset, value);
+    } else {
+      element.setAttribute(key, value);
+    }
+  }
+
+  if (typeof content === 'string') {
+    element.textContent = content;
+  } else if (content instanceof HTMLElement) {
+    element.appendChild(content);
+  }
+
+  return element;
+}
+
+/**
  * PModal - Modal dialog web component
  * Can be used standalone without the framework
  * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
@@ -23,6 +108,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  *   </div>
  * </p-modal>
  */
+
 
 class PModal extends HTMLElement {
   static get observedAttributes() {
@@ -488,16 +574,7 @@ class PModal extends HTMLElement {
    * @returns {HTMLElement[]}
    */
   _getFocusableElements() {
-    const selectors = [
-      'a[href]',
-      'button:not([disabled])',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"]):not([disabled])',
-    ];
-
-    return [...this.querySelectorAll(selectors.join(','))];
+    return getFocusableElements(this);
   }
 
   /**
@@ -515,26 +592,7 @@ class PModal extends HTMLElement {
    * @param {KeyboardEvent} event
    */
   _trapTab(event) {
-    const focusableElements = this._getFocusableElements();
-    if (!focusableElements.length) return;
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    const activeElement = this.contains(document.activeElement) ? document.activeElement : null;
-
-    if (event.shiftKey) {
-      // Shift + Tab
-      if (activeElement === firstElement || !activeElement) {
-        lastElement.focus();
-        event.preventDefault();
-      }
-    } else {
-      // Tab
-      if (activeElement === lastElement) {
-        firstElement.focus();
-        event.preventDefault();
-      }
-    }
+    trapFocus(this, event);
   }
 
   /**
@@ -935,7 +993,7 @@ class Modal extends BaseComponent {
   static async create({ title, content, actions = [], size = 'medium', options = {} }) {
     // Create modal element
     const modal = document.createElement('p-modal');
-    modal.id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    modal.id = generateId('modal');
 
     // Configure attributes
     modal.setAttribute('data-modal-size', size);
@@ -945,9 +1003,7 @@ class Modal extends BaseComponent {
 
     // Create title
     if (title) {
-      const titleElement = document.createElement('h2');
-      titleElement.slot = 'title';
-      titleElement.textContent = title;
+      const titleElement = createElement('h2', { slot: 'title' }, title);
       modal.appendChild(titleElement);
     }
 
@@ -964,13 +1020,14 @@ class Modal extends BaseComponent {
       actionsContainer.slot = 'actions';
 
       actions.forEach(action => {
-        const button = document.createElement('button');
-        button.className = `btn btn--${action.type || 'secondary'}`;
-        button.textContent = action.label;
-
-        if (action.close !== false) {
-          button.setAttribute('data-modal-close', '');
-        }
+        const button = createElement(
+          'button',
+          {
+            className: `btn btn--${action.type || 'secondary'}`,
+            'data-modal-close': action.close !== false ? '' : undefined,
+          },
+          action.label
+        );
 
         if (action.onClick) {
           button.addEventListener('click', action.onClick);

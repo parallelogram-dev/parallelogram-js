@@ -1,6 +1,70 @@
 import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
+ */
+
+
+/**
+ * Generate unique ID with optional prefix
+ * @param {string} prefix - Prefix for the ID
+ * @returns {string} Unique ID
+ */
+function generateId(prefix = 'elem') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Debounce a function - delays execution until after wait milliseconds
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Milliseconds to wait
+ * @returns {Function} Debounced function
+ */
+function debounce(func, wait = 300) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func.apply(this, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Create element with attributes and content
+ * @param {string} tag - HTML tag name
+ * @param {Object} attributes - Element attributes
+ * @param {string|HTMLElement} content - Text content or child element
+ * @returns {HTMLElement} Created element
+ */
+function createElement(tag, attributes = {}, content = '') {
+  const element = document.createElement(tag);
+
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key === 'className' || key === 'class') {
+      element.className = value;
+    } else if (key === 'style' && typeof value === 'object') {
+      Object.assign(element.style, value);
+    } else if (key === 'dataset' && typeof value === 'object') {
+      Object.assign(element.dataset, value);
+    } else {
+      element.setAttribute(key, value);
+    }
+  }
+
+  if (typeof content === 'string') {
+    element.textContent = content;
+  } else if (content instanceof HTMLElement) {
+    element.appendChild(content);
+  }
+
+  return element;
+}
+
+/**
  * DataTable Component - Enhanced table functionality
  *
  * @example
@@ -91,9 +155,11 @@ class DataTable extends BaseComponent {
       header.style.cursor = 'pointer';
       header.classList.add('sortable');
 
-      const icon = document.createElement('span');
-      icon.className = 'sort-icon';
-      icon.textContent = DataTable.defaults.sortIcons.unsorted;
+      const icon = createElement(
+        'span',
+        { className: 'sort-icon' },
+        DataTable.defaults.sortIcons.unsorted
+      );
       header.appendChild(icon);
 
       header.addEventListener('click', () => {
@@ -103,33 +169,32 @@ class DataTable extends BaseComponent {
   }
 
   _setupFiltering(element, state) {
-    const filterContainer = document.createElement('div');
-    filterContainer.className = 'form__element form__element--sm datatable-filter';
+    const searchId = generateId('datatable-search');
 
-    const label = document.createElement('label');
-    label.className = 'form__label';
-    label.textContent = 'Search:';
-    label.htmlFor = `datatable-search-${Date.now()}`;
+    const label = createElement('label', { className: 'form__label', htmlFor: searchId }, 'Search:');
 
-    const fieldContainer = document.createElement('div');
-    fieldContainer.className = 'form__field';
-
-    const searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Search table...';
-    searchInput.className = 'form__control datatable-search';
-    searchInput.id = label.htmlFor;
-
-    searchInput.addEventListener('input', e => {
-      clearTimeout(this.searchTimeout);
-      this.searchTimeout = setTimeout(() => {
-        this._handleFilter(element, state, e.target.value);
-      }, state.config.searchDelay);
+    const searchInput = createElement('input', {
+      type: 'text',
+      id: searchId,
+      placeholder: 'Search table...',
+      className: 'form__control datatable-search',
     });
 
+    const debouncedFilter = debounce(value => {
+      this._handleFilter(element, state, value);
+    }, state.config.searchDelay);
+
+    searchInput.addEventListener('input', e => debouncedFilter(e.target.value));
+
+    const fieldContainer = createElement('div', { className: 'form__field' });
     fieldContainer.appendChild(searchInput);
+
+    const filterContainer = createElement('div', {
+      className: 'form__element form__element--sm datatable-filter',
+    });
     filterContainer.appendChild(label);
     filterContainer.appendChild(fieldContainer);
+
     element.parentNode.insertBefore(filterContainer, element);
   }
 
