@@ -1,4 +1,49 @@
 /**
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
+ */
+
+
+/**
+ * Get all focusable elements within a container
+ * @param {HTMLElement} container - Container to search within
+ * @returns {HTMLElement[]} Array of focusable elements
+ */
+function getFocusableElements(container = document) {
+  const selectors = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"]):not([disabled])'
+  ];
+  return Array.from(container.querySelectorAll(selectors.join(',')));
+}
+
+/**
+ * Trap focus within a container (for modals, dialogs, etc.)
+ * @param {HTMLElement} container - Container to trap focus within
+ * @param {KeyboardEvent} event - Tab key event
+ */
+function trapFocus(container, event) {
+  const focusable = getFocusableElements(container);
+  if (!focusable.length) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = container.contains(document.activeElement) ? document.activeElement : null;
+
+  if (event.shiftKey && (active === first || !active)) {
+    last.focus();
+    event.preventDefault();
+  } else if (!event.shiftKey && active === last) {
+    first.focus();
+    event.preventDefault();
+  }
+}
+
+/**
  * PModal - Modal dialog web component
  * Can be used standalone without the framework
  * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
@@ -21,6 +66,7 @@
  *   </div>
  * </p-modal>
  */
+
 
 class PModal extends HTMLElement {
   static get observedAttributes() {
@@ -486,16 +532,7 @@ class PModal extends HTMLElement {
    * @returns {HTMLElement[]}
    */
   _getFocusableElements() {
-    const selectors = [
-      'a[href]',
-      'button:not([disabled])',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"]):not([disabled])',
-    ];
-
-    return [...this.querySelectorAll(selectors.join(','))];
+    return getFocusableElements(this);
   }
 
   /**
@@ -513,26 +550,7 @@ class PModal extends HTMLElement {
    * @param {KeyboardEvent} event
    */
   _trapTab(event) {
-    const focusableElements = this._getFocusableElements();
-    if (!focusableElements.length) return;
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    const activeElement = this.contains(document.activeElement) ? document.activeElement : null;
-
-    if (event.shiftKey) {
-      // Shift + Tab
-      if (activeElement === firstElement || !activeElement) {
-        lastElement.focus();
-        event.preventDefault();
-      }
-    } else {
-      // Tab
-      if (activeElement === lastElement) {
-        firstElement.focus();
-        event.preventDefault();
-      }
-    }
+    trapFocus(this, event);
   }
 
   /**

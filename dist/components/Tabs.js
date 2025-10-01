@@ -1,6 +1,21 @@
 import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
+ */
+
+
+/**
+ * Generate unique ID with optional prefix
+ * @param {string} prefix - Prefix for the ID
+ * @returns {string} Unique ID
+ */
+function generateId(prefix = 'elem') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
  * Tabs Component
  *
  * Progressive enhancement for tab navigation with accessibility and keyboard support.
@@ -143,7 +158,7 @@ class Tabs extends BaseComponent {
 
       // Generate IDs if needed
       if (!tab.id) {
-        tab.id = `tab-${Math.random().toString(36).slice(2)}`;
+        tab.id = generateId('tab');
       }
 
       // Find corresponding panel
