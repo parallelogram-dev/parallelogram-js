@@ -43,7 +43,7 @@ export default class Scrollhide extends BaseComponent {
       overlayThreshold: 100, // Pixels scrolled before adding overlay class
       scrolledClass: 'scrollhide', // Class added when element should hide
       overlayClass: 'scrolloverlay', // Class added for overlay effect
-      debounceMs: 16, // Scroll event debouncing (60fps)
+      debounce: 16, // Scroll event debouncing (60fps = ~16ms)
       passive: true, // Use passive scroll listeners
     };
   }
@@ -89,7 +89,7 @@ export default class Scrollhide extends BaseComponent {
       'overlay-class',
       Scrollhide.defaults.overlayClass
     );
-    const debounceMs = this._getDataAttr(element, 'debounce', Scrollhide.defaults.debounceMs);
+    const debounce = this._getDataAttr(element, 'debounce', Scrollhide.defaults.debounce);
 
     // Store state
     state.target = target;
@@ -104,7 +104,7 @@ export default class Scrollhide extends BaseComponent {
 
     // Create throttled scroll handler
     const scrollHandler = this._createScrollHandler(element, state);
-    const throttledHandler = this._throttle(scrollHandler, debounceMs);
+    const throttledHandler = this._throttle(scrollHandler, debounce);
 
     // Set up scroll listener
     window.addEventListener('scroll', throttledHandler, {

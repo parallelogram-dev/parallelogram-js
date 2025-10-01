@@ -727,7 +727,7 @@ class Modal extends BaseComponent {
         if (typeof state.modalElement.open === 'function') {
           state.modalElement.open();
         } else {
-          console.error('PModal open method not available', state.modalElement);
+          this.logger?.error('PModal open method not available', state.modalElement);
         }
       });
     }
@@ -744,7 +744,7 @@ class Modal extends BaseComponent {
     if (typeof state.modalElement.close === 'function') {
       state.modalElement.close();
     } else {
-      console.error('PModal close method not available', state.modalElement);
+      this.logger?.error('PModal close method not available', state.modalElement);
     }
   }
 

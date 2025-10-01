@@ -5,7 +5,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
  *
  * @example
  * <button data-copy-to-clipboard data-copy-target="#code-block">Copy Code</button>
- * <pre id="code-block">console.log('Hello World');</pre>
+ * <pre id="code-block">logger?.info('Hello World');</pre>
  */
 class CopyToClipboard extends BaseComponent {
   static get defaults() {
