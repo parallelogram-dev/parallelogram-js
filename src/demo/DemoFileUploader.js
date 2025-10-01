@@ -59,152 +59,51 @@ export class DemoFileUploader extends BaseComponent {
   }
   
   _setupMockAPI() {
-    // Mock the upload API for demo purposes
-    this._mockUploadAPI();
-  }
-  
-  _mockUploadAPI() {
-    // Intercept fetch requests to upload endpoints for demo
-    const originalFetch = window.fetch;
-    
-    window.fetch = async (url, options) => {
-      // Handle upload API endpoints
-      if (url.includes('/api/upload') || url.includes('/api/gallery-upload')) {
-        return this._handleMockUpload(url, options);
+    /* Inject MockXHR into all Uploader components on this page */
+    if (!window.MockXHR) {
+      if (this.logger) {
+        this.logger.warn('MockXHR not available globally');
       }
-      
-      // Handle sequence API endpoints  
-      if (url.includes('/api/sequence') || url.includes('/api/gallery-sequence')) {
-        return this._handleMockSequence(url, options);
+      return;
+    }
+
+    if (this.logger) {
+      this.logger.debug('Setting up MockXHR injection');
+    }
+
+    /* Wait a tick for components to mount, then inject MockXHR */
+    setTimeout(() => {
+      const uploaders = document.querySelectorAll('[data-uploader]');
+
+      if (this.logger) {
+        this.logger.debug('Found uploader elements', { count: uploaders.length });
       }
-      
-      // Pass through other requests
-      return originalFetch(url, options);
-    };
-    
-    // Also mock XMLHttpRequest for the component's upload functionality
-    this._mockXMLHttpRequest();
-  }
-  
-  _mockXMLHttpRequest() {
-    const OriginalXMLHttpRequest = window.XMLHttpRequest;
-    
-    window.XMLHttpRequest = class MockXMLHttpRequest {
-      constructor() {
-        this.readyState = 0;
-        this.status = 0;
-        this.responseText = '';
-        this.upload = {
-          addEventListener: (event, callback) => {
-            this._uploadEventListeners = this._uploadEventListeners || {};
-            this._uploadEventListeners[event] = callback;
+
+      uploaders.forEach((uploaderEl, index) => {
+        /* Get component instance from element */
+        const instance = uploaderEl.__componentInstance;
+
+        if (this.logger) {
+          this.logger.debug(`Uploader ${index}`, {
+            element: !!uploaderEl,
+            hasInstance: !!instance,
+            hasSetXHR: instance ? !!instance.setXHR : false
+          });
+        }
+
+        if (instance && instance.setXHR) {
+          instance.setXHR(window.MockXHR);
+          if (this.logger) {
+            this.logger.info('MockXHR injected into Uploader component', { index });
           }
-        };
-        this._eventListeners = {};
-      }
-      
-      open(method, url, async) {
-        this.method = method;
-        this.url = url;
-        this.async = async;
-      }
-      
-      addEventListener(event, callback) {
-        this._eventListeners[event] = callback;
-      }
-      
-      send(data) {
-        // Simulate upload progress
-        this._simulateUpload(data);
-      }
-      
-      _simulateUpload(formData) {
-        const action = formData.get('action');
-        
-        // Simulate progress events
-        setTimeout(() => {
-          if (this._uploadEventListeners?.progress) {
-            this._uploadEventListeners.progress({ loaded: 25, total: 100, lengthComputable: true });
-          }
-        }, 200);
-        
-        setTimeout(() => {
-          if (this._uploadEventListeners?.progress) {
-            this._uploadEventListeners.progress({ loaded: 75, total: 100, lengthComputable: true });
-          }
-        }, 600);
-        
-        setTimeout(() => {
-          if (this._uploadEventListeners?.progress) {
-            this._uploadEventListeners.progress({ loaded: 100, total: 100, lengthComputable: true });
-          }
-        }, 1000);
-        
-        // Simulate completion
-        setTimeout(() => {
-          this.readyState = 4;
-          
-          if (action === 'upload') {
-            // Simulate successful upload
-            this.status = 200;
-            const file = formData.get('file');
-            this.responseText = JSON.stringify({
-              id: this._generateId(),
-              title: file?.name?.split('.')[0] || 'Uploaded File',
-              filename: file?.name || 'unknown.file',
-              preview: file?.type?.startsWith('image/') ? this._generatePreviewURL() : null,
-              info: `${this._formatFileSize(file?.size || 1024)} • ${this._getFileTypeLabel(file)}`,
-              type: file?.type?.startsWith('image/') ? 'image' : 'document'
-            });
-          } else if (action === 'update') {
-            // Simulate successful update
-            this.status = 200;
-            this.responseText = JSON.stringify({
-              id: formData.get('id'),
-              title: formData.get('title'),
-              info: 'Updated successfully'
-            });
-          } else if (action === 'delete') {
-            // Simulate successful delete
-            this.status = 200;
-            this.responseText = 'OK';
-          }
-          
-          if (this._eventListeners.readystatechange) {
-            this._eventListeners.readystatechange();
-          }
-        }, 1200);
-      }
-      
-      _generateId() {
-        return `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      }
-      
-      _generatePreviewURL() {
-        const randomId = Math.floor(Math.random() * 1000);
-        return `https://picsum.photos/200/200?random=${randomId}`;
-      }
-      
-      _formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      }
-      
-      _getFileTypeLabel(file) {
-        if (!file?.type) return 'Unknown';
-        
-        if (file.type.startsWith('image/')) return 'Image';
-        if (file.type.includes('pdf')) return 'PDF';
-        if (file.type.includes('document') || file.type.includes('word')) return 'Document';
-        if (file.type.includes('spreadsheet') || file.type.includes('excel')) return 'Spreadsheet';
-        if (file.type.includes('presentation') || file.type.includes('powerpoint')) return 'Presentation';
-        
-        return 'File';
-      }
-    };
+        } else if (this.logger) {
+          this.logger.debug('Uploader not yet mounted - MockXHR will use lazy initialization', {
+            index,
+            hasInstance: !!instance
+          });
+        }
+      });
+    }, 100);
   }
   
   async _handleMockUpload(url, options) {
@@ -258,38 +157,42 @@ export class DemoFileUploader extends BaseComponent {
   _initEventLogging() {
     // Debug: Check if uploader elements exist
     const uploaderElements = document.querySelectorAll('[data-uploader]');
-    console.log('DemoFileUploader: Found uploader elements:', uploaderElements.length);
-    uploaderElements.forEach((el, i) => console.log(`Uploader ${i}:`, el));
-    
+    if (this.logger) {
+      this.logger.debug('Found uploader elements', { count: uploaderElements.length });
+    }
+
     // Debug: Check component registry
     if (window.pageManager) {
-      console.log('DemoFileUploader: PageManager exists');
+      if (this.logger) {
+        this.logger.debug('PageManager exists');
+      }
       const registry = window.componentRegistry || window.pageManager.registry;
       if (registry) {
-        console.log('DemoFileUploader: Component registry:', registry);
-        
         // Check if uploader component is registered
         if (registry.components) {
           const uploaderComponent = registry.components.find(c => c.name === 'uploader');
-          console.log('DemoFileUploader: Found uploader in registry:', uploaderComponent);
-          
-          // Try to manually test if the selector works
-          if (uploaderComponent) {
+          if (this.logger && uploaderComponent) {
+            this.logger.debug('Found uploader in registry', uploaderComponent);
+
+            // Try to manually test if the selector works
             const matches = document.querySelectorAll(uploaderComponent.selector);
-            console.log('DemoFileUploader: Selector matches:', uploaderComponent.selector, '→', matches.length, 'elements');
+            this.logger.debug('Selector matches', {
+              selector: uploaderComponent.selector,
+              count: matches.length
+            });
           }
         }
-        
+
         // Try to manually trigger a scan for uploader components
-        console.log('DemoFileUploader: Attempting manual scan...');
-        if (window.pageManager.scanAndMount) {
+        if (window.pageManager.scanAndMount && this.logger) {
+          this.logger.debug('Attempting manual scan');
           window.pageManager.scanAndMount();
         }
-      } else {
-        console.log('DemoFileUploader: No component registry found');
+      } else if (this.logger) {
+        this.logger.warn('No component registry found');
       }
-    } else {
-      console.log('DemoFileUploader: No pageManager found');
+    } else if (this.logger) {
+      this.logger.warn('No pageManager found');
     }
     
     // Initialize event log

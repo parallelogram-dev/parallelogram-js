@@ -2,7 +2,7 @@
 .navbar {
   &--demo {
     position: fixed;
-    top: 0;
+    top: 25px; /* Height of .nav__container to avoid covering main navigation */
     left: 0;
     right: 0;
     background: var(--color-text-dark);
