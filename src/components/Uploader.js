@@ -38,8 +38,8 @@ export default class Uploader extends BaseComponent {
       allowSort: element.dataset.uploaderAllowSort !== 'false'
     };
 
-    // Default to native XMLHttpRequest (can be overridden via setXHR method)
-    this.XHRConstructor = XMLHttpRequest;
+    // XHR constructor set to null for lazy initialization
+    this.XHRConstructor = null;
 
     // Initialize file tracking
     this.files = new Map();
@@ -76,6 +76,21 @@ export default class Uploader extends BaseComponent {
         isMock: XHRClass !== XMLHttpRequest
       });
     }
+  }
+
+  /**
+   * Get XHR constructor instance (lazy initialization)
+   * @returns {Function} XHR constructor to use for uploads
+   */
+  _getXHRConstructor() {
+    if (this.XHRConstructor === null) {
+      /* Default to native XMLHttpRequest if not set */
+      this.XHRConstructor = XMLHttpRequest;
+      if (this.logger) {
+        this.logger.debug('Using default XMLHttpRequest constructor');
+      }
+    }
+    return this.XHRConstructor;
   }
 
   _setupEventListeners(signal) {
@@ -271,7 +286,8 @@ export default class Uploader extends BaseComponent {
     const formData = new FormData();
     formData.append('file', fileData.file);
 
-    const xhr = new this.XHRConstructor();
+    const XHRConstructor = this._getXHRConstructor();
+    const xhr = new XHRConstructor();
     
     // Progress tracking
     xhr.upload.addEventListener('progress', (e) => {
