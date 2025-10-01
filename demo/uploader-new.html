@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uploader (New Field System) - Enhancement Framework</title>
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  </head>
+  <body>
+    <nav data-view="navbar">
+      <div class="nav__container">
+        <h1>Enhancement Framework</h1>
+        <ul class="nav__list">
+          <li><a href="/" class="nav__link">Home</a></li>
+          <li><a href="/uploader" class="nav__link">Uploader (Old)</a></li>
+          <li><a href="/uploader-new" class="nav__link" aria-current="page">Uploader (New)</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main data-view="main" data-demo="uploader" class="page__content">
+      <header class="page__header">
+        <h1>Uploader Component - Field-Based System</h1>
+        <p>
+          New implementation with configurable fields defined at the parent level.
+          Each field gets its own inline edit button.
+        </p>
+      </header>
+
+      <section class="demo__section" data-demo-section>
+        <h2>File Uploader with Custom Fields</h2>
+        <p>Define fields once, use them across all files with individual edit buttons:</p>
+
+        <div class="demo__container">
+          <p-uploader
+            max-files="3"
+            upload-url="/api/upload"
+            sequence-url="/api/sequence"
+            accept-types="image/*"
+            max-file-size="5242880"
+            input-name="images">
+
+            <!-- Field definitions for ALL files -->
+            <p-uploader-fields slot="field-definitions">
+              <p-uploader-field key="title" label="Title" type="text" required maxlength="100"></p-uploader-field>
+              <p-uploader-field key="caption" label="Caption" type="textarea" maxlength="500"></p-uploader-field>
+              <p-uploader-field key="link" label="Link" type="url"></p-uploader-field>
+            </p-uploader-fields>
+
+            <!-- Individual files with their data -->
+            <p-uploader-file
+              file-id="demo1"
+              filename="sample1.jpg"
+              preview="https://picsum.photos/200/200?random=1"
+              state="uploaded">
+              <p-uploader-data key="title">Beautiful Landscape</p-uploader-data>
+              <p-uploader-data key="caption">A stunning view captured at sunset in the mountains</p-uploader-data>
+              <p-uploader-data key="link">https://example.com/photo1</p-uploader-data>
+            </p-uploader-file>
+
+            <p-uploader-file
+              file-id="demo2"
+              filename="sample2.jpg"
+              preview="https://picsum.photos/200/200?random=2"
+              state="uploaded">
+              <p-uploader-data key="title">Urban Architecture</p-uploader-data>
+              <p-uploader-data key="caption">Modern building design</p-uploader-data>
+            </p-uploader-file>
+          </p-uploader>
+        </div>
+
+        <div class="features__details">
+          <h3>Key Features</h3>
+          <ul>
+            <li><strong>Field Definitions:</strong> Define fields once at parent level with type, validation, etc.</li>
+            <li><strong>Inline Edit Buttons:</strong> Each field has its own small edit icon button</li>
+            <li><strong>Type Validation:</strong> Supports text, textarea, url, email, etc.</li>
+            <li><strong>Required Fields:</strong> Mark fields as required with validation</li>
+            <li><strong>Max Length:</strong> Set character limits on fields</li>
+            <li><strong>Clean HTML:</strong> No duplication of field structure in each file</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="demo__section" data-demo-section>
+        <h2>Validation Examples</h2>
+        <p>The component validates field definitions and data:</p>
+
+        <div class="code__block">
+          <pre>// Console warnings for:
+- Unknown field keys
+- Required fields that are empty
+- Values exceeding maxlength
+- Invalid URLs in url-type fields
+- Missing required fields</pre>
+        </div>
+      </section>
+
+      <section class="demo__section" data-demo-section>
+        <h2>Field Definition Reference</h2>
+        <div class="api__documentation">
+          <h3>Field Attributes</h3>
+          <ul>
+            <li><code>key</code> (required): Unique identifier for the field</li>
+            <li><code>label</code> (required): Display label for the field</li>
+            <li><code>type</code>: Input type (text, textarea, url, email, etc.)</li>
+            <li><code>required</code>: Boolean attribute for required validation</li>
+            <li><code>maxlength</code>: Maximum character length</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast container -->
+    <p-toasts placement="top-right"></p-toasts>
+
+    <!-- Load the NEW implementation -->
+    <script type="module">
+      import PUploader from '../src/components/PUploader.new.js';
+
+      // Wait for custom elements to be defined
+      await Promise.all([
+        customElements.whenDefined('p-uploader'),
+        customElements.whenDefined('p-uploader-file'),
+        customElements.whenDefined('p-uploader-field'),
+        customElements.whenDefined('p-uploader-data')
+      ]);
+
+      console.log('✅ All uploader components loaded');
+    </script>
+  </body>
+</html>

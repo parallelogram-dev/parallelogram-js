@@ -27,6 +27,7 @@
 
 import { BaseComponent } from '@peptolab/parallelogram';
 import { default as PModal } from './PModal.js';
+import { generateId, createElement } from '../utils/dom-utils.js';
 
 export default class Modal extends BaseComponent {
   /**
@@ -366,7 +367,7 @@ export default class Modal extends BaseComponent {
   static async create({ title, content, actions = [], size = 'medium', options = {} }) {
     // Create modal element
     const modal = document.createElement('p-modal');
-    modal.id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    modal.id = generateId('modal');
 
     // Configure attributes
     modal.setAttribute('data-modal-size', size);
@@ -376,9 +377,7 @@ export default class Modal extends BaseComponent {
 
     // Create title
     if (title) {
-      const titleElement = document.createElement('h2');
-      titleElement.slot = 'title';
-      titleElement.textContent = title;
+      const titleElement = createElement('h2', { slot: 'title' }, title);
       modal.appendChild(titleElement);
     }
 
@@ -395,13 +394,14 @@ export default class Modal extends BaseComponent {
       actionsContainer.slot = 'actions';
 
       actions.forEach(action => {
-        const button = document.createElement('button');
-        button.className = `btn btn--${action.type || 'secondary'}`;
-        button.textContent = action.label;
-
-        if (action.close !== false) {
-          button.setAttribute('data-modal-close', '');
-        }
+        const button = createElement(
+          'button',
+          {
+            className: `btn btn--${action.type || 'secondary'}`,
+            'data-modal-close': action.close !== false ? '' : undefined,
+          },
+          action.label
+        );
 
         if (action.onClick) {
           button.addEventListener('click', action.onClick);

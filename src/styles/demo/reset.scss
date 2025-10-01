@@ -10,8 +10,19 @@
   box-sizing: border-box;
 }
 
-/* Remove default margins and padding */
-* {
+/* Remove default margins and padding from specific elements */
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+figure,
+blockquote,
+dl,
+dd {
   margin: 0;
   padding: 0;
 }

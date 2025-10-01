@@ -1,4 +1,5 @@
 import { BaseComponent } from '@peptolab/parallelogram';
+import { generateId } from '../utils/dom-utils.js';
 /**
  * Tabs Component
  *
@@ -142,7 +143,7 @@ export default class Tabs extends BaseComponent {
 
       // Generate IDs if needed
       if (!tab.id) {
-        tab.id = `tab-${Math.random().toString(36).slice(2)}`;
+        tab.id = generateId('tab');
       }
 
       // Find corresponding panel

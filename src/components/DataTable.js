@@ -1,4 +1,5 @@
 import { BaseComponent } from '@peptolab/parallelogram';
+import { createElement, generateId, debounce } from '../utils/dom-utils.js';
 
 /**
  * DataTable Component - Enhanced table functionality
@@ -91,9 +92,11 @@ export class DataTable extends BaseComponent {
       header.style.cursor = 'pointer';
       header.classList.add('sortable');
 
-      const icon = document.createElement('span');
-      icon.className = 'sort-icon';
-      icon.textContent = DataTable.defaults.sortIcons.unsorted;
+      const icon = createElement(
+        'span',
+        { className: 'sort-icon' },
+        DataTable.defaults.sortIcons.unsorted
+      );
       header.appendChild(icon);
 
       header.addEventListener('click', () => {
@@ -103,33 +106,32 @@ export class DataTable extends BaseComponent {
   }
 
   _setupFiltering(element, state) {
-    const filterContainer = document.createElement('div');
-    filterContainer.className = 'form__element form__element--sm datatable-filter';
+    const searchId = generateId('datatable-search');
 
-    const label = document.createElement('label');
-    label.className = 'form__label';
-    label.textContent = 'Search:';
-    label.htmlFor = `datatable-search-${Date.now()}`;
+    const label = createElement('label', { className: 'form__label', htmlFor: searchId }, 'Search:');
 
-    const fieldContainer = document.createElement('div');
-    fieldContainer.className = 'form__field';
-
-    const searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Search table...';
-    searchInput.className = 'form__control datatable-search';
-    searchInput.id = label.htmlFor;
-
-    searchInput.addEventListener('input', e => {
-      clearTimeout(this.searchTimeout);
-      this.searchTimeout = setTimeout(() => {
-        this._handleFilter(element, state, e.target.value);
-      }, state.config.searchDelay);
+    const searchInput = createElement('input', {
+      type: 'text',
+      id: searchId,
+      placeholder: 'Search table...',
+      className: 'form__control datatable-search',
     });
 
+    const debouncedFilter = debounce(value => {
+      this._handleFilter(element, state, value);
+    }, state.config.searchDelay);
+
+    searchInput.addEventListener('input', e => debouncedFilter(e.target.value));
+
+    const fieldContainer = createElement('div', { className: 'form__field' });
     fieldContainer.appendChild(searchInput);
+
+    const filterContainer = createElement('div', {
+      className: 'form__element form__element--sm datatable-filter',
+    });
     filterContainer.appendChild(label);
     filterContainer.appendChild(fieldContainer);
+
     element.parentNode.insertBefore(filterContainer, element);
   }
 
