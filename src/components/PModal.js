@@ -22,6 +22,8 @@
  * </p-modal>
  */
 
+import { getFocusableElements, trapFocus } from '../utils/dom-utils.js';
+
 export default class PModal extends HTMLElement {
   static get observedAttributes() {
     return ['open', 'data-modal-size', 'data-modal-closable'];
@@ -486,16 +488,7 @@ export default class PModal extends HTMLElement {
    * @returns {HTMLElement[]}
    */
   _getFocusableElements() {
-    const selectors = [
-      'a[href]',
-      'button:not([disabled])',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"]):not([disabled])',
-    ];
-
-    return [...this.querySelectorAll(selectors.join(','))];
+    return getFocusableElements(this);
   }
 
   /**
@@ -513,26 +506,7 @@ export default class PModal extends HTMLElement {
    * @param {KeyboardEvent} event
    */
   _trapTab(event) {
-    const focusableElements = this._getFocusableElements();
-    if (!focusableElements.length) return;
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    const activeElement = this.contains(document.activeElement) ? document.activeElement : null;
-
-    if (event.shiftKey) {
-      // Shift + Tab
-      if (activeElement === firstElement || !activeElement) {
-        lastElement.focus();
-        event.preventDefault();
-      }
-    } else {
-      // Tab
-      if (activeElement === lastElement) {
-        firstElement.focus();
-        event.preventDefault();
-      }
-    }
+    trapFocus(this, event);
   }
 
   /**
