@@ -19,7 +19,7 @@ class FormEnhancer extends BaseComponent {
       showErrorsImmediately: false,
       errorClass: 'error',
       validClass: 'valid',
-      debounceMs: 300,
+      debounce: 300, // milliseconds
     };
   }
 
@@ -89,8 +89,8 @@ class FormEnhancer extends BaseComponent {
         'show-errors-immediately',
         FormEnhancer.defaults.showErrorsImmediately
       ),
-      debounceMs: parseInt(
-        this._getDataAttr(element, 'validate-debounce', FormEnhancer.defaults.debounceMs)
+      debounce: parseInt(
+        this._getDataAttr(element, 'validate-debounce', FormEnhancer.defaults.debounce)
       ),
     };
   }
@@ -129,7 +129,7 @@ class FormEnhancer extends BaseComponent {
         if (state.touched.has(fieldName) || state.config.showErrorsImmediately) {
           this._validateField(field, state);
         }
-      }, state.config.debounceMs)
+      }, state.config.debounce)
     );
   }
 

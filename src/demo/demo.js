@@ -24,6 +24,7 @@ import Lightbox from '../../src/components/Lightbox.js';
 import FormEnhancer from '../../src/components/FormEnhancer.js';
 import CopyToClipboard from '../../src/components/CopyToClipboard.js';
 import Uploader from '../../src/components/Uploader.js';
+import SelectLoader from '../../src/components/SelectLoader.js';
 
 // Demo page classes
 import { DemoHome } from './DemoHome.js';
@@ -31,6 +32,10 @@ import { DemoMedia } from './DemoMedia.js';
 import { DemoPerformance } from './DemoPerformance.js';
 import { DemoUIComponents } from './DemoUIComponents.js';
 import { DemoFileUploader } from './DemoFileUploader.js';
+import { DemoSelectLoader } from './DemoSelectLoader.js';
+
+// Mock XHR for demo file uploads
+import { MockXHR } from './MockXHR.js';
 
 // Component factory function to replace dynamic loaders
 function createComponentLoader(ComponentClass) {
@@ -40,8 +45,12 @@ function createComponentLoader(ComponentClass) {
 async function initFramework() {
   try {
     // Initialize logger first for proper logging throughout
-    const logger = new DevLogger({ level: 'debug', prefix: 'Demo' }, true);
+    const logger = new DevLogger('Demo', true);
     logger.info('Initializing Enhancement Framework Demo');
+
+    // Make MockXHR available globally for Uploader component
+    window.MockXHR = MockXHR;
+    logger.debug('MockXHR available globally');
 
     // Create registry with logger available
     logger.debug('Building component registry');
@@ -92,6 +101,9 @@ async function initFramework() {
       .component('uploader', '[data-uploader]', {
         loader: createComponentLoader(Uploader),
       })
+      .component('selectloader', '[data-selectloader]', {
+        loader: createComponentLoader(SelectLoader),
+      })
       .component('demo-home', '[data-demo="home"]', {
         loader: createComponentLoader(DemoHome),
       })
@@ -106,6 +118,9 @@ async function initFramework() {
       })
       .component('demo-uploader', '[data-demo="uploader"]', {
         loader: createComponentLoader(DemoFileUploader),
+      })
+      .component('demo-selectloader', '[data-demo="selectloader"]', {
+        loader: createComponentLoader(DemoSelectLoader),
       })
       .build();
 
