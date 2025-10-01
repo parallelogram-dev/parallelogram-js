@@ -48,7 +48,20 @@ export class MockXHR {
   send(body) {
     this._logger.debug('send', { url: this._url, hasBody: !!body });
 
-    // Get file from FormData
+    // Check if this is a sequence update (JSON body)
+    if (typeof body === 'string') {
+      try {
+        const data = JSON.parse(body);
+        if (data.sequence) {
+          this._handleSequenceUpdate(data);
+          return;
+        }
+      } catch (e) {
+        // Not JSON, continue to file upload handling
+      }
+    }
+
+    // Get file from FormData for file uploads
     let file = null;
     if (body instanceof FormData) {
       file = body.get('file');
@@ -148,6 +161,19 @@ export class MockXHR {
     this.readyState = 4;
 
     this._logger.info('upload complete', responseData);
+
+    // Dispatch load event
+    this.dispatchEvent(new Event('load'));
+  }
+
+  _handleSequenceUpdate(data) {
+    this._logger.info('sequence update', { sequence: data.sequence });
+
+    // Set successful response
+    this.status = 200;
+    this.statusText = 'OK';
+    this.responseText = JSON.stringify({ success: true });
+    this.readyState = 4;
 
     // Dispatch load event
     this.dispatchEvent(new Event('load'));
