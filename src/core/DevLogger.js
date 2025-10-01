@@ -44,9 +44,16 @@ export class DevLogger {
     return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled);
   }
 
-  group(label) {
-    if (this.enabled && console.groupCollapsed)
-      console.groupCollapsed(`[${this.namespace}] ${label}`);
+  group(label, data) {
+    if (!this.enabled || !console.groupCollapsed) return;
+
+    /* Open the group with just the label */
+    console.groupCollapsed(`[${this.namespace}] ${label}`);
+
+    /* Log data separately inside the group if provided */
+    if (data && typeof data === 'object') {
+      console.log('Details:', data);
+    }
   }
   groupEnd() {
     if (this.enabled && console.groupEnd) console.groupEnd();
