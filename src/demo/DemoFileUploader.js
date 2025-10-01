@@ -71,37 +71,39 @@ export class DemoFileUploader extends BaseComponent {
       this.logger.debug('Setting up MockXHR injection');
     }
 
-    /* Find all uploader elements and inject MockXHR */
-    const uploaders = document.querySelectorAll('[data-uploader]');
-
-    if (this.logger) {
-      this.logger.debug('Found uploader elements', { count: uploaders.length });
-    }
-
-    uploaders.forEach((uploaderEl, index) => {
-      /* Get component instance from element */
-      const instance = uploaderEl.__componentInstance;
+    /* Wait a tick for components to mount, then inject MockXHR */
+    setTimeout(() => {
+      const uploaders = document.querySelectorAll('[data-uploader]');
 
       if (this.logger) {
-        this.logger.debug(`Uploader ${index}`, {
-          element: !!uploaderEl,
-          hasInstance: !!instance,
-          hasSetXHR: instance ? !!instance.setXHR : false
-        });
+        this.logger.debug('Found uploader elements', { count: uploaders.length });
       }
 
-      if (instance && instance.setXHR) {
-        instance.setXHR(window.MockXHR);
+      uploaders.forEach((uploaderEl, index) => {
+        /* Get component instance from element */
+        const instance = uploaderEl.__componentInstance;
+
         if (this.logger) {
-          this.logger.info('MockXHR injected into Uploader component', { index });
+          this.logger.debug(`Uploader ${index}`, {
+            element: !!uploaderEl,
+            hasInstance: !!instance,
+            hasSetXHR: instance ? !!instance.setXHR : false
+          });
         }
-      } else if (this.logger) {
-        this.logger.warn('Could not inject MockXHR - will use lazy initialization', {
-          index,
-          hasInstance: !!instance
-        });
-      }
-    });
+
+        if (instance && instance.setXHR) {
+          instance.setXHR(window.MockXHR);
+          if (this.logger) {
+            this.logger.info('MockXHR injected into Uploader component', { index });
+          }
+        } else if (this.logger) {
+          this.logger.debug('Uploader not yet mounted - MockXHR will use lazy initialization', {
+            index,
+            hasInstance: !!instance
+          });
+        }
+      });
+    }, 100);
   }
   
   async _handleMockUpload(url, options) {
