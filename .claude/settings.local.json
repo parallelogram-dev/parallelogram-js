@@ -23,7 +23,8 @@
       "Bash(do if grep -q \"console\\.\" \"$file\")",
       "Bash(then echo \"✅ HAS CONSOLE USAGE: $file\")",
       "Bash(if ! find /Users/peptolab/Sites/parallelogram-js/src/components/ -name \"*.js\" -exec grep -l \"console\\.\" {} ;)",
-      "Bash(then echo \"✅ NO CONSOLE USAGE FOUND IN COMPONENTS\")"
+      "Bash(then echo \"✅ NO CONSOLE USAGE FOUND IN COMPONENTS\")",
+      "Bash(npm run build-demo:*)"
     ],
     "deny": [],
     "ask": []
