@@ -24,7 +24,11 @@
       "Bash(then echo \"✅ HAS CONSOLE USAGE: $file\")",
       "Bash(if ! find /Users/peptolab/Sites/parallelogram-js/src/components/ -name \"*.js\" -exec grep -l \"console\\.\" {} ;)",
       "Bash(then echo \"✅ NO CONSOLE USAGE FOUND IN COMPONENTS\")",
-      "Bash(npm run build-demo:*)"
+      "Bash(npm run build-demo:*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:www.kryogenix.org)"
     ],
     "deny": [],
     "ask": []

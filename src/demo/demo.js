@@ -10,6 +10,7 @@ import { default as PModal } from '../../src/components/PModal.js';
 import { default as PToasts } from '../../src/components/PToasts.js';
 import { default as PSelect } from '../../src/components/PSelect.js';
 import { default as PDatetime } from '../../src/components/PDatetime.js';
+import { default as PUploader } from '../../src/components/PUploader.js';
 import Modal from '../../src/components/Modal.js';
 import Toast from '../../src/components/Toast.js';
 import Lazysrc from '../../src/components/Lazysrc.js';
@@ -187,12 +188,13 @@ async function initFramework() {
 
     // Ensure web components are available by referencing the imports
     // This prevents tree-shaking and ensures custom elements are registered
-    if (PModal && PToasts && PSelect && PDatetime) {
+    if (PModal && PToasts && PSelect && PDatetime && PUploader) {
       logger.debug('Web components loaded and registered', {
         PModal: customElements.get('p-modal'),
         PToasts: customElements.get('p-toasts'),
         PSelect: customElements.get('p-select'),
         PDatetime: customElements.get('p-datetime'),
+        PUploader: customElements.get('p-uploader'),
       });
 
       // Wait for custom elements to be defined and then log diagnostic info
@@ -201,6 +203,8 @@ async function initFramework() {
         customElements.whenDefined('p-toasts'),
         customElements.whenDefined('p-select'),
         customElements.whenDefined('p-datetime'),
+        customElements.whenDefined('p-uploader'),
+        customElements.whenDefined('p-uploader-file'),
       ])
         .then(() => {
           logger.info('All custom elements ready', {
@@ -208,6 +212,7 @@ async function initFramework() {
             toastsInDOM: document.querySelectorAll('p-toasts').length,
             selectsInDOM: document.querySelectorAll('p-select').length,
             datetimesInDOM: document.querySelectorAll('p-datetime').length,
+            uploadersInDOM: document.querySelectorAll('p-uploader').length,
           });
         })
         .catch(err => {
