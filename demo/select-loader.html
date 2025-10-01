@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SelectLoader Component - Enhancement Framework</title>
+        <meta
+            name="description"
+            content="Progressive enhancement for select elements with dynamic fragment loading"
+        />
+        <meta property="og:title" content="SelectLoader Component - Enhancement Framework" />
+        <meta property="og:description" content="Dynamic fragment loading with select elements" />
+        <meta property="og:type" content="website" />
+        <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    </head>
+    <body>
+        <nav data-view="navbar">
+            <div class="nav__container">
+                <h1>Enhancement Framework</h1>
+                <ul class="nav__list">
+                    <li><a href="/" class="nav__link">Home</a></li>
+                    <li><a href="/ui-components" class="nav__link">UI Components</a></li>
+                    <li><a href="/media" class="nav__link">Media</a></li>
+                    <li><a href="/interactive" class="nav__link">Interactive</a></li>
+                    <li><a href="/select-loader" class="nav__link" aria-current="page">SelectLoader</a></li>
+                    <li><a href="/performance" class="nav__link">Performance</a></li>
+                    <li><a href="/uploader" class="nav__link">Uploader</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main data-view="main" data-demo="selectloader" class="page__content">
+            <header class="page__header">
+                <h1>SelectLoader Component</h1>
+                <p>Progressive enhancement for select elements with dynamic fragment loading using RouterManager.</p>
+            </header>
+
+            <!-- Basic Example with data-view -->
+            <section class="demo__section" data-component="demo-section">
+                <h2>Basic Fragment Loading (data-view pattern)</h2>
+                <p>Using <code>data-selectloader-target-view</code> for consistency with PageManager's fragment system:</p>
+
+                <div class="demo__example">
+                    <div class="form__element">
+                        <label class="form__label" for="category-select">Choose a category:</label>
+                        <div class="form__field">
+                            <select
+                                id="category-select"
+                                class="form__control"
+                                data-selectloader
+                                data-selectloader-target-view="category-content"
+                                data-selectloader-transition="fade"
+                            >
+                                <option value="">-- Select a category --</option>
+                                <option value="fragments/electronics.html">Electronics</option>
+                                <option value="fragments/clothing.html">Clothing</option>
+                                <option value="fragments/books.html">Books</option>
+                                <option value="fragments/sports.html">Sports</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div data-view="category-content" class="select-loader__target">
+                        <!-- Content loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide Transition Example -->
+            <section class="demo__section" data-component="demo-section">
+                <h2>Slide Transition</h2>
+                <p>Select with slide animation effect:</p>
+
+                <div class="demo__example">
+                    <div class="form__element">
+                        <label class="form__label" for="product-select">Select product:</label>
+                        <div class="form__field">
+                            <select
+                                id="product-select"
+                                class="form__control"
+                                data-selectloader
+                                data-selectloader-target="#product-details"
+                                data-selectloader-transition="slide"
+                                data-selectloader-transition-duration="400"
+                            >
+                                <option value="">-- Select a product --</option>
+                                <option value="fragments/product-1.html">Premium Laptop</option>
+                                <option value="fragments/product-2.html">Wireless Headphones</option>
+                                <option value="fragments/product-3.html">Smart Watch</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="product-details" class="select-loader__target">
+                        <!-- Product details loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Integration Example -->
+            <section class="demo__section" data-component="demo-section">
+                <h2>Form Integration</h2>
+                <p>SelectLoader integrated with form with reset functionality:</p>
+
+                <div class="demo__example">
+                    <form id="region-form" class="form--enhanced">
+                        <div class="form__element">
+                            <label class="form__label" for="region-select">Select region:</label>
+                            <div class="form__field">
+                                <select
+                                    id="region-select"
+                                    class="form__control"
+                                    data-selectloader
+                                    data-selectloader-target="#region-info"
+                                    data-selectloader-transition="fade"
+                                    name="region"
+                                >
+                                    <option value="">-- Choose a region --</option>
+                                    <option value="fragments/region-north.html">North Region</option>
+                                    <option value="fragments/region-south.html">South Region</option>
+                                    <option value="fragments/region-east.html">East Region</option>
+                                    <option value="fragments/region-west.html">West Region</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="region-info" class="select-loader__target">
+                            <!-- Region info loaded here -->
+                        </div>
+
+                        <div class="form__actions">
+                            <button type="reset" class="btn btn--secondary">Reset Form</button>
+                            <button type="submit" class="btn btn--primary">Continue</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- API Demonstration -->
+            <section class="demo__section" data-component="demo-section">
+                <h2>JavaScript API</h2>
+                <p>Control SelectLoader programmatically:</p>
+
+                <div class="demo__example">
+                    <div class="form__element">
+                        <label class="form__label" for="api-select">Test select:</label>
+                        <div class="form__field">
+                            <select
+                                id="api-select"
+                                class="form__control"
+                                data-selectloader
+                                data-selectloader-target="#api-content"
+                            >
+                                <option value="">-- Select an option --</option>
+                                <option value="fragments/api-demo-1.html">Demo 1</option>
+                                <option value="fragments/api-demo-2.html">Demo 2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="button__group">
+                        <button type="button" class="btn btn--sm" id="btn-reload">Reload Current</button>
+                        <button type="button" class="btn btn--sm" id="btn-load-demo1">Load Demo 1</button>
+                        <button type="button" class="btn btn--sm" id="btn-clear">Clear</button>
+                        <button type="button" class="btn btn--sm" id="btn-get-state">Get State</button>
+                    </div>
+
+                    <div id="api-content" class="select-loader__target">
+                        <!-- API demo content loaded here -->
+                    </div>
+
+                    <pre id="api-output" class="code__output" style="display: none"></pre>
+                </div>
+            </section>
+
+            <!-- Event Listeners Example -->
+            <section class="demo__section" data-component="demo-section">
+                <h2>Event Handling</h2>
+                <p>Monitor SelectLoader events in real-time:</p>
+
+                <div class="demo__example">
+                    <div class="form__element">
+                        <label class="form__label" for="events-select">Select to trigger events:</label>
+                        <div class="form__field">
+                            <select
+                                id="events-select"
+                                class="form__control"
+                                data-selectloader
+                                data-selectloader-target="#events-content"
+                            >
+                                <option value="">-- Select an option --</option>
+                                <option value="fragments/event-demo-1.html">Event Demo 1</option>
+                                <option value="fragments/event-demo-2.html">Event Demo 2</option>
+                                <option value="fragments/event-demo-3.html">Event Demo 3</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="events-content" class="select-loader__target">
+                        <!-- Event demo content -->
+                    </div>
+
+                    <div class="event__log">
+                        <h3>Event Log:</h3>
+                        <ul id="event-log-list" class="event__log-list"></ul>
+                        <button type="button" class="btn btn--sm" id="clear-log">Clear Log</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="demo__section" data-component="demo-section">
+                <h2>SelectLoader Features</h2>
+                <div class="features__details">
+                    <ul>
+                        <li><strong>Progressive Enhancement:</strong> Works with native select elements</li>
+                        <li><strong>RouterManager Integration:</strong> Uses framework's HTTP client for fragment loading</li>
+                        <li><strong>Smooth Transitions:</strong> Fade and slide animations with configurable duration</li>
+                        <li><strong>Form Integration:</strong> Automatically clears content on form reset</li>
+                        <li><strong>Event-Driven:</strong> Emits events for loading, loaded, error, and cleared states</li>
+                        <li><strong>Error Handling:</strong> Retry mechanism and user-friendly error messages</li>
+                        <li><strong>JavaScript API:</strong> Programmatic control via reload(), load(), clear() methods</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast container -->
+        <p-toasts placement="top-right"></p-toasts>
+
+        <!-- Load the framework -->
+        <script type="module" src="dist/parallelogram-demo.min.js"></script>
+    </body>
+</html>

@@ -264,9 +264,11 @@ export default class ComponentName extends BaseComponent {
       isEnabled: true,
       animationDuration: 300,
       closeOnOutsideClick: false,
-      // Include units where helpful
-      delayMs: 0,
-      maxWidthPx: 800,
+      // Numeric values default to appropriate units (following CSS conventions)
+      // Time values default to milliseconds
+      delay: 0,
+      // Dimensions default to pixels when numeric
+      maxWidth: 800,
     };
   }
 
@@ -408,14 +410,50 @@ Use consistent data types and formatting:
 
 ### Component Targeting
 
-Use consistent patterns for element relationships:
+Components support two targeting approaches for consistency with the framework:
+
+#### Option 1: CSS Selector (Traditional)
+Use `data-*-target` with a CSS selector:
 
 ```html
-<!-- ✅ CORRECT: Clear targeting patterns -->
-<!-- Trigger → Target relationship -->
-<button data-modal data-modal-target="#contact-modal">Open</button>
-<div id="contact-modal" data-modal-closable="true">Modal content</div>
+<button data-toggle data-toggle-target="#sidebar">Toggle Sidebar</button>
+<div id="sidebar">Sidebar content</div>
 
+<select data-selectloader data-selectloader-target="#product-details">
+  <option value="">Choose product...</option>
+  <option value="/products/1">Product 1</option>
+</select>
+<div id="product-details">Details here</div>
+```
+
+#### Option 2: data-view Reference (Recommended)
+Use `data-*-target-view` to reference elements by their `data-view` attribute. This is more consistent with the framework's PageManager fragment system:
+
+```html
+<!-- ✅ RECOMMENDED: Using data-view for consistency -->
+<button data-toggle data-toggle-target-view="sidebar">Toggle Sidebar</button>
+<div data-view="sidebar">Sidebar content</div>
+
+<select data-selectloader data-selectloader-target-view="product-details">
+  <option value="">Choose product...</option>
+  <option value="/products/1">Product 1</option>
+</select>
+<div data-view="product-details">Details here</div>
+
+<!-- Works with any component that uses targeting -->
+<button data-modal data-modal-target-view="contact">Open Contact</button>
+<div data-view="contact" data-modal-closable="true">Modal content</div>
+```
+
+**Benefits of data-view approach:**
+- Consistent with PageManager's fragment targeting system
+- No need for unique IDs when not semantically necessary
+- Clearer semantic intent (view vs generic element)
+- Better integration with framework routing and navigation
+
+#### Other Relationship Patterns
+
+```html
 <!-- Parent → Child relationship -->
 <div data-tabs>
     <button data-tab="panel-1" aria-selected="true">Tab 1</button>

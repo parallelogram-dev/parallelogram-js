@@ -202,7 +202,10 @@ class Toggle extends BaseComponent {
     const state = this.getState(element);
     if (!state) return;
 
-    if (state.isOpen) {
+    // Check the actual target state, not just this trigger's stored state
+    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
+
+    if (isActuallyOpen) {
       this.hide(element);
     } else {
       this.show(element);
@@ -215,15 +218,22 @@ class Toggle extends BaseComponent {
    */
   show(element) {
     const state = this.getState(element);
-    if (!state || state.isOpen) return;
+    if (!state) return;
+
+    // Check if already open to avoid redundant operations
+    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
+    if (isActuallyOpen) return;
 
     // Close other toggles if multiple is not allowed
     if (!state.multiple) {
       this._closeOtherToggles(element);
     }
 
-    // Update state
+    // Update state for this trigger
     state.isOpen = true;
+
+    // Update state for all triggers targeting the same element
+    this._syncTriggerStates(state.targetSelector, true);
 
     // Update classes and ARIA
     this._updateElementStates(element, state, true);
@@ -262,10 +272,17 @@ class Toggle extends BaseComponent {
    */
   hide(element) {
     const state = this.getState(element);
-    if (!state || !state.isOpen) return;
+    if (!state) return;
 
-    // Update state
+    // Check if already closed to avoid redundant operations
+    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
+    if (!isActuallyOpen) return;
+
+    // Update state for this trigger
     state.isOpen = false;
+
+    // Update state for all triggers targeting the same element
+    this._syncTriggerStates(state.targetSelector, false);
 
     // Update classes and ARIA
     this._updateElementStates(element, state, false);
@@ -371,9 +388,9 @@ class Toggle extends BaseComponent {
       e.stopPropagation();
     };
 
-    // Close on outside click
+    // Close on outside click (only if not manual mode)
     const documentClickHandler = e => {
-      if (!element.contains(e.target) && !state.target.contains(e.target)) {
+      if (!state.manual && !element.contains(e.target) && !state.target.contains(e.target)) {
         this.hide(element);
       }
     };
@@ -468,6 +485,25 @@ class Toggle extends BaseComponent {
         if (state && state.isOpen && !state.manual) {
           this.hide(element);
         }
+      }
+    });
+  }
+
+  /**
+   * Sync state for all triggers targeting the same element
+   * @private
+   * @param {string} targetSelector - Target selector to sync
+   * @param {boolean} isOpen - Whether the target is open
+   */
+  _syncTriggerStates(targetSelector, isOpen) {
+    const triggers = document.querySelectorAll(
+      `[data-toggle-target="${targetSelector}"][data-toggle-enhanced="true"]`
+    );
+
+    triggers.forEach(trigger => {
+      const triggerState = this.getState(trigger);
+      if (triggerState) {
+        triggerState.isOpen = isOpen;
       }
     });
   }
