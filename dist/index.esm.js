@@ -573,6 +573,7 @@ class RouterManager {
         trigger,
         element,
         replace,
+        viewTarget: options.viewTarget,
       });
 
       this.logger?.info('Navigation successful', {
