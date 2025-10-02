@@ -164,10 +164,8 @@ async function initFramework() {
         },
         targetGroupTransitions: {
           main: {
-            out: 'fade-slide-left',
-            in: 'fade-slide-right',
-            duration: 300,
-            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            out: 'page-transition-out',
+            in: 'page-transition-in',
           },
           navbar: {
             out: 'fade-scale-down',

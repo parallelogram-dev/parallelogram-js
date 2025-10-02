@@ -2838,6 +2838,21 @@ th.sortable:hover {
   animation-duration: 0.5s;
 }
 
+/* Page Transition Animations */
+.page-transition-out {
+  animation-name: page-transition-out;
+  animation-duration: 0.25s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.page-transition-in {
+  animation-name: page-transition-in;
+  animation-duration: 2s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
 /* Zoom Animations */
 .animate--zoom-in {
   animation-name: zoom-in;
@@ -3107,6 +3122,27 @@ th.sortable:hover {
   }
   100% {
     background-position: calc(200px + 100%) 0;
+  }
+}
+/* Page Transition Keyframes */
+@keyframes page-transition-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+@keyframes page-transition-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 /* ============================================
