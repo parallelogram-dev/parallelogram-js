@@ -449,6 +449,7 @@ th.sortable:hover {
 }
 .lightbox__content {
   position: relative;
+  overflow: hidden;
 }
 .lightbox__image {
   max-width: 100%;
@@ -500,11 +501,15 @@ th.sortable:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, opacity 0.2s;
   z-index: 10001;
 }
-.lightbox__nav:hover {
+.lightbox__nav:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.7);
+}
+.lightbox__nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 .lightbox__nav--prev {
   left: -70px;
