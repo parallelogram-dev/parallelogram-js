@@ -1615,10 +1615,9 @@ class PageManager {
     try {
       // Check if it's a CSS class-based transition
       if (typeof transitionType === 'string' && !transitionType.includes('(')) {
-        /* For 'out' transitions, keep the class on to prevent blip when switching to 'in'
-         * The 'in' transition will remove the 'out' class in the same frame */
-        const removeAfter = direction !== 'out';
-        await this._performCSSTransition(fragment, transitionType, duration, removeAfter);
+        /* Pass the out class name to the in transition so it can remove it */
+        const outClassName = direction === 'in' ? config.out : null;
+        await this._performCSSTransition(fragment, transitionType, duration, direction, outClassName);
       } else {
         // Use TransitionManager or inline styles
         await this._performJSTransition(fragment, direction, config);
@@ -1647,9 +1646,10 @@ class PageManager {
    * @param {HTMLElement} fragment - Fragment element
    * @param {string} className - CSS class name
    * @param {number} duration - Duration in ms (ignored for CSS transitions)
-   * @param {boolean} removeAfter - Whether to remove the class after animation completes
+   * @param {string} direction - 'in' or 'out'
+   * @param {string} outClassName - Name of the 'out' class to remove when 'in' starts
    */
-  _performCSSTransition(fragment, className, duration, removeAfter = true) {
+  _performCSSTransition(fragment, className, duration, direction = 'in', outClassName = null) {
     return new Promise(resolve => {
       const handleEnd = event => {
         /* Only handle events from the fragment itself, not bubbled from children */
@@ -1658,7 +1658,8 @@ class PageManager {
         fragment.removeEventListener('animationend', handleEnd);
         fragment.removeEventListener('transitionend', handleEnd);
 
-        if (removeAfter) {
+        /* When 'in' transition finishes, remove the 'in' class */
+        if (direction === 'in') {
           fragment.classList.remove(className);
         }
 
@@ -1671,19 +1672,13 @@ class PageManager {
 
       /* Use requestAnimationFrame to ensure DOM is ready */
       requestAnimationFrame(() => {
-        /* Remove any existing transition classes before adding the new one
-         * This handles the case where we're adding 'in' class while 'out' class is still present */
-        const transitionClasses = Array.from(fragment.classList).filter(
-          cls => cls.includes('transition') || cls.includes('fade-') || cls.includes('slide-')
-        );
-
-        transitionClasses.forEach(cls => {
-          if (cls !== className) {
-            fragment.classList.remove(cls);
-          }
-        });
-
+        /* Add the new transition class */
         fragment.classList.add(className);
+
+        /* If this is an 'in' transition, remove the 'out' class */
+        if (direction === 'in' && outClassName) {
+          fragment.classList.remove(outClassName);
+        }
       });
     });
   }
