@@ -417,8 +417,12 @@ th.sortable:hover {
   border-color: #3b82f6;
 }
 
-/* Lightbox Component Styles */
-.lightbox-overlay {
+/* ============================================
+   LIGHTBOX COMPONENT
+   BEM-compliant styles for lightbox gallery viewer
+   ============================================ */
+/* Base lightbox block */
+.lightbox__overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -431,8 +435,7 @@ th.sortable:hover {
   justify-content: center;
   animation: lightbox-fade-in 0.3s ease-out;
 }
-
-.lightbox-container {
+.lightbox__container {
   position: relative;
   max-width: 90vw;
   max-height: 90vh;
@@ -440,19 +443,16 @@ th.sortable:hover {
   align-items: center;
   justify-content: center;
 }
-
-.lightbox-content {
+.lightbox__content {
   position: relative;
 }
-
-.lightbox-image {
+.lightbox__image {
   max-width: 100%;
   max-height: 90vh;
   object-fit: contain;
   animation: lightbox-zoom-in 0.3s ease-out;
 }
-
-.lightbox-close {
+.lightbox__close {
   position: absolute;
   top: -50px;
   right: -10px;
@@ -470,13 +470,10 @@ th.sortable:hover {
   transition: background-color 0.2s;
   z-index: 10001;
 }
-
-.lightbox-close:hover {
+.lightbox__close:hover {
   background: rgba(255, 255, 255, 0.3);
 }
-
-.lightbox-prev,
-.lightbox-next {
+.lightbox__nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -494,21 +491,16 @@ th.sortable:hover {
   transition: background-color 0.2s;
   z-index: 10001;
 }
-
-.lightbox-prev {
-  left: -70px;
-}
-
-.lightbox-next {
-  right: -70px;
-}
-
-.lightbox-prev:hover,
-.lightbox-next:hover {
+.lightbox__nav:hover {
   background: rgba(0, 0, 0, 0.7);
 }
-
-.lightbox-counter {
+.lightbox__nav--prev {
+  left: -70px;
+}
+.lightbox__nav--next {
+  right: -70px;
+}
+.lightbox__counter {
   position: absolute;
   bottom: -50px;
   left: 50%;
@@ -521,6 +513,7 @@ th.sortable:hover {
   white-space: nowrap;
 }
 
+/* Animations */
 @keyframes lightbox-fade-in {
   from {
     opacity: 0;
@@ -541,23 +534,22 @@ th.sortable:hover {
 }
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .lightbox-prev,
-  .lightbox-next {
+  .lightbox__nav {
     width: 40px;
     height: 40px;
     font-size: 20px;
   }
-  .lightbox-prev {
+  .lightbox__nav--prev {
     left: 10px;
   }
-  .lightbox-next {
+  .lightbox__nav--next {
     right: 10px;
   }
-  .lightbox-close {
+  .lightbox__close {
     top: 10px;
     right: 10px;
   }
-  .lightbox-counter {
+  .lightbox__counter {
     bottom: 10px;
     font-size: 0.75rem;
   }
