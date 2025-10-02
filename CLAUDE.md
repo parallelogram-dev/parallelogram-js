@@ -60,6 +60,23 @@ Components follow a progressive enhancement pattern:
 - Components can be imported individually or as a bundle
 - CSS custom properties for theming with fallback support
 
+## Working with Claude Code - Critical Principles
+
+**CRITICAL**: When given explicit procedural steps or instructions:
+
+1. **Implement steps EXACTLY as stated** - Do not add "improvements" or variations without asking first
+2. **Simplify, don't complicate** - Each iteration should make things clearer, not more complex
+3. **Think before implementing** - Mentally trace through the logic to verify it will work
+4. **One attempt, not iterations** - Get it right the first time by following instructions precisely
+5. **Test the approach mentally** - Reason through the sequence before writing code
+6. **Trust explicit instructions** - The user knows their codebase; follow their guidance
+
+When debugging or implementing features:
+- Follow procedural steps in the exact order given
+- Don't guess or try variations if explicit steps are provided
+- Ask for clarification rather than making assumptions
+- Respect the user's expertise, especially with their own code
+
 ## Coding Standards
 
 **CRITICAL**: Before executing any code changes, ALWAYS reference the comprehensive coding standards document at `docs/06-coding-standards.md`. This ensures all work adheres to established framework conventions and maintains code quality.
