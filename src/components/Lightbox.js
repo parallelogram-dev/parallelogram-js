@@ -3,19 +3,51 @@ import { BaseComponent } from '@peptolab/parallelogram';
 /**
  * Lightbox Component - Image/media gallery viewer
  *
+ * Features:
+ * - BEM-compliant class naming (.lightbox__overlay, .lightbox__container, etc.)
+ * - Configurable class names via data attributes
+ * - Gallery support with navigation
+ * - Keyboard navigation (arrow keys, escape)
+ * - Counter display
+ * - Backdrop click to close
+ * - Responsive design
+ *
  * @example
+ * <!-- Basic lightbox -->
  * <figure>
  *   <a data-lightbox="gallery" href="large1.jpg">
  *     <img src="thumb1.jpg" alt="Image 1">
  *   </a>
  *   <figcaption>Click to view larger image</figcaption>
  * </figure>
+ *
+ * <!-- Gallery with multiple images -->
  * <figure>
  *   <a data-lightbox="gallery" href="large2.jpg">
  *     <img src="thumb2.jpg" alt="Image 2">
  *   </a>
  *   <figcaption>Gallery image 2</figcaption>
  * </figure>
+ *
+ * <!-- Custom configuration -->
+ * <a data-lightbox="custom"
+ *    data-lightbox-close-escape="false"
+ *    data-lightbox-show-counter="true"
+ *    data-lightbox-overlay-class="custom-lightbox__overlay"
+ *    href="image.jpg">
+ *   <img src="thumb.jpg" alt="Custom lightbox">
+ * </a>
+ *
+ * BEM Classes:
+ * - .lightbox__overlay - Fullscreen overlay backdrop
+ * - .lightbox__container - Container for lightbox content
+ * - .lightbox__content - Content wrapper
+ * - .lightbox__image - Image element
+ * - .lightbox__close - Close button
+ * - .lightbox__nav - Navigation button
+ * - .lightbox__nav--prev - Previous button modifier
+ * - .lightbox__nav--next - Next button modifier
+ * - .lightbox__counter - Image counter display
  */
 export class Lightbox extends BaseComponent {
   static get defaults() {
@@ -26,6 +58,16 @@ export class Lightbox extends BaseComponent {
       showNavigation: true,
       keyNavigation: true,
       animationDuration: 300,
+      /* BEM class names */
+      baseClass: 'lightbox',
+      overlayClass: 'lightbox__overlay',
+      containerClass: 'lightbox__container',
+      closeClass: 'lightbox__close',
+      prevClass: 'lightbox__nav lightbox__nav--prev',
+      nextClass: 'lightbox__nav lightbox__nav--next',
+      contentClass: 'lightbox__content',
+      imageClass: 'lightbox__image',
+      counterClass: 'lightbox__counter',
     };
   }
 
@@ -89,6 +131,40 @@ export class Lightbox extends BaseComponent {
           Lightbox.defaults.animationDuration
         )
       ),
+      /* BEM class names - configurable via data attributes */
+      baseClass: this._getDataAttr(element, 'lightbox-base-class', Lightbox.defaults.baseClass),
+      overlayClass: this._getDataAttr(
+        element,
+        'lightbox-overlay-class',
+        Lightbox.defaults.overlayClass
+      ),
+      containerClass: this._getDataAttr(
+        element,
+        'lightbox-container-class',
+        Lightbox.defaults.containerClass
+      ),
+      closeClass: this._getDataAttr(
+        element,
+        'lightbox-close-class',
+        Lightbox.defaults.closeClass
+      ),
+      prevClass: this._getDataAttr(element, 'lightbox-prev-class', Lightbox.defaults.prevClass),
+      nextClass: this._getDataAttr(element, 'lightbox-next-class', Lightbox.defaults.nextClass),
+      contentClass: this._getDataAttr(
+        element,
+        'lightbox-content-class',
+        Lightbox.defaults.contentClass
+      ),
+      imageClass: this._getDataAttr(
+        element,
+        'lightbox-image-class',
+        Lightbox.defaults.imageClass
+      ),
+      counterClass: this._getDataAttr(
+        element,
+        'lightbox-counter-class',
+        Lightbox.defaults.counterClass
+      ),
     };
   }
 
@@ -118,38 +194,38 @@ export class Lightbox extends BaseComponent {
 
   _createLightboxElement(config) {
     this.lightboxElement = document.createElement('div');
-    this.lightboxElement.className = 'lightbox-overlay';
+    this.lightboxElement.className = config.overlayClass;
     this.lightboxElement.innerHTML = `
-            <div class="lightbox-container">
-                <button class="lightbox-close" aria-label="Close">&times;</button>
+            <div class="${config.containerClass}">
+                <button class="${config.closeClass}" aria-label="Close">&times;</button>
                 ${
                   config.showNavigation
                     ? `
-                    <button class="lightbox-prev" aria-label="Previous">&larr;</button>
-                    <button class="lightbox-next" aria-label="Next">&rarr;</button>
+                    <button class="${config.prevClass}" aria-label="Previous">&larr;</button>
+                    <button class="${config.nextClass}" aria-label="Next">&rarr;</button>
                 `
                     : ''
                 }
-                <div class="lightbox-content">
-                    <img class="lightbox-image" alt="">
+                <div class="${config.contentClass}">
+                    <img class="${config.imageClass}" alt="">
                 </div>
-                ${config.showCounter ? '<div class="lightbox-counter"></div>' : ''}
+                ${config.showCounter ? `<div class="${config.counterClass}"></div>` : ''}
             </div>
         `;
 
     document.body.appendChild(this.lightboxElement);
 
     // Setup button handlers
-    this.lightboxElement.querySelector('.lightbox-close').addEventListener('click', () => {
+    this.lightboxElement.querySelector(`.${config.closeClass.split(' ')[0]}`).addEventListener('click', () => {
       this._closeLightbox();
     });
 
     if (config.showNavigation) {
-      this.lightboxElement.querySelector('.lightbox-prev').addEventListener('click', () => {
+      this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`).addEventListener('click', () => {
         this._previousImage(config);
       });
 
-      this.lightboxElement.querySelector('.lightbox-next').addEventListener('click', () => {
+      this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`).addEventListener('click', () => {
         this._nextImage(config);
       });
     }
@@ -168,20 +244,20 @@ export class Lightbox extends BaseComponent {
     const imageUrl = element.href;
     const imageAlt = element.querySelector('img')?.alt || '';
 
-    const img = this.lightboxElement.querySelector('.lightbox-image');
+    const img = this.lightboxElement.querySelector(`.${config.imageClass.split(' ')[0]}`);
     img.src = imageUrl;
     img.alt = imageAlt;
 
     // Update counter
     if (config.showCounter) {
-      const counter = this.lightboxElement.querySelector('.lightbox-counter');
+      const counter = this.lightboxElement.querySelector(`.${config.counterClass.split(' ')[0]}`);
       counter.textContent = `${index + 1} / ${this.currentGallery.length}`;
     }
 
     // Update navigation buttons
     if (config.showNavigation) {
-      const prevBtn = this.lightboxElement.querySelector('.lightbox-prev');
-      const nextBtn = this.lightboxElement.querySelector('.lightbox-next');
+      const prevBtn = this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`);
+      const nextBtn = this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`);
 
       prevBtn.style.display = index > 0 ? 'block' : 'none';
       nextBtn.style.display = index < this.currentGallery.length - 1 ? 'block' : 'none';
