@@ -348,15 +348,18 @@ export class PageManager {
       // 2. Unmount components only within the target fragment
       this.unmountAllWithin(targetFragment);
 
-      // 3. Replace the target fragment's content with source fragment's content
-      targetFragment.innerHTML = sourceFragment.innerHTML;
-
-      // 4. Copy over any data attributes from the source fragment to target
-      this._copyFragmentAttributes(sourceFragment, targetFragment);
-
-      // 5. IN transition (if configured)
+      // 3 & 4. Replace content and prepare for IN transition in same frame
       if (transitionConfig?.in) {
-        await this._performFragmentTransition(targetFragment, 'in', transitionConfig);
+        // Set initial state for in-transition before replacing content
+        await this._replaceContentWithTransition(
+          targetFragment,
+          sourceFragment,
+          transitionConfig
+        );
+      } else {
+        // No transition - just replace
+        targetFragment.innerHTML = sourceFragment.innerHTML;
+        this._copyFragmentAttributes(sourceFragment, targetFragment);
       }
 
       // Emit post-mount event
@@ -386,6 +389,26 @@ export class PageManager {
       targetFragment,
       transitionConfig,
     };
+  }
+
+  /**
+   * Replace content and start IN transition in same frame to prevent flash
+   * @private
+   * @param {HTMLElement} targetFragment - Target fragment element
+   * @param {HTMLElement} sourceFragment - Source fragment element
+   * @param {Object} config - Transition configuration
+   */
+  async _replaceContentWithTransition(targetFragment, sourceFragment, config) {
+    return new Promise(resolve => {
+      requestAnimationFrame(() => {
+        /* Replace content and copy attributes */
+        targetFragment.innerHTML = sourceFragment.innerHTML;
+        this._copyFragmentAttributes(sourceFragment, targetFragment);
+
+        /* Trigger IN transition in same frame */
+        this._performFragmentTransition(targetFragment, 'in', config).then(resolve);
+      });
+    });
   }
 
   /**
