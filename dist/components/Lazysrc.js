@@ -453,12 +453,25 @@ class Lazysrc extends BaseComponent {
         reject(new Error('Image failed to load'));
       };
 
-      // Start loading - prefer data attribute, fall back to stored original
+      // Get src and srcset
       const src = element.dataset.lazysrcSrc || state.originalSrc;
+      const srcset = element.dataset.lazysrcSrcset || state.originalSrcset;
+      const sizes = element.dataset.lazysrcSizes || state.originalSizes;
+
+      // Set srcset and sizes first (browser will choose best image)
+      if (srcset) {
+        img.srcset = srcset;
+        if (sizes) {
+          img.sizes = sizes;
+        }
+      }
+
+      // Set src (either as fallback or primary)
       if (src) {
         img.src = src;
-      } else {
-        reject(new Error('No src specified'));
+      } else if (!srcset) {
+        reject(new Error('No src or srcset specified'));
+        return;
       }
     });
   }
