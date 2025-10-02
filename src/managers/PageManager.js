@@ -432,7 +432,10 @@ export class PageManager {
     try {
       // Check if it's a CSS class-based transition
       if (typeof transitionType === 'string' && !transitionType.includes('(')) {
-        await this._performCSSTransition(fragment, transitionType, duration);
+        /* For 'out' transitions, keep the class on to prevent blip when switching to 'in'
+         * The 'in' transition will remove the 'out' class in the same frame */
+        const removeAfter = direction !== 'out';
+        await this._performCSSTransition(fragment, transitionType, duration, removeAfter);
       } else {
         // Use TransitionManager or inline styles
         await this._performJSTransition(fragment, direction, config);
@@ -460,36 +463,45 @@ export class PageManager {
    * @private
    * @param {HTMLElement} fragment - Fragment element
    * @param {string} className - CSS class name
-   * @param {number} duration - Duration in ms
+   * @param {number} duration - Duration in ms (ignored for CSS transitions)
+   * @param {boolean} removeAfter - Whether to remove the class after animation completes
    */
-  _performCSSTransition(fragment, className, duration) {
+  _performCSSTransition(fragment, className, duration, removeAfter = true) {
     return new Promise(resolve => {
-      const cleanup = () => {
+      const handleEnd = event => {
+        /* Only handle events from the fragment itself, not bubbled from children */
+        if (event && event.target !== fragment) return;
+
         fragment.removeEventListener('animationend', handleEnd);
         fragment.removeEventListener('transitionend', handleEnd);
-        fragment.classList.remove(className);
-        clearTimeout(timeoutId);
-      };
 
-      const handleEnd = () => {
-        cleanup();
+        if (removeAfter) {
+          fragment.classList.remove(className);
+        }
+
         resolve();
       };
 
-      // Set up event listeners
-      fragment.addEventListener('animationend', handleEnd, { once: true });
-      fragment.addEventListener('transitionend', handleEnd, { once: true });
+      /* Set up event listeners */
+      fragment.addEventListener('animationend', handleEnd);
+      fragment.addEventListener('transitionend', handleEnd);
 
-      // Use requestAnimationFrame to ensure DOM is ready
+      /* Use requestAnimationFrame to ensure DOM is ready */
       requestAnimationFrame(() => {
+        /* Remove any existing transition classes before adding the new one
+         * This handles the case where we're adding 'in' class while 'out' class is still present */
+        const transitionClasses = Array.from(fragment.classList).filter(
+          cls => cls.includes('transition') || cls.includes('fade-') || cls.includes('slide-')
+        );
+
+        transitionClasses.forEach(cls => {
+          if (cls !== className) {
+            fragment.classList.remove(cls);
+          }
+        });
+
         fragment.classList.add(className);
       });
-
-      // Fallback timeout
-      const timeoutId = setTimeout(() => {
-        cleanup();
-        resolve();
-      }, duration + 100);
     });
   }
 
