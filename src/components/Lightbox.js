@@ -81,6 +81,7 @@ export class Lightbox extends BaseComponent {
     this.currentGallery = [];
     this.currentIndex = 0;
     this.isOpen = false;
+    this.isTransitioning = false;
   }
 
   _init(element) {
@@ -199,9 +200,11 @@ export class Lightbox extends BaseComponent {
     this.isOpen = true;
     document.body.style.overflow = 'hidden';
 
-    // Add show class with RAF for transition
+    // Add show class after paint for transition (double RAF)
     requestAnimationFrame(() => {
-      this.lightboxElement.classList.add(state.config.showClass);
+      requestAnimationFrame(() => {
+        this.lightboxElement.classList.add(state.config.showClass);
+      });
     });
 
     this.eventBus?.emit('lightbox:opened', {
@@ -216,12 +219,12 @@ export class Lightbox extends BaseComponent {
     this.lightboxElement.className = config.overlayClass;
     this.lightboxElement.innerHTML = `
             <div class="${config.containerClass}">
-                <button class="${config.closeClass}" aria-label="Close">&times;</button>
+                <button class="${config.closeClass}" data-lightbox-action="close" aria-label="Close">&times;</button>
                 ${
                   config.showNavigation
                     ? `
-                    <button class="${config.prevClass}" aria-label="Previous">&larr;</button>
-                    <button class="${config.nextClass}" aria-label="Next">&rarr;</button>
+                    <button class="${config.prevClass}" data-lightbox-action="prev" aria-label="Previous">&larr;</button>
+                    <button class="${config.nextClass}" data-lightbox-action="next" aria-label="Next">&rarr;</button>
                 `
                     : ''
                 }
@@ -235,21 +238,29 @@ export class Lightbox extends BaseComponent {
     document.body.appendChild(this.lightboxElement);
 
     // Setup button handlers
-    this.lightboxElement.querySelector(`.${config.closeClass.split(' ')[0]}`).addEventListener('click', e => {
+    const closeBtn = this.lightboxElement.querySelector('[data-lightbox-action="close"]');
+    closeBtn.addEventListener('click', e => {
       e.stopPropagation();
       this._closeLightbox();
     });
 
     if (config.showNavigation) {
-      this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`).addEventListener('click', e => {
+      const prevBtn = this.lightboxElement.querySelector('[data-lightbox-action="prev"]');
+      const nextBtn = this.lightboxElement.querySelector('[data-lightbox-action="next"]');
+
+      prevBtn.addEventListener('click', e => {
         e.stopPropagation();
         this._previousImage(config);
       });
 
-      this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`).addEventListener('click', e => {
+      nextBtn.addEventListener('click', e => {
         e.stopPropagation();
         this._nextImage(config);
       });
+
+      // Initially disable both buttons - _showImage will set correct state
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
     }
 
     if (config.closeOnBackdrop) {
@@ -270,24 +281,52 @@ export class Lightbox extends BaseComponent {
 
     // Apply directional transition if configured and direction specified
     if (config.useDirectionalTransitions && direction) {
-      const transitionClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
+      this.isTransitioning = true;
+      const slideOutClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
+      const slideInClass = direction === 'next' ? config.slideRightClass : config.slideLeftClass;
 
-      // Add transition class
-      img.classList.add(transitionClass);
+      // Step 1: Slide out current image
+      img.classList.add(slideOutClass);
 
-      // Wait for transition to complete, then update image and remove class
-      const handleTransitionEnd = event => {
-        if (event && event.target !== img) return;
+      img.addEventListener(
+        'transitionend',
+        () => {
+          // Step 2: Image has slid out, remove the class
 
-        img.src = imageUrl;
-        img.alt = imageAlt;
+          // Step 3: Preload new image
+          const loader = new Image();
+          loader.onload = () => {
+            // Step 4: Image loaded, update src and position off-screen
+            img.src = imageUrl;
+            img.alt = imageAlt;
+            img.style.transition = 'none';
+            img.classList.add(slideInClass);
+            img.offsetHeight;
+            img.classList.remove(slideOutClass);
 
-        // Remove transition class after image loads
-        img.classList.remove(config.slideLeftClass, config.slideRightClass);
-      };
+            // Step 5: Slide in
+            requestAnimationFrame(() => {
+              img.style.transition = '';
+              img.classList.remove(slideInClass);
 
-      img.addEventListener('transitionend', handleTransitionEnd, { once: true });
-      img.addEventListener('animationend', handleTransitionEnd, { once: true });
+              img.addEventListener(
+                'transitionend',
+                () => {
+                  this.isTransitioning = false;
+                },
+                { once: true }
+              );
+            });
+          };
+          loader.onerror = () => {
+            img.src = imageUrl;
+            img.alt = imageAlt;
+            this.isTransitioning = false;
+          };
+          loader.src = imageUrl;
+        },
+        { once: true }
+      );
     } else {
       // No transition, just update immediately
       img.src = imageUrl;
@@ -302,15 +341,16 @@ export class Lightbox extends BaseComponent {
 
     // Update navigation buttons
     if (config.showNavigation) {
-      const prevBtn = this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`);
-      const nextBtn = this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`);
+      const prevBtn = this.lightboxElement.querySelector('[data-lightbox-action="prev"]');
+      const nextBtn = this.lightboxElement.querySelector('[data-lightbox-action="next"]');
 
-      prevBtn.style.display = index > 0 ? 'block' : 'none';
-      nextBtn.style.display = index < this.currentGallery.length - 1 ? 'block' : 'none';
+      if (prevBtn) prevBtn.disabled = index === 0;
+      if (nextBtn) nextBtn.disabled = index === this.currentGallery.length - 1;
     }
   }
 
   _previousImage(config) {
+    if (this.isTransitioning) return;
     if (this.currentIndex > 0) {
       this.currentIndex--;
       this._showImage(this.currentIndex, config, 'prev');
@@ -318,6 +358,7 @@ export class Lightbox extends BaseComponent {
   }
 
   _nextImage(config) {
+    if (this.isTransitioning) return;
     if (this.currentIndex < this.currentGallery.length - 1) {
       this.currentIndex++;
       this._showImage(this.currentIndex, config, 'next');
@@ -363,9 +404,10 @@ export class Lightbox extends BaseComponent {
     // Remove show class to trigger close transition
     this.lightboxElement.classList.remove(this.currentConfig.showClass);
 
-    // Wait for transition to complete
-    const handleTransitionEnd = event => {
-      if (event && event.target !== this.lightboxElement) return;
+    let cleanupDone = false;
+    const cleanup = () => {
+      if (cleanupDone) return;
+      cleanupDone = true;
 
       // Remove event listeners
       if (this.keyHandler) {
@@ -390,8 +432,17 @@ export class Lightbox extends BaseComponent {
       this.eventBus?.emit('lightbox:closed', {});
     };
 
+    // Wait for transition to complete
+    const handleTransitionEnd = event => {
+      if (event && event.target !== this.lightboxElement) return;
+      cleanup();
+    };
+
     this.lightboxElement.addEventListener('transitionend', handleTransitionEnd, { once: true });
     this.lightboxElement.addEventListener('animationend', handleTransitionEnd, { once: true });
+
+    // Fallback in case transition doesn't fire
+    setTimeout(cleanup, 1000);
   }
 
   // Public API
