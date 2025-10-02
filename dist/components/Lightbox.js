@@ -57,7 +57,7 @@ class Lightbox extends BaseComponent {
       showCounter: true,
       showNavigation: true,
       keyNavigation: true,
-      animationDuration: 300,
+      useDirectionalTransitions: true,
       /* BEM class names */
       baseClass: 'lightbox',
       overlayClass: 'lightbox__overlay',
@@ -68,6 +68,10 @@ class Lightbox extends BaseComponent {
       contentClass: 'lightbox__content',
       imageClass: 'lightbox__image',
       counterClass: 'lightbox__counter',
+      /* Utility classes for transitions */
+      showClass: 'show',
+      slideLeftClass: 'slide-left',
+      slideRightClass: 'slide-right',
     };
   }
 
@@ -124,12 +128,10 @@ class Lightbox extends BaseComponent {
         'lightbox-key-nav',
         Lightbox.defaults.keyNavigation
       ),
-      animationDuration: parseInt(
-        this._getDataAttr(
-          element,
-          'lightbox-animation-duration',
-          Lightbox.defaults.animationDuration
-        )
+      useDirectionalTransitions: this._getDataAttr(
+        element,
+        'lightbox-directional-transitions',
+        Lightbox.defaults.useDirectionalTransitions
       ),
       /* BEM class names - configurable via data attributes */
       baseClass: this._getDataAttr(element, 'lightbox-base-class', Lightbox.defaults.baseClass),
@@ -165,6 +167,17 @@ class Lightbox extends BaseComponent {
         'lightbox-counter-class',
         Lightbox.defaults.counterClass
       ),
+      showClass: this._getDataAttr(element, 'lightbox-show-class', Lightbox.defaults.showClass),
+      slideLeftClass: this._getDataAttr(
+        element,
+        'lightbox-slide-left-class',
+        Lightbox.defaults.slideLeftClass
+      ),
+      slideRightClass: this._getDataAttr(
+        element,
+        'lightbox-slide-right-class',
+        Lightbox.defaults.slideRightClass
+      ),
     };
   }
 
@@ -177,6 +190,7 @@ class Lightbox extends BaseComponent {
     );
 
     this.currentIndex = this.currentGallery.indexOf(triggerElement);
+    this.currentConfig = state.config;
 
     this._createLightboxElement(state.config);
     this._showImage(this.currentIndex, state.config);
@@ -184,6 +198,11 @@ class Lightbox extends BaseComponent {
 
     this.isOpen = true;
     document.body.style.overflow = 'hidden';
+
+    // Add show class with RAF for transition
+    requestAnimationFrame(() => {
+      this.lightboxElement.classList.add(state.config.showClass);
+    });
 
     this.eventBus?.emit('lightbox:opened', {
       gallery: state.gallery,
@@ -216,16 +235,19 @@ class Lightbox extends BaseComponent {
     document.body.appendChild(this.lightboxElement);
 
     // Setup button handlers
-    this.lightboxElement.querySelector(`.${config.closeClass.split(' ')[0]}`).addEventListener('click', () => {
+    this.lightboxElement.querySelector(`.${config.closeClass.split(' ')[0]}`).addEventListener('click', e => {
+      e.stopPropagation();
       this._closeLightbox();
     });
 
     if (config.showNavigation) {
-      this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`).addEventListener('click', () => {
+      this.lightboxElement.querySelector(`.${config.prevClass.split(' ')[0]}`).addEventListener('click', e => {
+        e.stopPropagation();
         this._previousImage(config);
       });
 
-      this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`).addEventListener('click', () => {
+      this.lightboxElement.querySelector(`.${config.nextClass.split(' ')[0]}`).addEventListener('click', e => {
+        e.stopPropagation();
         this._nextImage(config);
       });
     }
@@ -239,14 +261,38 @@ class Lightbox extends BaseComponent {
     }
   }
 
-  _showImage(index, config) {
+  _showImage(index, config, direction = null) {
     const element = this.currentGallery[index];
     const imageUrl = element.href;
     const imageAlt = element.querySelector('img')?.alt || '';
 
     const img = this.lightboxElement.querySelector(`.${config.imageClass.split(' ')[0]}`);
-    img.src = imageUrl;
-    img.alt = imageAlt;
+
+    // Apply directional transition if configured and direction specified
+    if (config.useDirectionalTransitions && direction) {
+      const transitionClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
+
+      // Add transition class
+      img.classList.add(transitionClass);
+
+      // Wait for transition to complete, then update image and remove class
+      const handleTransitionEnd = event => {
+        if (event && event.target !== img) return;
+
+        img.src = imageUrl;
+        img.alt = imageAlt;
+
+        // Remove transition class after image loads
+        img.classList.remove(config.slideLeftClass, config.slideRightClass);
+      };
+
+      img.addEventListener('transitionend', handleTransitionEnd, { once: true });
+      img.addEventListener('animationend', handleTransitionEnd, { once: true });
+    } else {
+      // No transition, just update immediately
+      img.src = imageUrl;
+      img.alt = imageAlt;
+    }
 
     // Update counter
     if (config.showCounter) {
@@ -267,32 +313,44 @@ class Lightbox extends BaseComponent {
   _previousImage(config) {
     if (this.currentIndex > 0) {
       this.currentIndex--;
-      this._showImage(this.currentIndex, config);
+      this._showImage(this.currentIndex, config, 'prev');
     }
   }
 
   _nextImage(config) {
     if (this.currentIndex < this.currentGallery.length - 1) {
       this.currentIndex++;
-      this._showImage(this.currentIndex, config);
+      this._showImage(this.currentIndex, config, 'next');
     }
   }
 
   _setupEventListeners(config) {
     if (config.closeOnEscape || config.keyNavigation) {
       this.keyHandler = e => {
+        let handled = false;
         switch (e.key) {
           case 'Escape':
-            if (config.closeOnEscape) this._closeLightbox();
+            if (config.closeOnEscape) {
+              this._closeLightbox();
+              handled = true;
+            }
             break;
           case 'ArrowLeft':
-            if (config.keyNavigation) this._previousImage(config);
+            if (config.keyNavigation) {
+              this._previousImage(config);
+              handled = true;
+            }
             break;
           case 'ArrowRight':
-            if (config.keyNavigation) this._nextImage(config);
+            if (config.keyNavigation) {
+              this._nextImage(config);
+              handled = true;
+            }
             break;
         }
-        e.preventDefault();
+        if (handled) {
+          e.preventDefault();
+        }
       };
 
       document.addEventListener('keydown', this.keyHandler);
@@ -302,26 +360,38 @@ class Lightbox extends BaseComponent {
   _closeLightbox() {
     if (!this.isOpen) return;
 
-    // Remove event listeners
-    if (this.keyHandler) {
-      document.removeEventListener('keydown', this.keyHandler);
-      this.keyHandler = null;
-    }
+    // Remove show class to trigger close transition
+    this.lightboxElement.classList.remove(this.currentConfig.showClass);
 
-    // Remove lightbox element
-    if (this.lightboxElement) {
-      this.lightboxElement.remove();
-      this.lightboxElement = null;
-    }
+    // Wait for transition to complete
+    const handleTransitionEnd = event => {
+      if (event && event.target !== this.lightboxElement) return;
 
-    // Restore body scroll
-    document.body.style.overflow = '';
+      // Remove event listeners
+      if (this.keyHandler) {
+        document.removeEventListener('keydown', this.keyHandler);
+        this.keyHandler = null;
+      }
 
-    this.isOpen = false;
-    this.currentGallery = [];
-    this.currentIndex = 0;
+      // Remove lightbox element
+      if (this.lightboxElement) {
+        this.lightboxElement.remove();
+        this.lightboxElement = null;
+      }
 
-    this.eventBus?.emit('lightbox:closed', {});
+      // Restore body scroll
+      document.body.style.overflow = '';
+
+      this.isOpen = false;
+      this.currentGallery = [];
+      this.currentIndex = 0;
+      this.currentConfig = null;
+
+      this.eventBus?.emit('lightbox:closed', {});
+    };
+
+    this.lightboxElement.addEventListener('transitionend', handleTransitionEnd, { once: true });
+    this.lightboxElement.addEventListener('animationend', handleTransitionEnd, { once: true });
   }
 
   // Public API
