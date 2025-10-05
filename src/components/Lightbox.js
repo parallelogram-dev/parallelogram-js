@@ -95,6 +95,7 @@ export class Lightbox extends BaseComponent {
 
     element.addEventListener('click', e => {
       e.preventDefault();
+      e.stopPropagation();
       this._openLightbox(element, state);
     });
 
@@ -198,7 +199,11 @@ export class Lightbox extends BaseComponent {
     this._setupEventListeners(state.config);
 
     this.isOpen = true;
-    document.body.style.overflow = 'hidden';
+
+    // Calculate and set scrollbar width, then apply overflow--hidden class
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+    document.body.classList.add('overflow--hidden');
 
     // Add show class after paint for transition (double RAF)
     requestAnimationFrame(() => {
@@ -422,7 +427,7 @@ export class Lightbox extends BaseComponent {
       }
 
       // Restore body scroll
-      document.body.style.overflow = '';
+      document.body.classList.remove('overflow--hidden');
 
       this.isOpen = false;
       this.currentGallery = [];
