@@ -28,7 +28,8 @@
       "WebSearch",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:stackoverflow.com)",
-      "WebFetch(domain:www.kryogenix.org)"
+      "WebFetch(domain:www.kryogenix.org)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
