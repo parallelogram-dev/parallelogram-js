@@ -19,10 +19,10 @@ function generateId(prefix = 'elem') {
  * Usage:
  * <p-uploader
  *   max-files="5"
- *   upload-url="/api/upload"
- *   update-url="/api/update"
- *   delete-url="/api/delete"
- *   sequence-url="/api/sequence"
+ *   upload-action="/api/upload"
+ *   update-action="/api/update"
+ *   delete-action="/api/delete"
+ *   sequence-action="/api/sequence"
  * >
  *   <p-uploader-fields slot="field-definitions">
  *     <p-uploader-field key="title" label="Title" type="text" required></p-uploader-field>
@@ -71,7 +71,7 @@ class PUploader extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['max-files', 'upload-url', 'update-url', 'delete-url', 'sequence-url', 'accept-types', 'max-file-size', 'allow-edit', 'allow-sort'];
+    return ['max-files', 'upload-action', 'update-action', 'delete-action', 'sequence-action', 'accept-types', 'max-file-size', 'allow-edit', 'allow-sort'];
   }
 
   get config() {
@@ -81,10 +81,10 @@ class PUploader extends HTMLElement {
 
     return {
       maxFiles: getIntAttr('max-files', 5),
-      uploadUrl: getAttr('upload-url', '/upload'),
-      updateUrl: getAttr('update-url', '/update'),
-      deleteUrl: getAttr('delete-url', '/delete'),
-      sequenceUrl: getAttr('sequence-url', '/sequence'),
+      uploadAction: getAttr('upload-action', '/upload'),
+      updateAction: getAttr('update-action', '/update'),
+      deleteAction: getAttr('delete-action', '/delete'),
+      sequenceAction: getAttr('sequence-action', '/sequence'),
       inputName: getAttr('input-name', 'files'),
       acceptTypes: getAttr('accept-types', '*/*'),
       maxFileSize: getIntAttr('max-file-size', 10 * 1024 * 1024),
@@ -505,7 +505,7 @@ class PUploader extends HTMLElement {
       this._handleUploadError(fileData, 'Network error');
     });
 
-    xhr.open('POST', this.config.uploadUrl);
+    xhr.open('POST', this.config.uploadAction);
     xhr.send(formData);
   }
 
@@ -659,7 +659,7 @@ class PUploader extends HTMLElement {
       .filter((id) => id !== null);
 
     try {
-      const response = await fetch(this.config.sequenceUrl, {
+      const response = await fetch(this.config.sequenceAction, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1229,9 +1229,9 @@ class PUploaderFile extends HTMLElement {
 
       /* Send update to server */
       const uploader = this.closest('p-uploader');
-      if (uploader && uploader.config.updateUrl) {
+      if (uploader && uploader.config.updateAction) {
         try {
-          const response = await fetch(uploader.config.updateUrl, {
+          const response = await fetch(uploader.config.updateAction, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -1291,14 +1291,14 @@ class PUploaderFile extends HTMLElement {
     const uploader = this.closest('p-uploader');
     const fileId = this.getAttribute('file-id');
 
-    if (!uploader || !uploader.config.deleteUrl) {
-      /* No delete URL configured, just remove locally */
+    if (!uploader || !uploader.config.deleteAction) {
+      /* No delete action configured, just remove locally */
       this._removeFile();
       return;
     }
 
     try {
-      const response = await fetch(uploader.config.deleteUrl, {
+      const response = await fetch(uploader.config.deleteAction, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
