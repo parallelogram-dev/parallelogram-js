@@ -1,256 +1,445 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '../core/BaseComponent.js';
 
 /**
- * Uploader - File upload component with drag & drop, progress tracking, and sortable file management
- * Based on original legacy structure with asset__ class naming
- * 
- * Usage:
- * <div data-uploader 
- *      data-max-files="5" 
- *      data-upload-url="/upload" 
- *      data-sequence-url="/sequence">
- *   
- *   <div class="asset__selector" data-asset-selector>
- *     <input type="file" class="asset__fileinput" id="file-input">
- *     <label class="asset__label" for="file-input">
- *       + Add files by selecting or dragging here
- *     </label>
- *   </div>
- * </div>
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
  */
-class Uploader extends BaseComponent {
-  
-  _init(element) {
-    const state = super._init(element);
 
-    // Store element reference
-    this.element = element;
 
-    // Parse configuration following data attribute standards
-    this.config = {
-      maxFiles: parseInt(element.dataset.uploaderMaxFiles) || 5,
-      uploadUrl: element.dataset.uploaderUploadUrl || '/upload',
-      sequenceUrl: element.dataset.uploaderSequenceUrl || '/sequence',
-      inputName: element.dataset.uploaderInputName || 'files',
-      acceptTypes: element.dataset.uploaderAcceptTypes || '*/*',
-      maxFileSize: parseInt(element.dataset.uploaderMaxFileSize) || 10 * 1024 * 1024,
-      allowEdit: element.dataset.uploaderAllowEdit !== 'false',
-      allowSort: element.dataset.uploaderAllowSort !== 'false'
-    };
+/**
+ * Generate unique ID with optional prefix
+ * @param {string} prefix - Prefix for the ID
+ * @returns {string} Unique ID
+ */
+function generateId(prefix = 'elem') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
-    // XHR constructor set to null for lazy initialization
-    this.XHRConstructor = null;
+/**
+ * PUploader - Web Component for file uploads with configurable fields
+ *
+ * Usage:
+ * <p-uploader
+ *   max-files="5"
+ *   upload-action="/api/upload"
+ *   update-action="/api/update"
+ *   delete-action="/api/delete"
+ *   sequence-action="/api/sequence"
+ * >
+ *   <p-uploader-fields slot="field-definitions">
+ *     <p-uploader-field key="title" label="Title" type="text" required></p-uploader-field>
+ *     <p-uploader-field key="caption" label="Caption" type="textarea"></p-uploader-field>
+ *   </p-uploader-fields>
+ *
+ *   <p-uploader-file file-id="existing1" filename="image.jpg" preview="https://...">
+ *     <p-uploader-data key="title">My Title</p-uploader-data>
+ *     <p-uploader-data key="caption">My Caption</p-uploader-data>
+ *   </p-uploader-file>
+ * </p-uploader>
+ */
+class PUploader extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
 
-    // Initialize file tracking
+    /* File tracking */
     this.files = new Map();
-
-    // Track dragging state
+    this.fieldSchema = null;
     this.draggedElement = null;
     this.draggedOverElement = null;
-    this.placeholder = null;
+    this.XHRConstructor = null;
+    this.eventBus = null;
+    this.logger = null;
 
-    // Get DOM elements
-    this.selector = element.querySelector('[data-uploader-selector]');
-    this.fileInput = element.querySelector('.uploader__fileinput');
-    this.filesContainer = element.querySelector('[data-uploader-files]') || element;
+    /* Render initial structure */
+    this._render();
+  }
 
-    if (this.logger) {
-      this.logger.debug('Uploader initialized', {
-        selector: !!this.selector,
-        fileInput: !!this.fileInput,
-        config: this.config
-      });
-    }
-
-    // Set up event listeners
-    this._setupEventListeners(state.controller.signal);
-
-    // Load any existing files
+  connectedCallback() {
+    this._setupEventListeners();
+    this._loadFieldDefinitions();
     this._loadExistingFiles();
 
-    return state;
+    /* Defer validation to ensure child elements have fully initialized */
+    setTimeout(() => {
+      this._validateFiles();
+    }, 0);
   }
 
-  /**
-   * Set custom XHR constructor for uploads (useful for mocking/testing)
-   * @param {Function} XHRClass - Constructor function for XMLHttpRequest or mock
-   */
-  setXHR(XHRClass) {
-    this.XHRConstructor = XHRClass;
-    if (this.logger) {
-      this.logger.debug('Custom XHR constructor set', {
-        isMock: XHRClass !== XMLHttpRequest
-      });
+  disconnectedCallback() {
+    if (this.abortController) {
+      this.abortController.abort();
     }
   }
 
-  /**
-   * Get XHR constructor instance (lazy initialization)
-   * @returns {Function} XHR constructor to use for uploads
-   */
+  static get observedAttributes() {
+    return ['max-files', 'upload-action', 'update-action', 'delete-action', 'sequence-action', 'accept-types', 'max-file-size', 'allow-edit', 'allow-sort'];
+  }
+
+  get config() {
+    const getAttr = (name, defaultValue) => this.getAttribute(name) || defaultValue;
+    const getIntAttr = (name, defaultValue) => parseInt(this.getAttribute(name)) || defaultValue;
+    const getBoolAttr = (name) => this.getAttribute(name) !== 'false';
+
+    return {
+      maxFiles: getIntAttr('max-files', 5),
+      uploadAction: getAttr('upload-action', '/upload'),
+      updateAction: getAttr('update-action', '/update'),
+      deleteAction: getAttr('delete-action', '/delete'),
+      sequenceAction: getAttr('sequence-action', '/sequence'),
+      inputName: getAttr('input-name', 'files'),
+      acceptTypes: getAttr('accept-types', '*/*'),
+      maxFileSize: getIntAttr('max-file-size', 10 * 1024 * 1024),
+      allowEdit: getBoolAttr('allow-edit'),
+      allowSort: getBoolAttr('allow-sort')
+    };
+  }
+
+  setXHR(XHRClass) {
+    this.XHRConstructor = XHRClass;
+  }
+
+  setEventBus(eventBus) {
+    this.eventBus = eventBus;
+  }
+
+  setLogger(logger) {
+    this.logger = logger;
+  }
+
   _getXHRConstructor() {
     if (this.XHRConstructor === null) {
-      /* Check for MockXHR in window (for demo/testing) */
-      if (window.MockXHR) {
-        this.XHRConstructor = window.MockXHR;
-        if (this.logger) {
-          this.logger.debug('Using MockXHR constructor from window');
-        }
-      } else {
-        /* Default to native XMLHttpRequest if not set */
-        this.XHRConstructor = XMLHttpRequest;
-        if (this.logger) {
-          this.logger.debug('Using default XMLHttpRequest constructor');
-        }
-      }
+      this.XHRConstructor = window.MockXHR || XMLHttpRequest;
     }
     return this.XHRConstructor;
   }
 
-  _setupEventListeners(signal) {
-    if (!this.fileInput || !this.selector) {
+  _loadFieldDefinitions() {
+    const fieldContainer = this.querySelector('p-uploader-fields[slot="field-definitions"]');
+
+    if (!fieldContainer) {
       if (this.logger) {
-        this.logger.warn('Cannot set up event listeners - missing elements', {
-          fileInput: !!this.fileInput,
-          selector: !!this.selector
-        });
+        this.logger.warn('PUploader: No field definitions found. Using defaults.');
       }
+      this.fieldSchema = this._getDefaultFields();
       return;
     }
 
-    if (this.logger) {
-      this.logger.debug('Setting up Uploader event listeners');
-    }
+    const fieldElements = fieldContainer.querySelectorAll('p-uploader-field');
+    this.fieldSchema = new Map();
 
-    // File input change
-    this.fileInput.addEventListener('change', (e) => {
-      if (this.logger) {
-        this.logger.debug('File input changed', { fileCount: e.target.files.length });
+    fieldElements.forEach((field) => {
+      const key = field.getAttribute('key');
+      const label = field.getAttribute('label');
+      const type = field.getAttribute('type') || 'text';
+      const required = field.hasAttribute('required');
+      const maxlength = field.getAttribute('maxlength');
+
+      if (!key) {
+        if (this.logger) {
+          this.logger.error('PUploader: Field missing required "key" attribute', field);
+        }
+        return;
       }
-      this._handleFileSelect(e);
-    }, { signal });
-    
-    // Drag and drop for file uploads - TEMPORARILY DISABLED FOR DEBUGGING
-    // this.selector.addEventListener('dragover', (e) => {
-    //   /* Don't show dragover state if we're reordering files */
-    //   if (this.draggedElement) {
-    //     e.preventDefault(); // Prevent default to stop browser from treating as file drop
-    //     e.stopPropagation();
-    //     return;
-    //   }
 
-    //   e.preventDefault();
-    //   this.selector.classList.add('dragover');
-    // }, { signal });
-
-    // this.selector.addEventListener('dragleave', (e) => {
-    //   /* Don't remove dragover state if we're reordering files */
-    //   if (this.draggedElement) {
-    //     return;
-    //   }
-
-    //   e.preventDefault();
-    //   this.selector.classList.remove('dragover');
-    // }, { signal });
-
-    // this.selector.addEventListener('drop', (e) => {
-    //   /* Only handle file drops, not reordering drags */
-    //   if (this.draggedElement) {
-    //     e.preventDefault(); /* Prevent browser default file drop behavior */
-    //     e.stopPropagation(); /* Stop event from doing anything else */
-    //     return; /* This is a reorder drag, not a file drop */
-    //   }
-
-    //   e.preventDefault();
-    //   this.selector.classList.remove('dragover');
-    //   this._handleFileDrop(e);
-    // }, { signal });
-    
-    // Button clicks (using event delegation)
-    this.element.addEventListener('click', (e) => {
-      this._handleButtonClick(e);
-    }, { signal });
-
-    // Drag and drop reordering (only if sorting is enabled)
-    if (this.config.allowSort && this.filesContainer) {
-      this.filesContainer.addEventListener('dragstart', (e) => {
-        this._handleDragStart(e);
-      }, { signal });
-
-      this.filesContainer.addEventListener('dragend', (e) => {
-        this._handleDragEnd(e);
-      }, { signal });
-
-      this.filesContainer.addEventListener('dragover', (e) => {
-        this._handleDragOver(e);
-      }, { signal });
-
-      this.filesContainer.addEventListener('dragenter', (e) => {
-        this._handleDragEnter(e);
-      }, { signal });
-
-      this.filesContainer.addEventListener('dragleave', (e) => {
-        this._handleDragLeave(e);
-      }, { signal });
-
-      this.filesContainer.addEventListener('drop', (e) => {
-        this._handleDrop(e);
-      }, { signal });
-    }
+      this.fieldSchema.set(key, {
+        key,
+        label: label || key,
+        type,
+        required,
+        maxlength: maxlength ? parseInt(maxlength) : null,
+        element: field
+      });
+    });
   }
-  
+
+  _validateFiles() {
+    const files = this.querySelectorAll('p-uploader-file');
+
+    files.forEach((fileElement) => {
+      const dataElements = fileElement.querySelectorAll('p-uploader-data');
+      const fileData = new Map();
+
+      dataElements.forEach((dataEl) => {
+        const key = dataEl.getAttribute('key');
+        const value = dataEl.textContent.trim();
+
+        if (!this.fieldSchema.has(key)) {
+          if (this.logger) {
+            this.logger.warn(
+              `PUploader: Unknown field key "${key}" in file ${fileElement.getAttribute('file-id')}`
+            );
+          }
+          return;
+        }
+
+        const fieldDef = this.fieldSchema.get(key);
+
+        if (fieldDef.required && !value) {
+          if (this.logger) {
+            this.logger.error(
+              `PUploader: Required field "${key}" is empty in file ${fileElement.getAttribute('file-id')}`
+            );
+          }
+        }
+
+        if (fieldDef.maxlength && value.length > fieldDef.maxlength) {
+          if (this.logger) {
+            this.logger.warn(
+              `PUploader: Field "${key}" exceeds maxlength of ${fieldDef.maxlength}`
+            );
+          }
+        }
+
+        if (fieldDef.type === 'url' && value) {
+          try {
+            new URL(value);
+          } catch {
+            if (this.logger) {
+              this.logger.error(`PUploader: Field "${key}" has invalid URL: ${value}`);
+            }
+          }
+        }
+
+        fileData.set(key, value);
+      });
+
+      this.fieldSchema.forEach((fieldDef, key) => {
+        if (fieldDef.required && !fileData.has(key)) {
+          if (this.logger) {
+            this.logger.error(
+              `PUploader: Missing required field "${key}" in file ${fileElement.getAttribute('file-id')}`
+            );
+          }
+        }
+      });
+
+      fileElement._fieldData = fileData;
+      fileElement._fieldSchema = this.fieldSchema;
+
+      /* Trigger re-render to show fields */
+      if (fileElement._render) {
+        fileElement._render();
+      }
+    });
+  }
+
+  _getDefaultFields() {
+    return new Map([
+      ['title', { key: 'title', label: 'Title', type: 'text', required: false }],
+      ['caption', { key: 'caption', label: 'Caption', type: 'textarea', required: false }],
+      ['link', { key: 'link', label: 'Link', type: 'url', required: false }]
+    ]);
+  }
+
+  getFieldSchema() {
+    return this.fieldSchema;
+  }
+
+  _render() {
+    const acceptTypes = this.getAttribute('accept-types') || '*/*';
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          position: relative;
+          padding: 0.375rem;
+          border: 2px solid #000;
+        }
+
+        .uploader__files {
+          display: grid;
+          gap: 0.375rem;
+          margin-bottom: 0.375rem;
+        }
+
+        .uploader__selector {
+          border: 2px solid #cbd5e1;
+          padding: 2rem;
+          text-align: center;
+          background: #f8fafc;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+
+        .uploader__selector:hover {
+          border-color: #94a3b8;
+          background: #f1f5f9;
+        }
+
+        .uploader__selector.dragover {
+          border-color: #3b82f6;
+          background: #dbeafe;
+        }
+
+        .uploader__fileinput {
+          display: none;
+        }
+
+        .uploader__label {
+          color: #64748b;
+          font-size: 1rem;
+          cursor: pointer;
+        }
+
+        ::slotted(p-uploader-file) {
+          display: block;
+        }
+
+        ::slotted(p-uploader-fields) {
+          display: none;
+        }
+      </style>
+
+      <slot name="field-definitions"></slot>
+
+      <div class="uploader__files">
+        <slot></slot>
+      </div>
+
+      <div class="uploader__selector" part="selector">
+        <input type="file" multiple accept="${acceptTypes}" class="uploader__fileinput" id="file-input">
+        <label class="uploader__label" for="file-input">
+          + Add files by selecting or dragging here
+        </label>
+      </div>
+    `;
+  }
+
+  _setupEventListeners() {
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
+
+    const fileInput = this.shadowRoot.querySelector('.uploader__fileinput');
+    const selector = this.shadowRoot.querySelector('.uploader__selector');
+
+    fileInput.addEventListener('change', (e) => this._handleFileSelect(e), { signal });
+
+    selector.addEventListener(
+      'dragover',
+      (e) => {
+        if (this.draggedElement) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        e.preventDefault();
+        selector.classList.add('dragover');
+      },
+      { signal }
+    );
+
+    selector.addEventListener(
+      'dragleave',
+      (e) => {
+        if (this.draggedElement) return;
+        e.preventDefault();
+        selector.classList.remove('dragover');
+      },
+      { signal }
+    );
+
+    selector.addEventListener(
+      'drop',
+      (e) => {
+        if (this.draggedElement) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        e.preventDefault();
+        selector.classList.remove('dragover');
+        this._handleFileDrop(e);
+      },
+      { signal }
+    );
+
+    if (this.config.allowSort) {
+      this.addEventListener(
+        'dragover',
+        (e) => {
+          if (this.draggedElement) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+          }
+        },
+        { signal }
+      );
+
+      this.addEventListener('dragstart', (e) => this._handleDragStart(e), { signal });
+      this.addEventListener('dragend', (e) => this._handleDragEnd(e), { signal });
+      this.addEventListener('dragenter', (e) => this._handleDragEnter(e), { signal });
+      this.addEventListener('dragleave', (e) => this._handleDragLeave(e), { signal });
+      this.addEventListener('drop', (e) => this._handleDrop(e), { signal });
+    }
+
+    this.addEventListener(
+      'file:delete',
+      (e) => {
+        const fileId = e.detail.fileId;
+        if (fileId && this.files.has(fileId)) {
+          this.files.delete(fileId);
+        }
+      },
+      { signal }
+    );
+  }
+
   _loadExistingFiles() {
-    // Load existing uploader__file elements
-    const existingFiles = this.element.querySelectorAll('.uploader__file');
+    const existingFiles = this.querySelectorAll('p-uploader-file');
     existingFiles.forEach((fileElement, index) => {
-      const hiddenInput = fileElement.querySelector('input[type="hidden"]');
-      if (hiddenInput) {
-        const fileData = {
-          id: hiddenInput.value,
+      const fileId = fileElement.getAttribute('file-id');
+      if (fileId) {
+        this.files.set(fileId, {
+          id: fileId,
           element: fileElement,
           state: 'uploaded',
           order: index
-        };
-        this.files.set(fileData.id, fileData);
+        });
 
-        /* Make existing file elements draggable if sorting is enabled */
         if (this.config.allowSort && existingFiles.length > 1) {
           fileElement.setAttribute('draggable', 'true');
-          fileElement.setAttribute('data-uploader-drag-handle', '');
         }
       }
     });
   }
-  
-  _handleFileSelect(e) {
-    const files = Array.from(e.target.files);
-    this._processFiles(files);
-    e.target.value = ''; // Reset input
-  }
-  
-  _handleFileDrop(e) {
-    /* Only process if there are actual files in the drop */
-    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) {
-      return;
-    }
 
-    const files = Array.from(e.dataTransfer.files);
-    this._processFiles(files);
+  _handleFileSelect(e) {
+    this._processFiles(Array.from(e.target.files));
+    e.target.value = '';
   }
-  
+
+  _handleFileDrop(e) {
+    if (e.dataTransfer?.files?.length) {
+      this._processFiles(Array.from(e.dataTransfer.files));
+    }
+  }
+
   _processFiles(files) {
-    if (this.files.size >= this.config.maxFiles) {
+    const currentFileCount = this.querySelectorAll('p-uploader-file').length;
+    const availableSlots = this.config.maxFiles - currentFileCount;
+
+    if (availableSlots <= 0) {
       alert(`Maximum ${this.config.maxFiles} files allowed`);
       return;
     }
-    
-    files.slice(0, this.config.maxFiles - this.files.size).forEach(file => {
+
+    const filesToUpload = files.slice(0, availableSlots);
+
+    if (files.length > availableSlots) {
+      alert(
+        `Only ${availableSlots} more file${availableSlots === 1 ? '' : 's'} can be added (${this.config.maxFiles} max)`
+      );
+    }
+
+    filesToUpload.forEach((file) => {
       this._uploadFile(file);
     });
   }
-  
+
   async _uploadFile(file) {
-    const fileId = this._generateId('file');
+    const fileId = generateId('file');
     const fileData = {
       id: fileId,
       file: file,
@@ -258,143 +447,49 @@ class Uploader extends BaseComponent {
       progress: 0
     };
 
-    // Add to tracking
     this.files.set(fileId, fileData);
 
-    // Create UI element
-    const fileElement = this._createFileElement(fileData);
+    const fileElement = document.createElement('p-uploader-file');
+    fileElement.setAttribute('file-id', fileId);
+    fileElement.setAttribute('filename', file.name);
+    fileElement.setAttribute('state', 'uploading');
+    fileElement.setAttribute('allow-edit', this.config.allowEdit);
+    fileElement._fieldSchema = this.fieldSchema;
+    fileElement._fieldData = new Map();
+
     fileData.element = fileElement;
 
-    // Append to files container
-    this.filesContainer.appendChild(fileElement);
+    this.appendChild(fileElement);
 
-    // Generate thumbnail if it's an image
     if (file.type.startsWith('image/')) {
       try {
         const thumbnailUrl = await this._createThumbnail(file, 240, 240);
-        const preview = fileElement.querySelector('.uploader__preview img');
-        if (preview) {
-          preview.src = thumbnailUrl;
-          preview.style.display = 'block';
-          fileElement.querySelector('.uploader__preview').classList.add('uploader__preview--show');
-
-          /* Store that we've set a client-side thumbnail */
-          fileData.hasClientThumbnail = true;
-        }
+        fileElement.setAttribute('preview', thumbnailUrl);
       } catch (error) {
         if (this.logger) {
-          this.logger.warn('Failed to create thumbnail', { error });
+          this.logger.warn('Failed to create thumbnail', error);
         }
       }
     }
 
-    // Start upload
     this._performUpload(fileData);
   }
-  
-  _createFileElement(fileData) {
-    const div = document.createElement('div');
-    div.className = 'uploader__file uploader__file--show';
 
-    /* Make the entire file element draggable if sorting is enabled */
-    if (this.config.allowSort) {
-      div.setAttribute('draggable', 'true');
-      div.setAttribute('data-uploader-drag-handle', '');
-      div.style.userSelect = 'none';
-      div.style.webkitUserSelect = 'none';
-    }
-
-    div.innerHTML = `
-      <input type="hidden" value="${fileData.id}" name="${this.config.inputName}">
-
-      <div class="uploader__overlay">
-        <progress class="uploader__progress" max="100" value="${fileData.progress}">
-          <span>0%</span>
-        </progress>
-      </div>
-
-      <picture class="uploader__preview">
-        <img alt="" draggable="false" src="" style="display: none;">
-      </picture>
-
-      <div data-panel="info" class="uploader__panel uploader__panel--show">
-        <div class="uploader__body">
-          <p class="uploader__filename">${fileData.file ? fileData.file.name : ''}</p>
-          <p class="uploader__title"></p>
-          <p class="uploader__caption"></p>
-          <p class="uploader__link"></p>
-        </div>
-        <div class="uploader__actions">
-          ${this.config.allowEdit ? `
-            <button class="uploader__btn uploader__btn--update" type="button" data-uploader-action="show-rename">Edit Title/Caption</button>
-            <button class="uploader__btn uploader__btn--link" type="button" data-uploader-action="show-link">Edit Link</button>
-          ` : ''}
-          <button class="uploader__btn uploader__btn--delete" type="button" data-uploader-action="show-delete">Delete</button>
-        </div>
-      </div>
-
-      <div data-panel="error" class="uploader__panel">
-        <div class="uploader__body">
-          <p class="uploader__title">Upload Error</p>
-          <p class="uploader__info"></p>
-        </div>
-        <button class="uploader__btn uploader__btn--secondary" type="button" data-uploader-action="cancel">Cancel</button>
-      </div>
-
-      <div data-panel="rename" class="uploader__panel">
-        <div class="uploader__body">
-          <input name="title" class="uploader__input" placeholder="Title" type="text">
-          <textarea rows="6" name="caption" class="uploader__input" placeholder="Caption"></textarea>
-        </div>
-        <button class="uploader__btn uploader__btn--primary" type="button" data-uploader-action="confirm">Confirm</button>
-        <button class="uploader__btn uploader__btn--secondary" type="button" data-uploader-action="cancel">Cancel</button>
-      </div>
-
-      <div data-panel="link" class="uploader__panel">
-        <div class="uploader__body">
-          <input name="link" class="uploader__input" placeholder="E.g. https://example.com" type="text">
-        </div>
-        <button class="uploader__btn uploader__btn--primary" type="button" data-uploader-action="confirm">Confirm</button>
-        <button class="uploader__btn uploader__btn--secondary" type="button" data-uploader-action="cancel">Cancel</button>
-      </div>
-
-      <div data-panel="delete" class="uploader__panel">
-        <div class="uploader__body">
-          <p class="uploader__title">Delete this file?</p>
-        </div>
-        <button class="uploader__btn uploader__btn--delete" type="button" data-uploader-action="confirm">Delete</button>
-        <button class="uploader__btn uploader__btn--secondary" type="button" data-uploader-action="cancel">Cancel</button>
-      </div>
-    `;
-    
-    return div;
-  }
-  
   _performUpload(fileData) {
-    if (this.logger) {
-      this.logger.warn('_performUpload called', {
-        fileId: fileData.id,
-        hasFile: !!fileData.file,
-        fileName: fileData.file ? fileData.file.name : 'NO FILE'
-      });
-    }
-
     const formData = new FormData();
     formData.append('file', fileData.file);
 
     const XHRConstructor = this._getXHRConstructor();
     const xhr = new XHRConstructor();
-    
-    // Progress tracking
+
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const progress = (e.loaded / e.total) * 100;
         fileData.progress = progress;
-        this._updateProgress(fileData.element, progress);
+        fileData.element.setAttribute('progress', Math.round(progress));
       }
     });
-    
-    // Upload complete
+
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
         try {
@@ -407,316 +502,131 @@ class Uploader extends BaseComponent {
         this._handleUploadError(fileData, xhr.responseText || 'Upload failed');
       }
     });
-    
-    // Upload error
+
     xhr.addEventListener('error', () => {
       this._handleUploadError(fileData, 'Network error');
     });
-    
-    xhr.open('POST', this.config.uploadUrl);
+
+    xhr.open('POST', this.config.uploadAction);
     xhr.send(formData);
   }
-  
-  _updateProgress(element, progress) {
-    /* Update progress element */
-    const progressBar = element.querySelector('.uploader__progress');
-    if (progressBar) {
-      progressBar.value = progress;
 
-      /* Update progress percentage text inside progress element */
-      const percentText = progressBar.querySelector('span');
-      if (percentText) {
-        percentText.textContent = Math.round(progress) + '%';
-      }
-    }
-  }
-
-  async _handleUploadSuccess(fileData, response) {
+  _handleUploadSuccess(fileData, response) {
     fileData.state = 'uploaded';
     fileData.serverData = response;
 
-    /* Hide upload overlay with transition */
-    const overlay = fileData.element.querySelector('.uploader__overlay');
-    if (overlay) {
-      overlay.classList.add('hide');
-      await this._waitForTransition(overlay);
-      overlay.remove();
+    fileData.element.setAttribute('state', 'uploaded');
+
+    if (response.preview) {
+      fileData.element.setAttribute('preview', response.preview);
+    }
+    if (response.id) {
+      fileData.element.setAttribute('file-id', response.id);
     }
 
-    /* Update UI - only use server preview if we don't have a client thumbnail */
-    const preview = fileData.element.querySelector('.uploader__preview img');
-    if (preview && response.preview && !fileData.hasClientThumbnail) {
-      preview.src = response.preview;
-      preview.style.display = 'block';
-      fileData.element.querySelector('.uploader__preview').classList.add('uploader__preview--show');
-    }
-
-    /* Update hidden input with server ID */
-    const hiddenInput = fileData.element.querySelector('input[type="hidden"]');
-    if (hiddenInput && response.id) {
-      hiddenInput.value = response.id;
-    }
-
-    /* Enable dragging on all files if we now have 2+ files */
     this._updateDraggableState();
 
-    /* Dispatch upload success event */
-    this._dispatch(this.element, 'uploader:upload:success', {
-      fileId: fileData.id,
-      fileName: fileData.file ? fileData.file.name : null,
-      response: response
-    });
+    this.dispatchEvent(
+      new CustomEvent('upload:success', {
+        detail: { fileId: fileData.id, response },
+        bubbles: true
+      })
+    );
   }
-  
+
   _handleUploadError(fileData, error) {
     fileData.state = 'error';
     fileData.error = error;
 
-    // Show error panel
-    this._showPanel(fileData.element, 'error');
+    fileData.element.setAttribute('state', 'error');
+    fileData.element.setAttribute('error', error);
 
-    // Update error message
-    const errorInfo = fileData.element.querySelector('[data-panel="error"] .uploader__info');
-    if (errorInfo) {
-      errorInfo.textContent = error;
-    }
-
-    /* Dispatch upload error event */
-    this._dispatch(this.element, 'uploader:upload:error', {
-      fileId: fileData.id,
-      fileName: fileData.file ? fileData.file.name : null,
-      error: error
-    });
-  }
-  
-  _handleButtonClick(e) {
-    const button = e.target.closest('[data-uploader-action]');
-    if (!button) return;
-
-    const fileElement = button.closest('.uploader__file');
-    if (!fileElement) return;
-
-    const hiddenInput = fileElement.querySelector('input[type="hidden"]');
-    const fileId = hiddenInput ? hiddenInput.value : null;
-    const fileData = this.files.get(fileId);
-
-    e.preventDefault();
-
-    const action = button.dataset.uploaderAction;
-
-    // Handle different button actions
-    switch (action) {
-      case 'show-rename':
-        this._showPanel(fileElement, 'rename');
-        break;
-      case 'show-link':
-        this._showPanel(fileElement, 'link');
-        break;
-      case 'show-delete':
-        this._showPanel(fileElement, 'delete');
-        break;
-      case 'confirm':
-        this._handleConfirm(fileElement, fileData);
-        break;
-      case 'cancel':
-        this._showPanel(fileElement, 'info');
-        break;
-    }
-  }
-  
-  _showPanel(fileElement, panelName) {
-    // Hide all panels
-    const panels = fileElement.querySelectorAll('.uploader__panel');
-    panels.forEach(panel => panel.classList.remove('uploader__panel--show'));
-    
-    // Show requested panel
-    const targetPanel = fileElement.querySelector(`[data-panel="${panelName}"]`);
-    if (targetPanel) {
-      targetPanel.classList.add('uploader__panel--show');
-    }
-  }
-  
-  _handleConfirm(fileElement, fileData) {
-    const currentPanel = fileElement.querySelector('.uploader__panel.uploader__panel--show');
-    const panelType = currentPanel.getAttribute('data-panel');
-
-    if (panelType === 'rename') {
-      // Handle title/caption update
-      const title = currentPanel.querySelector('input[name="title"]').value;
-      const caption = currentPanel.querySelector('textarea[name="caption"]').value;
-
-      // Update UI
-      fileElement.querySelector('.uploader__title').textContent = title;
-      fileElement.querySelector('.uploader__caption').textContent = caption;
-
-      /* Dispatch file edit event */
-      this._dispatch(this.element, 'uploader:file:edit', {
-        fileId: fileData ? fileData.id : null,
-        title: title,
-        caption: caption
-      });
-
-      // TODO: Send to server
-
-    } else if (panelType === 'link') {
-      // Handle link update
-      const link = currentPanel.querySelector('input[name="link"]').value;
-
-      // Update UI
-      fileElement.querySelector('.uploader__link').textContent = link;
-
-      /* Dispatch file link event */
-      this._dispatch(this.element, 'uploader:file:link', {
-        fileId: fileData ? fileData.id : null,
-        link: link
-      });
-
-      // TODO: Send to server
-
-    } else if (panelType === 'delete') {
-      const deletedFileId = fileData ? fileData.id : null;
-
-      // Handle deletion
-      if (fileData) {
-        this.files.delete(fileData.id);
-      }
-      fileElement.remove();
-
-      /* Dispatch file delete event */
-      this._dispatch(this.element, 'uploader:file:delete', {
-        fileId: deletedFileId
-      });
-
-      // TODO: Send deletion to server
-      return; // Don't show info panel after deletion
-    }
-
-    // Return to info panel
-    this._showPanel(fileElement, 'info');
+    this.dispatchEvent(
+      new CustomEvent('upload:error', {
+        detail: { fileId: fileData.id, error },
+        bubbles: true
+      })
+    );
   }
 
-  /* Update draggable state based on file count */
   _updateDraggableState() {
     if (!this.config.allowSort) return;
 
-    const allFiles = this.element.querySelectorAll('.uploader__file');
+    const allFiles = this.querySelectorAll('p-uploader-file');
     const shouldBeDraggable = allFiles.length > 1;
 
-    allFiles.forEach(fileElement => {
-      if (shouldBeDraggable) {
-        fileElement.setAttribute('draggable', 'true');
-        fileElement.setAttribute('data-uploader-drag-handle', '');
-        fileElement.style.userSelect = 'none';
-        fileElement.style.webkitUserSelect = 'none';
+    allFiles.forEach((fileElement) => {
+      const currentPanel = fileElement.getAttribute('data-current-panel') || 'info';
+      const isPanelActive = currentPanel !== 'info';
 
-        /* Also disable dragging on images inside */
-        const img = fileElement.querySelector('img');
-        if (img) {
-          img.setAttribute('draggable', 'false');
-        }
+      if (shouldBeDraggable && !isPanelActive) {
+        fileElement.setAttribute('draggable', 'true');
       } else {
         fileElement.removeAttribute('draggable');
-        fileElement.removeAttribute('data-uploader-drag-handle');
-        fileElement.style.userSelect = '';
-        fileElement.style.webkitUserSelect = '';
       }
     });
   }
 
-  /* Drag and drop reordering handlers */
-
   _handleDragStart(e) {
-    /* Prevent default browser drag behaviors */
-    const img = e.target.closest('img');
-    const link = e.target.closest('a');
-
-    /* Don't allow dragging images or links */
-    if (img || link) {
-      e.preventDefault();
-      return;
-    }
-
-    const dragHandle = e.target.closest('[data-uploader-drag-handle]');
-    if (!dragHandle) return;
-
-    const fileElement = dragHandle.closest('.uploader__file');
-    if (!fileElement) return;
+    const fileElement = e.target.closest('p-uploader-file');
+    if (!fileElement || !fileElement.hasAttribute('draggable')) return;
 
     this.draggedElement = fileElement;
-
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', fileElement.innerHTML);
 
-    /* Stop event from bubbling to parent containers */
-    e.stopPropagation();
+    /* Capture the original order before any drag operations */
+    this.originalFileOrder = Array.from(this.querySelectorAll('p-uploader-file'));
 
-    /* Use requestAnimationFrame to add dragging class after ghost is created */
-    requestAnimationFrame(() => {
-      if (this.draggedElement) {
-        this.draggedElement.classList.add('uploader__file--dragging');
+    try {
+      if (document.selection) {
+        document.selection.empty();
+      } else {
+        window.getSelection().removeAllRanges();
       }
-    });
+    } catch (err) {}
+
+    setTimeout(() => {
+      if (this.draggedElement) {
+        fileElement.setAttribute('dragging', '');
+      }
+    }, 0);
   }
 
   _handleDragEnd(e) {
     if (!this.draggedElement) return;
 
-    this.draggedElement.classList.remove('uploader__file--dragging');
+    this.draggedElement.removeAttribute('dragging');
 
-    /* Remove all drag-over classes */
-    const allFiles = this.element.querySelectorAll('.uploader__file');
-    allFiles.forEach(el => el.classList.remove('uploader__file--drag-over'));
+    const allFiles = this.querySelectorAll('p-uploader-file');
+    allFiles.forEach((el) => el.removeAttribute('drag-over'));
 
     this.draggedElement = null;
     this.draggedOverElement = null;
   }
 
-  _handleDragOver(e) {
-    if (!this.draggedElement) return;
-
-    /* Stop the event from reaching selector's dragover handler */
-    e.stopPropagation();
-
-    const fileElement = e.target.closest('.uploader__file');
-    if (!fileElement || fileElement === this.draggedElement) return;
-
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }
-
   _handleDragEnter(e) {
     if (!this.draggedElement) return;
 
-    /* Don't process if we're over the selector */
-    if (e.target.closest('[data-uploader-selector]')) return;
-
-    const fileElement = e.target.closest('.uploader__file');
+    const fileElement = e.target.closest('p-uploader-file');
     if (!fileElement || fileElement === this.draggedElement) return;
 
-    /* Only update if we're entering a different element */
     if (fileElement === this.draggedOverElement) return;
 
-    /* Remove drag-over from previous element */
     if (this.draggedOverElement) {
-      this.draggedOverElement.classList.remove('uploader__file--drag-over');
+      this.draggedOverElement.removeAttribute('drag-over');
     }
 
-    /* Add drag-over to current element */
-    fileElement.classList.add('uploader__file--drag-over');
+    fileElement.setAttribute('drag-over', '');
     this.draggedOverElement = fileElement;
 
-    /* Get all file elements (excluding dragged element) */
-    const allFiles = Array.from(this.element.querySelectorAll('.uploader__file:not(.uploader__file--dragging)'));
+    const allFiles = Array.from(this.querySelectorAll('p-uploader-file'));
     const draggedIndex = allFiles.indexOf(this.draggedElement);
     const targetIndex = allFiles.indexOf(fileElement);
 
-    /* Swap elements in DOM to show live reordering */
     if (targetIndex !== -1) {
       if (targetIndex > draggedIndex) {
-        /* Moving down - insert after target */
         fileElement.parentNode.insertBefore(this.draggedElement, fileElement.nextSibling);
       } else {
-        /* Moving up - insert before target */
         fileElement.parentNode.insertBefore(this.draggedElement, fileElement);
       }
     }
@@ -725,12 +635,11 @@ class Uploader extends BaseComponent {
   _handleDragLeave(e) {
     if (!this.draggedElement) return;
 
-    const fileElement = e.target.closest('.uploader__file');
+    const fileElement = e.target.closest('p-uploader-file');
     if (!fileElement) return;
 
-    /* Only remove if we're actually leaving this element */
     if (fileElement === this.draggedOverElement && !fileElement.contains(e.relatedTarget)) {
-      fileElement.classList.remove('uploader__file--drag-over');
+      fileElement.removeAttribute('drag-over');
       this.draggedOverElement = null;
     }
   }
@@ -741,68 +650,80 @@ class Uploader extends BaseComponent {
     e.preventDefault();
     e.stopPropagation();
 
-    /* Element is already in final position from live swapping, just update server */
     this._updateSequence();
   }
 
   async _updateSequence() {
-    /* Get current order of file IDs */
-    const fileIds = Array.from(this.element.querySelectorAll('.uploader__file'))
-      .map(el => {
-        const hiddenInput = el.querySelector('input[type="hidden"]');
-        return hiddenInput ? hiddenInput.value : null;
-      })
-      .filter(id => id !== null);
+    /* Get the new order after drag */
+    const currentFiles = Array.from(this.querySelectorAll('p-uploader-file'));
+    const fileIds = currentFiles
+      .map((el) => el.getAttribute('file-id'))
+      .filter((id) => id !== null);
 
-    if (this.logger) {
-      this.logger.debug('Updating file sequence', { fileIds });
-    }
+    try {
+      const response = await fetch(this.config.sequenceAction, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sequence: fileIds })
+      });
 
-    /* Send to server */
-    const XHRConstructor = this._getXHRConstructor();
-    const xhr = new XHRConstructor();
+      if (response.ok) {
+        /* Success - clear the original order backup */
+        this.originalFileOrder = null;
 
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        if (this.logger) {
-          this.logger.debug('Sequence updated successfully');
-        }
-
-        /* Dispatch sequence update success event */
-        this._dispatch(this.element, 'uploader:sequence:update', {
-          sequence: fileIds
-        });
+        this.dispatchEvent(
+          new CustomEvent('sequence:update', {
+            detail: { sequence: fileIds },
+            bubbles: true
+          })
+        );
       } else {
-        if (this.logger) {
-          this.logger.error('Failed to update sequence', { status: xhr.status });
+        /* Revert to original order on failure */
+        if (this.originalFileOrder) {
+          this._revertSequence();
         }
 
-        /* Dispatch sequence update error event */
-        this._dispatch(this.element, 'uploader:sequence:error', {
-          sequence: fileIds,
-          status: xhr.status
-        });
+        const errorText = await response.text();
+        if (this.logger) {
+          this.logger.error('Failed to update sequence:', errorText);
+        }
       }
-    });
+    } catch (error) {
+      /* Revert to original order on network error */
+      if (this.originalFileOrder) {
+        this._revertSequence();
+      }
 
-    xhr.addEventListener('error', () => {
       if (this.logger) {
-        this.logger.error('Network error updating sequence');
+        this.logger.error('Failed to update sequence:', error);
       }
-    });
-
-    xhr.open('POST', this.config.sequenceUrl);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify({ sequence: fileIds }));
+    }
   }
 
-  /**
-   * Create a thumbnail from an image file
-   * @param {File} file - The image file
-   * @param {number} maxWidth - Maximum width of thumbnail
-   * @param {number} maxHeight - Maximum height of thumbnail
-   * @returns {Promise<string>} Data URL of the thumbnail
-   */
+  _revertSequence() {
+    if (!this.originalFileOrder) return;
+
+    /* Restore the original order by re-appending elements */
+    const fragment = document.createDocumentFragment();
+
+    /* Remove all file elements and add them to fragment in original order */
+    this.originalFileOrder.forEach((fileElement) => {
+      if (fileElement.parentNode) {
+        fileElement.parentNode.removeChild(fileElement);
+      }
+      fragment.appendChild(fileElement);
+    });
+
+    /* Re-append in original order */
+    const selector = this.shadowRoot.querySelector('.uploader__selector');
+    this.insertBefore(fragment, selector);
+
+    /* Clear the backup */
+    this.originalFileOrder = null;
+  }
+
   async _createThumbnail(file, maxWidth, maxHeight) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -811,48 +732,683 @@ class Uploader extends BaseComponent {
         const img = new Image();
 
         img.onload = () => {
-          /* Calculate dimensions maintaining aspect ratio */
-          let width = img.width;
-          let height = img.height;
+          const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+          const width = img.width * scale;
+          const height = img.height * scale;
 
-          if (width > height) {
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width = (width * maxHeight) / height;
-              height = maxHeight;
-            }
-          }
-
-          /* Create canvas and draw resized image */
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
 
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          /* Convert to data URL */
-          const thumbnailUrl = canvas.toDataURL(file.type || 'image/jpeg', 0.9);
-          resolve(thumbnailUrl);
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL(file.type || 'image/jpeg', 0.9));
         };
 
-        img.onerror = () => {
-          reject(new Error('Failed to load image'));
-        };
-
+        img.onerror = () => reject(new Error('Failed to load image'));
         img.src = e.target.result;
       };
 
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
+  }
+}
+
+/* Child Web Component for individual files */
+class PUploaderFile extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._fieldSchema = null;
+    this._fieldData = new Map();
+    this._render();
+  }
+
+  static get observedAttributes() {
+    return ['state', 'progress', 'preview', 'error', 'filename', 'allow-edit', 'data-current-panel'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this._render();
+    }
+  }
+
+  _render() {
+    const state = this.getAttribute('state') || 'uploaded';
+    const progress = parseInt(this.getAttribute('progress')) || 0;
+    const preview = this.getAttribute('preview') || '';
+    const error = this.getAttribute('error') || '';
+    const filename = this.getAttribute('filename') || '';
+    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const currentPanel = this.getAttribute('data-current-panel') || 'info';
+
+    /* Load field data from slotted elements */
+    const dataSlot = this.querySelector('p-uploader-data');
+    if (dataSlot && !this._fieldData.size) {
+      this._loadFieldData();
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+        }
+
+        :host {
+          display: block;
+          position: relative;
+          border: 1px solid #e2e8f0;
+          padding: 0.375rem;
+          background: white;
+          transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
+        }
+
+        :host([dragging]) {
+          opacity: 0.5;
+          transition: none;
+        }
+
+        :host([drag-over]) {
+          border-color: #3b82f6;
+          background: #eff6ff;
+          transform: translateY(-4px);
+        }
+
+        :host([draggable="true"]) {
+          cursor: grab;
+          user-select: none;
+          -webkit-user-select: none;
+        }
+
+        :host([draggable="true"]:active) {
+          cursor: grabbing;
+        }
+
+        .uploader__overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(255, 255, 255, 0.95);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+        }
+
+        .uploader__overlay--show {
+          display: flex;
+        }
+
+        .uploader__progress {
+          width: 80%;
+          height: 8px;
+        }
+
+        .uploader__container {
+          display: flex;
+          gap: 0.375rem;
+          position: relative;
+        }
+
+        .uploader__preview {
+          flex-shrink: 0;
+          width: 6rem;
+          height: 6rem;
+          display: ${preview ? 'block' : 'none'};
+          pointer-events: none;
+          user-select: none;
+        }
+
+        .uploader__preview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          pointer-events: none;
+          user-select: none;
+        }
+
+        .uploader__content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .uploader__panel {
+          display: none;
+          pointer-events: auto;
+          flex: 1;
+        }
+
+        .uploader__panel--show {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .uploader__body {
+          flex: 1;
+          padding-left: 0.375rem;
+          min-height: 4.75rem;
+          position: relative;
+        }
+
+        .uploader__delete-icon {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 1.75rem;
+          height: 1.75rem;
+          border: none;
+          background-size: contain;
+          background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E") no-repeat center;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+          pointer-events: auto;
+          padding: 0;
+        }
+
+        .uploader__delete-icon:hover {
+          opacity: 1;
+        }
+
+        .uploader__filename {
+          font-weight: 600;
+          color: #1e293b;
+          font-size: 0.875rem;
+          padding-right: 2rem;
+          height: 1.5rem;
+          padding-top: 0.1875rem;
+          padding-bottom: 0.1875rem;
+          line-height: 1.125rem;
+          margin: 0;
+          display: flex;
+          align-items: center;
+        }
+
+        .uploader__field {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          height: 1.5rem;
+          padding-top: 0.1875rem;
+          padding-bottom: 0.1875rem;
+          margin: 0;
+        }
+
+        .uploader__field-label {
+          font-weight: 600;
+          color: #475569;
+          font-size: 0.75rem;
+          min-width: 4rem;
+        }
+
+        .uploader__field-value {
+          flex: 1;
+          color: #64748b;
+          font-size: 0.75rem;
+          line-height: 1.3;
+          word-break: break-word;
+        }
+
+        .uploader__field-edit {
+          flex-shrink: 0;
+          width: 1.25rem;
+          height: 1.25rem;
+          border: 1px solid #cbd5e1;
+          background: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.625rem;
+          transition: all 0.2s;
+          padding: 0;
+        }
+
+        .uploader__field-edit:hover {
+          background: #f1f5f9;
+          border-color: #94a3b8;
+        }
+
+        .uploader__actions {
+          display: flex;
+          gap: 0.375rem;
+          justify-content: flex-end;
+          margin-top: 0.375rem;
+        }
+
+        .uploader__btn {
+          padding: 0.375rem 0.75rem;
+          border: 1px solid #cbd5e1;
+          background: white;
+          cursor: pointer;
+          font-size: 0.75rem;
+          transition: all 0.2s;
+          pointer-events: auto;
+        }
+
+        .uploader__btn:hover {
+          background: #f1f5f9;
+        }
+
+        .uploader__btn--secondary {
+          background: #f1f5f9;
+        }
+
+        .uploader__btn--delete {
+          color: #dc2626;
+          border-color: #dc2626;
+        }
+
+        .uploader__btn--delete:hover {
+          background: #fee2e2;
+        }
+
+        .uploader__btn--primary {
+          background: #3b82f6;
+          color: white;
+          border-color: #3b82f6;
+        }
+
+        .uploader__btn--primary:hover {
+          background: #2563eb;
+        }
+
+        .uploader__input,
+        .uploader__textarea {
+          width: 100%;
+          padding: 0.375rem;
+          border: 1px solid #cbd5e1;
+          margin-bottom: 0.375rem;
+          font-family: inherit;
+          font-size: 0.75rem;
+          pointer-events: auto;
+        }
+
+        .uploader__textarea {
+          resize: vertical;
+          min-height: 60px;
+        }
+
+        .error-message {
+          color: #dc2626;
+          background: #fee2e2;
+          padding: 0.5rem;
+          font-size: 0.75rem;
+        }
+
+        slot {
+          display: none;
+        }
+      </style>
+
+      <slot></slot>
+
+      <div class="uploader__overlay ${state === 'uploading' ? 'uploader__overlay--show' : ''}">
+        <progress class="uploader__progress" max="100" value="${progress}"></progress>
+      </div>
+
+      <div class="uploader__container">
+        ${
+        preview
+            ? `
+          <picture class="uploader__preview">
+            <img src="${preview}" alt="${filename}">
+          </picture>
+        `
+            : ''
+    }
+
+        <div class="uploader__content">
+          ${
+        state === 'error' || (state === 'uploaded' && currentPanel === 'error')
+            ? `
+            <div data-panel="error" class="uploader__panel ${currentPanel === 'error' || state === 'error' ? 'uploader__panel--show' : ''}">
+              <div class="uploader__body">
+                <div class="error-message">${error}</div>
+              </div>
+              <div class="uploader__actions">
+                ${state === 'error' ? '<button class="uploader__btn uploader__btn--delete" data-action="confirm-delete">Remove</button>' : '<button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>'}
+              </div>
+            </div>
+          `
+            : ''
+    }
+
+          ${
+        state === 'uploaded'
+            ? `
+            <div data-panel="info" class="uploader__panel ${currentPanel === 'info' ? 'uploader__panel--show' : ''}">
+              <div class="uploader__body">
+                ${allowEdit ? '<button class="uploader__delete-icon" data-action="show-delete" title="Delete file"></button>' : ''}
+                <div class="uploader__filename">${filename}</div>
+                ${this._renderFields(allowEdit)}
+              </div>
+            </div>
+
+            ${this._renderEditPanels()}
+
+            <div data-panel="delete" class="uploader__panel ${currentPanel === 'delete' ? 'uploader__panel--show' : ''}">
+              <div class="uploader__body">
+                <p class="uploader__filename">Delete this file?</p>
+              </div>
+              <div class="uploader__actions">
+                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete">Delete</button>
+                <button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+              </div>
+            </div>
+          `
+            : ''
+    }
+        </div>
+      </div>
+    `;
+
+    this._setupFileEventListeners();
+  }
+
+  _loadFieldData() {
+    const dataElements = this.querySelectorAll('p-uploader-data');
+    dataElements.forEach((dataEl) => {
+      const key = dataEl.getAttribute('key');
+      const value = dataEl.textContent.trim();
+      if (key) {
+        this._fieldData.set(key, value);
+      }
+    });
+  }
+
+  _renderFields(allowEdit) {
+    if (!this._fieldSchema || this._fieldSchema.size === 0) {
+      return '';
+    }
+
+    let html = '';
+    this._fieldSchema.forEach((fieldDef, key) => {
+      const value = this._fieldData.get(key) || '';
+      html += `
+        <div class="uploader__field">
+          <span class="uploader__field-label">${fieldDef.label}:</span>
+          <span class="uploader__field-value">${value || '<em>empty</em>'}</span>
+          ${
+            allowEdit
+              ? `<button class="uploader__field-edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}">✎</button>`
+              : ''
+          }
+        </div>
+      `;
+    });
+    return html;
+  }
+
+  _renderEditPanels() {
+    if (!this._fieldSchema || this._fieldSchema.size === 0) {
+      return '';
+    }
+
+    const currentPanel = this.getAttribute('data-current-panel') || 'info';
+    let html = '';
+
+    this._fieldSchema.forEach((fieldDef, key) => {
+      const value = this._fieldData.get(key) || '';
+      const isActive = currentPanel === `edit-${key}`;
+
+      html += `
+        <div data-panel="edit-${key}" class="uploader__panel ${isActive ? 'uploader__panel--show' : ''}">
+          <div class="uploader__body">
+            ${
+              fieldDef.type === 'textarea'
+                ? `<textarea class="uploader__textarea" name="${key}" placeholder="${fieldDef.label}" rows="3">${value}</textarea>`
+                : `<input type="${fieldDef.type}" class="uploader__input" name="${key}" placeholder="${fieldDef.label}" value="${value}">`
+            }
+          </div>
+          <div class="uploader__actions">
+            <button class="uploader__btn uploader__btn--primary" data-action="confirm-edit" data-field="${key}">Save</button>
+            <button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+          </div>
+        </div>
+      `;
+    });
+
+    return html;
+  }
+
+  _setupFileEventListeners() {
+    this.shadowRoot.removeEventListener('click', this._clickHandler);
+
+    this._clickHandler = (e) => {
+      const action = e.target.dataset.action;
+      if (!action) return;
+
+      const actions = {
+        'edit-field': () => this._setPanel(`edit-${e.target.dataset.field}`),
+        'show-delete': () => this._setPanel('delete'),
+        'cancel': () => this._setPanel('info'),
+        'confirm-edit': () => this._handleConfirmEdit(e.target.dataset.field),
+        'confirm-delete': () => this._handleConfirmDelete()
+      };
+
+      actions[action]?.();
+    };
+
+    this.shadowRoot.addEventListener('click', this._clickHandler);
+  }
+
+  _setPanel(panel) {
+    this.setAttribute('data-current-panel', panel);
+    this._notifyDraggableStateChange();
+  }
+
+  _notifyDraggableStateChange() {
+    const uploader = this.closest('p-uploader');
+    if (uploader && uploader._updateDraggableState) {
+      uploader._updateDraggableState();
+    }
+  }
+
+  async _handleConfirmEdit(fieldKey) {
+    const input = this.shadowRoot.querySelector(`[name="${fieldKey}"]`);
+
+    if (input) {
+      const newValue = input.value;
+      const oldValue = this._fieldData.get(fieldKey) || '';
+
+      /* Optimistically update the UI */
+      this._fieldData.set(fieldKey, newValue);
+
+      /* Update the slotted data element */
+      let dataElement = this.querySelector(`p-uploader-data[key="${fieldKey}"]`);
+      if (!dataElement) {
+        dataElement = document.createElement('p-uploader-data');
+        dataElement.setAttribute('key', fieldKey);
+        this.appendChild(dataElement);
+      }
+      const oldElementValue = dataElement.textContent;
+      dataElement.textContent = newValue;
+
+      /* Send update to server */
+      const uploader = this.closest('p-uploader');
+      if (uploader && uploader.config.updateAction) {
+        try {
+          const response = await fetch(uploader.config.updateAction, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: this.getAttribute('file-id'),
+              field: fieldKey,
+              value: newValue
+            })
+          });
+
+          if (response.ok) {
+            this.dispatchEvent(
+              new CustomEvent('file:update', {
+                detail: {
+                  fileId: this.getAttribute('file-id'),
+                  field: fieldKey,
+                  value: newValue
+                },
+                bubbles: true,
+                composed: true
+              })
+            );
+            this.setAttribute('data-current-panel', 'info');
+            this._notifyDraggableStateChange();
+          } else {
+            /* Revert the changes on failure */
+            this._fieldData.set(fieldKey, oldValue);
+            dataElement.textContent = oldElementValue;
+
+            const errorText = await response.text();
+            if (uploader.logger) {
+              uploader.logger.error('Failed to update field:', errorText);
+            }
+            this.setAttribute('error', `Update failed: ${errorText || 'Server error'}`);
+            this.setAttribute('data-current-panel', 'error');
+          }
+        } catch (error) {
+          /* Revert the changes on network error */
+          this._fieldData.set(fieldKey, oldValue);
+          dataElement.textContent = oldElementValue;
+
+          if (uploader.logger) {
+            uploader.logger.error('Failed to update field:', error);
+          }
+          this.setAttribute('error', `Update failed: ${error.message || 'Network error'}`);
+          this.setAttribute('data-current-panel', 'error');
+        }
+      } else {
+        this.setAttribute('data-current-panel', 'info');
+        this._notifyDraggableStateChange();
+      }
+    }
+  }
+
+  async _handleConfirmDelete() {
+    const uploader = this.closest('p-uploader');
+    const fileId = this.getAttribute('file-id');
+
+    if (!uploader || !uploader.config.deleteAction) {
+      /* No delete action configured, just remove locally */
+      this._removeFile();
+      return;
+    }
+
+    try {
+      const response = await fetch(uploader.config.deleteAction, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: fileId
+        })
+      });
+
+      if (response.ok) {
+        /* Delete successful, remove the file */
+        this._removeFile();
+
+        this.dispatchEvent(
+          new CustomEvent('file:delete', {
+            detail: { fileId: fileId },
+            bubbles: true,
+            composed: true
+          })
+        );
+      } else {
+        /* Delete failed, show error */
+        const errorText = await response.text();
+        if (uploader.logger) {
+          uploader.logger.error('Failed to delete file:', errorText);
+        }
+        this.setAttribute('error', `Delete failed: ${errorText || 'Server error'}`);
+        this.setAttribute('data-current-panel', 'error');
+      }
+    } catch (error) {
+      /* Network error, show error */
+      if (uploader.logger) {
+        uploader.logger.error('Failed to delete file:', error);
+      }
+      this.setAttribute('error', `Delete failed: ${error.message || 'Network error'}`);
+      this.setAttribute('data-current-panel', 'error');
+    }
+  }
+
+  _removeFile() {
+    const uploader = this.closest('p-uploader');
+    const fileId = this.getAttribute('file-id');
+
+    /* Clean up from parent's file tracking */
+    if (uploader && fileId && uploader.files.has(fileId)) {
+      uploader.files.delete(fileId);
+    }
+
+    /* Remove element from DOM */
+    this.remove();
+
+    /* Update draggable state */
+    if (uploader && uploader._updateDraggableState) {
+      uploader._updateDraggableState();
+    }
+  }
+}
+
+/* Helper components for field definitions and data */
+class PUploaderFields extends HTMLElement {}
+class PUploaderField extends HTMLElement {}
+class PUploaderData extends HTMLElement {}
+
+if (!customElements.get('p-uploader')) {
+  customElements.define('p-uploader', PUploader);
+}
+
+if (!customElements.get('p-uploader-file')) {
+  customElements.define('p-uploader-file', PUploaderFile);
+}
+
+if (!customElements.get('p-uploader-fields')) {
+  customElements.define('p-uploader-fields', PUploaderFields);
+}
+
+if (!customElements.get('p-uploader-field')) {
+  customElements.define('p-uploader-field', PUploaderField);
+}
+
+if (!customElements.get('p-uploader-data')) {
+  customElements.define('p-uploader-data', PUploaderData);
+}
+
+/**
+ * PUploaderLoader - BaseComponent wrapper for lazy-loading PUploader Web Component
+ *
+ * This wrapper allows PUploader to work with ComponentRegistry/PageManager
+ * while maintaining its Web Component architecture.
+ *
+ * Usage in ComponentRegistry:
+ * .component('Uploader', 'p-uploader', {
+ *   loader: () => import('@peptolab/parallelogram/components/PUploaderLoader')
+ * })
+ */
+class Uploader extends BaseComponent {
+  _init(element) {
+    /* The PUploader Web Component is already registered via the import above */
+    /* No mounting needed - Web Components handle their own lifecycle */
+
+    /* Store reference to the element for potential future use */
+    const state = {
+      element,
+      cleanup: () => {
+        /* Cleanup if needed in the future */
+      }
+    };
+
+    return state;
   }
 }
 
