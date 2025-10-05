@@ -681,6 +681,12 @@ p-toasts[placement=bottom-left] {
   --framework-focus-width: 2px;
 }
 
+/* Utility: Prevent layout shift when hiding overflow */
+.overflow--hidden {
+  padding-right: var(--scrollbar-width, 0px);
+  overflow: hidden;
+}
+
 /* Global focus styles for framework components */
 [data-lazysrc]:focus-visible,
 [data-modal]:focus-visible,
