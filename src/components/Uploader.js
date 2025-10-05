@@ -1,4 +1,4 @@
-import { BaseComponent } from '../core/BaseComponent.js';
+import { BaseComponent } from '@peptolab/parallelogram';
 import PUploader from './PUploader.js';
 
 /**
