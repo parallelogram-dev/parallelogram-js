@@ -95,6 +95,7 @@ class Lightbox extends BaseComponent {
 
     element.addEventListener('click', e => {
       e.preventDefault();
+      e.stopPropagation();
       this._openLightbox(element, state);
     });
 
@@ -198,7 +199,11 @@ class Lightbox extends BaseComponent {
     this._setupEventListeners(state.config);
 
     this.isOpen = true;
-    document.body.style.overflow = 'hidden';
+
+    // Calculate and set scrollbar width, then apply overflow--hidden class
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+    document.body.classList.add('overflow--hidden');
 
     // Add show class after paint for transition (double RAF)
     requestAnimationFrame(() => {
@@ -292,7 +297,6 @@ class Lightbox extends BaseComponent {
         'transitionend',
         () => {
           // Step 2: Image has slid out, remove the class
-          img.classList.remove(slideOutClass);
 
           // Step 3: Preload new image
           const loader = new Image();
@@ -303,6 +307,7 @@ class Lightbox extends BaseComponent {
             img.style.transition = 'none';
             img.classList.add(slideInClass);
             img.offsetHeight;
+            img.classList.remove(slideOutClass);
 
             // Step 5: Slide in
             requestAnimationFrame(() => {
@@ -422,7 +427,7 @@ class Lightbox extends BaseComponent {
       }
 
       // Restore body scroll
-      document.body.style.overflow = '';
+      document.body.classList.remove('overflow--hidden');
 
       this.isOpen = false;
       this.currentGallery = [];

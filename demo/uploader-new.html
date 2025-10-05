@@ -35,10 +35,14 @@
         <div class="demo__container">
           <p-uploader
             max-files="3"
-            upload-url="/api/upload"
-            sequence-url="/api/sequence"
+            upload-url="/mock/upload"
+            update-url="/mock/update"
+            delete-url="/mock/delete"
+            sequence-url="/mock/sequence"
             accept-types="image/*"
             max-file-size="5242880"
+            allow-edit="true"
+            allow-sort="true"
             input-name="images">
 
             <!-- Field definitions for ALL files -->
@@ -110,16 +114,130 @@
           </ul>
         </div>
       </section>
+
+      <section class="demo__section" data-demo-section>
+        <h2>Testing Error Handling & Revert</h2>
+        <p>This demo includes mock API endpoints. To test the revert functionality when server operations fail:</p>
+
+        <div class="features__details">
+          <h3>Success Mode (Current)</h3>
+          <p>Currently using <code>/mock/</code> URLs which simulate successful responses:</p>
+          <ul>
+            <li>✅ Updates will succeed and persist</li>
+            <li>✅ Deletes will succeed and remove files</li>
+            <li>✅ Sequence changes will succeed and stay reordered</li>
+          </ul>
+
+          <h3>Failure Mode</h3>
+          <p>Change the URLs to <code>/mock-fail/</code> pattern to test error handling:</p>
+          <div class="code__block">
+            <pre><!-- Example: Test failed updates -->
+&lt;p-uploader
+  update-url="/mock-fail/update"
+  delete-url="/mock-fail/delete"
+  sequence-url="/mock-fail/sequence"
+  ...&gt;</pre>
+          </div>
+          <p>With failure URLs:</p>
+          <ul>
+            <li>❌ Updates will revert to original values</li>
+            <li>❌ Deletes will show error and keep the file</li>
+            <li>❌ Sequence changes will revert to original order</li>
+          </ul>
+        </div>
+      </section>
     </main>
 
     <!-- Toast container -->
     <p-toasts placement="top-right"></p-toasts>
 
+    <!-- Mock fetch API for demo -->
+    <script>
+      /* Mock fetch to simulate server responses
+       * Use URL pattern /mock-fail/endpoint to simulate failures
+       * Use URL pattern /mock/endpoint for successful responses
+       */
+      const originalFetch = window.fetch;
+      window.fetch = async (url, options) => {
+        console.log('🔵 Mock fetch called:', url, options);
+
+        /* Check if this is a mock request */
+        const isMock = url.includes('/mock/') || url.includes('/mock-fail/');
+        if (!isMock) {
+          return originalFetch(url, options);
+        }
+
+        /* Simulate network delay */
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        /* Parse request body if present */
+        const body = options?.body ? JSON.parse(options.body) : null;
+
+        /* Check for failure mode */
+        const shouldFail = url.includes('/mock-fail/');
+
+        /* Mock update endpoint */
+        if (url.includes('/update')) {
+          console.log('📝 Update request:', body);
+          if (shouldFail) {
+            return new Response('Update failed: Server error', { status: 400 });
+          }
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        /* Mock delete endpoint */
+        if (url.includes('/delete')) {
+          console.log('🗑️ Delete request:', body);
+          if (shouldFail) {
+            return new Response('Delete not allowed', { status: 403 });
+          }
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        /* Mock sequence endpoint */
+        if (url.includes('/sequence')) {
+          console.log('🔄 Sequence update:', body);
+          if (shouldFail) {
+            return new Response('Sequence update failed', { status: 500 });
+          }
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        /* Mock upload endpoint */
+        if (url.includes('/upload')) {
+          console.log('📤 Upload request');
+          if (shouldFail) {
+            return new Response('Upload failed: Invalid file', { status: 400 });
+          }
+          return new Response(JSON.stringify({
+            id: 'file_' + Date.now(),
+            preview: 'https://picsum.photos/200/200?random=' + Date.now(),
+            success: true
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        /* Default: use original fetch */
+        return originalFetch(url, options);
+      };
+    </script>
+
     <!-- Load the NEW implementation -->
     <script type="module">
-      import PUploader from '../src/components/PUploader.new.js';
+      import PUploader from '../src/components/PUploader.js';
 
-      // Wait for custom elements to be defined
+      /* Wait for custom elements to be defined */
       await Promise.all([
         customElements.whenDefined('p-uploader'),
         customElements.whenDefined('p-uploader-file'),
