@@ -207,6 +207,9 @@ export class PageManager {
           x: window.scrollX,
           y: window.scrollY,
         };
+      } else if (this.options.scrollPosition === 'top' && !fromPopstate) {
+        // Scroll to top immediately before content replacement to avoid visual jump
+        window.scrollTo(0, 0);
       }
 
       // Parse the incoming HTML once
