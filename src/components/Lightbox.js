@@ -224,12 +224,12 @@ export class Lightbox extends BaseComponent {
     this.lightboxElement.className = config.overlayClass;
     this.lightboxElement.innerHTML = `
             <div class="${config.containerClass}">
-                <button class="${config.closeClass}" data-lightbox-action="close" aria-label="Close">&times;</button>
+                <button class="${config.closeClass}" data-lightbox-action="close" aria-label="Close"></button>
                 ${
                   config.showNavigation
                     ? `
-                    <button class="${config.prevClass}" data-lightbox-action="prev" aria-label="Previous">&larr;</button>
-                    <button class="${config.nextClass}" data-lightbox-action="next" aria-label="Next">&rarr;</button>
+                    <button class="${config.prevClass}" data-lightbox-action="prev" aria-label="Previous"></button>
+                    <button class="${config.nextClass}" data-lightbox-action="next" aria-label="Next"></button>
                 `
                     : ''
                 }
