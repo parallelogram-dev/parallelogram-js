@@ -1126,18 +1126,18 @@ class PUploaderFile extends HTMLElement {
         </picture>
 
         <div class="uploader__content">
-          <div data-panel="error" class="uploader__panel ${currentPanel === 'error' || state === 'error' ? 'uploader__panel--show' : ''}">
+          <div data-panel="error" class="uploader__panel ${currentPanel === 'error' || state === 'error' ? 'uploader__panel--show' : ''}" role="alert" aria-live="assertive">
             <div class="uploader__alert">
               <div class="error-message">${error}</div>
               <div class="uploader__actions">
-                ${state === 'error' ? '<button class="uploader__btn uploader__btn--delete" data-action="confirm-delete">Remove</button>' : '<button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>'}
+                ${state === 'error' ? '<button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Remove file">Remove</button>' : '<button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel">Cancel</button>'}
               </div>
             </div>
           </div>
 
-          <div data-panel="info" class="uploader__panel ${currentPanel === 'info' && state === 'uploaded' ? 'uploader__panel--show' : ''}">
+          <div data-panel="info" class="uploader__panel ${currentPanel === 'info' && state === 'uploaded' ? 'uploader__panel--show' : ''}" role="region" aria-label="File information for ${filename}">
             <div class="uploader__body">
-              ${allowEdit ? '<button class="uploader__delete-icon" data-action="show-delete" title="Delete file"></button>' : ''}
+              ${allowEdit ? '<button class="uploader__delete-icon" data-action="show-delete" title="Delete file" aria-label="Delete file"></button>' : ''}
               <div class="uploader__fields">
                 <h1 class="uploader__filename">${filename}</h1>
                 ${state === 'uploaded' ? this._renderFields(allowEdit) : ''}
@@ -1147,12 +1147,12 @@ class PUploaderFile extends HTMLElement {
 
           ${state === 'uploaded' ? this._renderEditPanels() : ''}
 
-          <div data-panel="delete" class="uploader__panel ${currentPanel === 'delete' ? 'uploader__panel--show' : ''}">
+          <div data-panel="delete" class="uploader__panel ${currentPanel === 'delete' ? 'uploader__panel--show' : ''}" role="dialog" aria-labelledby="delete-heading-${filename}">
             <div class="uploader__alert">
-              <h2 class="uploader__heading">Delete this file?</h2>
+              <h2 id="delete-heading-${filename}" class="uploader__heading">Delete this file?</h2>
               <div class="uploader__actions">
-                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete">Delete</button>
-                <button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
+                <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
               </div>
             </div>
           </div>
@@ -1185,7 +1185,7 @@ class PUploaderFile extends HTMLElement {
       html += `
         <div class="uploader__field">
           <label class="uploader__field-label">${fieldDef.label}</label>
-          <span class="uploader__field-value ${allowEdit ? 'uploader__field-value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>empty</em>'}</span>
+          <span class="uploader__field-value ${allowEdit ? 'uploader__field-value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>-</em>'}</span>
           ${
             allowEdit
               ? `<button class="uploader__field-edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}"></button>`
@@ -1210,16 +1210,16 @@ class PUploaderFile extends HTMLElement {
       const isActive = currentPanel === `edit-${key}`;
 
       html += `
-        <div data-panel="edit-${key}" class="uploader__panel ${isActive ? 'uploader__panel--show' : ''}">
+        <div data-panel="edit-${key}" class="uploader__panel ${isActive ? 'uploader__panel--show' : ''}" role="dialog" aria-label="Edit ${fieldDef.label}">
           <div class="uploader__body">
             ${
               fieldDef.type === 'textarea'
-                ? `<textarea class="uploader__textarea" name="${key}" placeholder="${fieldDef.label}" rows="3">${value}</textarea>`
-                : `<input type="${fieldDef.type}" class="uploader__input" name="${key}" placeholder="${fieldDef.label}" value="${value}">`
+                ? `<textarea class="uploader__textarea" name="${key}" placeholder="${fieldDef.label}" rows="3" aria-label="${fieldDef.label}">${value}</textarea>`
+                : `<input type="${fieldDef.type}" class="uploader__input" name="${key}" placeholder="${fieldDef.label}" value="${value}" aria-label="${fieldDef.label}">`
             }
             <div class="uploader__actions">
-              <button class="uploader__btn uploader__btn--primary" data-action="confirm-edit" data-field="${key}">Save</button>
-              <button class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+              <button class="uploader__btn uploader__btn--primary" data-action="confirm-edit" data-field="${key}" aria-label="Save ${fieldDef.label}">Save</button>
+              <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel editing">Cancel</button>
             </div>
           </div>
         </div>
@@ -1266,6 +1266,9 @@ class PUploaderFile extends HTMLElement {
         overlay.classList.remove('uploader__overlay--show');
       }
 
+      /* Render fields in the info panel for newly uploaded files */
+      this._renderInfoPanelFields();
+
       /* Show the info panel after overlay fades out */
       setTimeout(() => {
         this.setAttribute('data-current-panel', 'info');
@@ -1306,13 +1309,76 @@ class PUploaderFile extends HTMLElement {
     if (infoPanel) {
       const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].uploader__field-value`);
       if (fieldValueElement) {
-        fieldValueElement.textContent = newValue || '<em>-</em>';
+        fieldValueElement.innerHTML = newValue || '<em>-</em>';
       }
     }
   }
 
+  _renderInfoPanelFields() {
+    if (!this._fieldSchema || this._fieldSchema.size === 0) {
+      return;
+    }
+
+    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
+    const fieldsContainer = infoPanel?.querySelector('.uploader__fields');
+
+    if (!fieldsContainer) {
+      return;
+    }
+
+    /* Build the fields HTML */
+    const fieldsHTML = this._renderFields(allowEdit);
+
+    /* Find the filename element and insert fields after it */
+    const filenameElement = fieldsContainer.querySelector('.uploader__filename');
+    if (filenameElement) {
+      /* Remove any existing fields */
+      const existingFields = fieldsContainer.querySelectorAll('.uploader__field');
+      existingFields.forEach(field => field.remove());
+
+      /* Insert new fields after filename */
+      filenameElement.insertAdjacentHTML('afterend', fieldsHTML);
+    }
+
+    /* Also render the edit panels if they don't exist */
+    this._renderEditPanelsIfNeeded();
+  }
+
+  _renderEditPanelsIfNeeded() {
+    if (!this._fieldSchema || this._fieldSchema.size === 0) {
+      return;
+    }
+
+    /* Check if edit panels already exist */
+    const existingEditPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel^="edit-"]');
+    if (existingEditPanel) {
+      return; /* Edit panels already exist */
+    }
+
+    /* Find the delete panel to insert edit panels before it */
+    const deletePanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="delete"]');
+    if (!deletePanel) {
+      return;
+    }
+
+    /* Build edit panels HTML */
+    const editPanelsHTML = this._renderEditPanels();
+
+    /* Insert edit panels before delete panel */
+    deletePanel.insertAdjacentHTML('beforebegin', editPanelsHTML);
+  }
+
   _setupFileEventListeners() {
     this.shadowRoot.removeEventListener('click', this._clickHandler);
+
+    /* Remove old keydown listeners if they exist */
+    if (this._escapeKeyHandler) {
+      this.removeEventListener('keydown', this._escapeKeyHandler);
+    }
+    if (this._enterKeyHandler) {
+      this.shadowRoot.removeEventListener('keydown', this._enterKeyHandler);
+    }
 
     this._clickHandler = (e) => {
       const action = e.target.dataset.action;
@@ -1329,12 +1395,60 @@ class PUploaderFile extends HTMLElement {
       actions[action]?.();
     };
 
+    /* Escape key handler on host element (works anywhere) */
+    this._escapeKeyHandler = (e) => {
+      const currentPanel = this.getAttribute('data-current-panel') || 'info';
+
+      if (e.key === 'Escape') {
+        if (currentPanel !== 'info' && currentPanel !== 'error') {
+          e.preventDefault();
+          this._setPanel('info');
+        }
+      }
+    };
+
+    /* Enter key handler on shadow root (only for inputs) */
+    this._enterKeyHandler = (e) => {
+      const currentPanel = this.getAttribute('data-current-panel') || 'info';
+
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT' && currentPanel.startsWith('edit-')) {
+        e.preventDefault();
+        const fieldKey = currentPanel.replace('edit-', '');
+        this._handleConfirmEdit(fieldKey);
+      }
+    };
+
     this.shadowRoot.addEventListener('click', this._clickHandler);
+    this.addEventListener('keydown', this._escapeKeyHandler);
+    this.shadowRoot.addEventListener('keydown', this._enterKeyHandler);
   }
 
   _setPanel(panel) {
     this.setAttribute('data-current-panel', panel);
     this._notifyDraggableStateChange();
+
+    /* Make component focusable for keyboard events */
+    if (panel !== 'info' && panel !== 'error') {
+      this.setAttribute('tabindex', '-1');
+      this.focus();
+    } else {
+      this.removeAttribute('tabindex');
+    }
+
+    /* Auto-focus the input field in edit panels */
+    if (panel.startsWith('edit-')) {
+      setTimeout(() => {
+        const fieldKey = panel.replace('edit-', '');
+        const input = this.shadowRoot.querySelector(`[name="${fieldKey}"]`);
+        if (input) {
+          input.focus();
+          /* Select all text in input for easy editing */
+          if (input.tagName === 'INPUT') {
+            input.select();
+          }
+        }
+      }, 400); /* Delay to ensure panel animation completes */
+    }
   }
 
   _notifyDraggableStateChange() {
