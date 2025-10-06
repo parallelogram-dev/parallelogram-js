@@ -1303,6 +1303,16 @@ class PUploaderFile extends HTMLElement {
     }
   }
 
+  _updateFieldDisplay(fieldKey, newValue) {
+    const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
+    if (infoPanel) {
+      const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].uploader__field-value`);
+      if (fieldValueElement) {
+        fieldValueElement.textContent = newValue || '<em>-</em>';
+      }
+    }
+  }
+
   _setupFileEventListeners() {
     this.shadowRoot.removeEventListener('click', this._clickHandler);
 
@@ -1373,6 +1383,9 @@ class PUploaderFile extends HTMLElement {
           });
 
           if (response.ok) {
+            /* Update the field display in the info panel */
+            this._updateFieldDisplay(fieldKey, newValue);
+
             this.dispatchEvent(
               new CustomEvent('file:update', {
                 detail: {
