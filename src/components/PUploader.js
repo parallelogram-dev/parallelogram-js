@@ -1172,7 +1172,7 @@ export class PUploaderFile extends HTMLElement {
       html += `
         <div class="uploader__field">
           <label class="uploader__field-label">${fieldDef.label}</label>
-          <span class="uploader__field-value ${allowEdit ? 'uploader__field-value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>empty</em>'}</span>
+          <span class="uploader__field-value ${allowEdit ? 'uploader__field-value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>-</em>'}</span>
           ${
             allowEdit
               ? `<button class="uploader__field-edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}"></button>`
@@ -1288,6 +1288,16 @@ export class PUploaderFile extends HTMLElement {
     }
   }
 
+  _updateFieldDisplay(fieldKey, newValue) {
+    const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
+    if (infoPanel) {
+      const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].uploader__field-value`);
+      if (fieldValueElement) {
+        fieldValueElement.innerHTML = newValue || '<em>-</em>';
+      }
+    }
+  }
+
   _setupFileEventListeners() {
     this.shadowRoot.removeEventListener('click', this._clickHandler);
 
@@ -1358,6 +1368,9 @@ export class PUploaderFile extends HTMLElement {
           });
 
           if (response.ok) {
+            /* Update the field display in the info panel */
+            this._updateFieldDisplay(fieldKey, newValue);
+
             this.dispatchEvent(
               new CustomEvent('file:update', {
                 detail: {
