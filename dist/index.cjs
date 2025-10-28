@@ -410,6 +410,14 @@ class RouterManager {
     const href = link.getAttribute('href');
     const viewTarget = link.getAttribute('data-view-target') || 'main';
 
+    // Check if link OR any parent container has data-router-immutable-url
+    const immutableContainer = link.closest('[data-router-immutable-url]');
+    const immutableUrl = link.hasAttribute('data-router-immutable-url')
+      ? link.getAttribute('data-router-immutable-url') !== 'false'
+      : immutableContainer
+        ? immutableContainer.getAttribute('data-router-immutable-url') !== 'false'
+        : false;
+
     try {
       const url = new URL(href, location.href);
 
@@ -422,6 +430,7 @@ class RouterManager {
       this.navigate(url, {
         viewTarget,
         replace: link.hasAttribute('data-router-replace'),
+        immutableUrl,
         trigger: 'link-click',
         element: link,
       });
@@ -517,7 +526,7 @@ class RouterManager {
    * Navigate to a new URL with enhanced options
    */
   async navigate(url, options = {}) {
-    const { replace = false, trigger = 'programmatic', element = null, force = false } = options;
+    const { replace = false, trigger = 'programmatic', element = null, force = false, immutableUrl = false } = options;
 
     const targetUrl = typeof url === 'string' ? new URL(url, location.href) : url;
     const targetUrlString = targetUrl.toString();
@@ -560,12 +569,14 @@ class RouterManager {
         throw new Error('Expected HTML string response for navigation');
       }
 
-      // Update browser history
-      const historyState = { timestamp: Date.now(), trigger };
-      if (replace) {
-        history.replaceState(historyState, '', targetUrlString);
-      } else {
-        history.pushState(historyState, '', targetUrlString);
+      // Update browser history only if URL is not immutable
+      if (!immutableUrl) {
+        const historyState = { timestamp: Date.now(), trigger };
+        if (replace) {
+          history.replaceState(historyState, '', targetUrlString);
+        } else {
+          history.pushState(historyState, '', targetUrlString);
+        }
       }
 
       // Emit success event with HTML data
@@ -576,12 +587,14 @@ class RouterManager {
         element,
         replace,
         viewTarget: options.viewTarget,
+        immutableUrl,
       });
 
       this.logger?.info('Navigation successful', {
         url: targetUrlString,
         trigger,
         replace,
+        immutableUrl,
       });
 
       return data;
