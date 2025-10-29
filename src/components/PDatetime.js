@@ -117,13 +117,53 @@ export default class PDatetime extends HTMLElement {
               display: inline-block;
               position: relative;
               box-sizing: border-box;
-              --datetime-padding-x: 0.75em;
-              --datetime-padding-y: 0.375em;
+
+              /* Colors */
               --datetime-text: currentColor;
               --datetime-muted: rgba(0, 0, 0, 0.5);
               --datetime-accent: #3b82f6;
               --datetime-hover: rgba(0, 0, 0, 0.05);
               --datetime-bg: #ffffff;
+              --datetime-border: rgba(0, 0, 0, 0.1);
+              --datetime-shadow-color: rgba(0, 0, 0, 0.12);
+              --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
+              --datetime-btn-hover-bg: rgba(0, 0, 0, 0.08);
+
+              /* Opacity */
+              --datetime-placeholder-opacity: 0.6;
+              --datetime-icon-opacity: 0.7;
+              --datetime-disabled-opacity: 0.3;
+
+              /* Spacing */
+              --datetime-padding-x: 0.75em;
+              --datetime-padding-y: 0.375em;
+              --datetime-space-xs: 0.125em;
+              --datetime-space-sm: 0.25em;
+              --datetime-space-md: 0.5em;
+              --datetime-space-lg: 0.75em;
+              --datetime-gap: 0.5em;
+
+              /* Border Radius */
+              --datetime-radius: 0.5em;
+              --datetime-radius-lg: 0.75em;
+              --datetime-radius-xl: 1em;
+
+              /* Borders */
+              --datetime-border-width: 1px;
+              --datetime-focus-ring-width: 2px;
+              --datetime-today-border-width: 2px;
+
+              /* Shadows */
+              --datetime-shadow: 0 0.625em 1.875em var(--datetime-shadow-color);
+
+              /* Timing */
+              --datetime-transition: 0.15s ease;
+              --datetime-animation-duration: 0.5s;
+
+              /* Sizes */
+              --datetime-cell-size: 2.5em;
+              --datetime-font-sm: 0.75em;
+              --datetime-font-md: 0.875em;
             }
 
             @media (prefers-color-scheme: dark) {
@@ -168,13 +208,13 @@ export default class PDatetime extends HTMLElement {
             }
 
             .input:nth-of-type(2) {
-              border-left: 1px solid rgba(0, 0, 0, 0.1);
+              border-left: var(--datetime-border-width) solid var(--datetime-border);
               border-top-left-radius: 0;
               border-bottom-left-radius: 0;
             }
 
-            .input.focused {
-              box-shadow: inset 0 0 0 2px var(--datetime-accent);
+            .input.is-focused {
+              box-shadow: inset 0 0 0 var(--datetime-focus-ring-width) var(--datetime-accent);
             }
 
             .input[hidden] {
@@ -859,8 +899,8 @@ export default class PDatetime extends HTMLElement {
   close() {
     this._panel.classList.remove('open');
     /* Remove focus ring when panel closes */
-    this._input.classList.remove('focused');
-    this._toInput.classList.remove('focused');
+    this._input.classList.remove('is-focused');
+    this._toInput.classList.remove('is-focused');
     setTimeout(() => {
       this._panel.hidden = true;
     }, 150);
@@ -1420,18 +1460,18 @@ export default class PDatetime extends HTMLElement {
 
   _updateFocusRing() {
     // Remove focused class from both inputs
-    this._input.classList.remove('focused');
-    this._toInput.classList.remove('focused');
+    this._input.classList.remove('is-focused');
+    this._toInput.classList.remove('is-focused');
 
     // Add focused class to the current field
     if (this.isRange) {
       if (this._currentField === 'to') {
-        this._toInput.classList.add('focused');
+        this._toInput.classList.add('is-focused');
       } else {
-        this._input.classList.add('focused');  // First input is "from" in range mode
+        this._input.classList.add('is-focused');  // First input is "from" in range mode
       }
     } else {
-      this._input.classList.add('focused');
+      this._input.classList.add('is-focused');
     }
   }
 
