@@ -62,6 +62,11 @@ export default class PDatetime extends HTMLElement {
     this._view = new Date();
     this._step = 15;
     this._weekStart = 1;
+    this._viewMode = 'day'; // 'day', 'month', 'year'
+    this._animating = false;
+    this._navigationDirection = null; // 'next' or 'prev'
+    this._touchStartX = 0;
+    this._touchEndX = 0;
 
     this.shadowRoot.innerHTML = `
           <style>
@@ -199,23 +204,52 @@ export default class PDatetime extends HTMLElement {
             .nav{display:flex; align-items:center; justify-content:space-between; margin:0 0 .75rem}
             .nav button{background:none; border:none; cursor:pointer; padding:.5rem; border-radius:.5rem; color: var(--datetime-muted)}
             .nav button:hover{background: var(--datetime-hover)}
-            .month-year{font-weight:600; cursor:pointer; padding:.25rem .5rem; border-radius:.5rem}
+            .month-year{font-weight:600; cursor:pointer; padding:.25rem .5rem; border-radius:.5rem; transition:background-color 0.15s ease}
             .month-year:hover{background: var(--datetime-hover)}
+            .month-year:active{background: var(--datetime-surface)}
             
+            /* Grid container for animations */
+            .grid-container{
+              position:relative; overflow:hidden; min-height:15rem;
+              margin-bottom:.75rem;
+            }
+
             .grid{
               display:grid; grid-template-columns:repeat(7,1fr);
-              gap:.125rem; justify-items:center; margin-bottom:.75rem;
+              gap:.125rem; justify-items:center;
+              transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+            }
+
+            /* Animation states */
+            .grid--animating{position:absolute; top:0; left:0; right:0}
+            .grid--prev.grid--out{transform:translateX(100%); opacity:0}
+            .grid--prev.grid--in{transform:translateX(-100%); opacity:0}
+            .grid--next.grid--out{transform:translateX(-100%); opacity:0}
+            .grid--next.grid--in{transform:translateX(100%); opacity:0}
+            .grid:not(.grid--in):not(.grid--out){transform:translateX(0); opacity:1}
+
+            /* Reduced motion support */
+            @media (prefers-reduced-motion: reduce) {
+              .grid{transition:opacity 0.15s ease; transform:none!important}
+            }
+
+            /* Month and year picker grids */
+            .grid.month-view, .grid.year-view{
+              grid-template-columns:repeat(3,1fr); gap:.5rem;
             }
             .wd{font-size:.75rem; opacity:.6; font-weight:600; padding:.5rem 0; text-transform:uppercase}
-            .day{
+            .day, .month, .year{
               width:100%; height:2.5rem; border-radius:.5rem; cursor:pointer;
               background:none; border:none; font-size:.875rem; color: inherit;
               transition:all 0.15s ease; display:flex; align-items:center; justify-content:center;
             }
-            .day:hover{background: var(--datetime-hover); transform:scale(1.05)}
-            .day.today{background: var(--datetime-accent); color: var(--datetime-bg)}
-            .day.selected{background: var(--datetime-primary); color: var(--datetime-accent)}
+            .day:hover, .month:hover, .year:hover{background: var(--datetime-hover); transform:scale(1.05)}
+            .day.today, .month.today, .year.today{background: var(--datetime-accent); color: var(--datetime-bg)}
+            .day.selected, .month.selected, .year.selected{background: var(--datetime-primary); color: var(--datetime-accent)}
             .day:disabled{opacity:.3; cursor:not-allowed}
+
+            /* Month and year specific styles */
+            .month, .year{height:3rem}
             
             .time{
               display:flex; gap:.75rem; align-items:center; padding:.5rem 0;
@@ -223,20 +257,36 @@ export default class PDatetime extends HTMLElement {
             }
             .time-group{display:flex; flex-direction:column; align-items:center; gap:.5rem}
             .time-label{font-size:.7rem; text-transform:uppercase; color: var(--datetime-muted); font-weight:600}
-            .time-controls{display:flex; align-items:center; gap:.25rem; background: var(--datetime-bg); border:1px solid var(--datetime-border); border-radius:.5rem; padding:.25rem}
-            .time-btn{
-              width:1.5rem; height:1.5rem; border:none; background: var(--datetime-surface);
-              border-radius:.25rem; cursor:pointer; font-size:.8rem; display:flex; align-items:center; justify-content:center;
+
+            /* Time select dropdowns */
+            .time-select, .ampm{
+              appearance:none;
+              background-color: var(--datetime-bg);
+              background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path fill="currentColor" d="M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z"/></svg>');
+              background-position: right 0.5rem center;
+              background-repeat: no-repeat;
+              background-size: 0.75rem;
+              border: 1px solid var(--datetime-border);
+              border-radius: .5rem;
+              padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+              font-size: 1rem;
+              font-weight: 600;
+              color: var(--datetime-text);
+              cursor: pointer;
+              transition: all 0.15s ease;
+              min-width: 4rem;
             }
-            .time-btn:hover{background: var(--datetime-accent); color: var(--datetime-bg)}
-            .time-input{
-              width:3rem; text-align:center; border:none; background:transparent;
-              outline:none; font-size:1.1rem; font-weight:600;
-              -moz-appearance:textfield;
+
+            .time-select:hover, .ampm:hover{
+              border-color: var(--datetime-accent);
+              background-color: var(--datetime-hover);
             }
-            .time-input::-webkit-outer-spin-button,.time-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
-            
-            .ampm{background: var(--datetime-bg); border:1px solid var(--datetime-border); border-radius:.5rem; padding:.5rem; cursor:pointer}
+
+            .time-select:focus, .ampm:focus{
+              outline: none;
+              border-color: var(--datetime-focus);
+              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
             
             .quick-dates{display:flex; gap:.375rem; margin:.5rem 0; flex-wrap:wrap}
             .preset{
@@ -296,27 +346,21 @@ export default class PDatetime extends HTMLElement {
               <button class="next">›</button>
             </div>
 
-            <div class="grid"></div>
+            <div class="grid-container">
+              <div class="grid"></div>
+            </div>
             
             <div class="quick-dates" hidden></div>
             
             <div class="time" hidden>
               <div class="time-group">
                 <div class="time-label">Hours</div>
-                <div class="time-controls">
-                  <button class="time-btn" data-field="hh" data-dir="-1">−</button>
-                  <input class="time-input hh" type="number" min="0" max="23" value="00" />
-                  <button class="time-btn" data-field="hh" data-dir="1">+</button>
-                </div>
+                <select class="time-select hour-select"></select>
               </div>
               <div style="font-size:1.5rem; color: var(--datetime-muted)">:</div>
               <div class="time-group">
                 <div class="time-label">Minutes</div>
-                <div class="time-controls">
-                  <button class="time-btn" data-field="mm" data-dir="-1">−</button>
-                  <input class="time-input mm" type="number" min="0" max="59" value="00" />
-                  <button class="time-btn" data-field="mm" data-dir="1">+</button>
-                </div>
+                <select class="time-select minute-select"></select>
               </div>
               <div class="time-group ampm-group" hidden>
                 <div class="time-label">Period</div>
@@ -343,12 +387,14 @@ export default class PDatetime extends HTMLElement {
     this._toLabel = this.shadowRoot.querySelector('.to-label');
     this._btn = this.shadowRoot.querySelector('.calendar-btn');
     this._panel = this.shadowRoot.querySelector('.panel');
+    this._gridContainer = this.shadowRoot.querySelector('.grid-container');
     this._grid = this.shadowRoot.querySelector('.grid');
     this._month = this.shadowRoot.querySelector('.month');
     this._year = this.shadowRoot.querySelector('.year');
+    this._monthYearBtn = this.shadowRoot.querySelector('.month-year');
     this._timeWrap = this.shadowRoot.querySelector('.time');
-    this._hh = this.shadowRoot.querySelector('.hh');
-    this._mm = this.shadowRoot.querySelector('.mm');
+    this._hourSelect = this.shadowRoot.querySelector('.hour-select');
+    this._minuteSelect = this.shadowRoot.querySelector('.minute-select');
     this._ampm = this.shadowRoot.querySelector('.ampm');
     this._ampmGroup = this.shadowRoot.querySelector('.ampm-group');
     this._quickDates = this.shadowRoot.querySelector('.quick-dates');
@@ -472,14 +518,27 @@ export default class PDatetime extends HTMLElement {
     });
 
     this.shadowRoot.querySelector('.prev').addEventListener('click', () => {
-      this._view.setMonth(this._view.getMonth() - 1);
-      this._render();
+      this._handlePrevClick();
     });
 
     this.shadowRoot.querySelector('.next').addEventListener('click', () => {
-      this._view.setMonth(this._view.getMonth() + 1);
-      this._render();
+      this._handleNextClick();
     });
+
+    /* Month/Year title click to change view mode */
+    this._monthYearBtn.addEventListener('click', () => {
+      this._handleMonthYearClick();
+    });
+
+    /* Touch/swipe gestures for mobile */
+    this._gridContainer.addEventListener('touchstart', (e) => {
+      this._touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    this._gridContainer.addEventListener('touchend', (e) => {
+      this._touchEndX = e.changedTouches[0].screenX;
+      this._handleSwipe();
+    }, { passive: true });
 
     this.shadowRoot.querySelector('.today').addEventListener('click', () => {
       const now = new Date();
@@ -504,27 +563,9 @@ export default class PDatetime extends HTMLElement {
       this.close();
     });
 
-    this.shadowRoot.querySelectorAll('.time-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const field = e.target.dataset.field;
-        const dir = +e.target.dataset.dir;
-        const input = this.shadowRoot.querySelector(`.${field}`);
-        const current = +input.value || 0;
-        const step = field === 'mm' ? this._step : 1;
-        const max = field === 'hh' ? (this.timeFormat === '12' ? 12 : 23) : 59;
-        const min = field === 'hh' && this.timeFormat === '12' ? 1 : 0;
-
-        let newVal = current + dir * step;
-        if (newVal < min) newVal = max;
-        if (newVal > max) newVal = min;
-
-        input.value = String(newVal).padStart(2, '0');
-        this._syncTime();
-      });
-    });
-
-    this._hh.addEventListener('change', () => this._syncTime());
-    this._mm.addEventListener('change', () => this._syncTime());
+    /* Time select change handlers */
+    this._hourSelect.addEventListener('change', () => this._syncTime());
+    this._minuteSelect.addEventListener('change', () => this._syncTime());
     this._ampm.addEventListener('change', () => this._syncTime());
 
     document.addEventListener('click', e => {
@@ -671,13 +712,36 @@ export default class PDatetime extends HTMLElement {
   _renderCalendar() {
     const year = this._view.getFullYear();
     const month = this._view.getMonth();
+
+    /* Update title based on view mode */
+    if (this._viewMode === 'year') {
+      const startYear = year - 4;
+      const endYear = year + 4;
+      this._month.textContent = `${startYear} - ${endYear}`;
+      this._year.textContent = '';
+    } else if (this._viewMode === 'month') {
+      this._month.textContent = String(year);
+      this._year.textContent = '';
+    } else {
+      this._month.textContent = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(this._view);
+      this._year.textContent = String(year);
+    }
+
+    /* Route to correct view */
+    if (this._viewMode === 'month') {
+      this._renderMonthPicker();
+      return;
+    }
+    if (this._viewMode === 'year') {
+      this._renderYearPicker();
+      return;
+    }
+
+    /* Day view (original calendar rendering) */
     const today = new Date();
     const selected = this.value ? new Date(this.value) : null;
 
-    this._month.textContent = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(
-      this._view
-    );
-    this._year.textContent = String(year);
+    this._grid.classList.remove('month-view', 'year-view');
 
     const first = new Date(year, month, 1);
     const startDay = (first.getDay() - this._weekStart + 7) % 7;
@@ -811,26 +875,172 @@ export default class PDatetime extends HTMLElement {
     }
   }
 
+  /* Navigation handlers with view mode support */
+  _handlePrevClick() {
+    this._navigationDirection = 'prev';
+    if (this._viewMode === 'year') {
+      this._view.setFullYear(this._view.getFullYear() - 9);
+    } else if (this._viewMode === 'month') {
+      this._view.setFullYear(this._view.getFullYear() - 1);
+    } else {
+      this._view.setMonth(this._view.getMonth() - 1);
+    }
+    this._render();
+  }
+
+  _handleNextClick() {
+    this._navigationDirection = 'next';
+    if (this._viewMode === 'year') {
+      this._view.setFullYear(this._view.getFullYear() + 9);
+    } else if (this._viewMode === 'month') {
+      this._view.setFullYear(this._view.getFullYear() + 1);
+    } else {
+      this._view.setMonth(this._view.getMonth() + 1);
+    }
+    this._render();
+  }
+
+  _handleMonthYearClick() {
+    if (this._viewMode === 'day') {
+      this._viewMode = 'month';
+    } else if (this._viewMode === 'month') {
+      this._viewMode = 'year';
+    }
+    this._render();
+  }
+
+  _handleSwipe() {
+    const swipeDistance = this._touchEndX - this._touchStartX;
+    const threshold = 50;
+    if (Math.abs(swipeDistance) < threshold) return;
+
+    if (swipeDistance > 0) {
+      this._handlePrevClick();
+    } else {
+      this._handleNextClick();
+    }
+  }
+
+  /* Month picker view */
+  _renderMonthPicker() {
+    const year = this._view.getFullYear();
+    const selected = this.value ? new Date(this.value) : null;
+    const today = new Date();
+
+    this._grid.innerHTML = '';
+    this._grid.classList.add('month-view');
+    this._grid.classList.remove('year-view');
+
+    /* Render 12 months */
+    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+      const monthDate = new Date(year, monthIndex, 1);
+      const btn = document.createElement('button');
+      btn.className = 'month';
+      btn.textContent = new Intl.DateTimeFormat(undefined, { month: 'short' }).format(monthDate);
+
+      if (monthDate.getMonth() === today.getMonth() && monthDate.getFullYear() === today.getFullYear()) {
+        btn.classList.add('today');
+      }
+
+      if (selected && monthDate.getMonth() === selected.getMonth() && monthDate.getFullYear() === selected.getFullYear()) {
+        btn.classList.add('selected');
+      }
+
+      btn.addEventListener('click', () => {
+        this._view.setMonth(monthIndex);
+        this._viewMode = 'day';
+        this._render();
+      });
+
+      this._grid.appendChild(btn);
+    }
+  }
+
+  /* Year picker view */
+  _renderYearPicker() {
+    const currentYear = this._view.getFullYear();
+    const selected = this.value ? new Date(this.value) : null;
+    const today = new Date();
+
+    this._grid.innerHTML = '';
+    this._grid.classList.add('year-view');
+    this._grid.classList.remove('month-view');
+
+    /* Show 9-year range centered on current year */
+    const startYear = currentYear - 4;
+    for (let i = 0; i < 9; i++) {
+      const year = startYear + i;
+      const btn = document.createElement('button');
+      btn.className = 'year';
+      btn.textContent = String(year);
+
+      if (year === today.getFullYear()) {
+        btn.classList.add('today');
+      }
+
+      if (selected && year === selected.getFullYear()) {
+        btn.classList.add('selected');
+      }
+
+      btn.addEventListener('click', () => {
+        this._view.setFullYear(year);
+        this._viewMode = 'month';
+        this._render();
+      });
+
+      this._grid.appendChild(btn);
+    }
+  }
+
   _renderTime() {
     const showTime = this.mode === 'datetime';
     this._timeWrap.hidden = !showTime;
 
-    if (showTime) {
-      const is12Hour = this.timeFormat === '12';
-      this._ampmGroup.hidden = !is12Hour;
+    if (!showTime) return;
 
-      if (this.value) {
-        const date = new Date(this.value);
-        if (is12Hour) {
-          let hours = date.getHours();
-          this._ampm.value = hours >= 12 ? 'PM' : 'AM';
-          hours = hours % 12 || 12;
-          this._hh.value = String(hours).padStart(2, '0');
-        } else {
-          this._hh.value = String(date.getHours()).padStart(2, '0');
-        }
-        this._mm.value = String(date.getMinutes()).padStart(2, '0');
+    const is12Hour = this.timeFormat === '12';
+    this._ampmGroup.hidden = !is12Hour;
+
+    /* Build hour select options */
+    this._hourSelect.innerHTML = '';
+    const hourRange = is12Hour ? 12 : 24;
+    const hourStart = is12Hour ? 1 : 0;
+
+    for (let h = hourStart; h < (is12Hour ? hourStart + 12 : hourRange); h++) {
+      const option = document.createElement('option');
+      option.value = h;
+      option.textContent = String(h).padStart(2, '0');
+      this._hourSelect.appendChild(option);
+    }
+
+    /* Build minute select options */
+    this._minuteSelect.innerHTML = '';
+    const minuteStep = this._step || 15; /* Default 15-minute increments */
+
+    for (let m = 0; m < 60; m += minuteStep) {
+      const option = document.createElement('option');
+      option.value = m;
+      option.textContent = String(m).padStart(2, '0');
+      this._minuteSelect.appendChild(option);
+    }
+
+    /* Set current values */
+    if (this.value) {
+      const date = new Date(this.value);
+
+      if (is12Hour) {
+        let hours = date.getHours();
+        this._ampm.value = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        this._hourSelect.value = hours;
+      } else {
+        this._hourSelect.value = date.getHours();
       }
+
+      /* Select closest minute based on step */
+      const currentMinute = date.getMinutes();
+      const closestMinute = Math.round(currentMinute / minuteStep) * minuteStep;
+      this._minuteSelect.value = closestMinute >= 60 ? 0 : closestMinute;
     }
   }
 
@@ -916,8 +1126,8 @@ export default class PDatetime extends HTMLElement {
     if (this.mode !== 'datetime') return;
 
     const d = this.value ? new Date(this.value) : new Date();
-    let hours = +this._hh.value || 0;
-    const minutes = +this._mm.value || 0;
+    let hours = parseInt(this._hourSelect.value) || 0;
+    const minutes = parseInt(this._minuteSelect.value) || 0;
 
     if (this.timeFormat === '12') {
       const ampm = this._ampm.value;
