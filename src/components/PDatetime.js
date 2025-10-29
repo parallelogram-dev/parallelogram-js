@@ -106,16 +106,7 @@ export default class PDatetime extends HTMLElement {
               overflow: hidden;
             }
 
-            .range-fields {
-              display: flex;
-              flex: 1;
-              width: 100%;
-              height: 100%;
-            }
-
-            .single-input,
-            .from-input,
-            .to-input {
+            .input {
               padding: var(--datetime-padding-y) var(--datetime-padding-x);
               color: var(--datetime-text);
               overflow: hidden;
@@ -129,31 +120,26 @@ export default class PDatetime extends HTMLElement {
               border-radius: inherit;
             }
 
-            .from-input {
+            .input:first-of-type:not(:only-of-type) {
               border-top-right-radius: 0;
               border-bottom-right-radius: 0;
             }
 
-            .to-input {
+            .input:nth-of-type(2) {
               border-left: 1px solid rgba(0, 0, 0, 0.1);
               border-top-left-radius: 0;
               border-bottom-left-radius: 0;
             }
 
-            .single-input.focused,
-            .from-input.focused,
-            .to-input.focused {
+            .input.focused {
               box-shadow: inset 0 0 0 2px var(--datetime-accent);
             }
 
-            .single-input[hidden],
-            .range-fields[hidden] {
+            .input[hidden] {
               display: none;
             }
 
-            .single-input[data-placeholder]:empty::before,
-            .from-input[data-placeholder]:empty::before,
-            .to-input[data-placeholder]:empty::before {
+            .input[data-placeholder]:empty::before {
               content: attr(data-placeholder);
               color: var(--datetime-muted);
               opacity: 0.6;
@@ -235,8 +221,7 @@ export default class PDatetime extends HTMLElement {
               justify-content: center;
             }
 
-            .nav button:hover,
-            .month-year:hover {
+            .nav button:hover {
               background: var(--datetime-hover);
               color: var(--datetime-accent);
             }
@@ -253,21 +238,14 @@ export default class PDatetime extends HTMLElement {
               font-size: 0.875em;
             }
 
+            .month-year:hover {
+              background: var(--datetime-hover);
+              color: var(--datetime-accent);
+            }
+
             .month-year:active {
               background: var(--datetime-hover);
               opacity: 0.8;
-            }
-
-            .month-year .month,
-            .month-year .year {
-              display: inline;
-              width: auto;
-              height: auto;
-              background: none;
-              padding: 0;
-              cursor: pointer;
-              font-size: inherit;
-              font-weight: inherit;
             }
 
             .month-year svg {
@@ -490,7 +468,6 @@ export default class PDatetime extends HTMLElement {
               justify-content: space-between;
               padding-top: 0.75em;
               border-top: 1px solid rgba(0, 0, 0, 0.1);
-              margin-top: 0.75em;
             }
 
             .btn {
@@ -534,11 +511,8 @@ export default class PDatetime extends HTMLElement {
           </style>
 
           <div class="field">
-            <div class="single-input" data-placeholder="Select date..."></div>
-            <div class="range-fields" hidden>
-              <div class="from-input" data-placeholder="Start date..."></div>
-              <div class="to-input" data-placeholder="End date..."></div>
-            </div>
+            <div class="input" data-placeholder="Select date..."></div>
+            <div class="input" hidden data-placeholder="End date..."></div>
             <button type="button" class="calendar-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
           </div>
 
@@ -548,7 +522,8 @@ export default class PDatetime extends HTMLElement {
             <div class="nav">
               <button class="prev"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
               <div class="month-year">
-                <span class="month"></span> <span class="year"></span>
+                <span data-slot="month"></span>
+                <span data-slot="year"></span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
               </div>
               <button class="next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
@@ -577,16 +552,15 @@ export default class PDatetime extends HTMLElement {
           </div>
         `;
 
-    this._input = this.shadowRoot.querySelector('.single-input');
-    this._fromInput = this.shadowRoot.querySelector('.from-input');
-    this._toInput = this.shadowRoot.querySelector('.to-input');
-    this._rangeFields = this.shadowRoot.querySelector('.range-fields');
+    const inputs = this.shadowRoot.querySelectorAll('.input');
+    this._input = inputs[0];
+    this._toInput = inputs[1];
     this._btn = this.shadowRoot.querySelector('.calendar-btn');
     this._panel = this.shadowRoot.querySelector('.panel');
     this._gridContainer = this.shadowRoot.querySelector('.grid-container');
     this._grid = this.shadowRoot.querySelector('.grid');
-    this._month = this.shadowRoot.querySelector('.month');
-    this._year = this.shadowRoot.querySelector('.year');
+    this._month = this.shadowRoot.querySelector('[data-slot="month"]');
+    this._year = this.shadowRoot.querySelector('[data-slot="year"]');
     this._monthYearBtn = this.shadowRoot.querySelector('.month-year');
     this._timeWrap = this.shadowRoot.querySelector('.time');
     this._hourSelect = this.shadowRoot.querySelector('.hour-select');
@@ -692,29 +666,24 @@ export default class PDatetime extends HTMLElement {
         this._currentField = 'from';
         this._rangeState = 'selecting-from';
       }
+      this._updateFocusRing();
       this.toggle();
     });
     this._input.addEventListener('click', () => {
+      if (this.isRange) {
+        this._currentField = 'from';
+        this._rangeState = 'selecting-from';
+      }
       this._updateFocusRing();
       this.open();
     });
 
-    // For range mode, use unified popup approach
-    this._fromInput.addEventListener('click', () => {
-      if (this.isRange) {
-        this._currentField = 'from';
-        this._rangeState = 'selecting-from';
-        this._updateFocusRing();
-        this.open();
-      }
-    });
+    // For range mode, clicking either input opens the picker
     this._toInput.addEventListener('click', () => {
-      if (this.isRange) {
-        this._currentField = 'to';
-        this._rangeState = 'selecting-to';
-        this._updateFocusRing();
-        this.open();
-      }
+      this._currentField = 'to';
+      this._rangeState = 'selecting-to';
+      this._updateFocusRing();
+      this.open();
     });
 
     this.shadowRoot.querySelector('.prev').addEventListener('click', () => {
@@ -865,6 +834,9 @@ export default class PDatetime extends HTMLElement {
 
   close() {
     this._panel.classList.remove('open');
+    /* Remove focus ring when panel closes */
+    this._input.classList.remove('focused');
+    this._toInput.classList.remove('focused');
     setTimeout(() => {
       this._panel.hidden = true;
     }, 150);
@@ -884,8 +856,8 @@ export default class PDatetime extends HTMLElement {
 
   _renderMode() {
     if (this.isRange) {
-      this._input.hidden = true;
-      this._rangeFields.hidden = false;
+      this._input.hidden = false;  // Show first input (from date)
+      this._toInput.hidden = false;  // Show second input (to date)
       this._rangeInfo.hidden = false;
 
       // Update range info text based on current state
@@ -897,8 +869,8 @@ export default class PDatetime extends HTMLElement {
         this._rangeInfo.textContent = `Range selected. Click dates to modify.`;
       }
     } else {
-      this._input.hidden = false;
-      this._rangeFields.hidden = true;
+      this._input.hidden = false;  // Show first input
+      this._toInput.hidden = true;  // Hide second input
       this._rangeInfo.hidden = true;
     }
   }
@@ -909,8 +881,8 @@ export default class PDatetime extends HTMLElement {
 
     /* Update title based on view mode */
     if (this._viewMode === 'year') {
-      const startYear = year - 4;
-      const endYear = year + 4;
+      const startYear = year - 5;
+      const endYear = year + 6;
       this._month.textContent = `${startYear} - ${endYear}`;
       this._year.textContent = '';
     } else if (this._viewMode === 'month') {
@@ -1047,16 +1019,24 @@ export default class PDatetime extends HTMLElement {
               this.value = newDateISO;
             }
           } else {
+            // Selecting "from" date
+            const wasEmpty = !this.value && !this.rangeToValue;
             this.value = newDateISO;
             // Validate: if from-date is after to-date, swap them
             if (this.rangeToValue && new Date(newDateISO) > new Date(this.rangeToValue)) {
               this.value = this.rangeToValue;
               this.rangeToValue = newDateISO;
             }
+            // Auto-focus "to" field after first "from" selection
+            if (wasEmpty) {
+              this._currentField = 'to';
+              this._rangeState = 'selecting-to';
+            }
           }
 
           this._emitChange();
           this._render();
+          this._updateFocusRing();
         } else {
           // Single date mode (original logic)
           if (this.mode === 'date') {
@@ -1081,7 +1061,7 @@ export default class PDatetime extends HTMLElement {
   _handlePrevClick() {
     this._navigationDirection = 'prev';
     if (this._viewMode === 'year') {
-      this._view.setFullYear(this._view.getFullYear() - 9);
+      this._view.setFullYear(this._view.getFullYear() - 12);
     } else if (this._viewMode === 'month') {
       this._view.setFullYear(this._view.getFullYear() - 1);
     } else {
@@ -1093,7 +1073,7 @@ export default class PDatetime extends HTMLElement {
   _handleNextClick() {
     this._navigationDirection = 'next';
     if (this._viewMode === 'year') {
-      this._view.setFullYear(this._view.getFullYear() + 9);
+      this._view.setFullYear(this._view.getFullYear() + 12);
     } else if (this._viewMode === 'month') {
       this._view.setFullYear(this._view.getFullYear() + 1);
     } else {
@@ -1168,9 +1148,9 @@ export default class PDatetime extends HTMLElement {
     this._grid.classList.add('year-view');
     this._grid.classList.remove('month-view');
 
-    /* Show 9-year range centered on current year */
-    const startYear = currentYear - 4;
-    for (let i = 0; i < 9; i++) {
+    /* Show 12-year range (3x4 grid like months) */
+    const startYear = currentYear - 5;
+    for (let i = 0; i < 12; i++) {
       const year = startYear + i;
       const btn = document.createElement('button');
       btn.className = 'year';
@@ -1251,13 +1231,13 @@ export default class PDatetime extends HTMLElement {
       this.mode === 'date' ? { dateStyle: 'medium' } : { dateStyle: 'medium', timeStyle: 'short' };
 
     if (this.isRange) {
-      // Handle range divs
+      // Handle range: first input = from, second input = to
       if (this.value) {
         const fromDate = new Date(this.value);
-        this._fromInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
+        this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
       } else {
-        this._fromInput.textContent = '';
-        this._fromInput.setAttribute('data-placeholder',
+        this._input.textContent = '';
+        this._input.setAttribute('data-placeholder',
           this.mode === 'date' ? 'Start date...' : 'Start date & time...');
       }
 
@@ -1270,7 +1250,7 @@ export default class PDatetime extends HTMLElement {
           this.mode === 'date' ? 'End date...' : 'End date & time...');
       }
     } else {
-      // Handle single input div
+      // Handle single input
       if (this.value) {
         const date = new Date(this.value);
         this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(date);
@@ -1315,6 +1295,10 @@ export default class PDatetime extends HTMLElement {
               date.setHours(9, 0, 0, 0);
               this.value = date.toISOString();
             }
+
+            /* Reset view to day mode and navigate to selected date */
+            this._viewMode = 'day';
+            this._view = new Date(date);
 
             this._emitChange();
             this._render();
@@ -1367,9 +1351,8 @@ export default class PDatetime extends HTMLElement {
   }
 
   _updateFocusRing() {
-    // Remove focused class from all inputs
+    // Remove focused class from both inputs
     this._input.classList.remove('focused');
-    this._fromInput.classList.remove('focused');
     this._toInput.classList.remove('focused');
 
     // Add focused class to the current field
@@ -1377,7 +1360,7 @@ export default class PDatetime extends HTMLElement {
       if (this._currentField === 'to') {
         this._toInput.classList.add('focused');
       } else {
-        this._fromInput.classList.add('focused');
+        this._input.classList.add('focused');  // First input is "from" in range mode
       }
     } else {
       this._input.classList.add('focused');
