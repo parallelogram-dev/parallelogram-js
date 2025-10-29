@@ -650,6 +650,7 @@ export default class PDatetime extends HTMLElement {
       'range-to',
       'from-label',
       'to-label',
+      'range-to-value',
       'theme',
     ];
   }
@@ -657,11 +658,12 @@ export default class PDatetime extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue) return;
 
-    switch (name) {
-      case 'theme':
-        this._updateTheme(newValue);
-        break;
-      // ... other attribute cases would go here
+    if (name === 'theme') {
+      this._updateTheme(newValue);
+    }
+
+    if (this.isConnected) {
+      this._render();
     }
   }
 
@@ -808,26 +810,6 @@ export default class PDatetime extends HTMLElement {
   }
   set rangeToValue(v) {
     v ? this.setAttribute('range-to-value', v) : this.removeAttribute('range-to-value');
-  }
-
-  attributeChangedCallback() {
-    if (this.isConnected) this._render();
-  }
-
-  static get observedAttributes() {
-    return [
-      'mode',
-      'value',
-      'name',
-      'time-format',
-      'show-quick-dates',
-      'quick-dates',
-      'range',
-      'range-to',
-      'from-label',
-      'to-label',
-      'range-to-value',
-    ];
   }
 
   open() {
