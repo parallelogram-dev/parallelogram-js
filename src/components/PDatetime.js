@@ -593,63 +593,63 @@ export default class PDatetime extends HTMLElement {
           </style>
 
           <div class="field">
-            <div class="input" data-placeholder="Select date..."></div>
-            <div class="input" hidden data-placeholder="End date..."></div>
-            <button type="button" class="calendar-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
+            <div class="input" data-datetime-input data-placeholder="Select date..."></div>
+            <div class="input" data-datetime-input-to hidden data-placeholder="End date..."></div>
+            <button type="button" class="calendar-btn" data-datetime-trigger><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
           </div>
 
-          <div class="panel" hidden>
-            <div class="range-info" hidden>Click to select start date, then select end date</div>
+          <div class="panel" data-datetime-panel hidden>
+            <div class="range-info" data-datetime-range-info hidden>Click to select start date, then select end date</div>
 
-            <div class="nav">
-              <button class="prev"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
-              <div class="month-year">
+            <div class="nav" data-datetime-nav>
+              <button data-datetime-nav-btn="prev"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
+              <div class="month-year" data-datetime-month-year>
                 <span data-slot="month"></span>
                 <span data-slot="year"></span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
               </div>
-              <button class="next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
+              <button data-datetime-nav-btn="next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
             </div>
 
-            <div class="grid-container">
-              <div class="grid"></div>
+            <div class="grid-container" data-datetime-grid-container>
+              <div class="grid" data-datetime-grid></div>
             </div>
-            
-            <div class="quick-dates" hidden></div>
-            
-            <div class="time" hidden>
-              <select class="time-select hour-select"></select>
+
+            <div class="quick-dates" data-datetime-quick-dates hidden></div>
+
+            <div class="time" data-datetime-time hidden>
+              <select class="time-select" data-datetime-hour></select>
               <div class="time-separator">:</div>
-              <select class="time-select minute-select"></select>
-              <select class="ampm" hidden>
+              <select class="time-select" data-datetime-minute></select>
+              <select class="ampm" data-datetime-ampm hidden>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
             </div>
 
             <div class="actions">
-              <button class="btn clear">Clear</button>
-              <button class="btn primary apply">Apply</button>
+              <button class="btn" data-datetime-action="clear">Clear</button>
+              <button class="btn primary" data-datetime-action="apply">Apply</button>
             </div>
           </div>
         `;
 
-    const inputs = this.shadowRoot.querySelectorAll('.input');
-    this._input = inputs[0];
-    this._toInput = inputs[1];
-    this._btn = this.shadowRoot.querySelector('.calendar-btn');
-    this._panel = this.shadowRoot.querySelector('.panel');
-    this._gridContainer = this.shadowRoot.querySelector('.grid-container');
-    this._grid = this.shadowRoot.querySelector('.grid');
+    this._input = this.shadowRoot.querySelector('[data-datetime-input]');
+    this._toInput = this.shadowRoot.querySelector('[data-datetime-input-to]');
+    this._btn = this.shadowRoot.querySelector('[data-datetime-trigger]');
+    this._panel = this.shadowRoot.querySelector('[data-datetime-panel]');
+    this._nav = this.shadowRoot.querySelector('[data-datetime-nav]');
+    this._gridContainer = this.shadowRoot.querySelector('[data-datetime-grid-container]');
+    this._grid = this.shadowRoot.querySelector('[data-datetime-grid]');
     this._month = this.shadowRoot.querySelector('[data-slot="month"]');
     this._year = this.shadowRoot.querySelector('[data-slot="year"]');
-    this._monthYearBtn = this.shadowRoot.querySelector('.month-year');
-    this._timeWrap = this.shadowRoot.querySelector('.time');
-    this._hourSelect = this.shadowRoot.querySelector('.hour-select');
-    this._minuteSelect = this.shadowRoot.querySelector('.minute-select');
-    this._ampm = this.shadowRoot.querySelector('.ampm');
-    this._quickDates = this.shadowRoot.querySelector('.quick-dates');
-    this._rangeInfo = this.shadowRoot.querySelector('.range-info');
+    this._monthYearBtn = this.shadowRoot.querySelector('[data-datetime-month-year]');
+    this._timeWrap = this.shadowRoot.querySelector('[data-datetime-time]');
+    this._hourSelect = this.shadowRoot.querySelector('[data-datetime-hour]');
+    this._minuteSelect = this.shadowRoot.querySelector('[data-datetime-minute]');
+    this._ampm = this.shadowRoot.querySelector('[data-datetime-ampm]');
+    this._quickDates = this.shadowRoot.querySelector('[data-datetime-quick-dates]');
+    this._rangeInfo = this.shadowRoot.querySelector('[data-datetime-range-info]');
     this._hidden = null;
     this._hiddenTo = null;
     this._currentField = 'from';
@@ -770,12 +770,12 @@ export default class PDatetime extends HTMLElement {
       this.open();
     });
 
-    this.shadowRoot.querySelector('.prev').addEventListener('click', () => {
-      this._handlePrevClick();
-    });
-
-    this.shadowRoot.querySelector('.next').addEventListener('click', () => {
-      this._handleNextClick();
+    /* Navigation buttons */
+    this.shadowRoot.querySelectorAll('[data-datetime-nav-btn]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const direction = btn.getAttribute('data-datetime-nav-btn');
+        this._handleNavigation(direction);
+      });
     });
 
     /* Month/Year title click to change view mode */
@@ -793,23 +793,27 @@ export default class PDatetime extends HTMLElement {
       this._handleSwipe();
     }, { passive: true });
 
-    this.shadowRoot.querySelector('.clear').addEventListener('click', () => {
-      if (this.isRange) {
-        // Clear the focused field only
-        if (this._currentField === 'to') {
-          this.rangeToValue = '';
-        } else {
-          this.value = '';
+    /* Action buttons */
+    this.shadowRoot.querySelectorAll('[data-datetime-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.getAttribute('data-datetime-action');
+        if (action === 'clear') {
+          if (this.isRange) {
+            // Clear the focused field only
+            if (this._currentField === 'to') {
+              this.rangeToValue = '';
+            } else {
+              this.value = '';
+            }
+          } else {
+            this.value = '';
+          }
+          this._emitChange();
+          this._render();
+        } else if (action === 'apply') {
+          this.close();
         }
-      } else {
-        this.value = '';
-      }
-      this._emitChange();
-      this._render();
-    });
-
-    this.shadowRoot.querySelector('.apply').addEventListener('click', () => {
-      this.close();
+      });
     });
 
     /* Time select change handlers */
