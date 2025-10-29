@@ -301,6 +301,54 @@
                                 <p class="form__help">Full datetime range with 12-hour format</p>
                             </div>
                         </div>
+
+                        <div class="form__element form__element--sm">
+                            <label class="form__label" for="office-hours-start">Office Hours (24h):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="officeHoursStart"
+                                    mode="time"
+                                    time-format="24"
+                                    id="office-hours-start"
+                                ></p-datetime>
+                                <p class="form__help">Time-only picker with 24-hour format</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element form__element--sm">
+                            <label class="form__label" for="alarm-time">Alarm Time:</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="alarmTime"
+                                    mode="time"
+                                    time-format="12"
+                                    id="alarm-time"
+                                ></p-datetime>
+                                <p class="form__help">Time-only picker with 12-hour format (AM/PM)</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label">Business Hours:</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="businessHoursStart"
+                                    range
+                                    range-to="businessHoursEnd"
+                                    from-label="Open"
+                                    to-label="Close"
+                                    mode="time"
+                                    time-format="12"
+                                ></p-datetime>
+                                <p class="form__help">Time range picker (e.g., 9:00 AM - 5:00 PM)</p>
+                            </div>
+                        </div>
                     </div>
 
                     <button type="button" class="btn btn--primary" data-btn-action="handleDatetimeDemo">
@@ -311,14 +359,14 @@
                 <div class="features__details">
                     <h3>Datetime Picker Features</h3>
                     <ul>
-                        <li><strong>Dual Modes:</strong> Date-only or full datetime selection with time controls</li>
+                        <li><strong>Multiple Modes:</strong> Date-only, full datetime, or time-only selection</li>
                         <li><strong>Time Formats:</strong> 12-hour (AM/PM) or 24-hour time display options</li>
-                        <li><strong>Date Ranges:</strong> Support for date/datetime ranges with validation</li>
+                        <li><strong>Date Ranges:</strong> Support for date/datetime/time ranges with validation</li>
                         <li>
                             <strong>Quick Presets:</strong> Configurable quick date buttons (yesterday, today, tomorrow)
                         </li>
                         <li><strong>Form Integration:</strong> Creates hidden inputs for seamless form submission</li>
-                        <li><strong>Range Validation:</strong> Ensures end dates are not before start dates</li>
+                        <li><strong>Range Validation:</strong> Ensures end dates/times are not before start dates/times</li>
                         <li><strong>Accessibility:</strong> Keyboard navigation and screen reader support</li>
                         <li><strong>Customizable:</strong> CSS custom properties and configurable field labels</li>
                     </ul>
