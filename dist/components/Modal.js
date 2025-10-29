@@ -1,18 +1,160 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+/**
+ * ComponentRegistry - Core utility for building component registries
+ * Provides a fluent API for defining component loader configurations
+ * with sensible defaults and path conventions.
+ */
 
 /**
  * DOM Utility Functions
  * Shared utilities for both BaseComponent and Web Components
  */
 
+/**
+ * Convert kebab-case to camelCase
+ * @param {string} str - String to convert
+ * @returns {string} Camel-cased string
+ */
+function camelCase(str) {
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+}
+
+/**
+ * Get data attribute with type conversion
+ * @param {HTMLElement} element - Element to read from
+ * @param {string} attr - Attribute name (kebab-case or camelCase)
+ * @param {*} defaultValue - Default value if not found
+ * @returns {*} Converted value
+ */
+function getDataAttr(element, attr, defaultValue) {
+  const key = attr.includes('-') ? camelCase(attr) : attr;
+  const value = element.dataset[key];
+  if (value === undefined) return defaultValue;
+
+  /* Convert string values to appropriate types */
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  if (!isNaN(value) && value !== '') return Number(value);
+  return value;
+}
 
 /**
  * Generate unique ID with optional prefix
  * @param {string} prefix - Prefix for the ID
  * @returns {string} Unique ID
  */
-function generateId(prefix = 'elem') {
+function generateId$1(prefix = 'elem') {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Debounce a function - delays execution until after wait milliseconds
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Milliseconds to wait
+ * @returns {Function} Debounced function
+ */
+function debounce(func, wait = 300) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func.apply(this, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Throttle a function - ensures it's only called at most once per time period
+ * @param {Function} func - Function to throttle
+ * @param {number} limit - Milliseconds between allowed executions
+ * @returns {Function} Throttled function
+ */
+function throttle(func, limit = 100) {
+  let inThrottle;
+  return function executedFunction(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+/**
+ * Delay helper - returns a promise that resolves after specified milliseconds
+ * @param {number} ms - Milliseconds to delay
+ * @returns {Promise} Promise that resolves after delay
+ */
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Wait for CSS transition or animation to complete
+ * @param {HTMLElement} element - Element with transition/animation
+ * @param {number} timeout - Maximum time to wait in milliseconds
+ * @returns {Promise} Promise that resolves when transition ends
+ */
+async function waitForTransition(element, timeout = 2000) {
+  return new Promise((resolve) => {
+    const handleEnd = () => {
+      element.removeEventListener('animationend', handleEnd);
+      element.removeEventListener('transitionend', handleEnd);
+      resolve();
+    };
+
+    element.addEventListener('animationend', handleEnd, { once: true });
+    element.addEventListener('transitionend', handleEnd, { once: true });
+
+    setTimeout(() => {
+      element.removeEventListener('animationend', handleEnd);
+      element.removeEventListener('transitionend', handleEnd);
+      resolve();
+    }, timeout);
+  });
+}
+
+/**
+ * Apply fade-in effect to element
+ * @param {HTMLElement} element - Element to fade in
+ * @param {number} duration - Duration in milliseconds
+ * @returns {Promise} Promise that resolves when fade completes
+ */
+async function fadeIn(element, duration = 300) {
+  element.style.opacity = '0';
+  element.style.transition = `opacity ${duration}ms ease-in-out`;
+  element.offsetHeight; /* Force reflow */
+  element.style.opacity = '1';
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      element.style.transition = '';
+      resolve();
+    }, duration);
+  });
+}
+
+/**
+ * Apply fade-out effect to element
+ * @param {HTMLElement} element - Element to fade out
+ * @param {number} duration - Duration in milliseconds
+ * @returns {Promise} Promise that resolves when fade completes
+ */
+async function fadeOut(element, duration = 300) {
+  element.style.opacity = '1';
+  element.style.transition = `opacity ${duration}ms ease-in-out`;
+  element.offsetHeight; /* Force reflow */
+  element.style.opacity = '0';
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      element.style.transition = '';
+      resolve();
+    }, duration);
+  });
 }
 
 /**
@@ -55,6 +197,286 @@ function trapFocus(container, event) {
 }
 
 /**
+ * Restore focus to an element with smooth transition
+ * @param {HTMLElement} element - Element to focus
+ */
+function restoreFocus(element) {
+  if (element && typeof element.focus === 'function') {
+    requestAnimationFrame(() => element.focus());
+  }
+}
+
+/**
+ * Create element with attributes and content
+ * @param {string} tag - HTML tag name
+ * @param {Object} attributes - Element attributes
+ * @param {string|HTMLElement} content - Text content or child element
+ * @returns {HTMLElement} Created element
+ */
+function createElement$1(tag, attributes = {}, content = '') {
+  const element = document.createElement(tag);
+
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key === 'className' || key === 'class') {
+      element.className = value;
+    } else if (key === 'style' && typeof value === 'object') {
+      Object.assign(element.style, value);
+    } else if (key === 'dataset' && typeof value === 'object') {
+      Object.assign(element.dataset, value);
+    } else {
+      element.setAttribute(key, value);
+    }
+  }
+
+  if (typeof content === 'string') {
+    element.textContent = content;
+  } else if (content instanceof HTMLElement) {
+    element.appendChild(content);
+  }
+
+  return element;
+}
+
+/**
+ * BaseComponent - Production-ready base class with state management
+ *
+ * Provides lifecycle helpers, state tracking per element, data-attribute
+ * parsing, and event dispatching. Components should extend this class and
+ * implement _init(element) and optionally update(element).
+ *
+ * @typedef {Object} ComponentState
+ * @property {AbortController} controller - Abort controller for listeners
+ * @property {Function} cleanup - Cleanup function called on unmount
+ */
+class BaseComponent {
+  constructor({ eventBus, logger, router }) {
+    this.eventBus = eventBus;
+    this.logger = logger;
+    this.router = router;
+    // Primary storage for element states
+    this.elements = new WeakMap();
+    // Backward-compat alias for older components expecting `states`
+    this.states = this.elements;
+    this._keys = null;
+  }
+
+  mount(element) {
+    if (this.elements.has(element)) return this.update(element);
+    const state = this._init(element);
+    this.elements.set(element, state);
+  }
+
+  update(element) {
+    // Override in subclasses for update logic
+  }
+
+  unmount(element) {
+    const state = this.elements.get(element);
+    if (!state) return;
+    try {
+      state.cleanup?.();
+    } finally {
+      this.elements.delete(element);
+    }
+  }
+
+  destroy() {
+    for (const element of this._elementsKeys()) {
+      this.unmount(element);
+    }
+  }
+
+  _elementsKeys() {
+    if (!this._keys) this._keys = new Set();
+    return this._keys;
+  }
+
+  _track(element) {
+    if (!this._keys) this._keys = new Set();
+    this._keys.add(element);
+  }
+
+  _untrack(element) {
+    this._keys?.delete(element);
+  }
+
+  _init(element) {
+    const controller = new AbortController();
+    const cleanup = () => {
+      controller.abort();
+      this._untrack(element);
+    };
+    this._track(element);
+    return { cleanup, controller };
+  }
+
+  // Helper method for getting state
+  getState(element) {
+    return this.elements.get(element);
+  }
+
+  /* Wrapper methods that delegate to shared utilities */
+  _getDataAttr(element, attr, defaultValue) {
+    return getDataAttr(element, attr, defaultValue);
+  }
+
+  _camelCase(str) {
+    return camelCase(str);
+  }
+
+  _debounce(func, wait = 300) {
+    return debounce(func, wait);
+  }
+
+  _throttle(func, limit = 100) {
+    return throttle(func, limit);
+  }
+
+  _delay(ms) {
+    return delay(ms);
+  }
+
+  /**
+   * Get target element from data attribute with validation
+   * Supports both CSS selectors (data-*-target="#id") and data-view lookups (data-*-target-view="viewname")
+   *
+   * @param {HTMLElement} element - Element containing the data attribute
+   * @param {string} dataAttr - Data attribute name (without 'data-' prefix)
+   * @param {Object} options - Options for validation
+   * @param {boolean} options.required - Whether to warn if not found
+   * @returns {HTMLElement|null} Target element or null
+   *
+   * @example
+   * // CSS selector approach
+   * <button data-toggle-target="#sidebar">Toggle</button>
+   *
+   * // data-view approach (more consistent with framework)
+   * <button data-toggle-target-view="sidebar">Toggle</button>
+   * <div data-view="sidebar">...</div>
+   */
+  _getTargetElement(element, dataAttr, options = {}) {
+    /* Check for data-view based target first (e.g., data-toggle-target-view) */
+    const viewAttr = `${dataAttr}-view`;
+    const viewName = this._getDataAttr(element, viewAttr);
+
+    if (viewName) {
+      const target = document.querySelector(`[data-view="${viewName}"]`);
+      if (!target && options.required) {
+        this.logger?.warn(`Target element with data-view="${viewName}" not found`, {
+          viewName,
+          element,
+          attribute: viewAttr
+        });
+      }
+      return target;
+    }
+
+    /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
+    const selector = this._getDataAttr(element, dataAttr);
+    if (!selector) {
+      if (options.required) {
+        this.logger?.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
+      }
+      return null;
+    }
+
+    const target = document.querySelector(selector);
+    if (!target && options.required) {
+      this.logger?.warn(`Target element not found`, { selector, element });
+    }
+    return target;
+  }
+
+  /**
+   * Parse multiple data attributes into configuration object
+   * @param {HTMLElement} element - Element with data attributes
+   * @param {Object} mapping - Map of config keys to data attribute names
+   * @returns {Object} Configuration object
+   */
+  _getConfigFromAttrs(element, mapping) {
+    const config = {};
+    for (const [key, attrName] of Object.entries(mapping)) {
+      const defaultValue = this.constructor.defaults?.[key];
+      config[key] = this._getDataAttr(element, attrName, defaultValue);
+    }
+    return config;
+  }
+
+  /**
+   * Validate and require state exists before proceeding
+   * @param {HTMLElement} element - Element to get state for
+   * @param {string} methodName - Name of calling method for error messages
+   * @returns {Object|null} State object or null
+   */
+  _requireState(element, methodName = 'method') {
+    const state = this.getState(element);
+    if (!state) {
+      this.logger?.warn(`${methodName}: No state found for element`, element);
+    }
+    return state;
+  }
+
+  _generateId(prefix = 'elem') {
+    return generateId$1(prefix);
+  }
+
+  async _waitForTransition(element, timeout = 2000) {
+    return waitForTransition(element, timeout);
+  }
+
+  async _fadeIn(element, duration = 300) {
+    return fadeIn(element, duration);
+  }
+
+  async _fadeOut(element, duration = 300) {
+    return fadeOut(element, duration);
+  }
+
+  _getFocusableElements(container = document) {
+    return getFocusableElements(container);
+  }
+
+  _trapFocus(container, event) {
+    return trapFocus(container, event);
+  }
+
+  _restoreFocus(element) {
+    return restoreFocus(element);
+  }
+
+  _createElement(tag, attributes = {}, content = '') {
+    return createElement$1(tag, attributes, content);
+  }
+
+  // Dispatch custom events
+  _dispatch(element, eventType, detail) {
+    const event = new CustomEvent(eventType, {
+      detail,
+      bubbles: true,
+      cancelable: true,
+    });
+    element.dispatchEvent(event);
+    this.eventBus?.emit(eventType, { element, ...detail });
+    return event;
+  }
+}
+
+/**
+ * DOM Utility Functions
+ * Shared utilities for both BaseComponent and Web Components
+ */
+
+
+/**
+ * Generate unique ID with optional prefix
+ * @param {string} prefix - Prefix for the ID
+ * @returns {string} Unique ID
+ */
+function generateId(prefix = 'elem') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
  * Create element with attributes and content
  * @param {string} tag - HTML tag name
  * @param {Object} attributes - Element attributes
@@ -83,548 +505,6 @@ function createElement(tag, attributes = {}, content = '') {
   }
 
   return element;
-}
-
-/**
- * PModal - Modal dialog web component
- * Can be used standalone without the framework
- * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
- *
- * @example
- * import './components/PModal.js';
- *
- * HTML:
- * <button data-modal data-modal-target="#example-modal">Open Modal</button>
- *
- * <p-modal id="example-modal"
- *          data-modal-closable="true"
- *          data-modal-backdrop-close="true"
- *          data-modal-keyboard="true">
- *   <h2 slot="title">Modal Title</h2>
- *   <p>Modal content goes here.</p>
- *   <div slot="actions">
- *     <button class="btn btn--secondary" data-modal-close>Cancel</button>
- *     <button class="btn btn--primary">Save</button>
- *   </div>
- * </p-modal>
- */
-
-
-class PModal extends HTMLElement {
-  static get observedAttributes() {
-    return ['open', 'data-modal-size', 'data-modal-closable'];
-  }
-
-  constructor() {
-    super();
-    const root = this.attachShadow({ mode: 'open' });
-
-    // Use BEM-style CSS with CSS custom properties for theming
-    root.innerHTML = `
-      <style>
-        :host {
-          --modal-backdrop-bg: rgba(0, 0, 0, 0.45);
-          --modal-panel-bg: #0f172a;
-          --modal-panel-color: #e5e7eb;
-          --modal-panel-border: rgba(255, 255, 255, 0.08);
-          --modal-panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-          --modal-panel-radius: 16px;
-          --modal-header-bg: #0f172a;
-          --modal-footer-bg: #0f172a;
-          --modal-close-hover-bg: rgba(255, 255, 255, 0.1);
-          --modal-animation-duration: 0.2s;
-          --modal-animation-easing: ease-out;
-        }
-
-        /* Host states */
-        :host {
-          display: none;
-        }
-
-        :host([open]) {
-          display: block;
-          position: fixed;
-          inset: 0;
-          z-index: 9999;
-          animation: modal-fade-in var(--modal-animation-duration) var(--modal-animation-easing);
-        }
-
-        /* Block: Modal backdrop */
-        .modal__backdrop {
-          position: absolute;
-          inset: 0;
-          background: var(--modal-backdrop-bg);
-          animation: modal-backdrop-in var(--modal-animation-duration) var(--modal-animation-easing);
-        }
-
-        /* Block: Modal panel */
-        .modal__panel {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          min-width: min(92vw, 640px);
-          max-width: 92vw;
-          max-height: 86vh;
-          overflow: auto;
-          background: var(--modal-panel-bg);
-          color: var(--modal-panel-color);
-          border: 1px solid var(--modal-panel-border);
-          border-radius: var(--modal-panel-radius);
-          box-shadow: var(--modal-panel-shadow);
-          animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
-        }
-
-        /* Panel size modifiers */
-        :host([data-modal-size="sm"]) .modal__panel {
-          min-width: min(92vw, 400px);
-        }
-
-        :host([data-modal-size="lg"]) .modal__panel {
-          min-width: min(92vw, 800px);
-        }
-
-        :host([data-modal-size="xs"]) .modal__panel {
-          min-width: min(92vw, 300px);
-        }
-
-        :host([data-modal-size="xl"]) .modal__panel {
-          min-width: min(92vw, 1000px);
-        }
-
-        :host([data-modal-size="fullscreen"]) .modal__panel {
-          width: 100vw;
-          height: 100vh;
-          max-width: 100vw;
-          max-height: 100vh;
-          border-radius: 0;
-          transform: none;
-          top: 0;
-          left: 0;
-        }
-
-        /* Element: Modal header */
-        .modal__header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 14px;
-          border-bottom: 1px solid var(--modal-panel-border);
-          position: sticky;
-          top: 0;
-          background: var(--modal-header-bg);
-          z-index: 1;
-        }
-
-        .modal__header h2 {
-          margin: 0;
-          font-size: 18px;
-          line-height: 1.3;
-          font-weight: 600;
-        }
-
-        /* Element: Header spacer */
-        .modal__spacer {
-          flex: 1;
-        }
-
-        /* Element: Close button */
-        .modal__close {
-          all: unset;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: bold;
-          transition: background-color var(--modal-animation-duration) ease;
-        }
-
-        .modal__close:hover {
-          background: var(--modal-close-hover-bg);
-        }
-
-        .modal__close:focus-visible {
-          outline: 2px solid currentColor;
-          outline-offset: 2px;
-        }
-
-        /* Element: Modal content */
-        .modal__content {
-          padding: 14px;
-        }
-
-        /* Element: Modal footer */
-        .modal__footer {
-          padding: 12px 14px;
-          border-top: 1px solid var(--modal-panel-border);
-          display: flex;
-          gap: 8px;
-          justify-content: flex-end;
-          position: sticky;
-          bottom: 0;
-          background: var(--modal-footer-bg);
-          z-index: 1;
-        }
-
-        /* Slotted button styles (BEM classes) */
-        ::slotted(.btn) {
-          appearance: none;
-          border: 0;
-          border-radius: 10px;
-          padding: 10px 14px;
-          background: #1f2937;
-          color: #fff;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 500;
-          min-height: 3.125rem;
-          transition: all var(--modal-animation-duration) ease;
-        }
-
-        ::slotted(.btn:hover) {
-          background: #374151;
-        }
-
-        ::slotted(.btn--primary) {
-          background: #60a5fa;
-          color: #0b1020;
-          font-weight: 700;
-        }
-
-        ::slotted(.btn--primary:hover) {
-          background: #3b82f6;
-        }
-
-        ::slotted(.btn--danger) {
-          background: #dc2626;
-          color: white;
-        }
-
-        ::slotted(.btn--danger:hover) {
-          background: #b91c1c;
-        }
-
-        ::slotted(.btn:disabled) {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        /* Animations */
-        @keyframes modal-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes modal-backdrop-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes modal-panel-in {
-          from { 
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-          :host([open]),
-          .modal__backdrop,
-          .modal__panel,
-          .modal__close,
-          ::slotted(.btn) {
-            animation: none;
-            transition: none;
-          }
-        }
-
-        /* Dark mode adjustments */
-        @media (prefers-color-scheme: light) {
-          :host {
-            --modal-panel-bg: white;
-            --modal-panel-color: #1f2937;
-            --modal-panel-border: rgba(0, 0, 0, 0.1);
-            --modal-header-bg: white;
-            --modal-footer-bg: white;
-            --modal-close-hover-bg: rgba(0, 0, 0, 0.1);
-          }
-
-          ::slotted(.btn) {
-            background: #f3f4f6;
-            color: #1f2937;
-          }
-
-          ::slotted(.btn:hover) {
-            background: #e5e7eb;
-          }
-        }
-      </style>
-      
-      <div class="modal__backdrop" part="backdrop"></div>
-      <div class="modal__panel" part="panel" role="dialog" aria-modal="true">
-        <header class="modal__header" part="header">
-          <slot name="title"><h2>Dialog</h2></slot>
-          <div class="modal__spacer"></div>
-          <button class="modal__close" aria-label="Close" part="close">×</button>
-        </header>
-        <section class="modal__content" part="content">
-          <slot></slot>
-        </section>
-        <footer class="modal__footer" part="footer">
-          <slot name="actions"></slot>
-        </footer>
-      </div>
-    `;
-
-    // Store element references using BEM naming
-    this._elements = {
-      backdrop: root.querySelector('.modal__backdrop'),
-      panel: root.querySelector('.modal__panel'),
-      close: root.querySelector('.modal__close'),
-    };
-
-    // Bind event handlers
-    this._onKeydown = this._onKeydown.bind(this);
-    this._onFocus = this._onFocus.bind(this);
-  }
-
-  connectedCallback() {
-    this._upgradeProperty('open');
-
-    // Set up event listeners
-    this._elements.backdrop.addEventListener('click', () => {
-      if (this._isBackdropClosable()) {
-        this.close();
-      }
-    });
-
-    this._elements.close.addEventListener('click', () => {
-      if (this._isClosable()) {
-        this.close();
-      }
-    });
-
-    // Global event listeners
-    document.addEventListener('keydown', this._onKeydown);
-    this.addEventListener('focusin', this._onFocus);
-
-    // Handle slotted buttons with data-modal-close attribute
-    this.addEventListener('click', (event) => {
-      if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
-        this.close();
-      }
-    });
-
-    // Set ARIA attributes
-    this._elements.panel.setAttribute('aria-labelledby', this._getTitleId());
-  }
-
-  disconnectedCallback() {
-    document.removeEventListener('keydown', this._onKeydown);
-    this.removeEventListener('focusin', this._onFocus);
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'open') {
-      if (this.hasAttribute('open')) {
-        this._onOpen();
-      } else {
-        this._onClose();
-      }
-    }
-  }
-
-  /**
-   * Open the modal
-   */
-  open() {
-    this.setAttribute('open', '');
-  }
-
-  /**
-   * Close the modal
-   */
-  close() {
-    this.removeAttribute('open');
-  }
-
-  /**
-   * Toggle modal open/closed state
-   * @param {boolean} [force] - Force open (true) or close (false)
-   */
-  toggle(force) {
-    if (force === true) {
-      this.open();
-    } else if (force === false) {
-      this.close();
-    } else {
-      this.hasAttribute('open') ? this.close() : this.open();
-    }
-  }
-
-  /**
-   * Check if modal can be closed
-   * @private
-   * @returns {boolean}
-   */
-  _isClosable() {
-    return this.getAttribute('data-modal-closable') !== 'false';
-  }
-
-  /**
-   * Check if modal can be closed by clicking backdrop
-   * @private
-   * @returns {boolean}
-   */
-  _isBackdropClosable() {
-    return this._isClosable() && this.getAttribute('data-modal-backdrop-close') !== 'false';
-  }
-
-  /**
-   * Check if keyboard navigation is enabled
-   * @private
-   * @returns {boolean}
-   */
-  _isKeyboardEnabled() {
-    return this.getAttribute('data-modal-keyboard') !== 'false';
-  }
-
-  /**
-   * Handle modal opening
-   * @private
-   */
-  _onOpen() {
-    // Dispatch open event
-    this.dispatchEvent(
-      new CustomEvent('modal:open', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
-
-    // Focus management
-    requestAnimationFrame(() => {
-      const firstFocusable = this._getFirstFocusable();
-      const focusTarget = firstFocusable || this._elements.close;
-      focusTarget.focus({ preventScroll: true });
-    });
-
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-  }
-
-  /**
-   * Handle modal closing
-   * @private
-   */
-  _onClose() {
-    // Dispatch close event
-    this.dispatchEvent(
-      new CustomEvent('modal:close', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
-
-    // Restore body scroll
-    document.body.style.overflow = '';
-  }
-
-  /**
-   * Handle keyboard events
-   * @private
-   * @param {KeyboardEvent} event
-   */
-  _onKeydown(event) {
-    if (!this.hasAttribute('open') || !this._isKeyboardEnabled()) return;
-
-    if (event.key === 'Escape' && this._isClosable()) {
-      event.preventDefault();
-      this.close();
-    }
-
-    if (event.key === 'Tab') {
-      this._trapTab(event);
-    }
-  }
-
-  /**
-   * Handle focus events for focus trapping
-   * @private
-   */
-  _onFocus() {
-    if (!this.contains(document.activeElement)) {
-      const focusTarget = this._getFirstFocusable() || this._elements.close;
-      focusTarget.focus({ preventScroll: true });
-    }
-  }
-
-  /**
-   * Get all focusable elements within the modal
-   * @private
-   * @returns {HTMLElement[]}
-   */
-  _getFocusableElements() {
-    return getFocusableElements(this);
-  }
-
-  /**
-   * Get the first focusable element
-   * @private
-   * @returns {HTMLElement|null}
-   */
-  _getFirstFocusable() {
-    return this._getFocusableElements()[0] || null;
-  }
-
-  /**
-   * Trap tab navigation within the modal
-   * @private
-   * @param {KeyboardEvent} event
-   */
-  _trapTab(event) {
-    trapFocus(this, event);
-  }
-
-  /**
-   * Get title element ID for ARIA labeling
-   * @private
-   * @returns {string}
-   */
-  _getTitleId() {
-    const titleSlot = this.querySelector('[slot="title"]');
-    if (titleSlot && titleSlot.id) {
-      return titleSlot.id;
-    }
-    return 'modal-title';
-  }
-
-  /**
-   * Upgrade property for proper web component behavior
-   * @private
-   * @param {string} prop
-   */
-  _upgradeProperty(prop) {
-    if (this.hasOwnProperty(prop)) {
-      const value = this[prop];
-      delete this[prop];
-      this[prop] = value;
-    }
-  }
-}
-
-// Auto-register the web component if not already registered
-if (!customElements.get('p-modal')) {
-  customElements.define('p-modal', PModal);
 }
 
 /**
