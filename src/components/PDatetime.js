@@ -102,6 +102,8 @@ export default class PDatetime extends HTMLElement {
               display: flex;
               align-items: stretch;
               box-sizing: border-box;
+              border-radius: inherit;
+              overflow: hidden;
             }
 
             .range-fields {
@@ -123,15 +125,30 @@ export default class PDatetime extends HTMLElement {
               min-width: 0;
               display: flex;
               align-items: center;
+              transition: box-shadow 0.15s ease;
+              border-radius: inherit;
+            }
+
+            .from-input {
+              border-top-right-radius: 0;
+              border-bottom-right-radius: 0;
+            }
+
+            .to-input {
+              border-left: 1px solid rgba(0, 0, 0, 0.1);
+              border-top-left-radius: 0;
+              border-bottom-left-radius: 0;
+            }
+
+            .single-input.focused,
+            .from-input.focused,
+            .to-input.focused {
+              box-shadow: inset 0 0 0 2px var(--datetime-accent);
             }
 
             .single-input[hidden],
             .range-fields[hidden] {
               display: none;
-            }
-
-            .to-input {
-              border-left: 1px solid rgba(0, 0, 0, 0.1);
             }
 
             .single-input[data-placeholder]:empty::before,
@@ -677,13 +694,17 @@ export default class PDatetime extends HTMLElement {
       }
       this.toggle();
     });
-    this._input.addEventListener('click', () => this.open());
+    this._input.addEventListener('click', () => {
+      this._updateFocusRing();
+      this.open();
+    });
 
     // For range mode, use unified popup approach
     this._fromInput.addEventListener('click', () => {
       if (this.isRange) {
         this._currentField = 'from';
         this._rangeState = 'selecting-from';
+        this._updateFocusRing();
         this.open();
       }
     });
@@ -691,6 +712,7 @@ export default class PDatetime extends HTMLElement {
       if (this.isRange) {
         this._currentField = 'to';
         this._rangeState = 'selecting-to';
+        this._updateFocusRing();
         this.open();
       }
     });
@@ -719,7 +741,16 @@ export default class PDatetime extends HTMLElement {
     }, { passive: true });
 
     this.shadowRoot.querySelector('.clear').addEventListener('click', () => {
-      this.value = '';
+      if (this.isRange) {
+        // Clear the focused field only
+        if (this._currentField === 'to') {
+          this.rangeToValue = '';
+        } else {
+          this.value = '';
+        }
+      } else {
+        this.value = '';
+      }
       this._emitChange();
       this._render();
     });
@@ -994,7 +1025,7 @@ export default class PDatetime extends HTMLElement {
 
       btn.addEventListener('click', () => {
         if (this.isRange) {
-          // Unified range selection logic
+          // Apply date to the currently focused field
           const newDateISO =
             this.mode === 'date'
               ? new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).toISOString()
@@ -1007,45 +1038,20 @@ export default class PDatetime extends HTMLElement {
                   return cur.toISOString();
                 })();
 
-          if (!this.value) {
-            // First click: set start date
-            this.value = newDateISO;
-            this._currentField = 'to'; // Next click will be end date
-          } else if (!this.rangeToValue) {
-            // Second click: set end date
-            if (new Date(newDateISO) < new Date(this.value)) {
-              // If clicked date is before start, make it the new start
+          // Apply to the focused field
+          if (this._currentField === 'to') {
+            this.rangeToValue = newDateISO;
+            // Validate: if to-date is before from-date, swap them
+            if (this.value && new Date(newDateISO) < new Date(this.value)) {
               this.rangeToValue = this.value;
               this.value = newDateISO;
-            } else {
-              // Normal case: set as end date
-              this.rangeToValue = newDateISO;
-            }
-
-            if (this.mode === 'date') {
-              this.close(); // Close after selecting range
             }
           } else {
-            // Range already selected: determine which date to update based on proximity
-            const fromDate = new Date(this.value);
-            const toDate = new Date(this.rangeToValue);
-            const clickedDate = new Date(newDateISO);
-
-            const distanceToFrom = Math.abs(clickedDate - fromDate);
-            const distanceToTo = Math.abs(clickedDate - toDate);
-
-            if (distanceToFrom <= distanceToTo) {
-              // Closer to start date: update start
-              this.value = newDateISO;
-              // Clear end if new start is after end
-              if (new Date(newDateISO) > toDate) {
-                this.rangeToValue = '';
-              }
-            } else {
-              // Closer to end date: update end
-              if (new Date(newDateISO) >= fromDate) {
-                this.rangeToValue = newDateISO;
-              }
+            this.value = newDateISO;
+            // Validate: if from-date is after to-date, swap them
+            if (this.rangeToValue && new Date(newDateISO) > new Date(this.rangeToValue)) {
+              this.value = this.rangeToValue;
+              this.rangeToValue = newDateISO;
             }
           }
 
@@ -1357,6 +1363,24 @@ export default class PDatetime extends HTMLElement {
       }
       this._hiddenTo.name = this.rangeTo;
       this._hiddenTo.value = this.rangeToValue;
+    }
+  }
+
+  _updateFocusRing() {
+    // Remove focused class from all inputs
+    this._input.classList.remove('focused');
+    this._fromInput.classList.remove('focused');
+    this._toInput.classList.remove('focused');
+
+    // Add focused class to the current field
+    if (this.isRange) {
+      if (this._currentField === 'to') {
+        this._toInput.classList.add('focused');
+      } else {
+        this._fromInput.classList.add('focused');
+      }
+    } else {
+      this._input.classList.add('focused');
     }
   }
 
