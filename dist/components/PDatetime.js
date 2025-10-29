@@ -68,6 +68,43 @@ class PDatetime extends HTMLElement {
     this._touchStartX = 0;
     this._touchEndX = 0;
 
+    /* Mode configuration centralizes mode-specific behavior */
+    this._modeConfig = {
+      date: {
+        showCalendar: true,
+        showTime: false,
+        showQuickDates: true,
+        formatOpts: { dateStyle: 'medium' },
+        placeholders: {
+          single: 'Select date...',
+          rangeFrom: 'Start date...',
+          rangeTo: 'End date...'
+        }
+      },
+      datetime: {
+        showCalendar: true,
+        showTime: true,
+        showQuickDates: true,
+        formatOpts: { dateStyle: 'medium', timeStyle: 'short' },
+        placeholders: {
+          single: 'Select date & time...',
+          rangeFrom: 'Start date & time...',
+          rangeTo: 'End date & time...'
+        }
+      },
+      time: {
+        showCalendar: false,
+        showTime: true,
+        showQuickDates: false,
+        formatOpts: { timeStyle: 'short' },
+        placeholders: {
+          single: 'Select time...',
+          rangeFrom: 'Start time...',
+          rangeTo: 'End time...'
+        }
+      }
+    };
+
     this.shadowRoot.innerHTML = `
           <style>
             /* Global Hidden Rule */
@@ -863,16 +900,13 @@ class PDatetime extends HTMLElement {
   }
 
   _renderCalendar() {
-    /* Hide calendar and navigation for time-only mode */
-    if (this.mode === 'time') {
-      this.shadowRoot.querySelector('.nav').hidden = true;
-      this._gridContainer.hidden = true;
-      return;
-    }
+    const config = this._modeConfig[this.mode];
 
-    /* Show calendar and navigation for date/datetime modes */
-    this.shadowRoot.querySelector('.nav').hidden = false;
-    this._gridContainer.hidden = false;
+    /* Show/hide calendar and navigation based on mode config */
+    this.shadowRoot.querySelector('.nav').hidden = !config.showCalendar;
+    this._gridContainer.hidden = !config.showCalendar;
+
+    if (!config.showCalendar) return;
 
     const year = this._view.getFullYear();
     const month = this._view.getMonth();
