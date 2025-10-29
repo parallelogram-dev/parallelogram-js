@@ -70,280 +70,471 @@ class PDatetime extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
           <style>
-            :host{
-              display:inline-block;
-              position:relative;
+            /* Host & Core Properties */
+            :host {
+              display: inline-block;
+              position: relative;
               box-sizing: border-box;
+              --datetime-padding-x: 0.75em;
+              --datetime-padding-y: 0.375em;
+              --datetime-text: currentColor;
+              --datetime-muted: rgba(0, 0, 0, 0.5);
+              --datetime-accent: #3b82f6;
+              --datetime-hover: rgba(0, 0, 0, 0.05);
+              --datetime-bg: #ffffff;
             }
 
-            .field{
+            @media (prefers-color-scheme: dark) {
+              :host {
+                --datetime-muted: rgba(255, 255, 255, 0.5);
+                --datetime-hover: rgba(255, 255, 255, 0.1);
+              }
+            }
+
+            /* Field & Input Containers */
+            .field {
+              font: inherit;
               position: absolute;
               top: 0;
               left: 0;
               right: 0;
               bottom: 0;
-              display:flex;
-              align-items:center;
-              gap:.5rem;
+              display: flex;
+              align-items: stretch;
               box-sizing: border-box;
             }
 
-            /* CSS custom properties with theme/parent color inheritance */
-            :host {
-              --datetime-bg: var(--background-color, var(--color-surface, #fff));
-              --datetime-border: var(--border-color, var(--color-border, #e5e7eb));
-              --datetime-text: var(--text-color, var(--color-text, currentColor));
-              --datetime-muted: var(--text-muted, var(--color-text-secondary, #666));
-              --datetime-accent: var(--accent-color, var(--color-primary, #3b82f6));
-              --datetime-primary: var(--primary-color, var(--color-emphasis, #111));
-              --datetime-surface: var(--surface-color, var(--color-surface-secondary, #f8f9fb));
-              --datetime-hover: var(--hover-bg, var(--color-surface-hover, #f8f9fb));
-              --datetime-focus: var(--focus-color, var(--color-focus, #3b82f6));
-            }
-
-            /* Dark mode adjustments */
-            @media (prefers-color-scheme: dark) {
-              :host {
-                --datetime-bg: var(--background-color, var(--color-surface, #1f2937));
-                --datetime-border: var(--border-color, var(--color-border, #374151));
-                --datetime-text: var(--text-color, var(--color-text, #f9fafb));
-                --datetime-muted: var(--text-muted, var(--color-text-secondary, #9ca3af));
-                --datetime-surface: var(--surface-color, var(--color-surface-secondary, #374151));
-                --datetime-hover: var(--hover-bg, var(--color-surface-hover, #4b5563));
-              }
-            }
-
-            /* Default standalone styles */
-            :host(:not([theme="inherit"])) .field {
-              padding: 0.75rem 1rem;
-              border: 1px solid var(--datetime-border);
-              border-radius: 6px;
-              background: var(--datetime-bg);
-              color: var(--datetime-text);
-              height: 2.5rem;
-              box-sizing: border-box;
-            }
-
-            /* When inheriting from parent, fill parent and inherit its styles */
-            :host([theme="inherit"]) {
-              width: 100%;
-              min-height: 100%;
-            }
-
-            :host([theme="inherit"]) .field {
-              background: inherit;
-              color: inherit;
-              font-family: inherit;
-              font-size: inherit;
-              border: inherit;
-              border-radius: inherit;
-              padding: inherit;
-            }
-
-            .panel{
-              position:absolute; top:100%; left:0; margin-top:.5rem;
-              background: var(--datetime-bg); border:1px solid var(--datetime-border);
-              border-radius:var(--p-radius,12px); box-shadow:var(--p-shadow,0 10px 30px rgba(0,0,0,.12));
-              padding:.75rem; z-index:1000; min-width:20rem;
-              opacity:0; transform:translateY(-8px); transition:all 0.15s ease;
-              pointer-events:none;
-            }
-            .panel.open{opacity:1; transform:translateY(0); pointer-events:all}
-            .panel[hidden]{display:none}
-
-            input{
-              border: none;
-              outline: none;
-              background: transparent;
-              color: inherit;
-              font: inherit;
+            .range-fields {
+              display: flex;
               flex: 1;
               width: 100%;
-              padding: 0;
+              height: 100%;
+            }
+
+            .single-input,
+            .from-input,
+            .to-input {
+              padding: var(--datetime-padding-y) var(--datetime-padding-x);
+              color: var(--datetime-text);
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              flex: 1;
               min-width: 0;
+              display: flex;
+              align-items: center;
             }
 
-            /* Default standalone input styles */
-            :host(:not([theme="inherit"])) input {
-              padding: 0;
-              border: 1px solid #e5e7eb;
-              border-radius: 6px;
-              background: #fff;
-              color: #1f2937;
-              font-size: 1rem;
+            .single-input[hidden],
+            .range-fields[hidden] {
+              display: none;
             }
 
-            :host(:not([theme="inherit"])) input:focus {
-              border-color: #3b82f6;
-              box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+            .to-input {
+              border-left: 1px solid rgba(0, 0, 0, 0.1);
             }
 
-            input::placeholder {
-              color: inherit;
+            .single-input[data-placeholder]:empty::before,
+            .from-input[data-placeholder]:empty::before,
+            .to-input[data-placeholder]:empty::before {
+              content: attr(data-placeholder);
+              color: var(--datetime-muted);
               opacity: 0.6;
             }
-            .calendar-btn{
-              background:none;
-              border:none;
-              cursor:pointer;
-              font-size:1.1rem;
-              padding:.25rem;
-              border-radius:.5rem;
+
+            /* Buttons - Shared Styles */
+            .nav button,
+            .month-year,
+            .calendar-btn,
+            .day,
+            .month,
+            .year,
+            .preset,
+            .btn {
+              background: none;
+              border: none;
+              cursor: pointer;
               color: inherit;
+            }
+
+            .calendar-btn {
+              font-size: 1.1em;
+              padding: var(--datetime-padding-y) var(--datetime-padding-x);
               flex-shrink: 0;
               opacity: 0.7;
               margin-left: auto;
             }
 
-            :host(:not([theme="inherit"])) .calendar-btn {
+            .calendar-btn:hover {
+              background: var(--datetime-hover);
+              color: var(--datetime-accent);
+            }
+
+            /* Panel */
+            .panel {
+              position: absolute;
+              top: 100%;
+              left: 0;
+              margin-top: 0.5em;
+              background: var(--datetime-bg);
+              border: 1px solid rgba(0, 0, 0, 0.1);
+              border-radius: 0.75em;
+              box-shadow: 0 0.625em 1.875em rgba(0, 0, 0, 0.12);
+              padding: 0.75em;
+              z-index: 1000;
+              min-width: 20em;
+              opacity: 0;
+              transform: translateY(-0.5em);
+              transition: all 0.15s ease;
+              pointer-events: none;
+            }
+
+            .panel.open {
+              opacity: 1;
+              transform: translateY(0);
+              pointer-events: all;
+            }
+
+            .panel[hidden] {
+              display: none;
+            }
+
+            /* Navigation */
+            .nav {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin: 0;
+              padding-bottom: 0.75em;
+            }
+
+            .nav button {
+              padding: 0.5em;
+              border-radius: 0.5em;
               color: var(--datetime-muted);
-              padding: .5rem;
-            }
-            .calendar-btn:hover{background: var(--datetime-hover); color: var(--datetime-accent)}
-            
-            .nav{display:flex; align-items:center; justify-content:space-between; margin:0 0 .75rem}
-            .nav button{background:none; border:none; cursor:pointer; padding:.5rem; border-radius:.5rem; color: var(--datetime-muted)}
-            .nav button:hover{background: var(--datetime-hover)}
-            .month-year{font-weight:600; cursor:pointer; padding:.25rem .5rem; border-radius:.5rem; transition:background-color 0.15s ease}
-            .month-year:hover{background: var(--datetime-hover)}
-            .month-year:active{background: var(--datetime-surface)}
-            
-            /* Grid container for animations */
-            .grid-container{
-              position:relative; overflow:hidden; min-height:15rem;
-              margin-bottom:.75rem;
+              transition: all 0.15s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
 
-            .grid{
-              display:grid; grid-template-columns:repeat(7,1fr);
-              gap:.125rem; justify-items:center;
-              transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+            .nav button:hover,
+            .month-year:hover {
+              background: var(--datetime-hover);
+              color: var(--datetime-accent);
             }
 
-            /* Animation states */
-            .grid--animating{position:absolute; top:0; left:0; right:0}
-            .grid--prev.grid--out{transform:translateX(100%); opacity:0}
-            .grid--prev.grid--in{transform:translateX(-100%); opacity:0}
-            .grid--next.grid--out{transform:translateX(-100%); opacity:0}
-            .grid--next.grid--in{transform:translateX(100%); opacity:0}
-            .grid:not(.grid--in):not(.grid--out){transform:translateX(0); opacity:1}
-
-            /* Reduced motion support */
-            @media (prefers-reduced-motion: reduce) {
-              .grid{transition:opacity 0.15s ease; transform:none!important}
-            }
-
-            /* Month and year picker grids */
-            .grid.month-view, .grid.year-view{
-              grid-template-columns:repeat(3,1fr); gap:.5rem;
-            }
-            .wd{font-size:.75rem; opacity:.6; font-weight:600; padding:.5rem 0; text-transform:uppercase}
-            .day, .month, .year{
-              width:100%; height:2.5rem; border-radius:.5rem; cursor:pointer;
-              background:none; border:none; font-size:.875rem; color: inherit;
-              transition:all 0.15s ease; display:flex; align-items:center; justify-content:center;
-            }
-            .day:hover, .month:hover, .year:hover{background: var(--datetime-hover); transform:scale(1.05)}
-            .day.today, .month.today, .year.today{background: var(--datetime-accent); color: var(--datetime-bg)}
-            .day.selected, .month.selected, .year.selected{background: var(--datetime-primary); color: var(--datetime-accent)}
-            .day:disabled{opacity:.3; cursor:not-allowed}
-
-            /* Month and year specific styles */
-            .month, .year{height:3rem}
-            
-            .time{
-              display:flex; gap:.75rem; align-items:center; padding:.5rem 0;
-              margin:.5rem 0;
-            }
-            .time-group{display:flex; flex-direction:column; align-items:center; gap:.5rem}
-            .time-label{font-size:.7rem; text-transform:uppercase; color: var(--datetime-muted); font-weight:600}
-
-            /* Time select dropdowns */
-            .time-select, .ampm{
-              appearance:none;
-              background-color: var(--datetime-bg);
-              background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path fill="currentColor" d="M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z"/></svg>');
-              background-position: right 0.5rem center;
-              background-repeat: no-repeat;
-              background-size: 0.75rem;
-              border: 1px solid var(--datetime-border);
-              border-radius: .5rem;
-              padding: 0.5rem 1.75rem 0.5rem 0.75rem;
-              font-size: 1rem;
+            .month-year {
               font-weight: 600;
+              padding: 0.25em 0.5em;
+              border-radius: 0.5em;
+              transition: background-color 0.15s ease;
+              color: var(--datetime-text);
+              display: flex;
+              align-items: center;
+              gap: 0.25em;
+              font-size: 0.875em;
+            }
+
+            .month-year:active {
+              background: var(--datetime-hover);
+              opacity: 0.8;
+            }
+
+            .month-year .month,
+            .month-year .year {
+              display: inline;
+              width: auto;
+              height: auto;
+              background: none;
+              padding: 0;
+              cursor: pointer;
+              font-size: inherit;
+              font-weight: inherit;
+            }
+
+            .month-year svg {
+              opacity: 0.6;
+              margin-left: 0.125em;
+            }
+
+            /* Grids - Container & Layout */
+            .grid-container {
+              padding-top: 0.75em;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              position: relative;
+              overflow: hidden;
+              height: 18.75em;
+            }
+
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(7, 1fr);
+              gap: 0.125em;
+              justify-items: center;
+              align-content: start;
+              grid-template-rows: 2em repeat(6, 2.5em);
+              height: 18em;
+            }
+
+            .grid.month-view,
+            .grid.year-view {
+              grid-template-columns: repeat(3, 1fr);
+              grid-template-rows: repeat(4, 1fr);
+              gap: 0.5em;
+            }
+
+            .grid--animating {
+              position: absolute;
+              top: 0.75em;
+              left: 0;
+              right: 0;
+            }
+
+            .grid.animating {
+              transition: transform 0.5s cubic-bezier(0.5, 0, 0, 1);
+            }
+
+            .grid--prev.grid--out {
+              transform: translateX(100%);
+            }
+
+            .grid--prev.grid--in {
+              transform: translateX(-100%);
+            }
+
+            .grid--next.grid--out {
+              transform: translateX(-100%);
+            }
+
+            .grid--next.grid--in {
+              transform: translateX(100%);
+            }
+
+            .grid:not(.grid--in):not(.grid--out) {
+              transform: translateX(0);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+              .grid {
+                transition: opacity 0.15s ease;
+                transform: none !important;
+              }
+            }
+
+            /* Grid Cells - Day/Month/Year */
+            .wd {
+              font-size: 0.75em;
+              opacity: 0.6;
+              font-weight: 600;
+              padding: 0.5em 0;
+              text-transform: uppercase;
+            }
+
+            .day,
+            .month,
+            .year {
+              width: 100%;
+              height: 2.5em;
+              border-radius: 0.5em;
+              font-size: 0.875em;
+              transition: all 0.15s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            .day:hover,
+            .month:hover,
+            .year:hover {
+              background: var(--datetime-hover);
+            }
+
+            .day.today,
+            .month.today,
+            .year.today {
+              border: 2px solid var(--datetime-accent);
+              position: relative;
+            }
+
+            .day.in-range {
+              background: var(--datetime-accent);
+              color: var(--datetime-bg);
+              opacity: 0.6;
+            }
+
+            .day.selected,
+            .month.selected,
+            .year.selected,
+            .day.range-start,
+            .day.range-end {
+              background: var(--datetime-accent);
+              color: var(--datetime-bg);
+              opacity: 1;
+            }
+
+            .month,
+            .year {
+              height: 3em;
+            }
+
+            .day:disabled {
+              opacity: 0.3;
+              cursor: not-allowed;
+            }
+
+            .day.range-hover {
+              background: rgba(59, 130, 246, 0.1);
+            }
+
+            /* Time Picker */
+            .time {
+              display: flex;
+              gap: 0.5em;
+              align-items: center;
+              justify-content: center;
+              padding: 0.75em 0;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            .time[hidden] {
+              display: none;
+            }
+
+            .time-separator {
+              font-size: 1.25em;
+              color: var(--datetime-muted);
+              font-weight: 600;
+            }
+
+            .time-select,
+            .ampm {
+              appearance: none;
+              background-color: var(--datetime-bg);
+              background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>');
+              background-position: right 0.5em center;
+              background-repeat: no-repeat;
+              background-size: 1em;
+              border: 1px solid rgba(0, 0, 0, 0.1);
+              border-radius: 0.5em;
+              padding: 0.5em 1.75em 0.5em 0.75em;
+              font-size: 0.875em;
+              font-weight: 500;
               color: var(--datetime-text);
               cursor: pointer;
               transition: all 0.15s ease;
-              min-width: 4rem;
+              min-width: 4em;
             }
 
-            .time-select:hover, .ampm:hover{
+            .time-select:hover,
+            .ampm:hover {
               border-color: var(--datetime-accent);
               background-color: var(--datetime-hover);
             }
 
-            .time-select:focus, .ampm:focus{
+            .time-select:focus,
+            .ampm:focus {
               outline: none;
-              border-color: var(--datetime-focus);
+              border-color: var(--datetime-accent);
               box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }
-            
-            .quick-dates{display:flex; gap:.375rem; margin:.5rem 0; flex-wrap:wrap}
-            .preset{
-              padding:.375rem .75rem; background:none; border:1px solid var(--datetime-border);
-              border-radius:1rem; font-size:.8rem; cursor:pointer; color: var(--datetime-muted);
+
+            /* Quick Dates & Presets */
+            .quick-dates {
+              display: flex;
+              gap: 0.375em;
+              padding: 0.75em 0;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              flex-wrap: wrap;
             }
-            .preset:hover{background: var(--datetime-accent); color: var(--datetime-bg); border-color: var(--datetime-accent)}
-            
-            .actions{display:flex; gap:.5rem; justify-content:flex-end; margin-top:.75rem}
-            .btn{
-              border:1px solid var(--datetime-border); background: var(--datetime-surface);
-              border-radius:.5rem; padding:0.5rem 0.75rem; cursor:pointer; font-size:0.875rem;
-              min-height: 2rem; display: inline-flex; align-items: center; justify-content: center;
+
+            .quick-dates[hidden] {
+              display: none;
+            }
+
+            .preset {
+              padding: 0.375em 0.75em;
+              border: 1px solid rgba(0, 0, 0, 0.1);
+              border-radius: 1em;
+              font-size: 0.8em;
+              color: var(--datetime-muted);
+            }
+
+            .preset:hover {
+              background: var(--datetime-accent);
+              color: var(--datetime-bg);
+              border-color: var(--datetime-accent);
+            }
+
+            /* Action Buttons */
+            .actions {
+              display: flex;
+              gap: 0.5em;
+              justify-content: space-between;
+              padding-top: 0.75em;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              margin-top: 0.75em;
+            }
+
+            .btn {
+              border: 1px solid rgba(0, 0, 0, 0.1);
+              background: var(--datetime-hover);
+              border-radius: 0.5em;
+              padding: 0.625em 1em;
+              font-size: 0.875em;
+              min-height: 2.5em;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
               color: var(--datetime-text);
+              transition: all 0.15s ease;
             }
-            .btn:hover{background: var(--datetime-primary); color: var(--datetime-bg)}
-            .btn.primary{background: var(--datetime-accent); color: var(--datetime-bg); border-color: var(--datetime-accent)}
 
-            .range-fields{display:flex; gap:.5rem; align-items:flex-end}
-            .range-field{flex:1}
-            .range-label{display:block; font-size:.875rem; color: var(--datetime-text); margin-bottom:.5rem; font-weight:500}
+            .btn:hover {
+              background: rgba(0, 0, 0, 0.08);
+              border-color: var(--datetime-accent);
+            }
 
-            .day.range-start{background: var(--datetime-accent); color: var(--datetime-bg)}
-            .day.range-end{background: var(--datetime-accent); color: var(--datetime-bg)}
-            .day.in-range{background: var(--datetime-surface); color: var(--datetime-text)}
-            .day.range-hover{background:rgba(59,130,246,0.1)}
+            .btn.primary {
+              background: var(--datetime-accent);
+              color: var(--datetime-bg);
+              border-color: var(--datetime-accent);
+            }
 
-            .range-info{
-              padding:.5rem; background: var(--datetime-surface); border-radius:.5rem;
-              margin-bottom:.75rem; font-size:.8rem; color: var(--datetime-muted); text-align:center;
+            .btn.primary:hover {
+              opacity: 0.9;
+            }
+
+            /* Range Info */
+            .range-info {
+              padding: 0.5em 0.5em 0.75em;
+              background: var(--datetime-hover);
+              border-radius: 0.5em;
+              font-size: 0.8em;
+              color: var(--datetime-muted);
+              text-align: center;
             }
           </style>
 
           <div class="field">
-            <input type="text" readonly class="single-input" />
+            <div class="single-input" data-placeholder="Select date..."></div>
             <div class="range-fields" hidden>
-              <div class="range-field">
-                <label class="range-label from-label">From</label>
-                <input type="text" readonly class="from-input" />
-              </div>
-              <div class="range-field">
-                <label class="range-label to-label">To</label>
-                <input type="text" readonly class="to-input" />
-              </div>
+              <div class="from-input" data-placeholder="Start date..."></div>
+              <div class="to-input" data-placeholder="End date..."></div>
             </div>
-            <button type="button" class="calendar-btn">📅</button>
+            <button type="button" class="calendar-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
           </div>
-          
+
           <div class="panel" hidden>
             <div class="range-info" hidden>Click to select start date, then select end date</div>
 
             <div class="nav">
-              <button class="prev">‹</button>
+              <button class="prev"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
               <div class="month-year">
                 <span class="month"></span> <span class="year"></span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
               </div>
-              <button class="next">›</button>
+              <button class="next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
             </div>
 
             <div class="grid-container">
@@ -353,28 +544,18 @@ class PDatetime extends HTMLElement {
             <div class="quick-dates" hidden></div>
             
             <div class="time" hidden>
-              <div class="time-group">
-                <div class="time-label">Hours</div>
-                <select class="time-select hour-select"></select>
-              </div>
-              <div style="font-size:1.5rem; color: var(--datetime-muted)">:</div>
-              <div class="time-group">
-                <div class="time-label">Minutes</div>
-                <select class="time-select minute-select"></select>
-              </div>
-              <div class="time-group ampm-group" hidden>
-                <div class="time-label">Period</div>
-                <select class="ampm">
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
+              <select class="time-select hour-select"></select>
+              <div class="time-separator">:</div>
+              <select class="time-select minute-select"></select>
+              <select class="ampm" hidden>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
             </div>
-            
+
             <div class="actions">
-              <button class="btn btn--sm today">Today</button>
-              <button class="btn btn--sm clear">Clear</button>
-              <button class="btn btn--sm primary apply">Apply</button>
+              <button class="btn clear">Clear</button>
+              <button class="btn primary apply">Apply</button>
             </div>
           </div>
         `;
@@ -383,8 +564,6 @@ class PDatetime extends HTMLElement {
     this._fromInput = this.shadowRoot.querySelector('.from-input');
     this._toInput = this.shadowRoot.querySelector('.to-input');
     this._rangeFields = this.shadowRoot.querySelector('.range-fields');
-    this._fromLabel = this.shadowRoot.querySelector('.from-label');
-    this._toLabel = this.shadowRoot.querySelector('.to-label');
     this._btn = this.shadowRoot.querySelector('.calendar-btn');
     this._panel = this.shadowRoot.querySelector('.panel');
     this._gridContainer = this.shadowRoot.querySelector('.grid-container');
@@ -396,7 +575,6 @@ class PDatetime extends HTMLElement {
     this._hourSelect = this.shadowRoot.querySelector('.hour-select');
     this._minuteSelect = this.shadowRoot.querySelector('.minute-select');
     this._ampm = this.shadowRoot.querySelector('.ampm');
-    this._ampmGroup = this.shadowRoot.querySelector('.ampm-group');
     this._quickDates = this.shadowRoot.querySelector('.quick-dates');
     this._rangeInfo = this.shadowRoot.querySelector('.range-info');
     this._hidden = null;
@@ -540,19 +718,6 @@ class PDatetime extends HTMLElement {
       this._handleSwipe();
     }, { passive: true });
 
-    this.shadowRoot.querySelector('.today').addEventListener('click', () => {
-      const now = new Date();
-      if (this.mode === 'date') {
-        this.value = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      } else {
-        now.setSeconds(0, 0);
-        this.value = now.toISOString();
-      }
-      this._emitChange();
-      this._render();
-      if (this.mode === 'date') this.close();
-    });
-
     this.shadowRoot.querySelector('.clear').addEventListener('click', () => {
       this.value = '';
       this._emitChange();
@@ -688,23 +853,21 @@ class PDatetime extends HTMLElement {
 
   _renderMode() {
     if (this.isRange) {
-      this._input.style.display = 'none';
-      this._rangeFields.style.display = 'flex';
+      this._input.hidden = true;
+      this._rangeFields.hidden = false;
       this._rangeInfo.hidden = false;
-      this._fromLabel.textContent = this.fromLabel;
-      this._toLabel.textContent = this.toLabel;
 
       // Update range info text based on current state
       if (!this.value) {
-        this._rangeInfo.textContent = `Click to select ${this.fromLabel.toLowerCase()}`;
+        this._rangeInfo.textContent = `Click to select start date`;
       } else if (!this.rangeToValue) {
-        this._rangeInfo.textContent = `${this.fromLabel} selected. Now select ${this.toLabel.toLowerCase()}`;
+        this._rangeInfo.textContent = `Start date selected. Now select end date`;
       } else {
         this._rangeInfo.textContent = `Range selected. Click dates to modify.`;
       }
     } else {
-      this._input.style.display = 'block';
-      this._rangeFields.style.display = 'none';
+      this._input.hidden = false;
+      this._rangeFields.hidden = true;
       this._rangeInfo.hidden = true;
     }
   }
@@ -725,6 +888,39 @@ class PDatetime extends HTMLElement {
     } else {
       this._month.textContent = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(this._view);
       this._year.textContent = String(year);
+    }
+
+    /* Handle animation if navigating */
+    if (this._navigationDirection && !this._animating) {
+      this._animating = true;
+
+      /* Clone current grid as the old grid */
+      const oldGrid = this._grid.cloneNode(true);
+      oldGrid.classList.add('grid--animating', `grid--${this._navigationDirection}`);
+
+      /* Add old grid to container */
+      this._gridContainer.appendChild(oldGrid);
+
+      /* Prepare new grid with direction and 'in' class BEFORE RAF */
+      this._grid.classList.add(`grid--${this._navigationDirection}`, 'grid--in');
+
+      /* Trigger animation in next frame */
+      requestAnimationFrame(() => {
+        /* Add animating and out classes to start transition */
+        oldGrid.classList.add('animating', 'grid--out');
+
+        /* Start new grid transition */
+        this._grid.classList.add('animating');
+        this._grid.classList.remove('grid--in');
+
+        /* Clean up after animation */
+        setTimeout(() => {
+          oldGrid.remove();
+          this._grid.classList.remove('animating', `grid--${this._navigationDirection}`);
+          this._animating = false;
+          this._navigationDirection = null;
+        }, 500);
+      });
     }
 
     /* Route to correct view */
@@ -999,7 +1195,7 @@ class PDatetime extends HTMLElement {
     if (!showTime) return;
 
     const is12Hour = this.timeFormat === '12';
-    this._ampmGroup.hidden = !is12Hour;
+    this._ampm.hidden = !is12Hour;
 
     /* Build hour select options */
     this._hourSelect.innerHTML = '';
@@ -1049,31 +1245,33 @@ class PDatetime extends HTMLElement {
       this.mode === 'date' ? { dateStyle: 'medium' } : { dateStyle: 'medium', timeStyle: 'short' };
 
     if (this.isRange) {
-      // Handle range inputs
+      // Handle range divs
       if (this.value) {
         const fromDate = new Date(this.value);
-        this._fromInput.value = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
+        this._fromInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
       } else {
-        this._fromInput.value = '';
-        this._fromInput.placeholder =
-          this.mode === 'date' ? 'Start date...' : 'Start date & time...';
+        this._fromInput.textContent = '';
+        this._fromInput.setAttribute('data-placeholder',
+          this.mode === 'date' ? 'Start date...' : 'Start date & time...');
       }
 
       if (this.rangeToValue) {
         const toDate = new Date(this.rangeToValue);
-        this._toInput.value = new Intl.DateTimeFormat(undefined, opts).format(toDate);
+        this._toInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(toDate);
       } else {
-        this._toInput.value = '';
-        this._toInput.placeholder = this.mode === 'date' ? 'End date...' : 'End date & time...';
+        this._toInput.textContent = '';
+        this._toInput.setAttribute('data-placeholder',
+          this.mode === 'date' ? 'End date...' : 'End date & time...');
       }
     } else {
-      // Handle single input
+      // Handle single input div
       if (this.value) {
         const date = new Date(this.value);
-        this._input.value = new Intl.DateTimeFormat(undefined, opts).format(date);
+        this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(date);
       } else {
-        this._input.value = '';
-        this._input.placeholder = this.mode === 'date' ? 'Select date...' : 'Select date & time...';
+        this._input.textContent = '';
+        this._input.setAttribute('data-placeholder',
+          this.mode === 'date' ? 'Select date...' : 'Select date & time...');
       }
     }
   }
