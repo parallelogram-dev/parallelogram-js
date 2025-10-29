@@ -21,7 +21,7 @@
  * <p-datetime name="eventDates" mode="date" range range-to="endDate" from-label="Start Date" to-label="End Date"></p-datetime>
  *
  * @attributes
- * - mode: "date" | "datetime" (default: "date") - Controls whether to show time picker
+ * - mode: "date" | "datetime" | "time" (default: "date") - Controls picker type (date, datetime, or time only)
  * - value: ISO date string - Current selected value (or start date in range mode)
  * - name: string - Form field name, creates hidden input for form submission
  * - time-format: "12" | "24" (default: "24") - Time display format
@@ -70,6 +70,11 @@ export default class PDatetime extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
           <style>
+            /* Global Hidden Rule */
+            [hidden] {
+              display: none !important;
+            }
+
             /* Host & Core Properties */
             :host {
               display: inline-block;
@@ -161,11 +166,11 @@ export default class PDatetime extends HTMLElement {
             }
 
             .calendar-btn {
-              font-size: 1.1em;
-              padding: var(--datetime-padding-y) var(--datetime-padding-x);
-              flex-shrink: 0;
+              padding: 0 var(--datetime-padding-x);
               opacity: 0.7;
-              margin-left: auto;
+              display: flex;
+              justify-content: center;
+              align-items: center;
             }
 
             .calendar-btn:hover {
@@ -184,7 +189,7 @@ export default class PDatetime extends HTMLElement {
               border-radius: 0.75em;
               box-shadow: 0 0.625em 1.875em rgba(0, 0, 0, 0.12);
               padding: 0.75em;
-              z-index: 1000;
+              z-index: 9;
               min-width: 20em;
               opacity: 0;
               transform: translateY(-0.5em);
@@ -501,9 +506,9 @@ export default class PDatetime extends HTMLElement {
 
             /* Range Info */
             .range-info {
-              padding: 0.5em 0.5em 0.75em;
+              padding: 0.5em 0.5em;
+              margin-bottom: 0.75em;
               background: var(--datetime-hover);
-              border-radius: 0.5em;
               font-size: 0.8em;
               color: var(--datetime-muted);
               text-align: center;
@@ -876,6 +881,17 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderCalendar() {
+    /* Hide calendar and navigation for time-only mode */
+    if (this.mode === 'time') {
+      this.shadowRoot.querySelector('.nav').hidden = true;
+      this._gridContainer.hidden = true;
+      return;
+    }
+
+    /* Show calendar and navigation for date/datetime modes */
+    this.shadowRoot.querySelector('.nav').hidden = false;
+    this._gridContainer.hidden = false;
+
     const year = this._view.getFullYear();
     const month = this._view.getMonth();
 
@@ -1175,10 +1191,19 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderTime() {
-    const showTime = this.mode === 'datetime';
+    const showTime = this.mode === 'datetime' || this.mode === 'time';
     this._timeWrap.hidden = !showTime;
 
     if (!showTime) return;
+
+    /* Remove border-top for time-only mode since there's no calendar above */
+    if (this.mode === 'time') {
+      this._timeWrap.style.borderTop = 'none';
+      this._timeWrap.style.paddingTop = '0';
+    } else {
+      this._timeWrap.style.borderTop = '';
+      this._timeWrap.style.paddingTop = '';
+    }
 
     const is12Hour = this.timeFormat === '12';
     this._ampm.hidden = !is12Hour;
@@ -1206,9 +1231,16 @@ export default class PDatetime extends HTMLElement {
       this._minuteSelect.appendChild(option);
     }
 
-    /* Set current values */
-    if (this.value) {
-      const date = new Date(this.value);
+    /* Set current values based on the focused field in range mode */
+    let valueToUse;
+    if (this.isRange && this._currentField === 'to') {
+      valueToUse = this.rangeToValue;
+    } else {
+      valueToUse = this.value;
+    }
+
+    if (valueToUse) {
+      const date = new Date(valueToUse);
 
       if (is12Hour) {
         let hours = date.getHours();
@@ -1227,8 +1259,15 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderInput() {
-    const opts =
-      this.mode === 'date' ? { dateStyle: 'medium' } : { dateStyle: 'medium', timeStyle: 'short' };
+    /* Set format options based on mode */
+    let opts;
+    if (this.mode === 'date') {
+      opts = { dateStyle: 'medium' };
+    } else if (this.mode === 'time') {
+      opts = { timeStyle: 'short' };
+    } else {
+      opts = { dateStyle: 'medium', timeStyle: 'short' };
+    }
 
     if (this.isRange) {
       // Handle range: first input = from, second input = to
@@ -1237,8 +1276,8 @@ export default class PDatetime extends HTMLElement {
         this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
       } else {
         this._input.textContent = '';
-        this._input.setAttribute('data-placeholder',
-          this.mode === 'date' ? 'Start date...' : 'Start date & time...');
+        const placeholder = this.mode === 'date' ? 'Start date...' : this.mode === 'time' ? 'Start time...' : 'Start date & time...';
+        this._input.setAttribute('data-placeholder', placeholder);
       }
 
       if (this.rangeToValue) {
@@ -1246,8 +1285,8 @@ export default class PDatetime extends HTMLElement {
         this._toInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(toDate);
       } else {
         this._toInput.textContent = '';
-        this._toInput.setAttribute('data-placeholder',
-          this.mode === 'date' ? 'End date...' : 'End date & time...');
+        const placeholder = this.mode === 'date' ? 'End date...' : this.mode === 'time' ? 'End time...' : 'End date & time...';
+        this._toInput.setAttribute('data-placeholder', placeholder);
       }
     } else {
       // Handle single input
@@ -1256,14 +1295,15 @@ export default class PDatetime extends HTMLElement {
         this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(date);
       } else {
         this._input.textContent = '';
-        this._input.setAttribute('data-placeholder',
-          this.mode === 'date' ? 'Select date...' : 'Select date & time...');
+        const placeholder = this.mode === 'date' ? 'Select date...' : this.mode === 'time' ? 'Select time...' : 'Select date & time...';
+        this._input.setAttribute('data-placeholder', placeholder);
       }
     }
   }
 
   _renderQuickDates() {
-    const shouldShow = this.showQuickDates;
+    /* Hide quick dates for time-only mode */
+    const shouldShow = this.showQuickDates && this.mode !== 'time';
     this._quickDates.hidden = !shouldShow;
 
     if (shouldShow) {
@@ -1311,9 +1351,16 @@ export default class PDatetime extends HTMLElement {
   }
 
   _syncTime() {
-    if (this.mode !== 'datetime') return;
+    if (this.mode !== 'datetime' && this.mode !== 'time') return;
 
-    const d = this.value ? new Date(this.value) : new Date();
+    /* Determine which field to update based on range mode and current field */
+    let d;
+    if (this.isRange && this._currentField === 'to') {
+      d = this.rangeToValue ? new Date(this.rangeToValue) : new Date();
+    } else {
+      d = this.value ? new Date(this.value) : new Date();
+    }
+
     let hours = parseInt(this._hourSelect.value) || 0;
     const minutes = parseInt(this._minuteSelect.value) || 0;
 
@@ -1324,7 +1371,14 @@ export default class PDatetime extends HTMLElement {
     }
 
     d.setHours(hours, minutes, 0, 0);
-    this.value = d.toISOString();
+
+    /* Update the appropriate field based on range mode */
+    if (this.isRange && this._currentField === 'to') {
+      this.rangeToValue = d.toISOString();
+    } else {
+      this.value = d.toISOString();
+    }
+
     this._emitChange();
     this._renderInput();
   }
