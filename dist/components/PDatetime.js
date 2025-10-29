@@ -161,11 +161,12 @@ class PDatetime extends HTMLElement {
             }
 
             .calendar-btn {
-              font-size: 1.1em;
-              padding: var(--datetime-padding-y) var(--datetime-padding-x);
-              flex-shrink: 0;
+              padding: 0 var(--datetime-padding-x);
+              align-self: center;
               opacity: 0.7;
-              margin-left: auto;
+              display: flex;
+              justify-content: center;
+              align-items: center;
             }
 
             .calendar-btn:hover {
@@ -184,7 +185,7 @@ class PDatetime extends HTMLElement {
               border-radius: 0.75em;
               box-shadow: 0 0.625em 1.875em rgba(0, 0, 0, 0.12);
               padding: 0.75em;
-              z-index: 1000;
+              z-index: 9;
               min-width: 20em;
               opacity: 0;
               transform: translateY(-0.5em);
