@@ -1089,29 +1089,27 @@ export default class PDatetime extends HTMLElement {
     }
   }
 
-  /* Navigation handlers with view mode support */
-  _handlePrevClick() {
-    this._navigationDirection = 'prev';
-    if (this._viewMode === 'year') {
-      this._view.setFullYear(this._view.getFullYear() - 12);
-    } else if (this._viewMode === 'month') {
-      this._view.setFullYear(this._view.getFullYear() - 1);
-    } else {
-      this._view.setMonth(this._view.getMonth() - 1);
-    }
+  /* Unified navigation handler */
+  _handleNavigation(direction) {
+    this._navigationDirection = direction;
+    const delta = direction === 'next' ? 1 : -1;
+
+    const operations = {
+      year: () => this._view.setFullYear(this._view.getFullYear() + (12 * delta)),
+      month: () => this._view.setFullYear(this._view.getFullYear() + delta),
+      day: () => this._view.setMonth(this._view.getMonth() + delta)
+    };
+
+    operations[this._viewMode]();
     this._render();
   }
 
+  _handlePrevClick() {
+    this._handleNavigation('prev');
+  }
+
   _handleNextClick() {
-    this._navigationDirection = 'next';
-    if (this._viewMode === 'year') {
-      this._view.setFullYear(this._view.getFullYear() + 12);
-    } else if (this._viewMode === 'month') {
-      this._view.setFullYear(this._view.getFullYear() + 1);
-    } else {
-      this._view.setMonth(this._view.getMonth() + 1);
-    }
-    this._render();
+    this._handleNavigation('next');
   }
 
   _handleMonthYearClick() {
