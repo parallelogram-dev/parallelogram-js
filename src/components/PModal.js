@@ -46,23 +46,29 @@ export default class PModal extends HTMLElement {
           display: none;
           box-sizing: border-box;
 
-          /* Colors */
+          /* Colors (matching PDatetime for consistency) */
           --modal-text: currentColor;
           --modal-muted: rgba(0, 0, 0, 0.5);
           --modal-accent: #3b82f6;
+          --modal-hover: rgba(0, 0, 0, 0.05);
           --modal-backdrop-bg: rgba(0, 0, 0, 0.45);
-          --modal-panel-bg: #0f172a;
-          --modal-panel-color: #e5e7eb;
-          --modal-panel-border: rgba(255, 255, 255, 0.08);
-          --modal-header-bg: #0f172a;
-          --modal-footer-bg: #0f172a;
-          --modal-close-hover-bg: rgba(255, 255, 255, 0.1);
-          --modal-btn-primary-bg: #60a5fa;
-          --modal-btn-primary-color: #0b1020;
+          --modal-panel-bg: #ffffff;
+          --modal-panel-color: #1f2937;
+          --modal-panel-border: rgba(0, 0, 0, 0.1);
+          --modal-header-bg: #ffffff;
+          --modal-header-border: rgba(0, 0, 0, 0.1);
+          --modal-footer-bg: #ffffff;
+          --modal-footer-border: rgba(0, 0, 0, 0.1);
+          --modal-close-hover-bg: rgba(0, 0, 0, 0.08);
+          --modal-btn-primary-bg: #3b82f6;
+          --modal-btn-primary-color: #ffffff;
+          --modal-btn-primary-hover-bg: #2563eb;
           --modal-btn-danger-bg: #dc2626;
-          --modal-btn-danger-color: white;
-          --modal-btn-bg: #1f2937;
-          --modal-btn-hover-bg: #374151;
+          --modal-btn-danger-color: #ffffff;
+          --modal-btn-danger-hover-bg: #b91c1c;
+          --modal-btn-bg: #f3f4f6;
+          --modal-btn-color: #1f2937;
+          --modal-btn-hover-bg: #e5e7eb;
 
           /* Opacity */
           --modal-placeholder-opacity: 0.6;
@@ -108,12 +114,6 @@ export default class PModal extends HTMLElement {
           --modal-font-sm: 0.875em;     /* 14px */
           --modal-font-md: 1.125em;     /* 18px */
           --modal-btn-min-height: 3.125em; /* 50px */
-        }
-
-        @media (prefers-color-scheme: dark) {
-          :host {
-            --modal-muted: rgba(255, 255, 255, 0.5);
-          }
         }
 
         /* Shared - Border Properties */
@@ -282,7 +282,7 @@ export default class PModal extends HTMLElement {
           border-radius: var(--modal-radius-lg);
           padding: var(--modal-space-lg) var(--modal-padding-x);
           background: var(--modal-btn-bg);
-          color: #fff;
+          color: var(--modal-btn-color);
           cursor: pointer;
           font-size: var(--modal-font-sm);
           font-weight: 500;
@@ -301,7 +301,7 @@ export default class PModal extends HTMLElement {
         }
 
         ::slotted(.btn--primary:hover) {
-          background: var(--modal-accent);
+          background: var(--modal-btn-primary-hover-bg);
         }
 
         ::slotted(.btn--danger) {
@@ -310,7 +310,7 @@ export default class PModal extends HTMLElement {
         }
 
         ::slotted(.btn--danger:hover) {
-          background: #b91c1c;
+          background: var(--modal-btn-danger-hover-bg);
         }
 
         ::slotted(.btn:disabled) {
@@ -349,27 +349,6 @@ export default class PModal extends HTMLElement {
           ::slotted(.btn) {
             animation: none;
             transition: none;
-          }
-        }
-
-        /* Dark mode adjustments */
-        @media (prefers-color-scheme: light) {
-          :host {
-            --modal-panel-bg: white;
-            --modal-panel-color: #1f2937;
-            --modal-panel-border: rgba(0, 0, 0, 0.1);
-            --modal-header-bg: white;
-            --modal-footer-bg: white;
-            --modal-close-hover-bg: rgba(0, 0, 0, 0.1);
-          }
-
-          ::slotted(.btn) {
-            background: #f3f4f6;
-            color: #1f2937;
-          }
-
-          ::slotted(.btn:hover) {
-            background: #e5e7eb;
           }
         }
       </style>
