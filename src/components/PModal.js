@@ -117,9 +117,7 @@ export default class PModal extends HTMLElement {
         }
 
         /* Shared - Border Properties */
-        .modal__panel,
-        .modal__header,
-        .modal__footer {
+        .modal__panel {
           border: var(--modal-border-width) solid var(--modal-panel-border);
         }
 
@@ -187,10 +185,11 @@ export default class PModal extends HTMLElement {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
+          display: flex;
+          flex-direction: column;
           min-width: min(var(--modal-max-width), var(--modal-size-md));
           max-width: var(--modal-max-width);
           max-height: var(--modal-max-height);
-          overflow: auto;
           background: var(--modal-panel-bg);
           color: var(--modal-panel-color);
           box-shadow: var(--modal-shadow);
@@ -227,12 +226,11 @@ export default class PModal extends HTMLElement {
 
         /* Element: Modal header */
         .modal__header {
+          flex-shrink: 0;
           gap: var(--modal-gap);
           padding: var(--modal-padding-y) var(--modal-padding-x);
-          position: sticky;
-          top: 0;
           background: var(--modal-header-bg);
-          z-index: 1;
+          border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
         }
 
         .modal__header h2 {
@@ -272,18 +270,21 @@ export default class PModal extends HTMLElement {
 
         /* Element: Modal content */
         .modal__content {
+          flex: 1 1 auto;
+          overflow-y: auto;
+          overflow-x: hidden;
+          position: relative;
           padding: var(--modal-padding-x);
         }
 
         /* Element: Modal footer */
         .modal__footer {
+          flex-shrink: 0;
           padding: var(--modal-padding-y) var(--modal-padding-x);
           gap: var(--modal-gap);
           justify-content: flex-end;
-          position: sticky;
-          bottom: 0;
           background: var(--modal-footer-bg);
-          z-index: 1;
+          border-top: var(--modal-border-width) solid var(--modal-panel-border);
         }
 
         /* Slotted button styles (BEM classes) */
