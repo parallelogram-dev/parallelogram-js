@@ -151,14 +151,14 @@ class PModal extends HTMLElement {
         }
 
         :host([data-modal-size="fullscreen"]) .modal__panel {
-          width: 100vw;
-          height: 100vh;
-          max-width: 100vw;
-          max-height: 100vh;
-          border-radius: 0;
-          transform: none;
-          top: 0;
-          left: 0;
+          width: calc(100vw - 6rem);
+          height: calc(100vh - 6rem);
+          max-width: calc(100vw - 6rem);
+          max-height: calc(100vh - 6rem);
+          border-radius: var(--modal-panel-radius);
+          transform: translate(-50%, -50%);
+          top: 50%;
+          left: 50%;
         }
 
         /* Element: Modal header */
