@@ -245,7 +245,7 @@ class PDatetime extends HTMLElement {
               font-size: 0.8em;
             }
 
-            /* Shared - Hover States (only for devices that support hover) */
+            /* Shared - Hover States (consolidated for performance) */
             @media (hover: hover) {
               .calendar-btn:hover,
               .nav button:hover,
@@ -258,6 +258,27 @@ class PDatetime extends HTMLElement {
               .month:hover,
               .year:hover {
                 background: var(--datetime-hover);
+              }
+
+              .time-select:hover,
+              .ampm:hover {
+                border-color: var(--datetime-accent);
+                background-color: var(--datetime-hover);
+              }
+
+              .preset:hover {
+                background: var(--datetime-accent);
+                color: var(--datetime-bg);
+                border-color: var(--datetime-accent);
+              }
+
+              .btn:hover {
+                background: var(--datetime-btn-hover-bg);
+                border-color: var(--datetime-accent);
+              }
+
+              .btn.primary:hover {
+                opacity: 0.9;
               }
             }
 
@@ -529,14 +550,6 @@ class PDatetime extends HTMLElement {
               min-width: 4em;
             }
 
-            @media (hover: hover) {
-              .time-select:hover,
-              .ampm:hover {
-                border-color: var(--datetime-accent);
-                background-color: var(--datetime-hover);
-              }
-            }
-
             .time-select:focus,
             .ampm:focus {
               outline: none;
@@ -558,14 +571,6 @@ class PDatetime extends HTMLElement {
               color: var(--datetime-muted);
             }
 
-            @media (hover: hover) {
-              .preset:hover {
-                background: var(--datetime-accent);
-                color: var(--datetime-bg);
-                border-color: var(--datetime-accent);
-              }
-            }
-
             /* Action Buttons */
             .actions {
               display: flex;
@@ -581,23 +586,10 @@ class PDatetime extends HTMLElement {
               color: var(--datetime-text);
             }
 
-            @media (hover: hover) {
-              .btn:hover {
-                background: var(--datetime-btn-hover-bg);
-                border-color: var(--datetime-accent);
-              }
-            }
-
             .btn.primary {
               background: var(--datetime-accent);
               color: var(--datetime-bg);
               border-color: var(--datetime-accent);
-            }
-
-            @media (hover: hover) {
-              .btn.primary:hover {
-                opacity: 0.9;
-              }
             }
 
             /* Range Info */
