@@ -173,6 +173,90 @@ export default class PDatetime extends HTMLElement {
               }
             }
 
+            /* Shared - Border Properties */
+            .panel,
+            .time-select,
+            .ampm,
+            .preset,
+            .btn {
+              border: var(--datetime-border-width) solid var(--datetime-border);
+            }
+
+            .grid-container,
+            .time,
+            .quick-dates,
+            .actions {
+              border-top: var(--datetime-border-width) solid var(--datetime-border);
+            }
+
+            /* Shared - Border Radius */
+            .nav button,
+            .month-year,
+            .day,
+            .month,
+            .year,
+            .time-select,
+            .ampm,
+            .btn {
+              border-radius: var(--datetime-radius);
+            }
+
+            /* Shared - Flex Center Layout */
+            .calendar-btn,
+            .nav button,
+            .month-year,
+            .day,
+            .month,
+            .year,
+            .time,
+            .btn {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            /* Shared - Transitions */
+            .panel,
+            .nav button,
+            .day,
+            .month,
+            .year,
+            .time-select,
+            .ampm,
+            .btn {
+              transition: all var(--datetime-transition);
+            }
+
+            /* Shared - Font Sizes */
+            .month-year,
+            .day,
+            .month,
+            .year,
+            .time-select,
+            .ampm,
+            .btn {
+              font-size: var(--datetime-font-md);
+            }
+
+            .preset,
+            .range-info {
+              font-size: 0.8em;
+            }
+
+            /* Shared - Hover States */
+            .calendar-btn:hover,
+            .nav button:hover,
+            .month-year:hover {
+              background: var(--datetime-hover);
+              color: var(--datetime-accent);
+            }
+
+            .day:hover,
+            .month:hover,
+            .year:hover {
+              background: var(--datetime-hover);
+            }
+
             /* Field & Input Containers */
             .field {
               font: inherit;
@@ -198,7 +282,7 @@ export default class PDatetime extends HTMLElement {
               min-width: 0;
               display: flex;
               align-items: center;
-              transition: box-shadow 0.15s ease;
+              transition: box-shadow var(--datetime-transition);
               border-radius: inherit;
             }
 
@@ -217,17 +301,13 @@ export default class PDatetime extends HTMLElement {
               box-shadow: inset 0 0 0 var(--datetime-focus-ring-width) var(--datetime-accent);
             }
 
-            .input[hidden] {
-              display: none;
-            }
-
             .input[data-placeholder]:empty::before {
               content: attr(data-placeholder);
               color: var(--datetime-muted);
-              opacity: 0.6;
+              opacity: var(--datetime-placeholder-opacity);
             }
 
-            /* Buttons - Shared Styles */
+            /* Buttons - Base Reset */
             .nav button,
             .month-year,
             .calendar-btn,
@@ -244,15 +324,7 @@ export default class PDatetime extends HTMLElement {
 
             .calendar-btn {
               padding: 0 var(--datetime-padding-x);
-              opacity: 0.7;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
-
-            .calendar-btn:hover {
-              background: var(--datetime-hover);
-              color: var(--datetime-accent);
+              opacity: var(--datetime-icon-opacity);
             }
 
             /* Panel */
@@ -260,17 +332,15 @@ export default class PDatetime extends HTMLElement {
               position: absolute;
               top: 100%;
               left: 0;
-              margin-top: 0.5em;
+              margin-top: var(--datetime-gap);
               background: var(--datetime-bg);
-              border: 1px solid rgba(0, 0, 0, 0.1);
-              border-radius: 0.75em;
-              box-shadow: 0 0.625em 1.875em rgba(0, 0, 0, 0.12);
-              padding: 0.75em;
+              border-radius: var(--datetime-radius-lg);
+              box-shadow: var(--datetime-shadow);
+              padding: var(--datetime-space-lg);
               z-index: 9;
               min-width: 20em;
               opacity: 0;
               transform: translateY(-0.5em);
-              transition: all 0.15s ease;
               pointer-events: none;
             }
 
@@ -280,49 +350,26 @@ export default class PDatetime extends HTMLElement {
               pointer-events: all;
             }
 
-            .panel[hidden] {
-              display: none;
-            }
-
             /* Navigation */
             .nav {
               display: flex;
               align-items: center;
               justify-content: space-between;
               margin: 0;
-              padding-bottom: 0.75em;
+              padding-bottom: var(--datetime-space-lg);
             }
 
             .nav button {
-              padding: 0.5em;
-              border-radius: 0.5em;
+              padding: var(--datetime-gap);
               color: var(--datetime-muted);
-              transition: all 0.15s ease;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-
-            .nav button:hover {
-              background: var(--datetime-hover);
-              color: var(--datetime-accent);
             }
 
             .month-year {
               font-weight: 600;
-              padding: 0.25em 0.5em;
-              border-radius: 0.5em;
-              transition: background-color 0.15s ease;
+              padding: var(--datetime-space-sm) var(--datetime-gap);
+              transition: background-color var(--datetime-transition);
               color: var(--datetime-text);
-              display: flex;
-              align-items: center;
-              gap: 0.25em;
-              font-size: 0.875em;
-            }
-
-            .month-year:hover {
-              background: var(--datetime-hover);
-              color: var(--datetime-accent);
+              gap: var(--datetime-space-sm);
             }
 
             .month-year:active {
@@ -331,14 +378,13 @@ export default class PDatetime extends HTMLElement {
             }
 
             .month-year svg {
-              opacity: 0.6;
-              margin-left: 0.125em;
+              opacity: var(--datetime-placeholder-opacity);
+              margin-left: var(--datetime-space-xs);
             }
 
             /* Grids - Container & Layout */
             .grid-container {
-              padding-top: 0.75em;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              padding-top: var(--datetime-space-lg);
               position: relative;
               overflow: hidden;
               height: 18.75em;
@@ -347,10 +393,10 @@ export default class PDatetime extends HTMLElement {
             .grid {
               display: grid;
               grid-template-columns: repeat(7, 1fr);
-              gap: 0.125em;
+              gap: var(--datetime-space-xs);
               justify-items: center;
               align-content: start;
-              grid-template-rows: 2em repeat(6, 2.5em);
+              grid-template-rows: 2em repeat(6, var(--datetime-cell-size));
               height: 18em;
             }
 
@@ -358,18 +404,18 @@ export default class PDatetime extends HTMLElement {
             .grid.year-view {
               grid-template-columns: repeat(3, 1fr);
               grid-template-rows: repeat(4, 1fr);
-              gap: 0.5em;
+              gap: var(--datetime-gap);
             }
 
             .grid--animating {
               position: absolute;
-              top: 0.75em;
+              top: var(--datetime-space-lg);
               left: 0;
               right: 0;
             }
 
             .grid.animating {
-              transition: transform 0.5s cubic-bezier(0.5, 0, 0, 1);
+              transition: transform var(--datetime-animation-duration) cubic-bezier(0.5, 0, 0, 1);
             }
 
             .grid--prev.grid--out {
@@ -394,17 +440,17 @@ export default class PDatetime extends HTMLElement {
 
             @media (prefers-reduced-motion: reduce) {
               .grid {
-                transition: opacity 0.15s ease;
+                transition: opacity var(--datetime-transition);
                 transform: none !important;
               }
             }
 
             /* Grid Cells - Day/Month/Year */
             .wd {
-              font-size: 0.75em;
-              opacity: 0.6;
+              font-size: var(--datetime-font-sm);
+              opacity: var(--datetime-placeholder-opacity);
               font-weight: 600;
-              padding: 0.5em 0;
+              padding: var(--datetime-gap) 0;
               text-transform: uppercase;
             }
 
@@ -412,25 +458,13 @@ export default class PDatetime extends HTMLElement {
             .month,
             .year {
               width: 100%;
-              height: 2.5em;
-              border-radius: 0.5em;
-              font-size: 0.875em;
-              transition: all 0.15s ease;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-
-            .day:hover,
-            .month:hover,
-            .year:hover {
-              background: var(--datetime-hover);
+              height: var(--datetime-cell-size);
             }
 
             .day.today,
             .month.today,
             .year.today {
-              border: 2px solid var(--datetime-accent);
+              border: var(--datetime-today-border-width) solid var(--datetime-accent);
               position: relative;
             }
 
@@ -456,26 +490,18 @@ export default class PDatetime extends HTMLElement {
             }
 
             .day:disabled {
-              opacity: 0.3;
+              opacity: var(--datetime-disabled-opacity);
               cursor: not-allowed;
             }
 
             .day.range-hover {
-              background: rgba(59, 130, 246, 0.1);
+              background: var(--datetime-focus-shadow);
             }
 
             /* Time Picker */
             .time {
-              display: flex;
-              gap: 0.5em;
-              align-items: center;
-              justify-content: center;
-              padding: 0.75em 0;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-            }
-
-            .time[hidden] {
-              display: none;
+              gap: var(--datetime-gap);
+              padding: var(--datetime-space-lg) 0;
             }
 
             .time-separator {
@@ -489,17 +515,13 @@ export default class PDatetime extends HTMLElement {
               appearance: none;
               background-color: var(--datetime-bg);
               background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>');
-              background-position: right 0.5em center;
+              background-position: right var(--datetime-gap) center;
               background-repeat: no-repeat;
               background-size: 1em;
-              border: 1px solid rgba(0, 0, 0, 0.1);
-              border-radius: 0.5em;
-              padding: 0.5em 1.75em 0.5em 0.75em;
-              font-size: 0.875em;
+              padding: var(--datetime-gap) 1.75em var(--datetime-gap) var(--datetime-space-lg);
               font-weight: 500;
               color: var(--datetime-text);
               cursor: pointer;
-              transition: all 0.15s ease;
               min-width: 4em;
             }
 
@@ -513,27 +535,20 @@ export default class PDatetime extends HTMLElement {
             .ampm:focus {
               outline: none;
               border-color: var(--datetime-accent);
-              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+              box-shadow: 0 0 0 3px var(--datetime-focus-shadow);
             }
 
             /* Quick Dates & Presets */
             .quick-dates {
               display: flex;
               gap: 0.375em;
-              padding: 0.75em 0;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              padding: var(--datetime-space-lg) 0;
               flex-wrap: wrap;
             }
 
-            .quick-dates[hidden] {
-              display: none;
-            }
-
             .preset {
-              padding: 0.375em 0.75em;
-              border: 1px solid rgba(0, 0, 0, 0.1);
-              border-radius: 1em;
-              font-size: 0.8em;
+              padding: 0.375em var(--datetime-space-lg);
+              border-radius: var(--datetime-radius-xl);
               color: var(--datetime-muted);
             }
 
@@ -546,28 +561,20 @@ export default class PDatetime extends HTMLElement {
             /* Action Buttons */
             .actions {
               display: flex;
-              gap: 0.5em;
+              gap: var(--datetime-gap);
               justify-content: space-between;
-              padding-top: 0.75em;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              padding-top: var(--datetime-space-lg);
             }
 
             .btn {
-              border: 1px solid rgba(0, 0, 0, 0.1);
               background: var(--datetime-hover);
-              border-radius: 0.5em;
               padding: 0.625em 1em;
-              font-size: 0.875em;
-              min-height: 2.5em;
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
+              min-height: var(--datetime-cell-size);
               color: var(--datetime-text);
-              transition: all 0.15s ease;
             }
 
             .btn:hover {
-              background: rgba(0, 0, 0, 0.08);
+              background: var(--datetime-btn-hover-bg);
               border-color: var(--datetime-accent);
             }
 
@@ -583,10 +590,9 @@ export default class PDatetime extends HTMLElement {
 
             /* Range Info */
             .range-info {
-              padding: 0.5em 0.5em;
-              margin-bottom: 0.75em;
+              padding: var(--datetime-gap) var(--datetime-gap);
+              margin-bottom: var(--datetime-space-lg);
               background: var(--datetime-hover);
-              font-size: 0.8em;
               color: var(--datetime-muted);
               text-align: center;
             }
