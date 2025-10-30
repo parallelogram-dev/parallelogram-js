@@ -160,6 +160,38 @@ class PModal extends HTMLElement {
           }
         }
 
+        /* Shared - Border Properties */
+        .modal__panel,
+        .modal__header,
+        .modal__footer {
+          border: var(--modal-border-width) solid var(--modal-panel-border);
+        }
+
+        /* Shared - Border Radius */
+        .modal__panel,
+        .modal__close,
+        ::slotted(.btn) {
+          border-radius: var(--modal-radius-lg);
+        }
+
+        /* Shared - Flex Center Layout */
+        .modal__close,
+        .modal__header,
+        .modal__footer {
+          display: flex;
+          align-items: center;
+        }
+
+        /* Shared - Transitions (only for users who prefer motion) */
+        @media (prefers-reduced-motion: no-preference) {
+          .modal__backdrop,
+          .modal__panel,
+          .modal__close,
+          ::slotted(.btn) {
+            transition: all var(--modal-transition);
+          }
+        }
+
         /* Host states */
         :host {
           display: none;
@@ -193,8 +225,6 @@ class PModal extends HTMLElement {
           overflow: auto;
           background: var(--modal-panel-bg);
           color: var(--modal-panel-color);
-          border: var(--modal-border-width) solid var(--modal-panel-border);
-          border-radius: var(--modal-radius-xl);
           box-shadow: var(--modal-shadow);
           animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
         }
@@ -229,11 +259,8 @@ class PModal extends HTMLElement {
 
         /* Element: Modal header */
         .modal__header {
-          display: flex;
-          align-items: center;
           gap: var(--modal-gap);
           padding: var(--modal-padding-y) var(--modal-padding-x);
-          border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
           position: sticky;
           top: 0;
           background: var(--modal-header-bg);
@@ -284,8 +311,6 @@ class PModal extends HTMLElement {
         /* Element: Modal footer */
         .modal__footer {
           padding: var(--modal-padding-y) var(--modal-padding-x);
-          border-top: var(--modal-border-width) solid var(--modal-panel-border);
-          display: flex;
           gap: var(--modal-gap);
           justify-content: flex-end;
           position: sticky;
@@ -392,28 +417,28 @@ class PModal extends HTMLElement {
           }
         }
       </style>
-      
-      <div class="modal__backdrop" part="backdrop"></div>
-      <div class="modal__panel" part="panel" role="dialog" aria-modal="true">
-        <header class="modal__header" part="header">
+
+      <div class="modal__backdrop" data-modal-backdrop part="backdrop"></div>
+      <div class="modal__panel" data-modal-panel part="panel" role="dialog" aria-modal="true">
+        <header class="modal__header" data-modal-header part="header">
           <slot name="title"><h2>Dialog</h2></slot>
           <div class="modal__spacer"></div>
-          <button class="modal__close" aria-label="Close" part="close">×</button>
+          <button class="modal__close" data-modal-close-btn aria-label="Close" part="close">×</button>
         </header>
-        <section class="modal__content" part="content">
+        <section class="modal__content" data-modal-content part="content">
           <slot></slot>
         </section>
-        <footer class="modal__footer" part="footer">
+        <footer class="modal__footer" data-modal-footer part="footer">
           <slot name="actions"></slot>
         </footer>
       </div>
     `;
 
-    // Store element references using BEM naming
+    // Store element references using data attributes (following PDatetime pattern)
     this._elements = {
-      backdrop: root.querySelector('.modal__backdrop'),
-      panel: root.querySelector('.modal__panel'),
-      close: root.querySelector('.modal__close'),
+      backdrop: root.querySelector('[data-modal-backdrop]'),
+      panel: root.querySelector('[data-modal-panel]'),
+      close: root.querySelector('[data-modal-close-btn]'),
     };
 
     // Bind event handlers
