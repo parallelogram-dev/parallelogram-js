@@ -739,6 +739,7 @@ class PDatetime extends HTMLElement {
       'to-label',
       'range-to-value',
       'theme',
+      'format',
     ];
   }
 
@@ -901,6 +902,12 @@ class PDatetime extends HTMLElement {
   }
   set rangeToValue(v) {
     v ? this.setAttribute('range-to-value', v) : this.removeAttribute('range-to-value');
+  }
+  get format() {
+    return this.getAttribute('format') || '';
+  }
+  set format(v) {
+    v ? this.setAttribute('format', v) : this.removeAttribute('format');
   }
 
   open() {
@@ -1451,6 +1458,75 @@ class PDatetime extends HTMLElement {
     this._renderInput();
   }
 
+  /**
+   * Formats an ISO date string according to the format attribute
+   * Supports tokens: yyyy, mm, dd, hh, ii, ss, tz, tzz
+   * Supports presets: iso, iso-tz, us-date, us-datetime, eu-date, eu-datetime
+   * @param {string} isoString - ISO 8601 date string
+   * @returns {string} - Formatted date string
+   */
+  _formatDate(isoString) {
+    if (!isoString || !this.format) return isoString;
+
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return isoString;
+
+    /* Check for preset formats */
+    const presets = {
+      'iso': 'yyyy-mm-dd',
+      'iso-tz': 'yyyy-mm-ddThh:ii:sstzz',
+      'iso-datetime': 'yyyy-mm-dd hh:ii:ss',
+      'iso-datetime-tz': 'yyyy-mm-dd hh:ii:ss tz',
+      'us-date': 'mm/dd/yyyy',
+      'us-datetime': 'mm/dd/yyyy hh:ii:ss',
+      'us-datetime-tz': 'mm/dd/yyyy hh:ii:ss tz',
+      'eu-date': 'dd/mm/yyyy',
+      'eu-datetime': 'dd/mm/yyyy hh:ii:ss',
+      'eu-datetime-tz': 'dd/mm/yyyy hh:ii:ss tz',
+      'mysql': 'yyyy-mm-dd hh:ii:ss',
+    };
+
+    let format = presets[this.format] || this.format;
+
+    /* Extract date/time components */
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    /* Get timezone information */
+    const getTimezoneOffset = () => {
+      const offset = -date.getTimezoneOffset();
+      const sign = offset >= 0 ? '+' : '-';
+      const absOffset = Math.abs(offset);
+      const tzHours = String(Math.floor(absOffset / 60)).padStart(2, '0');
+      const tzMinutes = String(absOffset % 60).padStart(2, '0');
+      return `${sign}${tzHours}:${tzMinutes}`;
+    };
+
+    const getTimezoneOffsetISO = () => {
+      const offset = -date.getTimezoneOffset();
+      const sign = offset >= 0 ? '+' : '-';
+      const absOffset = Math.abs(offset);
+      const tzHours = String(Math.floor(absOffset / 60)).padStart(2, '0');
+      const tzMinutes = String(absOffset % 60).padStart(2, '0');
+      return `${sign}${tzHours}${tzMinutes}`;
+    };
+
+    /* Replace tokens */
+    return format
+      .replace(/yyyy/g, year)
+      .replace(/mm/g, month)
+      .replace(/dd/g, day)
+      .replace(/hh/g, hours)
+      .replace(/ii/g, minutes)
+      .replace(/ss/g, seconds)
+      .replace(/tzz/g, getTimezoneOffsetISO())
+      .replace(/tz/g, getTimezoneOffset());
+  }
+
   _ensureHidden() {
     if (!this._hidden) {
       this._hidden = document.createElement('input');
@@ -1458,9 +1534,9 @@ class PDatetime extends HTMLElement {
       this.appendChild(this._hidden);
     }
     this._hidden.name = this.name;
-    this._hidden.value = this.value;
+    this._hidden.value = this.format ? this._formatDate(this.value) : this.value;
 
-    // Create second hidden input for range mode
+    /* Create second hidden input for range mode */
     if (this.isRange && this.rangeTo) {
       if (!this._hiddenTo) {
         this._hiddenTo = document.createElement('input');
@@ -1468,7 +1544,7 @@ class PDatetime extends HTMLElement {
         this.appendChild(this._hiddenTo);
       }
       this._hiddenTo.name = this.rangeTo;
-      this._hiddenTo.value = this.rangeToValue;
+      this._hiddenTo.value = this.format ? this._formatDate(this.rangeToValue) : this.rangeToValue;
     }
   }
 
@@ -1490,8 +1566,12 @@ class PDatetime extends HTMLElement {
   }
 
   _emitChange() {
-    if (this._hidden) this._hidden.value = this.value;
-    if (this._hiddenTo) this._hiddenTo.value = this.rangeToValue;
+    if (this._hidden) {
+      this._hidden.value = this.format ? this._formatDate(this.value) : this.value;
+    }
+    if (this._hiddenTo) {
+      this._hiddenTo.value = this.format ? this._formatDate(this.rangeToValue) : this.rangeToValue;
+    }
 
     const eventDetail = this.isRange
       ? { value: this.value, toValue: this.rangeToValue, from: this.value, to: this.rangeToValue }

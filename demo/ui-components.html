@@ -309,6 +309,96 @@
                         </div>
 
                         <div class="form__element">
+                            <label class="form__label" for="custom-date">Custom Date Format (yyyy-mm-dd):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="customDate"
+                                    mode="date"
+                                    format="yyyy-mm-dd"
+                                    id="custom-date"
+                                ></p-datetime>
+                                <p class="form__help">Outputs date as: 2025-10-20</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="custom-datetime">Custom DateTime Format (yyyy-mm-dd hh:ii:ss):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="customDateTime"
+                                    mode="datetime"
+                                    format="yyyy-mm-dd hh:ii:ss"
+                                    id="custom-datetime"
+                                ></p-datetime>
+                                <p class="form__help">Outputs datetime as: 2025-10-20 14:30:00</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element form__element--sm">
+                            <label class="form__label" for="custom-time">Custom Time Format (hh:ii:ss):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="customTime"
+                                    mode="time"
+                                    format="hh:ii:ss"
+                                    id="custom-time"
+                                ></p-datetime>
+                                <p class="form__help">Outputs time as: 14:30:00</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="iso-tz">ISO Format with Timezone (iso-tz):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="isoTz"
+                                    mode="datetime"
+                                    format="iso-tz"
+                                    id="iso-tz"
+                                ></p-datetime>
+                                <p class="form__help">Outputs as: 2025-10-20T14:30:00-0700</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="custom-tz">Custom DateTime with Timezone (yyyy-mm-dd hh:ii:ss tz):</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="customTz"
+                                    mode="datetime"
+                                    format="yyyy-mm-dd hh:ii:ss tz"
+                                    id="custom-tz"
+                                ></p-datetime>
+                                <p class="form__help">Outputs as: 2025-10-20 14:30:00 -07:00</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element form__element--sm">
+                            <label class="form__label" for="us-datetime-tz">US DateTime with Timezone:</label>
+                            <div class="form__field">
+                                <p-datetime
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="usDatetimeTz"
+                                    mode="datetime"
+                                    format="us-datetime-tz"
+                                    id="us-datetime-tz"
+                                ></p-datetime>
+                                <p class="form__help">Outputs as: 10/20/2025 14:30:00 -07:00</p>
+                            </div>
+                        </div>
+
+                        <div class="form__element">
                             <label class="form__label required">Conference Schedule:</label>
                             <div class="form__field">
                                 <p-datetime
