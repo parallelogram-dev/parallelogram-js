@@ -36,10 +36,13 @@
                 <p>Accessible modals with focus management, slot-based content, and multiple sizes:</p>
 
                 <div class="button__group">
-                    <button class="btn btn--primary" data-modal data-modal-target="#info-modal">Info Modal</button>
-                    <button class="btn btn--secondary" data-modal data-modal-target="#form-modal">Form Modal</button>
-                    <button class="btn btn--accent" data-modal data-modal-target="#gallery-modal">Gallery Modal</button>
-                    <button class="btn btn--outline" data-modal data-modal-target="#large-modal">Large Modal</button>
+                    <button class="btn btn--sm" data-modal data-modal-target="#confirm-modal">XS Confirm</button>
+                    <button class="btn btn--primary" data-modal data-modal-target="#info-modal">MD Info</button>
+                    <button class="btn btn--secondary" data-modal data-modal-target="#form-modal">MD Form</button>
+                    <button class="btn btn--accent" data-modal data-modal-target="#gallery-modal">LG Gallery</button>
+                    <button class="btn btn--outline" data-modal data-modal-target="#large-modal">LG Large</button>
+                    <button class="btn btn--lg" data-modal data-modal-target="#xl-modal">XL Modal</button>
+                    <button class="btn btn--danger" data-modal data-modal-target="#fullscreen-modal">Fullscreen</button>
                 </div>
 
                 <div class="features__details">
@@ -823,6 +826,107 @@ framework.mount();</pre
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close data-btn-action="close-large-modal">Close</button>
                     <button class="btn btn--primary" data-btn-action="view-performance">📈 View Performance</button>
+                </div>
+            </p-modal>
+
+            <!-- Extra Small Confirmation Modal -->
+            <p-modal id="confirm-modal" data-modal-size="xs" data-modal-closable="true" data-modal-backdrop-close="false">
+                <h2 slot="title">Confirm Action</h2>
+                <div>
+                    <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+                </div>
+                <div slot="actions">
+                    <button class="btn btn--secondary" data-modal-close>Cancel</button>
+                    <button class="btn btn--danger" data-modal-close>Delete</button>
+                </div>
+            </p-modal>
+
+            <!-- Extra Large Modal -->
+            <p-modal id="xl-modal" data-modal-size="xl" data-modal-closable="true">
+                <h2 slot="title">Extra Large Modal - Documentation</h2>
+                <div>
+                    <h3>PModal Component Documentation</h3>
+                    <p>The PModal component provides a flexible, accessible modal dialog system with the following features:</p>
+
+                    <h4>Size Options</h4>
+                    <ul>
+                        <li><strong>xs (300px):</strong> Perfect for simple confirmations and alerts</li>
+                        <li><strong>sm (400px):</strong> Good for small forms and quick actions</li>
+                        <li><strong>md (640px):</strong> Default size for standard content</li>
+                        <li><strong>lg (800px):</strong> Great for forms and detailed content</li>
+                        <li><strong>xl (1000px):</strong> Ideal for documentation and rich content</li>
+                        <li><strong>fullscreen:</strong> Full viewport with 3rem inset margins</li>
+                    </ul>
+
+                    <h4>CSS Custom Properties</h4>
+                    <p>All styles use em-based CSS custom properties for easy theming and accessibility:</p>
+                    <ul>
+                        <li>Spacing scale: --modal-space-xs through --modal-space-xl</li>
+                        <li>Border radius: --modal-radius, --modal-radius-lg, --modal-radius-xl</li>
+                        <li>Colors: --modal-panel-bg, --modal-text, --modal-accent</li>
+                        <li>Timing: --modal-transition, --modal-animation-duration</li>
+                    </ul>
+
+                    <h4>Data Attributes</h4>
+                    <p>Clean separation between styling (BEM classes) and JavaScript hooks (data attributes):</p>
+                    <ul>
+                        <li>data-modal-backdrop, data-modal-panel, data-modal-header</li>
+                        <li>data-modal-content, data-modal-footer, data-modal-close-btn</li>
+                    </ul>
+                </div>
+                <div slot="actions">
+                    <button class="btn btn--secondary" data-modal-close>Close</button>
+                    <button class="btn btn--primary" data-modal data-modal-target="#fullscreen-modal">Try Fullscreen</button>
+                </div>
+            </p-modal>
+
+            <!-- Fullscreen Modal -->
+            <p-modal id="fullscreen-modal" data-modal-size="fullscreen" data-modal-closable="true">
+                <h2 slot="title">Fullscreen Modal Experience</h2>
+                <div>
+                    <h3>Welcome to Fullscreen Mode!</h3>
+                    <p>This modal demonstrates the fullscreen size option with elegant 3rem (48px) margins on all sides.</p>
+
+                    <h4>Key Features:</h4>
+                    <ul>
+                        <li>✨ <strong>Inset Margins:</strong> 3rem space on all sides prevents edge-to-edge jarring appearance</li>
+                        <li>🎨 <strong>Rounded Corners:</strong> Maintains the design system's border-radius for visual consistency</li>
+                        <li>📱 <strong>Responsive:</strong> Automatically adapts to different screen sizes</li>
+                        <li>⌨️ <strong>Accessible:</strong> Full keyboard navigation and screen reader support</li>
+                        <li>🎭 <strong>Smooth Animations:</strong> Respects prefers-reduced-motion for accessibility</li>
+                    </ul>
+
+                    <h4>Use Cases:</h4>
+                    <p>Fullscreen modals are perfect for:</p>
+                    <ul>
+                        <li>Rich media galleries and image viewers</li>
+                        <li>Complex multi-step forms and wizards</li>
+                        <li>Detailed documentation and help systems</li>
+                        <li>Video players and embedded content</li>
+                        <li>Interactive dashboards and data visualization</li>
+                    </ul>
+
+                    <h4>Design System Integration:</h4>
+                    <p>This modal follows the same patterns as PDatetime for holistic framework consistency:</p>
+                    <ul>
+                        <li><strong>CSS Custom Properties:</strong> Systematic, categorized variables</li>
+                        <li><strong>Data Attributes:</strong> JavaScript hooks separate from styling</li>
+                        <li><strong>Consolidated CSS:</strong> Shared rules for borders, radius, flex layouts</li>
+                        <li><strong>Em-based Units:</strong> Scales with user font size preferences</li>
+                        <li><strong>Motion-Aware:</strong> Transitions only when user prefers motion</li>
+                    </ul>
+
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.1); border-radius: 0.5rem;">
+                        <h5>💡 Pro Tip</h5>
+                        <p style="margin: 0;">
+                            The fullscreen modal provides maximum space while maintaining visual breathing room.
+                            The 3rem inset creates a professional, polished appearance that doesn't feel cramped.
+                        </p>
+                    </div>
+                </div>
+                <div slot="actions">
+                    <button class="btn btn--secondary" data-modal-close>Close Fullscreen</button>
+                    <button class="btn btn--primary" data-modal data-modal-target="#xl-modal">View XL Modal</button>
                 </div>
             </p-modal>
 
