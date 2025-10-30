@@ -197,3 +197,15 @@
     font-size: 0.875rem;
   }
 }
+
+/* Custom Theme Examples */
+.theme-ocean {
+  /* CSS custom properties that p-select will inherit */
+  --border-color: #0ea5e9;
+  --accent-color: #06b6d4;
+  --background-color: #f0f9ff;
+  --text-color: #0c4a6e;
+  --hover-bg: #e0f2fe;
+  --selected-bg: #bae6fd;
+  --current-bg: #dbeafe;
+}
