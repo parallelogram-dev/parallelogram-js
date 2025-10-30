@@ -181,6 +181,26 @@
                                 <p class="form__help">Select the category that best describes your project</p>
                             </div>
                         </div>
+
+                        <div class="form__element">
+                            <label class="form__label" for="status-select">Project Status:</label>
+                            <div class="form__field theme-ocean">
+                                <p-select
+                                    class="form__control"
+                                    theme="inherit"
+                                    name="status"
+                                    placeholder="Choose status"
+                                    id="status-select"
+                                >
+                                    <option value="">-- Select Status --</option>
+                                    <option value="planning">Planning</option>
+                                    <option value="active" selected>Active</option>
+                                    <option value="on-hold">On Hold</option>
+                                    <option value="completed">Completed</option>
+                                </p-select>
+                                <p class="form__help">This select uses a custom "ocean" theme</p>
+                            </div>
+                        </div>
                     </form>
 
                     <button data-btn-action="handleFormSubmit" type="submit" class="btn btn--primary">
@@ -197,6 +217,7 @@
                         <li><strong>Form Integration:</strong> Full form association with validation support</li>
                         <li><strong>Accessibility:</strong> Screen reader support, keyboard navigation</li>
                         <li><strong>Visual Feedback:</strong> Disabled states, hover effects, focus indicators</li>
+                        <li><strong>Custom Theming:</strong> Inherits CSS custom properties from parent for easy styling (see ocean theme example above)</li>
                     </ul>
                 </div>
             </section>
