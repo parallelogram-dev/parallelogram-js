@@ -36,18 +36,84 @@ export default class PModal extends HTMLElement {
     // Use BEM-style CSS with CSS custom properties for theming
     root.innerHTML = `
       <style>
+        /* Global Hidden Rule */
+        [hidden] {
+          display: none !important;
+        }
+
+        /* Host & Core Properties */
         :host {
+          display: none;
+          box-sizing: border-box;
+
+          /* Colors */
+          --modal-text: currentColor;
+          --modal-muted: rgba(0, 0, 0, 0.5);
+          --modal-accent: #3b82f6;
           --modal-backdrop-bg: rgba(0, 0, 0, 0.45);
           --modal-panel-bg: #0f172a;
           --modal-panel-color: #e5e7eb;
           --modal-panel-border: rgba(255, 255, 255, 0.08);
-          --modal-panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-          --modal-panel-radius: 16px;
           --modal-header-bg: #0f172a;
           --modal-footer-bg: #0f172a;
           --modal-close-hover-bg: rgba(255, 255, 255, 0.1);
+          --modal-btn-primary-bg: #60a5fa;
+          --modal-btn-primary-color: #0b1020;
+          --modal-btn-danger-bg: #dc2626;
+          --modal-btn-danger-color: white;
+          --modal-btn-bg: #1f2937;
+          --modal-btn-hover-bg: #374151;
+
+          /* Opacity */
+          --modal-placeholder-opacity: 0.6;
+          --modal-disabled-opacity: 0.5;
+
+          /* Spacing (em-based for scalability) */
+          --modal-space-xs: 0.125em;    /* 2px at 16px base */
+          --modal-space-sm: 0.25em;     /* 4px */
+          --modal-space-md: 0.5em;      /* 8px */
+          --modal-space-lg: 0.75em;     /* 12px */
+          --modal-space-xl: 1em;        /* 16px */
+          --modal-padding-x: 0.875em;   /* 14px */
+          --modal-padding-y: 0.75em;    /* 12px */
+          --modal-gap: 0.5em;           /* 8px */
+
+          /* Border Radius */
+          --modal-radius: 0.5em;        /* 8px */
+          --modal-radius-lg: 0.625em;   /* 10px */
+          --modal-radius-xl: 1em;       /* 16px */
+
+          /* Borders */
+          --modal-border-width: 1px;
+
+          /* Shadows */
+          --modal-shadow-color: rgba(0, 0, 0, 0.5);
+          --modal-shadow: 0 1.25em 3.75em var(--modal-shadow-color);
+
+          /* Timing */
+          --modal-transition: 0.2s ease;
           --modal-animation-duration: 0.2s;
           --modal-animation-easing: ease-out;
+
+          /* Sizes */
+          --modal-size-xs: 18.75em;     /* 300px */
+          --modal-size-sm: 25em;        /* 400px */
+          --modal-size-md: 40em;        /* 640px - default */
+          --modal-size-lg: 50em;        /* 800px */
+          --modal-size-xl: 62.5em;      /* 1000px */
+          --modal-max-width: 92vw;
+          --modal-max-height: 86vh;
+          --modal-fullscreen-inset: 3em; /* 48px */
+          --modal-close-size: 1.75em;   /* 28px */
+          --modal-font-sm: 0.875em;     /* 14px */
+          --modal-font-md: 1.125em;     /* 18px */
+          --modal-btn-min-height: 3.125em; /* 50px */
+        }
+
+        @media (prefers-color-scheme: dark) {
+          :host {
+            --modal-muted: rgba(255, 255, 255, 0.5);
+          }
         }
 
         /* Host states */
@@ -77,41 +143,41 @@ export default class PModal extends HTMLElement {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          min-width: min(92vw, 640px);
-          max-width: 92vw;
-          max-height: 86vh;
+          min-width: min(var(--modal-max-width), var(--modal-size-md));
+          max-width: var(--modal-max-width);
+          max-height: var(--modal-max-height);
           overflow: auto;
           background: var(--modal-panel-bg);
           color: var(--modal-panel-color);
-          border: 1px solid var(--modal-panel-border);
-          border-radius: var(--modal-panel-radius);
-          box-shadow: var(--modal-panel-shadow);
+          border: var(--modal-border-width) solid var(--modal-panel-border);
+          border-radius: var(--modal-radius-xl);
+          box-shadow: var(--modal-shadow);
           animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
         }
 
         /* Panel size modifiers */
+        :host([data-modal-size="xs"]) .modal__panel {
+          min-width: min(var(--modal-max-width), var(--modal-size-xs));
+        }
+
         :host([data-modal-size="sm"]) .modal__panel {
-          min-width: min(92vw, 400px);
+          min-width: min(var(--modal-max-width), var(--modal-size-sm));
         }
 
         :host([data-modal-size="lg"]) .modal__panel {
-          min-width: min(92vw, 800px);
-        }
-
-        :host([data-modal-size="xs"]) .modal__panel {
-          min-width: min(92vw, 300px);
+          min-width: min(var(--modal-max-width), var(--modal-size-lg));
         }
 
         :host([data-modal-size="xl"]) .modal__panel {
-          min-width: min(92vw, 1000px);
+          min-width: min(var(--modal-max-width), var(--modal-size-xl));
         }
 
         :host([data-modal-size="fullscreen"]) .modal__panel {
-          width: calc(100vw - 6rem);
-          height: calc(100vh - 6rem);
-          max-width: calc(100vw - 6rem);
-          max-height: calc(100vh - 6rem);
-          border-radius: var(--modal-panel-radius);
+          width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
+          height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
+          max-width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
+          max-height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
+          border-radius: var(--modal-radius-xl);
           transform: translate(-50%, -50%);
           top: 50%;
           left: 50%;
@@ -121,9 +187,9 @@ export default class PModal extends HTMLElement {
         .modal__header {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 12px 14px;
-          border-bottom: 1px solid var(--modal-panel-border);
+          gap: var(--modal-gap);
+          padding: var(--modal-padding-y) var(--modal-padding-x);
+          border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
           position: sticky;
           top: 0;
           background: var(--modal-header-bg);
@@ -132,7 +198,7 @@ export default class PModal extends HTMLElement {
 
         .modal__header h2 {
           margin: 0;
-          font-size: 18px;
+          font-size: var(--modal-font-md);
           line-height: 1.3;
           font-weight: 600;
         }
@@ -148,13 +214,13 @@ export default class PModal extends HTMLElement {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
+          width: var(--modal-close-size);
+          height: var(--modal-close-size);
+          border-radius: var(--modal-radius);
           cursor: pointer;
-          font-size: 16px;
+          font-size: var(--modal-font-md);
           font-weight: bold;
-          transition: background-color var(--modal-animation-duration) ease;
+          transition: background-color var(--modal-transition);
         }
 
         .modal__close:hover {
@@ -168,15 +234,15 @@ export default class PModal extends HTMLElement {
 
         /* Element: Modal content */
         .modal__content {
-          padding: 14px;
+          padding: var(--modal-padding-x);
         }
 
         /* Element: Modal footer */
         .modal__footer {
-          padding: 12px 14px;
-          border-top: 1px solid var(--modal-panel-border);
+          padding: var(--modal-padding-y) var(--modal-padding-x);
+          border-top: var(--modal-border-width) solid var(--modal-panel-border);
           display: flex;
-          gap: 8px;
+          gap: var(--modal-gap);
           justify-content: flex-end;
           position: sticky;
           bottom: 0;
@@ -188,34 +254,34 @@ export default class PModal extends HTMLElement {
         ::slotted(.btn) {
           appearance: none;
           border: 0;
-          border-radius: 10px;
-          padding: 10px 14px;
-          background: #1f2937;
+          border-radius: var(--modal-radius-lg);
+          padding: var(--modal-space-lg) var(--modal-padding-x);
+          background: var(--modal-btn-bg);
           color: #fff;
           cursor: pointer;
-          font-size: 14px;
+          font-size: var(--modal-font-sm);
           font-weight: 500;
-          min-height: 3.125rem;
-          transition: all var(--modal-animation-duration) ease;
+          min-height: var(--modal-btn-min-height);
+          transition: all var(--modal-transition);
         }
 
         ::slotted(.btn:hover) {
-          background: #374151;
+          background: var(--modal-btn-hover-bg);
         }
 
         ::slotted(.btn--primary) {
-          background: #60a5fa;
-          color: #0b1020;
+          background: var(--modal-btn-primary-bg);
+          color: var(--modal-btn-primary-color);
           font-weight: 700;
         }
 
         ::slotted(.btn--primary:hover) {
-          background: #3b82f6;
+          background: var(--modal-accent);
         }
 
         ::slotted(.btn--danger) {
-          background: #dc2626;
-          color: white;
+          background: var(--modal-btn-danger-bg);
+          color: var(--modal-btn-danger-color);
         }
 
         ::slotted(.btn--danger:hover) {
@@ -223,7 +289,7 @@ export default class PModal extends HTMLElement {
         }
 
         ::slotted(.btn:disabled) {
-          opacity: 0.5;
+          opacity: var(--modal-disabled-opacity);
           cursor: not-allowed;
         }
 
