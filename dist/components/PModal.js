@@ -275,6 +275,7 @@ class PModal extends HTMLElement {
           padding: var(--modal-padding-y) var(--modal-padding-x);
           background: var(--modal-header-bg);
           border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
+          border-radius: var(--modal-radius) var(--modal-radius) 0 0;
         }
 
         .modal__header h2 {
@@ -329,6 +330,7 @@ class PModal extends HTMLElement {
           justify-content: flex-end;
           background: var(--modal-footer-bg);
           border-top: var(--modal-border-width) solid var(--modal-panel-border);
+          border-radius: 0 0 var(--modal-radius) var(--modal-radius);
         }
 
         /* Slotted button styles (BEM classes) */
