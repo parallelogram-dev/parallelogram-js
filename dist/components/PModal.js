@@ -184,11 +184,23 @@ class PModal extends HTMLElement {
 
         /* Shared - Transitions (only for users who prefer motion) */
         @media (prefers-reduced-motion: no-preference) {
-          .modal__backdrop,
-          .modal__panel,
-          .modal__close,
+          .modal__backdrop {
+            transition: opacity var(--modal-transition);
+          }
+
+          .modal__panel {
+            transition: opacity var(--modal-transition),
+                        transform var(--modal-transition);
+          }
+
+          .modal__close {
+            transition: background-color var(--modal-transition);
+          }
+
           ::slotted(.btn) {
-            transition: all var(--modal-transition);
+            transition: background-color var(--modal-transition),
+                        color var(--modal-transition),
+                        transform var(--modal-transition);
           }
         }
 
@@ -291,7 +303,6 @@ class PModal extends HTMLElement {
           cursor: pointer;
           font-size: var(--modal-font-md);
           font-weight: bold;
-          transition: background-color var(--modal-transition);
         }
 
         .modal__close:hover {
