@@ -215,16 +215,18 @@ class PDatetime extends HTMLElement {
               justify-content: center;
             }
 
-            /* Shared - Transitions */
-            .panel,
-            .nav button,
-            .day,
-            .month,
-            .year,
-            .time-select,
-            .ampm,
-            .btn {
-              transition: all var(--datetime-transition);
+            /* Shared - Transitions (only for users who prefer motion) */
+            @media (prefers-reduced-motion: no-preference) {
+              .panel,
+              .nav button,
+              .day,
+              .month,
+              .year,
+              .time-select,
+              .ampm,
+              .btn {
+                transition: all var(--datetime-transition);
+              }
             }
 
             /* Shared - Font Sizes */
@@ -243,18 +245,20 @@ class PDatetime extends HTMLElement {
               font-size: 0.8em;
             }
 
-            /* Shared - Hover States */
-            .calendar-btn:hover,
-            .nav button:hover,
-            .month-year:hover {
-              background: var(--datetime-hover);
-              color: var(--datetime-accent);
-            }
+            /* Shared - Hover States (only for devices that support hover) */
+            @media (hover: hover) {
+              .calendar-btn:hover,
+              .nav button:hover,
+              .month-year:hover {
+                background: var(--datetime-hover);
+                color: var(--datetime-accent);
+              }
 
-            .day:hover,
-            .month:hover,
-            .year:hover {
-              background: var(--datetime-hover);
+              .day:hover,
+              .month:hover,
+              .year:hover {
+                background: var(--datetime-hover);
+              }
             }
 
             /* Field & Input Containers */
@@ -525,10 +529,12 @@ class PDatetime extends HTMLElement {
               min-width: 4em;
             }
 
-            .time-select:hover,
-            .ampm:hover {
-              border-color: var(--datetime-accent);
-              background-color: var(--datetime-hover);
+            @media (hover: hover) {
+              .time-select:hover,
+              .ampm:hover {
+                border-color: var(--datetime-accent);
+                background-color: var(--datetime-hover);
+              }
             }
 
             .time-select:focus,
@@ -552,10 +558,12 @@ class PDatetime extends HTMLElement {
               color: var(--datetime-muted);
             }
 
-            .preset:hover {
-              background: var(--datetime-accent);
-              color: var(--datetime-bg);
-              border-color: var(--datetime-accent);
+            @media (hover: hover) {
+              .preset:hover {
+                background: var(--datetime-accent);
+                color: var(--datetime-bg);
+                border-color: var(--datetime-accent);
+              }
             }
 
             /* Action Buttons */
@@ -573,9 +581,11 @@ class PDatetime extends HTMLElement {
               color: var(--datetime-text);
             }
 
-            .btn:hover {
-              background: var(--datetime-btn-hover-bg);
-              border-color: var(--datetime-accent);
+            @media (hover: hover) {
+              .btn:hover {
+                background: var(--datetime-btn-hover-bg);
+                border-color: var(--datetime-accent);
+              }
             }
 
             .btn.primary {
@@ -584,8 +594,10 @@ class PDatetime extends HTMLElement {
               border-color: var(--datetime-accent);
             }
 
-            .btn.primary:hover {
-              opacity: 0.9;
+            @media (hover: hover) {
+              .btn.primary:hover {
+                opacity: 0.9;
+              }
             }
 
             /* Range Info */
