@@ -495,9 +495,12 @@ export class PageManager {
         /* Add the new transition class */
         fragment.classList.add(className);
 
-        /* If this is an 'in' transition, remove the 'out' class */
+        /* If this is an 'in' transition, remove the 'out' class in the next frame */
+        /* This prevents flicker by ensuring the 'in' class is applied first */
         if (direction === 'in' && outClassName) {
-          fragment.classList.remove(outClassName);
+          requestAnimationFrame(() => {
+            fragment.classList.remove(outClassName);
+          });
         }
       });
     });
