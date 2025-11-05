@@ -479,18 +479,27 @@ export default class Lazysrc extends BaseComponent {
     return new Promise((resolve, reject) => {
       /* Check if this image is inside a picture element */
       if (state.pictureParent) {
-        /* Handle as picture element - apply sources to picture and img */
+        /*
+         * Handle picture element with race condition prevention
+         *
+         * Apply sources to the actual img element, not a temporary Image object.
+         * This ensures the picture element's source selection works correctly.
+         *
+         * IMPORTANT: Handlers are set up AFTER applying sources to prevent race conditions:
+         * - Prevents infinite loops when images are cached (onload fires immediately)
+         * - Ensures browser doesn't start loading before all source elements are ready
+         * - Maintains correct picture element source selection order
+         */
+        this._applyPictureSources(state.pictureParent, state);
+
+        /* Set up handlers AFTER applying sources */
         element.onload = () => {
-          this._applyPictureSources(state.pictureParent, state);
           resolve();
         };
 
         element.onerror = () => {
           reject(new Error('Picture image failed to load'));
         };
-
-        /* Apply sources to trigger loading */
-        this._applyPictureSources(state.pictureParent, state);
       } else {
         /* Standard image loading */
         // Create new image for preloading
@@ -546,19 +555,18 @@ export default class Lazysrc extends BaseComponent {
         return;
       }
 
-      // Handle load success
+      // Apply sources to trigger loading
+      this._applyPictureSources(element, state);
+
+      // Set up handlers AFTER applying sources to avoid infinite loop
+      // (onload can fire immediately if image is cached)
       img.onload = () => {
-        this._applyPictureSources(element, state);
         resolve();
       };
 
-      // Handle load error
       img.onerror = () => {
         reject(new Error('Picture failed to load'));
       };
-
-      // Apply sources to trigger loading
-      this._applyPictureSources(element, state);
     });
   }
 
