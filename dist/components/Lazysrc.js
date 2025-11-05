@@ -493,11 +493,24 @@ class BaseComponent {
  *   <figcaption>Progressive enhancement example</figcaption>
  * </figure>
  *
- * <!-- Picture element with sources -->
- * <picture data-lazysrc>
+ * <!-- Picture element with sources (data-lazysrc on img, not picture) -->
+ * <picture>
  *   <source data-lazysrc-srcset="image.webp" type="image/webp">
  *   <source data-lazysrc-srcset="image.jpg" type="image/jpeg">
- *   <img data-lazysrc-src="image.jpg" alt="Description">
+ *   <img data-lazysrc data-lazysrc-src="image.jpg" alt="Description">
+ * </picture>
+ *
+ * <!-- Picture with responsive images (srcset + sizes) -->
+ * <picture>
+ *   <source
+ *     data-lazysrc-srcset="image-320.webp 320w, image-1280.webp 1280w"
+ *     data-lazysrc-sizes="(max-width: 640px) 320px, 1280px"
+ *     type="image/webp">
+ *   <source
+ *     data-lazysrc-srcset="image-320.jpg 320w, image-1280.jpg 1280w"
+ *     data-lazysrc-sizes="(max-width: 640px) 320px, 1280px"
+ *     type="image/jpeg">
+ *   <img data-lazysrc data-lazysrc-src="image-1280.jpg" alt="Description">
  * </picture>
  *
  * <!-- Background image -->
@@ -563,6 +576,11 @@ class Lazysrc extends BaseComponent {
     state.isLoaded = false;
     state.isLoading = false;
     state.hasError = false;
+
+    /* Detect if this element is inside a <picture> element */
+    if (this._isImage(element) && element.parentElement?.tagName === 'PICTURE') {
+      state.pictureParent = element.parentElement;
+    }
 
     // Check if we should use native lazy loading
     if (
@@ -742,7 +760,26 @@ class Lazysrc extends BaseComponent {
    */
   _storeAndClearSources(element, state) {
     if (element.tagName === 'IMG') {
-      // Store original src and srcset
+      /* Check if this img is inside a picture element */
+      const pictureParent = state.pictureParent;
+
+      if (pictureParent) {
+        /* Handle picture sources when data-lazysrc is on the img */
+        const sources = pictureParent.querySelectorAll('source');
+        state.originalSources = [];
+
+        sources.forEach((source, index) => {
+          if (source.srcset && !source.dataset.lazysrcSrcset) {
+            state.originalSources[index] = {
+              srcset: source.srcset,
+              sizes: source.sizes || null,
+            };
+            source.removeAttribute('srcset');
+          }
+        });
+      }
+
+      /* Store and clear img src/srcset */
       if (element.src && !element.dataset.lazysrcSrc) {
         state.originalSrc = element.src;
         element.removeAttribute('src');
@@ -755,7 +792,7 @@ class Lazysrc extends BaseComponent {
         state.originalSizes = element.sizes;
       }
     } else if (element.tagName === 'PICTURE') {
-      // Handle picture sources
+      /* Handle picture sources when data-lazysrc is on the picture element */
       const sources = element.querySelectorAll('source');
       state.originalSources = [];
 
@@ -769,7 +806,7 @@ class Lazysrc extends BaseComponent {
         }
       });
 
-      // Handle img within picture
+      /* Handle img within picture */
       const img = element.querySelector('img');
       if (img) {
         if (img.src && !img.dataset.lazysrcSrc) {
@@ -900,39 +937,56 @@ class Lazysrc extends BaseComponent {
    */
   _loadImageElement(element, state) {
     return new Promise((resolve, reject) => {
-      // Create new image for preloading
-      const img = new Image();
+      /* Check if this image is inside a picture element */
+      if (state.pictureParent) {
+        /* Handle as picture element - apply sources to picture and img */
+        element.onload = () => {
+          this._applyPictureSources(state.pictureParent, state);
+          resolve();
+        };
 
-      // Handle load success
-      img.onload = () => {
-        this._applySources(element, state);
-        resolve();
-      };
+        element.onerror = () => {
+          reject(new Error('Picture image failed to load'));
+        };
 
-      // Handle load error
-      img.onerror = () => {
-        reject(new Error('Image failed to load'));
-      };
+        /* Apply sources to trigger loading */
+        this._applyPictureSources(state.pictureParent, state);
+      } else {
+        /* Standard image loading */
+        // Create new image for preloading
+        const img = new Image();
 
-      // Get src and srcset
-      const src = element.dataset.lazysrcSrc || state.originalSrc;
-      const srcset = element.dataset.lazysrcSrcset || state.originalSrcset;
-      const sizes = element.dataset.lazysrcSizes || state.originalSizes;
+        // Handle load success
+        img.onload = () => {
+          this._applySources(element, state);
+          resolve();
+        };
 
-      // Set srcset and sizes first (browser will choose best image)
-      if (srcset) {
-        img.srcset = srcset;
-        if (sizes) {
-          img.sizes = sizes;
+        // Handle load error
+        img.onerror = () => {
+          reject(new Error('Image failed to load'));
+        };
+
+        // Get src and srcset
+        const src = element.dataset.lazysrcSrc || state.originalSrc;
+        const srcset = element.dataset.lazysrcSrcset || state.originalSrcset;
+        const sizes = element.dataset.lazysrcSizes || state.originalSizes;
+
+        // Set srcset and sizes first (browser will choose best image)
+        if (srcset) {
+          img.srcset = srcset;
+          if (sizes) {
+            img.sizes = sizes;
+          }
         }
-      }
 
-      // Set src (either as fallback or primary)
-      if (src) {
-        img.src = src;
-      } else if (!srcset) {
-        reject(new Error('No src or srcset specified'));
-        return;
+        // Set src (either as fallback or primary)
+        if (src) {
+          img.src = src;
+        } else if (!srcset) {
+          reject(new Error('No src or srcset specified'));
+          return;
+        }
       }
     });
   }
@@ -1035,11 +1089,15 @@ class Lazysrc extends BaseComponent {
    * @param {Object} state
    */
   _applyPictureSources(element, state) {
-    // Handle source elements
+    /* Handle source elements */
     const sources = element.querySelectorAll('source');
     sources.forEach((source, index) => {
       if (source.dataset.lazysrcSrcset) {
         source.srcset = source.dataset.lazysrcSrcset;
+        /* Also apply data-lazysrc-sizes if present */
+        if (source.dataset.lazysrcSizes) {
+          source.sizes = source.dataset.lazysrcSizes;
+        }
       } else if (state.originalSources && state.originalSources[index]) {
         source.srcset = state.originalSources[index].srcset;
         if (state.originalSources[index].sizes) {
@@ -1048,7 +1106,7 @@ class Lazysrc extends BaseComponent {
       }
     });
 
-    // Handle img element
+    /* Handle img element */
     const img = element.querySelector('img');
     if (img) {
       this._applySources(img, state);
