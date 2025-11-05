@@ -2,6 +2,7 @@ import { BaseComponent } from '@peptolab/parallelogram';
 
 /**
  * Lazysrc Component - Standalone lazy loading without external dependencies
+ * Supports img, picture elements, and background images with automatic parent detection
  *
  * @example
  * HTML:
