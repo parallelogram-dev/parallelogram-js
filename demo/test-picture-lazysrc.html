@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Picture Lazysrc Test</title>
+    <link rel="stylesheet" href="dist/parallelogram-demo.min.css" />
+    <style>
+      body {
+        padding: 2rem;
+        font-family: system-ui;
+      }
+      .test-section {
+        margin: 3rem 0;
+        padding: 2rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+      }
+      .test-section h2 {
+        margin-top: 0;
+      }
+      picture,
+      img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 1rem 0;
+      }
+      .status {
+        font-family: monospace;
+        padding: 1rem;
+        background: #f5f5f5;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+      .placeholder {
+        background: #ddd;
+        padding: 2rem;
+        text-align: center;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Picture Element Lazysrc Testing</h1>
+
+    <div class="test-section">
+      <h2>Test 1: Basic Picture with WebP and JPEG sources</h2>
+      <p>
+        <strong>Setup:</strong> data-lazysrc on picture, data-lazysrc-srcset on sources,
+        data-lazysrc-src on img
+      </p>
+
+      <picture data-lazysrc>
+        <source data-lazysrc-srcset="https://picsum.photos/800/400.webp?random=100" type="image/webp" />
+        <source data-lazysrc-srcset="https://picsum.photos/800/400?random=100" type="image/jpeg" />
+        <img
+          data-lazysrc-src="https://picsum.photos/800/400?random=100"
+          alt="Test image with WebP and JPEG sources"
+        />
+      </picture>
+
+      <div class="status" id="status1">Waiting for load...</div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 2: Picture with Responsive Images (srcset with sizes)</h2>
+      <p>
+        <strong>Setup:</strong> Multiple sizes in srcset with sizes attribute for art direction
+      </p>
+
+      <picture data-lazysrc>
+        <source
+          data-lazysrc-srcset="https://picsum.photos/320/240?random=101 320w, https://picsum.photos/640/480?random=101 640w, https://picsum.photos/1280/960?random=101 1280w"
+          data-lazysrc-sizes="(max-width: 320px) 320px, (max-width: 640px) 640px, 1280px"
+          type="image/webp"
+        />
+        <source
+          data-lazysrc-srcset="https://picsum.photos/320/240?random=101 320w, https://picsum.photos/640/480?random=101 640w, https://picsum.photos/1280/960?random=101 1280w"
+          data-lazysrc-sizes="(max-width: 320px) 320px, (max-width: 640px) 640px, 1280px"
+          type="image/jpeg"
+        />
+        <img data-lazysrc-src="https://picsum.photos/1280/960?random=101" alt="Responsive test image" />
+      </picture>
+
+      <div class="status" id="status2">Waiting for load...</div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 3: Picture with Placeholder Image</h2>
+      <p><strong>Setup:</strong> Using a placeholder SVG in the img src while lazy loading</p>
+
+      <picture data-lazysrc>
+        <source data-lazysrc-srcset="https://picsum.photos/800/400.webp?random=102" type="image/webp" />
+        <source data-lazysrc-srcset="https://picsum.photos/800/400?random=102" type="image/jpeg" />
+        <img
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23ddd' width='800' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3ELoading...%3C/text%3E%3C/svg%3E"
+          data-lazysrc-src="https://picsum.photos/800/400?random=102"
+          alt="Test with placeholder"
+        />
+      </picture>
+
+      <div class="status" id="status3">Waiting for load...</div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 4: Wrong Setup - data-lazysrc on img instead of picture</h2>
+      <p><strong>Setup:</strong> ❌ This should NOT work correctly</p>
+
+      <picture>
+        <source data-lazysrc-srcset="https://picsum.photos/800/400.webp?random=103" type="image/webp" />
+        <source data-lazysrc-srcset="https://picsum.photos/800/400?random=103" type="image/jpeg" />
+        <img data-lazysrc data-lazysrc-src="https://picsum.photos/800/400?random=103" alt="Wrong setup" />
+      </picture>
+
+      <div class="status" id="status4">This setup is incorrect - sources won't be handled</div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 5: Wrong Setup - No data-lazysrc on picture</h2>
+      <p><strong>Setup:</strong> ❌ This will cause immediate loading by browser</p>
+
+      <picture>
+        <source srcset="https://picsum.photos/800/400.webp?random=104" type="image/webp" />
+        <source srcset="https://picsum.photos/800/400?random=104" type="image/jpeg" />
+        <img src="https://picsum.photos/800/400?random=104" alt="No lazy loading" />
+      </picture>
+
+      <div class="status" id="status5">No lazy loading - browser loads immediately</div>
+    </div>
+
+    <div style="height: 1500px; background: linear-gradient(to bottom, #fff, #f0f0f0); padding: 2rem; text-align: center;">
+      <p>⬇️ Scroll down to trigger lazy loading ⬇️</p>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 6: Picture Below Fold (Lazy Load Test)</h2>
+      <p><strong>Setup:</strong> This should only load when scrolled into view</p>
+
+      <picture data-lazysrc data-lazysrc-threshold="0.1">
+        <source data-lazysrc-srcset="https://picsum.photos/800/400.webp?random=105" type="image/webp" />
+        <source data-lazysrc-srcset="https://picsum.photos/800/400?random=105" type="image/jpeg" />
+        <img data-lazysrc-src="https://picsum.photos/800/400?random=105" alt="Below fold test" />
+      </picture>
+
+      <div class="status" id="status6">Waiting for scroll into view...</div>
+    </div>
+
+    <script type="module">
+      import { Parallelogram } from './dist/parallelogram-demo.min.js';
+
+      /* Track loading events */
+      document.addEventListener('lazysrc:loading-start', e => {
+        console.log('Loading started:', e.target);
+        const picture = e.target.closest('picture') || e.target;
+        const statusEl = picture.parentElement.querySelector('.status');
+        if (statusEl) {
+          statusEl.textContent = '⏳ Loading...';
+          statusEl.style.background = '#fff3cd';
+        }
+      });
+
+      document.addEventListener('lazysrc:loaded', e => {
+        console.log('Loaded:', e.target, e.detail);
+        const picture = e.target.closest('picture') || e.target;
+        const statusEl = picture.parentElement.querySelector('.status');
+        if (statusEl) {
+          statusEl.textContent = `✅ Loaded successfully in ${e.detail.loadTime}ms`;
+          statusEl.style.background = '#d4edda';
+        }
+
+        /* Log which source was actually used */
+        const img = picture.querySelector('img');
+        if (img) {
+          console.log('Image currentSrc:', img.currentSrc);
+        }
+      });
+
+      document.addEventListener('lazysrc:error', e => {
+        console.error('Load error:', e.target, e.detail);
+        const picture = e.target.closest('picture') || e.target;
+        const statusEl = picture.parentElement.querySelector('.status');
+        if (statusEl) {
+          statusEl.textContent = `❌ Error: ${e.detail.error}`;
+          statusEl.style.background = '#f8d7da';
+        }
+      });
+
+      /* Log component initialization */
+      document.addEventListener('lazysrc:mounted', e => {
+        console.log('Lazysrc mounted:', e.target, e.detail);
+      });
+    </script>
+
+    <script type="module" src="dist/parallelogram-demo.min.js"></script>
+  </body>
+</html>
