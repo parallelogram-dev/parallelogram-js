@@ -8,7 +8,7 @@ This guide walks you through creating components in Parallelogram-JS, from basic
 
 ```javascript
 // src/components/Mycomponent.js
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 export default class Mycomponent extends BaseComponent {
   static get defaults() {
@@ -151,7 +151,7 @@ Before coding, define:
 
 ```javascript
 // Example: Image Carousel Component
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 export default class Carousel extends BaseComponent {
   static get defaults() {
@@ -446,7 +446,7 @@ This example shows how to enhance a native `<select>` element to load and replac
 
 ```javascript
 // src/components/SelectLoader.js
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 /**
  * SelectLoader Component

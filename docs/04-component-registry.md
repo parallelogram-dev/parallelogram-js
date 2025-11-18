@@ -18,7 +18,7 @@ graph TB
 ### Creating a Registry
 
 ```javascript
-import { ComponentRegistry } from '@peptolab/parallelogram';
+import { ComponentRegistry } from '@parallelogram-js/core';
 
 // Create registry with environment configuration
 const registry = ComponentRegistry.create('production');
