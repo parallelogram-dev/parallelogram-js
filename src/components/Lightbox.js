@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 /**
  * Lightbox Component - Image/media gallery viewer

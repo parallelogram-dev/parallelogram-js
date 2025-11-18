@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 import { createElement, generateId, debounce } from '../utils/dom-utils.js';
 
 /**

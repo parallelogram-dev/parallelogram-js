@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 import PUploader from './PUploader.js';
 
 /**
@@ -9,7 +9,7 @@ import PUploader from './PUploader.js';
  *
  * Usage in ComponentRegistry:
  * .component('Uploader', 'p-uploader', {
- *   loader: () => import('@peptolab/parallelogram/components/PUploaderLoader')
+ *   loader: () => import('@parallelogram-js/core/components/PUploaderLoader')
  * })
  */
 export default class Uploader extends BaseComponent {
