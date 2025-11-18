@@ -28,7 +28,7 @@ Central event system for component communication and global state management.
 ### Basic Usage
 
 ```javascript
-import { EventManager } from '@peptolab/parallelogram';
+import { EventManager } from '@parallelogram-js/core';
 
 const eventBus = new EventManager();
 
@@ -104,7 +104,7 @@ Client-side routing with history API integration and component integration.
 ### Basic Routing
 
 ```javascript
-import { RouterManager } from '@peptolab/parallelogram';
+import { RouterManager } from '@parallelogram-js/core';
 
 const router = new RouterManager({
   eventBus,
@@ -213,7 +213,7 @@ Manages page-level lifecycle, transitions, and Single Page Application (SPA) beh
 ### Page Registration
 
 ```javascript
-import { PageManager } from '@peptolab/parallelogram';
+import { PageManager } from '@parallelogram-js/core';
 
 const pageManager = new PageManager({
   eventBus,
@@ -317,7 +317,7 @@ User notification system for success messages, errors, warnings, and confirmatio
 ### Basic Notifications
 
 ```javascript
-import { AlertManager } from '@peptolab/parallelogram';
+import { AlertManager } from '@parallelogram-js/core';
 
 const alerts = new AlertManager({
   eventBus,
@@ -403,7 +403,7 @@ Smooth transitions and animations between states and pages.
 ### Basic Transitions
 
 ```javascript
-import { TransitionManager } from '@peptolab/parallelogram';
+import { TransitionManager } from '@parallelogram-js/core';
 
 const transitions = new TransitionManager({
   eventBus,
@@ -456,7 +456,7 @@ Development logging with levels, filtering, and performance tracking.
 ### Basic Logging
 
 ```javascript
-import { DevLogger } from '@peptolab/parallelogram';
+import { DevLogger } from '@parallelogram-js/core';
 
 const logger = new DevLogger(
   {

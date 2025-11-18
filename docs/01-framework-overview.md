@@ -8,7 +8,7 @@ The framework is built around several key concepts:
 
 ```javascript
 // Framework initialization
-import { ComponentRegistry, EventManager, DevLogger } from '@peptolab/parallelogram';
+import { ComponentRegistry, EventManager, DevLogger } from '@parallelogram-js/core';
 
 const registry = ComponentRegistry.create('production');
 const eventBus = new EventManager();
