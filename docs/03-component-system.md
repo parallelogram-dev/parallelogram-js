@@ -75,7 +75,7 @@ class MyComponent extends BaseComponent {
 
 ```javascript
 // Example: Toggle Component
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 export class Toggle extends BaseComponent {
   static get defaults() {
