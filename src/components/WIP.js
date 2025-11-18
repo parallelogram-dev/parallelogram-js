@@ -2,7 +2,7 @@
 // DataTable Component
 // ==========================================
 
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 
 /**
  * DataTable Component - Enhanced table functionality
