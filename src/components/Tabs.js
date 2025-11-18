@@ -1,4 +1,4 @@
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 import { generateId } from '../utils/dom-utils.js';
 /**
  * Tabs Component
