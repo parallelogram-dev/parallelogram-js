@@ -35,7 +35,7 @@
  * // Automatically handled by PageManager
  */
 
-import { BaseComponent } from '@peptolab/parallelogram';
+import { BaseComponent } from '@parallelogram-js/core';
 export default class Carousel extends BaseComponent {
   /**
    * Default options for carousel
