@@ -5,6 +5,20 @@
 @use 'mixins' as mix;
 
 /* ============================================================================
+   SURFACE TOKENS (shared decorative properties for UI containers)
+   ============================================================================ */
+
+:root {
+  /* Border radius by usage context */
+  --surface-control: #{$radius-sm};   /* Form inputs, selects, textareas */
+  --surface-button: #{$radius-sm};    /* Buttons and button-like elements */
+  --surface-panel: #{$radius-md};     /* Cards, containers, file items */
+  --surface-dialog: #{$radius-lg};    /* Modals, dialogs, popovers */
+  --surface-dropdown: #{$radius-sm};  /* Dropdown menus, selects */
+  --surface-item: #{$radius-sm};      /* List items, chips, tags */
+}
+
+/* ============================================================================
    FORM CONTROLS (inputs, selects, textareas)
    ============================================================================ */
 
@@ -21,9 +35,7 @@
   /* Borders */
   --form-control-border-width: #{$border-width};
   --form-control-border-color: #{$color-border};
-  --form-control-border-radius: #{$radius-md};
-  --form-control-border-radius-sm: #{$radius-sm};
-  --form-control-border-radius-lg: #{$radius-lg};
+  --form-control-border-radius: var(--surface-control);
 
   /* Colors */
   --form-control-bg: #ffffff;
@@ -70,14 +82,12 @@
   --form-control-padding-y: var(--form-control-padding-y-sm);
   --form-control-padding-x: var(--form-control-padding-x-sm);
   --form-control-font-size: var(--form-control-font-size-sm);
-  --form-control-border-radius: var(--form-control-border-radius-sm);
 }
 
 @mixin form-control-lg {
   --form-control-padding-y: var(--form-control-padding-y-lg);
   --form-control-padding-x: var(--form-control-padding-x-lg);
   --form-control-font-size: var(--form-control-font-size-lg);
-  --form-control-border-radius: var(--form-control-border-radius-lg);
 }
 
 @mixin form-control-focus {
@@ -148,9 +158,7 @@
   --button-font-weight: #{$font-semibold};
 
   --button-border-width: #{$border-width};
-  --button-border-radius: #{$radius-md};
-  --button-border-radius-sm: #{$radius-sm};
-  --button-border-radius-lg: #{$radius-lg};
+  --button-border-radius: var(--surface-button);
 
   --button-min-height: 2.5em;
   --button-min-height-sm: 2em;
@@ -217,7 +225,6 @@
   --button-padding-y: var(--button-padding-y-sm);
   --button-padding-x: var(--button-padding-x-sm);
   --button-font-size: var(--button-font-size-sm);
-  --button-border-radius: var(--button-border-radius-sm);
   --button-min-height: var(--button-min-height-sm);
 }
 
@@ -225,7 +232,6 @@
   --button-padding-y: var(--button-padding-y-lg);
   --button-padding-x: var(--button-padding-x-lg);
   --button-font-size: var(--button-font-size-lg);
-  --button-border-radius: var(--button-border-radius-lg);
   --button-min-height: var(--button-min-height-lg);
 }
 
@@ -282,15 +288,13 @@
   --panel-bg: #ffffff;
   --panel-border-width: #{$border-width};
   --panel-border-color: #{$color-border};
-  --panel-border-radius: #{$radius-lg};
+  --panel-border-radius: var(--surface-panel);
   --panel-padding: #{$space-lg};
   --panel-shadow: #{$shadow-md};
 
   /* Panel variants */
   --panel-padding-sm: #{$space-md};
   --panel-padding-lg: #{$space-xl};
-  --panel-border-radius-sm: #{$radius-md};
-  --panel-border-radius-lg: #{$radius-lg};
 
   /* Panel header/footer */
   --panel-header-padding: #{$space-md} #{$space-lg};
@@ -315,12 +319,10 @@
 
 @mixin panel-sm {
   --panel-padding: var(--panel-padding-sm);
-  --panel-border-radius: var(--panel-border-radius-sm);
 }
 
 @mixin panel-lg {
   --panel-padding: var(--panel-padding-lg);
-  --panel-border-radius: var(--panel-border-radius-lg);
 }
 
 @mixin panel-header {
@@ -342,7 +344,7 @@
 
 @mixin panel-modal {
   --panel-shadow: var(--modal-shadow);
-  --panel-border-radius: var(--panel-border-radius-lg);
+  --panel-border-radius: var(--surface-dialog);
 }
 
 /* ============================================================================
