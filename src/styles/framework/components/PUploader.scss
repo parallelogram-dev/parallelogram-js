@@ -1,5 +1,5 @@
 /* PUploader Web Component Styles */
-@use '../../design-system/variables' as *;
+@use '../../design-system' as *;
 
 *,
 *::before,
@@ -10,11 +10,23 @@
 :host {
   display: block;
   position: relative;
-  border: $border-width-md solid $color-black;
-  padding: $spacing-sm;
-  background: $color-white;
-  transition: border-color $transition-fast ease-out, background-color $transition-fast ease-out;
-  font-family: $font-family;
+
+  /* Use surface-panel tokens for consistent decoration */
+  border-radius: var(--surface-panel-radius);
+  border-width: var(--surface-panel-border-width);
+  border-style: solid;
+  border-color: var(--surface-panel-border-color);
+  background: var(--surface-panel-color-bg);
+  color: var(--surface-panel-color-text);
+  box-shadow: var(--surface-panel-shadow);
+
+  /* Customize */
+  padding: $space-sm;
+  border-width: $border-width-thick;
+  border-color: black;
+
+  transition: border-color $duration-fast ease-out, background-color $duration-fast ease-out;
+  font-family: inherit;
 }
 
 :host([dragging]) {
@@ -23,7 +35,7 @@
 }
 
 :host([drag-over]) {
-  border-color: $color-border-active;
+  border-color: $primary;
   background: $color-bg-hover;
   transform: translateY(-4px);
 }
@@ -41,7 +53,7 @@
 button,
 textarea,
 input {
-  font-family: $font-family;
+  font-family: inherit;
 }
 
 .uploader {
@@ -52,11 +64,11 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: $z-overlay;
-    padding: 0 $spacing-sm 0 6.75rem;
+    z-index: $z-dropdown;
+    padding: 0 $space-sm 0 6.75rem;
     opacity: 0;
     pointer-events: none;
-    transition: opacity $transition-normal $easing-standard;
+    transition: opacity $duration-normal $ease-standard;
 
     &--show {
       opacity: 1;
@@ -66,12 +78,12 @@ input {
 
   &__progress {
     width: 100%;
-    height: $spacing-md;
+    height: $space-md;
   }
 
   &__container {
     display: flex;
-    gap: $spacing-sm;
+    gap: $space-sm;
     position: relative;
   }
 
@@ -108,9 +120,9 @@ input {
     flex-direction: column;
     pointer-events: auto;
     height: $size-preview;
-    background: $color-white;
+    background: white;
     transform: translateY(-100%);
-    transition: transform $transition-normal $easing-standard;
+    transition: transform $duration-normal $ease-standard;
     will-change: transform;
 
     &--show {
@@ -160,12 +172,12 @@ input {
 
   &__filename,
   &__heading {
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-sm;
-    padding-right: $spacing-2xl;
-    height: $line-height-base;
-    line-height: $line-height-base;
-    margin: 0 0 $spacing-md;
+    font-weight: $font-semibold;
+    font-size: $font-sm;
+    padding-right: $space-xxl;
+    height: 1.125rem;
+    line-height: 1.125rem;
+    margin: 0 0 $space-md;
     display: flex;
     align-items: center;
   }
@@ -178,10 +190,10 @@ input {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    gap: $spacing-sm;
+    gap: $space-sm;
     height: $size-field-height;
-    padding-top: $spacing-xs;
-    padding-bottom: $spacing-xs;
+    padding-top: $space-xs;
+    padding-bottom: $space-xs;
     margin: 0;
   }
 
@@ -194,12 +206,12 @@ input {
     border: none;
     background-size: contain;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: $color-white;
+    background-color: white;
     background-repeat: no-repeat;
     background-position: center;
     cursor: pointer;
     opacity: 0.6;
-    transition: opacity $transition-fast;
+    transition: opacity $duration-fast;
     pointer-events: auto;
     padding: 0;
 
@@ -210,23 +222,23 @@ input {
 
   &__actions {
     display: flex;
-    gap: $spacing-sm;
+    gap: $space-sm;
     justify-content: flex-end;
-    padding-left: $spacing-sm;
+    padding-left: $space-sm;
   }
 
   &__btn {
-    padding: $spacing-sm $spacing-lg;
-    border: $border-width-sm solid $color-border-hover;
-    background: $color-white;
+    padding: $space-sm $space-lg;
+    border: $border-width solid $color-border-hover;
+    background: white;
     cursor: pointer;
-    font-size: $font-size-sm;
-    transition: all $transition-fast;
+    font-size: $font-sm;
+    transition: all $duration-fast;
     pointer-events: auto;
     flex-shrink: 0;
 
     &:hover {
-      background: $color-bg-lighter;
+      background: $neutral-100;
     }
 
     &--secondary {
@@ -235,8 +247,8 @@ input {
     }
 
     &--delete {
-      color: $color-error;
-      border-color: $color-error;
+      color: $error-dark;
+      border-color: $error-dark;
 
       &:hover {
         background: $color-error-bg;
@@ -244,12 +256,12 @@ input {
     }
 
     &--primary {
-      background: $color-primary;
-      color: $color-white;
-      border-color: $color-primary;
+      background: $primary;
+      color: white;
+      border-color: $primary;
 
       &:hover {
-        background: $color-primary-dark;
+        background: $primary-dark;
       }
     }
   }
@@ -258,11 +270,11 @@ input {
   &__textarea {
     flex: 1 0 auto;
     height: 100%;
-    padding: $spacing-sm;
-    border: $border-width-sm solid $color-border-hover;
+    padding: $space-sm;
+    border: $border-width solid $color-border-hover;
     margin: 0;
-    font-family: $font-family;
-    font-size: $font-size-sm;
+    font-family: inherit;
+    font-size: $font-sm;
     pointer-events: auto;
     outline: 0 none;
   }
@@ -276,14 +288,14 @@ input {
 .field {
   &__label {
     opacity: $color-text-muted;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    font-size: $font-sm;
     flex: 0 0 4rem;
   }
 
   &__value {
     opacity: $color-text-muted;
-    font-size: $font-size-sm;
+    font-size: $font-sm;
     line-height: $size-field-height;
     word-break: break-word;
     height: $size-field-height;
@@ -307,12 +319,12 @@ input {
     border: none;
     background-size: contain;
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: $color-white;
+    background-color: white;
     background-repeat: no-repeat;
     background-position: center;
     cursor: pointer;
     opacity: 0.6;
-    transition: opacity $transition-fast;
+    transition: opacity $duration-fast;
     pointer-events: auto;
     padding: 0;
     flex-shrink: 0;
@@ -324,10 +336,10 @@ input {
 }
 
 .error-message {
-  color: $color-error;
+  color: $error-dark;
   background: $color-error-bg;
-  padding: $spacing-md;
-  font-size: $font-size-sm;
+  padding: $space-md;
+  font-size: $font-sm;
 }
 
 slot {
