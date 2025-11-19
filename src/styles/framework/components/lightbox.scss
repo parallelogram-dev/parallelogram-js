@@ -21,6 +21,7 @@
 
     &.show {
       opacity: 1;
+      will-change: opacity;
     }
   }
 
@@ -47,11 +48,13 @@
     &.slide-left {
       transform: translateX(-100%);
       opacity: 0;
+      will-change: transform, opacity;
     }
 
     &.slide-right {
       transform: translateX(100%);
       opacity: 0;
+      will-change: transform, opacity;
     }
   }
 

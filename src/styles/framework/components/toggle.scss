@@ -1,0 +1,62 @@
+/**
+ * Toggle Component Styles
+ * State-based styling using data-toggle attribute values
+ */
+
+:root {
+  --toggle-transition-duration: 0.75s;
+  --toggle-transition-easing: ease-in-out;
+}
+
+/* Base styles for all toggle trigger elements */
+[data-toggle] {
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--toggle-transition-duration) var(--toggle-transition-easing);
+}
+
+/* State: Opening - toggle is animating to open */
+[data-toggle="opening"] {
+  will-change: auto;
+  /* Triggers can have custom opening styles if needed */
+}
+
+/* State: Open - toggle is fully open */
+[data-toggle="open"] {
+  /* Triggers can have custom open styles if needed */
+}
+
+/* State: Closing - toggle is animating to closed */
+[data-toggle="closing"] {
+  will-change: auto;
+  /* Triggers can have custom closing styles if needed */
+}
+
+/* State: Closed - toggle is fully closed */
+[data-toggle="closed"] {
+  /* Triggers can have custom closed styles if needed */
+}
+
+/* Common toggle target pattern (elements being toggled) */
+.toggle-target {
+  transition:
+    opacity var(--toggle-transition-duration) var(--toggle-transition-easing),
+    max-height var(--toggle-transition-duration) var(--toggle-transition-easing),
+    transform var(--toggle-transition-duration) var(--toggle-transition-easing);
+}
+
+.toggle-target.is-opening,
+.toggle-target.is-closing {
+  will-change: opacity, max-height, transform;
+}
+
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [data-toggle] {
+    transition: none;
+  }
+
+  .toggle-target {
+    transition: none;
+  }
+}
