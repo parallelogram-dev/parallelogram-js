@@ -357,7 +357,7 @@ class BaseComponent {
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
     const viewAttr = `${dataAttr}-view`;
-    const viewName = this._getDataAttr(element, viewAttr);
+    const viewName = this.getAttr(element, viewAttr);
 
     if (viewName) {
       const target = document.querySelector(`[data-view="${viewName}"]`);
@@ -372,7 +372,7 @@ class BaseComponent {
     }
 
     /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
-    const selector = this._getDataAttr(element, dataAttr);
+    const selector = this.getAttr(element, dataAttr);
     if (!selector) {
       if (options.required) {
         this.logger?.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
@@ -390,14 +390,20 @@ class BaseComponent {
   /**
    * Parse multiple data attributes into configuration object
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to data attribute names
+   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
    * @returns {Object} Configuration object
+   * @example
+   * // In SelectLoader component:
+   * const config = this._getConfigFromAttrs(element, {
+   *   target: 'target',           // Uses data-selectloader-target
+   *   loadingClass: 'loading-class' // Uses data-selectloader-loading-class
+   * });
    */
   _getConfigFromAttrs(element, mapping) {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this._getDataAttr(element, attrName, defaultValue);
+      config[key] = this.getAttr(element, attrName, defaultValue);
     }
     return config;
   }
@@ -459,6 +465,103 @@ class BaseComponent {
     this.eventBus?.emit(eventType, { element, ...detail });
     return event;
   }
+
+  /**
+   * Get the component's data attribute selector
+   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
+   * Can be overridden in subclasses if needed
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    if (this._selector) return this._selector;
+
+    // Extract component name from class name and convert to kebab-case
+    const className = this.constructor.name;
+    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
+    const kebab = className
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase();
+
+    this._selector = `data-${kebab}`;
+    return this._selector;
+  }
+
+  /**
+   * Set component state using data attribute (data-<component>="<state>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} state - State value
+   * @example
+   * // In Toggle component:
+   * this.setState(element, ExtendedStates.OPEN);
+   * // Sets: <div data-toggle="open">
+   */
+  setState(element, state) {
+    element.setAttribute(this._getSelector(), state);
+  }
+
+  /**
+   * Get component state from data attribute
+   * @param {HTMLElement} element - Target element
+   * @returns {string|null} Current state value
+   * @example
+   * const state = this.getElementState(element); // "open"
+   */
+  getElementState(element) {
+    return element.getAttribute(this._getSelector());
+  }
+
+  /**
+   * Set component attribute (data-<component>-<attr>="<value>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {string|number|boolean} value - Attribute value
+   * @example
+   * // In Toggle component:
+   * this.setAttr(element, 'duration', '300');
+   * // Sets: <div data-toggle-duration="300">
+   */
+  setAttr(element, attr, value) {
+    element.setAttribute(`${this._getSelector()}-${attr}`, String(value));
+  }
+
+  /**
+   * Get component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {*} defaultValue - Default value if attribute doesn't exist
+   * @returns {string|null} Attribute value or null
+   * @example
+   * const duration = this.getAttr(element, 'duration', '300'); // "300"
+   */
+  getAttr(element, attr, defaultValue = null) {
+    const value = element.getAttribute(`${this._getSelector()}-${attr}`);
+    return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Remove component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @example
+   * this.removeAttr(element, 'duration');
+   * // Removes: data-toggle-duration
+   */
+  removeAttr(element, attr) {
+    element.removeAttribute(`${this._getSelector()}-${attr}`);
+  }
+
+  /**
+   * Check if component attribute exists (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @returns {boolean}
+   * @example
+   * if (this.hasAttr(element, 'disabled')) { ... }
+   */
+  hasAttr(element, attr) {
+    return element.hasAttribute(`${this._getSelector()}-${attr}`);
+  }
 }
 
 /**
@@ -484,6 +587,15 @@ class BaseComponent {
  * </a>
  */
 class Lightbox extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-lightbox';
+  }
+
   static get defaults() {
     return {
       closeOnEscape: true,
@@ -548,60 +660,60 @@ class Lightbox extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      closeOnEscape: this._getDataAttr(
+      closeOnEscape: this.getAttr(
         element,
-        'lightbox-close-escape',
+        'close-escape',
         Lightbox.defaults.closeOnEscape
       ),
-      closeOnBackdrop: this._getDataAttr(
+      closeOnBackdrop: this.getAttr(
         element,
-        'lightbox-close-backdrop',
+        'close-backdrop',
         Lightbox.defaults.closeOnBackdrop
       ),
-      showCounter: this._getDataAttr(
+      showCounter: this.getAttr(
         element,
-        'lightbox-show-counter',
+        'show-counter',
         Lightbox.defaults.showCounter
       ),
-      showNavigation: this._getDataAttr(
+      showNavigation: this.getAttr(
         element,
-        'lightbox-show-nav',
+        'show-nav',
         Lightbox.defaults.showNavigation
       ),
-      keyNavigation: this._getDataAttr(
+      keyNavigation: this.getAttr(
         element,
-        'lightbox-key-nav',
+        'key-nav',
         Lightbox.defaults.keyNavigation
       ),
-      useDirectionalTransitions: this._getDataAttr(
+      useDirectionalTransitions: this.getAttr(
         element,
-        'lightbox-directional-transitions',
+        'directional-transitions',
         Lightbox.defaults.useDirectionalTransitions
       ),
-      preloadStrategy: this._getDataAttr(
+      preloadStrategy: this.getAttr(
         element,
-        'lightbox-preload',
+        'preload',
         Lightbox.defaults.preloadStrategy
       ),
       /* BEM class names */
-      baseClass: this._getDataAttr(element, 'lightbox-base-class', Lightbox.defaults.baseClass),
-      overlayClass: this._getDataAttr(element, 'lightbox-overlay-class', Lightbox.defaults.overlayClass),
-      containerClass: this._getDataAttr(element, 'lightbox-container-class', Lightbox.defaults.containerClass),
-      closeClass: this._getDataAttr(element, 'lightbox-close-class', Lightbox.defaults.closeClass),
-      prevClass: this._getDataAttr(element, 'lightbox-prev-class', Lightbox.defaults.prevClass),
-      nextClass: this._getDataAttr(element, 'lightbox-next-class', Lightbox.defaults.nextClass),
-      contentClass: this._getDataAttr(element, 'lightbox-content-class', Lightbox.defaults.contentClass),
-      imageClass: this._getDataAttr(element, 'lightbox-image-class', Lightbox.defaults.imageClass),
-      counterClass: this._getDataAttr(element, 'lightbox-counter-class', Lightbox.defaults.counterClass),
+      baseClass: this.getAttr(element, 'base-class', Lightbox.defaults.baseClass),
+      overlayClass: this.getAttr(element, 'overlay-class', Lightbox.defaults.overlayClass),
+      containerClass: this.getAttr(element, 'container-class', Lightbox.defaults.containerClass),
+      closeClass: this.getAttr(element, 'close-class', Lightbox.defaults.closeClass),
+      prevClass: this.getAttr(element, 'prev-class', Lightbox.defaults.prevClass),
+      nextClass: this.getAttr(element, 'next-class', Lightbox.defaults.nextClass),
+      contentClass: this.getAttr(element, 'content-class', Lightbox.defaults.contentClass),
+      imageClass: this.getAttr(element, 'image-class', Lightbox.defaults.imageClass),
+      counterClass: this.getAttr(element, 'counter-class', Lightbox.defaults.counterClass),
       /* State classes */
-      stateClosedClass: this._getDataAttr(element, 'lightbox-state-closed-class', Lightbox.defaults.stateClosedClass),
-      stateOpeningClass: this._getDataAttr(element, 'lightbox-state-opening-class', Lightbox.defaults.stateOpeningClass),
-      stateOpenClass: this._getDataAttr(element, 'lightbox-state-open-class', Lightbox.defaults.stateOpenClass),
-      stateTransitioningClass: this._getDataAttr(element, 'lightbox-state-transitioning-class', Lightbox.defaults.stateTransitioningClass),
-      stateClosingClass: this._getDataAttr(element, 'lightbox-state-closing-class', Lightbox.defaults.stateClosingClass),
-      showClass: this._getDataAttr(element, 'lightbox-show-class', Lightbox.defaults.showClass),
-      slideLeftClass: this._getDataAttr(element, 'lightbox-slide-left-class', Lightbox.defaults.slideLeftClass),
-      slideRightClass: this._getDataAttr(element, 'lightbox-slide-right-class', Lightbox.defaults.slideRightClass),
+      stateClosedClass: this.getAttr(element, 'state-closed-class', Lightbox.defaults.stateClosedClass),
+      stateOpeningClass: this.getAttr(element, 'state-opening-class', Lightbox.defaults.stateOpeningClass),
+      stateOpenClass: this.getAttr(element, 'state-open-class', Lightbox.defaults.stateOpenClass),
+      stateTransitioningClass: this.getAttr(element, 'state-transitioning-class', Lightbox.defaults.stateTransitioningClass),
+      stateClosingClass: this.getAttr(element, 'state-closing-class', Lightbox.defaults.stateClosingClass),
+      showClass: this.getAttr(element, 'show-class', Lightbox.defaults.showClass),
+      slideLeftClass: this.getAttr(element, 'slide-left-class', Lightbox.defaults.slideLeftClass),
+      slideRightClass: this.getAttr(element, 'slide-right-class', Lightbox.defaults.slideRightClass),
     };
   }
 
@@ -612,37 +724,9 @@ class Lightbox extends BaseComponent {
     const oldState = state.lightboxState;
     state.lightboxState = newState;
 
-    /* Update lightbox element classes based on state */
-    if (this.lightboxElement && state.config) {
-      const config = state.config;
-
-      /* Remove all state classes */
-      this.lightboxElement.classList.remove(
-        config.stateClosedClass,
-        config.stateOpeningClass,
-        config.stateOpenClass,
-        config.stateTransitioningClass,
-        config.stateClosingClass
-      );
-
-      /* Add new state class */
-      switch (newState) {
-        case 'closed':
-          this.lightboxElement.classList.add(config.stateClosedClass);
-          break;
-        case 'opening':
-          this.lightboxElement.classList.add(config.stateOpeningClass);
-          break;
-        case 'open':
-          this.lightboxElement.classList.add(config.stateOpenClass);
-          break;
-        case 'transitioning':
-          this.lightboxElement.classList.add(config.stateTransitioningClass);
-          break;
-        case 'closing':
-          this.lightboxElement.classList.add(config.stateClosingClass);
-          break;
-      }
+    /* Update lightbox element data attribute for state-based CSS */
+    if (this.lightboxElement) {
+      this.setState(this.lightboxElement, newState);
     }
 
     this.eventBus?.emit('lightbox:stateChange', {
@@ -771,7 +855,8 @@ class Lightbox extends BaseComponent {
     const config = state.config;
 
     this.lightboxElement = document.createElement('div');
-    this.lightboxElement.className = `${config.overlayClass} ${config.stateOpeningClass}`;
+    this.lightboxElement.className = config.overlayClass;
+    this.setState(this.lightboxElement, 'opening');
     this.lightboxElement.innerHTML = `
       <div class="${config.containerClass}">
         <button class="${config.closeClass}" data-lightbox-action="close" aria-label="Close"></button>

@@ -20,6 +20,15 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * </div>
  */
 export default class SelectLoader extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-selectloader';
+  }
+
   static get defaults() {
     return {
       loadingClass: 'loading',
@@ -47,17 +56,17 @@ export default class SelectLoader extends BaseComponent {
 
     /* Get configuration using BaseComponent helper */
     const config = this._getConfigFromAttrs(element, {
-      target: 'selectloader-target',
-      loadingClass: 'selectloader-loading-class',
-      errorClass: 'selectloader-error-class',
-      transition: 'selectloader-transition',
-      transitionDuration: 'selectloader-transition-duration',
-      retainScroll: 'selectloader-retain-scroll',
-      emptyMessage: 'selectloader-empty-message',
+      target: 'target',
+      loadingClass: 'loading-class',
+      errorClass: 'error-class',
+      transition: 'transition',
+      transitionDuration: 'transition-duration',
+      retainScroll: 'retain-scroll',
+      emptyMessage: 'empty-message',
     });
 
     /* Get target container using BaseComponent helper */
-    const targetElement = this._getTargetElement(element, 'selectloader-target', {
+    const targetElement = this._getTargetElement(element, 'target', {
       required: true,
     });
 

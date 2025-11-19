@@ -1,6 +1,8 @@
 /**
  * Toggle Component Styles
- * State-based styling using data-toggle attribute values
+ * State-based styling using data-toggle-target attribute values
+ *
+ * States: closed → opening → open → closing → closed
  */
 
 :root {
@@ -12,42 +14,78 @@
 [data-toggle] {
   cursor: pointer;
   user-select: none;
-  transition: all var(--toggle-transition-duration) var(--toggle-transition-easing);
 }
 
-/* State: Opening - toggle is animating to open */
-[data-toggle="opening"] {
-  will-change: auto;
-  /* Triggers can have custom opening styles if needed */
-}
-
-/* State: Open - toggle is fully open */
-[data-toggle="open"] {
-  /* Triggers can have custom open styles if needed */
-}
-
-/* State: Closing - toggle is animating to closed */
-[data-toggle="closing"] {
-  will-change: auto;
-  /* Triggers can have custom closing styles if needed */
-}
-
-/* State: Closed - toggle is fully closed */
-[data-toggle="closed"] {
-  /* Triggers can have custom closed styles if needed */
-}
-
-/* Common toggle target pattern (elements being toggled) */
-.toggle-target {
+/* Toggle target states */
+[data-toggle-target] {
   transition:
     opacity var(--toggle-transition-duration) var(--toggle-transition-easing),
     max-height var(--toggle-transition-duration) var(--toggle-transition-easing),
-    transform var(--toggle-transition-duration) var(--toggle-transition-easing);
+    transform var(--toggle-transition-duration) var(--toggle-transition-easing),
+    visibility var(--toggle-transition-duration) var(--toggle-transition-easing);
 }
 
-.toggle-target.is-opening,
-.toggle-target.is-closing {
+/* State: Closed - toggle is fully closed */
+[data-toggle-target="closed"] {
+  display: none;
+  opacity: 0;
+  max-height: 0;
+  visibility: hidden;
+}
+
+/* State: Opening - toggle is animating to open */
+[data-toggle-target="opening"] {
+  display: block;
+  opacity: 0;
+  max-height: 0;
+  visibility: visible;
+  animation: slideDown var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
   will-change: opacity, max-height, transform;
+}
+
+/* State: Open - toggle is fully open */
+[data-toggle-target="open"] {
+  display: block;
+  opacity: 1;
+  max-height: none;
+  visibility: visible;
+}
+
+/* State: Closing - toggle is animating to closed */
+[data-toggle-target="closing"] {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  animation: slideUp var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
+  will-change: opacity, max-height, transform;
+  pointer-events: none;
+}
+
+/* Animation keyframes */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 100vh;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 100vh;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
 }
 
 /* Accessibility: Respect reduced motion preferences */
@@ -56,7 +94,26 @@
     transition: none;
   }
 
-  .toggle-target {
+  [data-toggle-target] {
     transition: none;
+    animation: none !important;
+  }
+
+  [data-toggle-target="opening"],
+  [data-toggle-target="closing"] {
+    will-change: auto;
+  }
+
+  /* Instant state changes for reduced motion */
+  [data-toggle-target="opening"] {
+    opacity: 1;
+    max-height: none;
+    transform: none;
+  }
+
+  [data-toggle-target="closing"] {
+    opacity: 0;
+    max-height: 0;
+    transform: none;
   }
 }
