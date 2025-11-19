@@ -24,6 +24,9 @@ const createComponentPlugins = (isProduction = false) => {
       extract: false,
       minimize: true,
       sourceMap: false,
+      // Note: rollup-plugin-postcss 4.0.2 still uses legacy Sass API
+      // This will show deprecation warnings until the plugin is updated
+      // See: https://github.com/egoist/rollup-plugin-postcss/issues
       use: [
         ['sass', {
           includePaths: ['src/styles']
