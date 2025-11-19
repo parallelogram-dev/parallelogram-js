@@ -1,4 +1,5 @@
 import { BaseComponent } from '@parallelogram-js/core';
+import { ComponentStates } from '../core/ComponentStates.js';
 import { generateId } from '../utils/dom-utils.js';
 /**
  * Tabs Component
@@ -154,6 +155,10 @@ export default class Tabs extends BaseComponent {
         panel.setAttribute('role', 'tabpanel');
         panel.setAttribute('aria-labelledby', tab.id);
         panel.setAttribute('tabindex', '0');
+        /* Initialize panel with inactive state */
+        if (!panel.getAttribute('data-tab-panel')) {
+          panel.setAttribute('data-tab-panel', 'inactive');
+        }
       }
     });
 
@@ -289,23 +294,22 @@ export default class Tabs extends BaseComponent {
     const previousTab = state.activeTab;
     const previousPanel = state.activePanel;
 
-    // Update tab states
+    /* Update tab states */
     state.tabs.forEach(tab => {
       const isActive = tab.dataset.tab === panelId;
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tab.setAttribute('tabindex', isActive ? '0' : '-1');
-      tab.classList.toggle(Tabs.defaults.activeClass, isActive);
     });
 
-    // Handle panel transition
+    /* Handle panel transition */
     if (animate && previousPanel && previousPanel !== targetPanel) {
       await this._transitionPanels(previousPanel, targetPanel, state);
     } else {
-      // Simple show/hide without animation
+      /* Simple show/hide without animation */
       state.panels.forEach(panel => {
         const shouldShow = panel.id === panelId;
         panel.style.display = shouldShow ? '' : 'none';
-        panel.classList.toggle(Tabs.defaults.panelActiveClass, shouldShow);
+        panel.setAttribute('data-tab-panel', shouldShow ? 'active' : 'inactive');
       });
     }
 
@@ -344,38 +348,36 @@ export default class Tabs extends BaseComponent {
   async _transitionPanels(fromPanel, toPanel, state) {
     const duration = Tabs.defaults.transitionDuration;
 
-    // Add transition class
-    fromPanel.classList.add(Tabs.defaults.transitionClass);
-    toPanel.classList.add(Tabs.defaults.transitionClass);
+    /* Set transitioning state */
+    fromPanel.setAttribute('data-tab-panel', 'transitioning');
+    toPanel.setAttribute('data-tab-panel', 'transitioning');
 
-    // Show target panel
+    /* Show target panel */
     toPanel.style.display = '';
-    toPanel.classList.add(Tabs.defaults.panelActiveClass);
 
-    // Transition out current panel
+    /* Transition out current panel */
     fromPanel.style.opacity = '0';
 
-    // Wait for transition
+    /* Wait for transition */
     await new Promise(resolve => setTimeout(resolve, duration / 2));
 
-    // Hide previous panel
+    /* Hide previous panel */
     fromPanel.style.display = 'none';
-    fromPanel.classList.remove(Tabs.defaults.panelActiveClass);
+    fromPanel.setAttribute('data-tab-panel', 'inactive');
     fromPanel.style.opacity = '';
 
-    // Transition in new panel
+    /* Transition in new panel */
     toPanel.style.opacity = '0';
     requestAnimationFrame(() => {
       toPanel.style.transition = `opacity ${duration}ms ease-in-out`;
       toPanel.style.opacity = '1';
     });
 
-    // Cleanup after transition
+    /* Cleanup after transition */
     setTimeout(() => {
       toPanel.style.transition = '';
       toPanel.style.opacity = '';
-      fromPanel.classList.remove(Tabs.defaults.transitionClass);
-      toPanel.classList.remove(Tabs.defaults.transitionClass);
+      toPanel.setAttribute('data-tab-panel', 'active');
     }, duration);
   }
 
