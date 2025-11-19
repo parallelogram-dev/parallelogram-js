@@ -1,6 +1,3 @@
-/* PSelect Web Component Styles */
-@use '../../design-system' as *;
-
 :host {
   display: inline-block;
   position: relative;
@@ -9,23 +6,20 @@
 
 /* CSS custom properties using surface tokens */
 :host {
-  /* Control uses surface-control tokens */
+  /* Control uses surface-control tokens (with user override support) */
   --select-border-color: var(--surface-control-border-color);
-  --select-focus-color: #{$primary};
+  --select-focus-color: var(--color-primary);
   --select-bg: var(--surface-control-color-bg);
   --select-text: var(--surface-control-color-text);
-  --select-placeholder: #{$color-text-muted};
-
+  --select-placeholder: var(--color-text-secondary, #64748b);
   /* Menu hover/selection states using surface-dropdown-item tokens */
   --select-hover-bg: var(--surface-dropdown-item-hover-bg);
   --select-selected-bg: var(--surface-dropdown-item-selected-bg);
   --select-current-bg: var(--surface-dropdown-item-current-bg);
-
   --select-padding: 0.45rem 0.6rem;
   --select-border-radius: var(--surface-control-radius);
   --select-border: var(--surface-control-border-width) solid var(--select-border-color);
-  --select-focus-shadow: inset 0 0 0 3px #{rgba($primary, 0.3)};
-
+  --select-focus-shadow: inset 0 0 0 3px rgba(37, 99, 235, 0.3);
   /* Dropdown menu surface tokens */
   --menu-border-radius: var(--surface-dropdown-radius);
   --menu-border-color: var(--surface-dropdown-border-color);
@@ -36,11 +30,15 @@
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   :host {
-    --select-placeholder: #{$color-text-muted-dark};
-    --select-hover-bg: #{$color-bg-hover-dark};
+    --select-border-color: var(--border-color, var(--color-border, #374151));
+    --select-bg: var(--background-color, var(--color-surface, #1f2937));
+    --select-text: var(--text-color, var(--color-text, #f9fafb));
+    --select-placeholder: var(--text-muted, var(--color-text-secondary, #9ca3af));
+    --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(255,255,255,0.1)));
+    --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.2)));
+    --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(255,255,255,0.1)));
   }
 }
-
 .root {
   position: absolute;
   top: 0;
@@ -96,25 +94,23 @@
   margin-left: auto;
 }
 
-.control[aria-expanded="true"] .arrow {
+.control[aria-expanded=true] .arrow {
   transform: rotate(180deg);
 }
 
 .menu {
   position: absolute;
-  z-index: #{$z-dropdown};
+  z-index: 10;
   left: 0;
   right: 0;
   top: 100%;
   margin-top: 0.25rem;
-
   /* Use surface-dropdown tokens */
   background: var(--menu-bg);
   color: var(--select-text);
   border: var(--surface-dropdown-border-width, 1px) solid var(--menu-border-color);
   border-radius: var(--menu-border-radius);
   box-shadow: var(--menu-shadow);
-
   max-height: 240px;
   overflow: auto;
 }
@@ -129,16 +125,16 @@
   background: var(--select-hover-bg);
 }
 
-.option[aria-selected="true"] {
+.option[aria-selected=true] {
   background: var(--select-selected-bg);
   font-weight: 500;
 }
 
-.option[aria-current="true"] {
+.option[aria-current=true] {
   background: var(--select-current-bg);
 }
 
-.option[aria-disabled="true"] {
+.option[aria-disabled=true] {
   opacity: 0.5;
   cursor: not-allowed;
   background: transparent !important;
