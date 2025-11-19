@@ -11,19 +11,17 @@
   display: block;
   position: relative;
 
-  /* Use surface-panel tokens for consistent decoration */
-  border-radius: var(--surface-panel-radius);
-  border-width: var(--surface-panel-border-width);
+  /* Use surface-card tokens for nested items within panels */
+  border-radius: var(--surface-card-radius);
+  border-width: var(--surface-card-border-width);
   border-style: solid;
-  border-color: var(--surface-panel-border-color);
-  background: var(--surface-panel-color-bg);
-  color: var(--surface-panel-color-text);
-  box-shadow: var(--surface-panel-shadow);
+  border-color: var(--surface-card-border-color);
+  background: var(--surface-card-color-bg);
+  color: var(--surface-card-color-text);
+  box-shadow: var(--surface-card-shadow);
 
   /* Customize */
   padding: $space-sm;
-  border-width: $border-width-thick;
-  border-color: black;
 
   transition: border-color $duration-fast ease-out, background-color $duration-fast ease-out;
   font-family: inherit;
