@@ -1,6 +1,6 @@
 import { generateId } from '../utils/dom-utils.js';
-import hostStyles from './PUploaderHost.scss';
-import fileStyles from './PUploader.scss';
+import hostStyles from '../styles/framework/components/PUploaderHost.scss';
+import fileStyles from '../styles/framework/components/PUploader.scss';
 
 /**
  * PUploader - Web Component for file uploads with configurable fields
