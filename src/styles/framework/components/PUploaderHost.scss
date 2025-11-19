@@ -6,8 +6,20 @@
   font-family: inherit;
   display: block;
   position: relative;
+
+  /* Use surface-panel tokens for consistent decoration */
+  border-radius: var(--surface-panel-radius);
+  border-width: var(--surface-panel-border-width);
+  border-style: solid;
+  border-color: var(--surface-panel-border-color);
+  background: var(--surface-panel-color-bg);
+  color: var(--surface-panel-color-text);
+  box-shadow: var(--surface-panel-shadow);
+
+  /* Customize */
   padding: $space-sm;
-  border: $border-width-thick solid black;
+  border-width: $border-width-thick;
+  border-color: black;
 }
 
 .uploader {
