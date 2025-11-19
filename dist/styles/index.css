@@ -128,7 +128,13 @@ th.sortable:hover {
 /* ============================================
    LIGHTBOX COMPONENT
    BEM-compliant styles for lightbox gallery viewer
+   State-based CSS using data-lightbox attribute
    ============================================ */
+:root {
+  --lightbox-transition-duration: 0.3s;
+  --lightbox-transition-easing: ease-out;
+}
+
 /* Base lightbox block */
 .lightbox__overlay {
   position: fixed;
@@ -141,12 +147,7 @@ th.sortable:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease-out;
-}
-.lightbox__overlay.show {
-  opacity: 1;
-  will-change: opacity;
+  transition: opacity var(--lightbox-transition-duration) var(--lightbox-transition-easing);
 }
 .lightbox__container {
   position: relative;
@@ -241,6 +242,58 @@ th.sortable:hover {
   white-space: nowrap;
 }
 
+/* State-based CSS using data-lightbox attribute */
+[data-lightbox=closed] {
+  display: none;
+  opacity: 0;
+}
+
+[data-lightbox=opening] {
+  display: flex;
+  opacity: 0;
+  will-change: opacity;
+  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+}
+
+[data-lightbox=open] {
+  display: flex;
+  opacity: 1;
+}
+
+[data-lightbox=transitioning] {
+  display: flex;
+  opacity: 1;
+  will-change: opacity;
+}
+
+[data-lightbox=closing] {
+  display: flex;
+  opacity: 1;
+  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes lightboxFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes lightboxFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
 /* Mobile responsive */
 @media (max-width: 768px) {
   .lightbox__nav {
@@ -261,6 +314,26 @@ th.sortable:hover {
   .lightbox__counter {
     bottom: 10px;
     font-size: 0.75rem;
+  }
+}
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [data-lightbox] {
+    animation: none !important;
+    transition: none !important;
+  }
+  [data-lightbox=opening],
+  [data-lightbox=closing] {
+    will-change: auto;
+  }
+  /* Instant state changes for reduced motion */
+  [data-lightbox=opening] {
+    opacity: 1;
+    transform: none;
+  }
+  [data-lightbox=closing] {
+    opacity: 0;
+    transform: none;
   }
 }
 :root {

@@ -23,6 +23,15 @@ import { createElement, generateId, debounce } from '../utils/dom-utils.js';
  * </table>
  */
 export class DataTable extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-datatable';
+  }
+
   static get defaults() {
     return {
       sortable: true,
@@ -47,7 +56,7 @@ export class DataTable extends BaseComponent {
     const state = super._init(element);
 
     /* Initialize with idle state */
-    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
+    this.setState(element, ComponentStates.MOUNTED);
 
     /* Get configuration */
     const config = this._getConfiguration(element);
@@ -76,16 +85,16 @@ export class DataTable extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      sortable: this._getDataAttr(element, 'datatable-sortable', DataTable.defaults.sortable),
-      filterable: this._getDataAttr(element, 'datatable-filterable', DataTable.defaults.filterable),
+      sortable: this.getAttr(element, 'sortable', DataTable.defaults.sortable),
+      filterable: this.getAttr(element, 'filterable', DataTable.defaults.filterable),
       paginate:
-        parseInt(this._getDataAttr(element, 'datatable-paginate', DataTable.defaults.paginate)) ||
+        parseInt(this.getAttr(element, 'paginate', DataTable.defaults.paginate)) ||
         false,
       pageSize: parseInt(
-        this._getDataAttr(element, 'datatable-page-size', DataTable.defaults.pageSize)
+        this.getAttr(element, 'page-size', DataTable.defaults.pageSize)
       ),
       searchDelay: parseInt(
-        this._getDataAttr(element, 'datatable-search-delay', DataTable.defaults.searchDelay)
+        this.getAttr(element, 'search-delay', DataTable.defaults.searchDelay)
       ),
     };
   }
@@ -322,7 +331,7 @@ export class DataTable extends BaseComponent {
 
     try {
       /* Set loading state */
-      element.setAttribute('data-datatable', ExtendedStates.LOADING);
+      this.setState(element, ExtendedStates.LOADING);
       state.errorMessage = null;
 
       /* Fetch data */
@@ -339,7 +348,7 @@ export class DataTable extends BaseComponent {
 
       /* Check for empty data */
       if (data.length === 0) {
-        element.setAttribute('data-datatable', 'empty');
+        this.setState(element, 'empty');
         state.originalRows = [];
         state.filteredRows = [];
         this._render(element, state);
@@ -357,7 +366,7 @@ export class DataTable extends BaseComponent {
       state.currentPage = 1;
 
       /* Set loaded state */
-      element.setAttribute('data-datatable', ExtendedStates.LOADED);
+      this.setState(element, ExtendedStates.LOADED);
 
       /* Render the table */
       this._render(element, state);
@@ -375,8 +384,8 @@ export class DataTable extends BaseComponent {
       });
     } catch (error) {
       /* Set error state */
-      element.setAttribute('data-datatable', ComponentStates.ERROR);
-      element.setAttribute('data-error-message', error.message);
+      this.setState(element, ComponentStates.ERROR);
+      this.setAttr(element, 'error-message', error.message);
       state.errorMessage = error.message;
 
       /* Dispatch error event */
@@ -406,8 +415,8 @@ export class DataTable extends BaseComponent {
     if (!state) return;
 
     state.errorMessage = null;
-    element.removeAttribute('data-error-message');
-    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
+    this.removeAttr(element, 'error-message');
+    this.setState(element, ComponentStates.MOUNTED);
   }
 
   // Public API methods

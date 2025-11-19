@@ -22,6 +22,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  */
 export default class Toast extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-toast';
+  }
+
+  /**
    * Default configuration for toast component
    * @returns {Object} Default config
    */
@@ -49,13 +58,13 @@ export default class Toast extends BaseComponent {
   _init(element) {
     const state = super._init(element);
 
-    const message = this._getDataAttr(element, 'toast-message');
-    const type = this._getDataAttr(element, 'toast-trigger', Toast.defaults.defaultType);
+    const message = this.getAttr(element, 'message');
+    const type = this.getAttr(element, 'trigger', Toast.defaults.defaultType);
     const duration = parseInt(
-      this._getDataAttr(element, 'toast-duration', Toast.defaults.defaultDuration)
+      this.getAttr(element, 'duration', Toast.defaults.defaultDuration)
     );
-    const title = this._getDataAttr(element, 'toast-title');
-    const dismissible = this._getDataAttr(element, 'toast-dismissible', 'true') !== 'false';
+    const title = this.getAttr(element, 'title');
+    const dismissible = this.getAttr(element, 'dismissible', 'true') !== 'false';
 
     if (!element.hasAttribute('data-toast-trigger')) {
       this.logger?.warn(

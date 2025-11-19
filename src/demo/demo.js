@@ -89,8 +89,8 @@ app.components
   .add('[data-form-validator]', () =>
     import(/* webpackChunkName: "form-validator" */ '../../src/components/FormEnhancer.js')
   )
-  .add('[data-copy-to-clipboard]', () =>
-    import(/* webpackChunkName: "copy-to-clipboard" */ '../../src/components/CopyToClipboard.js')
+  .add('[data-copytoclipboard]', () =>
+    import(/* webpackChunkName: "copytoclipboard" */ '../../src/components/CopyToClipboard.js')
   )
   .add('[data-selectloader]', () =>
     import(/* webpackChunkName: "selectloader" */ '../../src/components/SelectLoader.js')

@@ -357,7 +357,7 @@ class BaseComponent {
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
     const viewAttr = `${dataAttr}-view`;
-    const viewName = this._getDataAttr(element, viewAttr);
+    const viewName = this.getAttr(element, viewAttr);
 
     if (viewName) {
       const target = document.querySelector(`[data-view="${viewName}"]`);
@@ -372,7 +372,7 @@ class BaseComponent {
     }
 
     /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
-    const selector = this._getDataAttr(element, dataAttr);
+    const selector = this.getAttr(element, dataAttr);
     if (!selector) {
       if (options.required) {
         this.logger?.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
@@ -390,14 +390,20 @@ class BaseComponent {
   /**
    * Parse multiple data attributes into configuration object
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to data attribute names
+   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
    * @returns {Object} Configuration object
+   * @example
+   * // In SelectLoader component:
+   * const config = this._getConfigFromAttrs(element, {
+   *   target: 'target',           // Uses data-selectloader-target
+   *   loadingClass: 'loading-class' // Uses data-selectloader-loading-class
+   * });
    */
   _getConfigFromAttrs(element, mapping) {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this._getDataAttr(element, attrName, defaultValue);
+      config[key] = this.getAttr(element, attrName, defaultValue);
     }
     return config;
   }
@@ -459,6 +465,103 @@ class BaseComponent {
     this.eventBus?.emit(eventType, { element, ...detail });
     return event;
   }
+
+  /**
+   * Get the component's data attribute selector
+   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
+   * Can be overridden in subclasses if needed
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    if (this._selector) return this._selector;
+
+    // Extract component name from class name and convert to kebab-case
+    const className = this.constructor.name;
+    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
+    const kebab = className
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase();
+
+    this._selector = `data-${kebab}`;
+    return this._selector;
+  }
+
+  /**
+   * Set component state using data attribute (data-<component>="<state>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} state - State value
+   * @example
+   * // In Toggle component:
+   * this.setState(element, ExtendedStates.OPEN);
+   * // Sets: <div data-toggle="open">
+   */
+  setState(element, state) {
+    element.setAttribute(this._getSelector(), state);
+  }
+
+  /**
+   * Get component state from data attribute
+   * @param {HTMLElement} element - Target element
+   * @returns {string|null} Current state value
+   * @example
+   * const state = this.getElementState(element); // "open"
+   */
+  getElementState(element) {
+    return element.getAttribute(this._getSelector());
+  }
+
+  /**
+   * Set component attribute (data-<component>-<attr>="<value>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {string|number|boolean} value - Attribute value
+   * @example
+   * // In Toggle component:
+   * this.setAttr(element, 'duration', '300');
+   * // Sets: <div data-toggle-duration="300">
+   */
+  setAttr(element, attr, value) {
+    element.setAttribute(`${this._getSelector()}-${attr}`, String(value));
+  }
+
+  /**
+   * Get component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {*} defaultValue - Default value if attribute doesn't exist
+   * @returns {string|null} Attribute value or null
+   * @example
+   * const duration = this.getAttr(element, 'duration', '300'); // "300"
+   */
+  getAttr(element, attr, defaultValue = null) {
+    const value = element.getAttribute(`${this._getSelector()}-${attr}`);
+    return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Remove component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @example
+   * this.removeAttr(element, 'duration');
+   * // Removes: data-toggle-duration
+   */
+  removeAttr(element, attr) {
+    element.removeAttribute(`${this._getSelector()}-${attr}`);
+  }
+
+  /**
+   * Check if component attribute exists (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @returns {boolean}
+   * @example
+   * if (this.hasAttr(element, 'disabled')) { ... }
+   */
+  hasAttr(element, attr) {
+    return element.hasAttribute(`${this._getSelector()}-${attr}`);
+  }
 }
 
 /**
@@ -467,6 +570,15 @@ class BaseComponent {
  * Elements are revealed in the order they enter the viewport with simple staggering
  */
 class Scrollreveal extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-reveal';
+  }
+
   static get defaults() {
     return {
       threshold: 0.1,
@@ -505,21 +617,21 @@ class Scrollreveal extends BaseComponent {
     const state = super._init(element);
 
     // Get configuration from data attributes
-    const threshold = this._getDataAttr(
+    const threshold = this.getAttr(
       element,
-      'reveal-threshold',
+      'threshold',
       Scrollreveal.defaults.threshold
     );
-    const once = this._getDataAttr(element, 'reveal-once', Scrollreveal.defaults.once);
-    const delay = this._getDataAttr(element, 'reveal-delay', Scrollreveal.defaults.delay);
-    const stagger = this._getDataAttr(
+    const once = this.getAttr(element, 'once', Scrollreveal.defaults.once);
+    const delay = this.getAttr(element, 'delay', Scrollreveal.defaults.delay);
+    const stagger = this.getAttr(
       element,
-      'reveal-stagger',
+      'stagger',
       Scrollreveal.defaults.stagger
     );
-    const initialState = this._getDataAttr(
+    const initialState = this.getAttr(
       element,
-      'reveal-initial',
+      'initial',
       Scrollreveal.defaults.initialState
     );
 
@@ -601,7 +713,7 @@ class Scrollreveal extends BaseComponent {
       }
 
       // Mark as not yet revealed
-      element.setAttribute('data-reveal-state', 'hidden');
+      this.setAttr(element, 'state', 'hidden');
     }
   }
 
@@ -786,7 +898,7 @@ class Scrollreveal extends BaseComponent {
    */
   async _revealItems(items, container) {
     const promises = items.map(async item => {
-      item.setAttribute('data-reveal-state', 'revealing');
+      this.setAttr(item, 'state', 'revealing');
 
       try {
         // Check for CSS class-based animation first
@@ -804,9 +916,9 @@ class Scrollreveal extends BaseComponent {
           item.style.opacity = '1';
           item.style.transform = 'translateY(0)';
         }
-        item.setAttribute('data-reveal-state', 'visible');
+        this.setAttr(item, 'state', 'visible');
       } catch (error) {
-        item.setAttribute('data-reveal-state', 'error');
+        this.setAttr(item, 'state', 'error');
         throw error;
       }
     });
@@ -822,7 +934,7 @@ class Scrollreveal extends BaseComponent {
    */
   async _hideItems(items, container) {
     const promises = items.map(async item => {
-      item.setAttribute('data-reveal-state', 'hiding');
+      this.setAttr(item, 'state', 'hiding');
 
       try {
         const revealClass = item.dataset.revealClass;
@@ -840,9 +952,9 @@ class Scrollreveal extends BaseComponent {
           item.style.opacity = '0';
           item.style.transform = `translateY(${y})`;
         }
-        item.setAttribute('data-reveal-state', 'hidden');
+        this.setAttr(item, 'state', 'hidden');
       } catch (error) {
-        item.setAttribute('data-reveal-state', 'error');
+        this.setAttr(item, 'state', 'error');
         throw error;
       }
     });

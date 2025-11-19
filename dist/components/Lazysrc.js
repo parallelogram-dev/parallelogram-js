@@ -357,7 +357,7 @@ class BaseComponent {
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
     const viewAttr = `${dataAttr}-view`;
-    const viewName = this._getDataAttr(element, viewAttr);
+    const viewName = this.getAttr(element, viewAttr);
 
     if (viewName) {
       const target = document.querySelector(`[data-view="${viewName}"]`);
@@ -372,7 +372,7 @@ class BaseComponent {
     }
 
     /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
-    const selector = this._getDataAttr(element, dataAttr);
+    const selector = this.getAttr(element, dataAttr);
     if (!selector) {
       if (options.required) {
         this.logger?.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
@@ -390,14 +390,20 @@ class BaseComponent {
   /**
    * Parse multiple data attributes into configuration object
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to data attribute names
+   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
    * @returns {Object} Configuration object
+   * @example
+   * // In SelectLoader component:
+   * const config = this._getConfigFromAttrs(element, {
+   *   target: 'target',           // Uses data-selectloader-target
+   *   loadingClass: 'loading-class' // Uses data-selectloader-loading-class
+   * });
    */
   _getConfigFromAttrs(element, mapping) {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this._getDataAttr(element, attrName, defaultValue);
+      config[key] = this.getAttr(element, attrName, defaultValue);
     }
     return config;
   }
@@ -458,6 +464,103 @@ class BaseComponent {
     element.dispatchEvent(event);
     this.eventBus?.emit(eventType, { element, ...detail });
     return event;
+  }
+
+  /**
+   * Get the component's data attribute selector
+   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
+   * Can be overridden in subclasses if needed
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    if (this._selector) return this._selector;
+
+    // Extract component name from class name and convert to kebab-case
+    const className = this.constructor.name;
+    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
+    const kebab = className
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase();
+
+    this._selector = `data-${kebab}`;
+    return this._selector;
+  }
+
+  /**
+   * Set component state using data attribute (data-<component>="<state>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} state - State value
+   * @example
+   * // In Toggle component:
+   * this.setState(element, ExtendedStates.OPEN);
+   * // Sets: <div data-toggle="open">
+   */
+  setState(element, state) {
+    element.setAttribute(this._getSelector(), state);
+  }
+
+  /**
+   * Get component state from data attribute
+   * @param {HTMLElement} element - Target element
+   * @returns {string|null} Current state value
+   * @example
+   * const state = this.getElementState(element); // "open"
+   */
+  getElementState(element) {
+    return element.getAttribute(this._getSelector());
+  }
+
+  /**
+   * Set component attribute (data-<component>-<attr>="<value>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {string|number|boolean} value - Attribute value
+   * @example
+   * // In Toggle component:
+   * this.setAttr(element, 'duration', '300');
+   * // Sets: <div data-toggle-duration="300">
+   */
+  setAttr(element, attr, value) {
+    element.setAttribute(`${this._getSelector()}-${attr}`, String(value));
+  }
+
+  /**
+   * Get component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {*} defaultValue - Default value if attribute doesn't exist
+   * @returns {string|null} Attribute value or null
+   * @example
+   * const duration = this.getAttr(element, 'duration', '300'); // "300"
+   */
+  getAttr(element, attr, defaultValue = null) {
+    const value = element.getAttribute(`${this._getSelector()}-${attr}`);
+    return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Remove component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @example
+   * this.removeAttr(element, 'duration');
+   * // Removes: data-toggle-duration
+   */
+  removeAttr(element, attr) {
+    element.removeAttribute(`${this._getSelector()}-${attr}`);
+  }
+
+  /**
+   * Check if component attribute exists (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @returns {boolean}
+   * @example
+   * if (this.hasAttr(element, 'disabled')) { ... }
+   */
+  hasAttr(element, attr) {
+    return element.hasAttribute(`${this._getSelector()}-${attr}`);
   }
 }
 
@@ -526,6 +629,15 @@ class BaseComponent {
  *      alt="Description">
  */
 class Lazysrc extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-lazysrc';
+  }
+
   static get defaults() {
     return {
       threshold: 0.1,
@@ -643,42 +755,50 @@ class Lazysrc extends BaseComponent {
     const config = { ...Lazysrc.defaults };
 
     // Threshold
-    if (element.dataset.lazysrcThreshold) {
-      config.threshold = parseFloat(element.dataset.lazysrcThreshold);
+    const threshold = this.getAttr(element, 'threshold');
+    if (threshold) {
+      config.threshold = parseFloat(threshold);
     }
 
     // Root margin
-    if (element.dataset.lazysrcRootMargin) {
-      config.rootMargin = element.dataset.lazysrcRootMargin;
+    const rootMargin = this.getAttr(element, 'root-margin');
+    if (rootMargin) {
+      config.rootMargin = rootMargin;
     }
 
     // CSS Classes
-    if (element.dataset.lazysrcLoadingClass) {
-      config.loadingClass = element.dataset.lazysrcLoadingClass;
+    const loadingClass = this.getAttr(element, 'loading-class');
+    if (loadingClass) {
+      config.loadingClass = loadingClass;
     }
-    if (element.dataset.lazysrcLoadedClass) {
-      config.loadedClass = element.dataset.lazysrcLoadedClass;
+    const loadedClass = this.getAttr(element, 'loaded-class');
+    if (loadedClass) {
+      config.loadedClass = loadedClass;
     }
-    if (element.dataset.lazysrcErrorClass) {
-      config.errorClass = element.dataset.lazysrcErrorClass;
+    const errorClass = this.getAttr(element, 'error-class');
+    if (errorClass) {
+      config.errorClass = errorClass;
     }
 
     // Animation
-    if (element.dataset.lazysrcFadeDuration) {
-      config.fadeInDuration = parseInt(element.dataset.lazysrcFadeDuration, 10);
+    const fadeDuration = this.getAttr(element, 'fade-duration');
+    if (fadeDuration) {
+      config.fadeInDuration = parseInt(fadeDuration, 10);
     }
 
     // Retry logic
-    if (element.dataset.lazysrcRetryAttempts) {
-      config.retryAttempts = parseInt(element.dataset.lazysrcRetryAttempts, 10);
+    const retryAttempts = this.getAttr(element, 'retry-attempts');
+    if (retryAttempts) {
+      config.retryAttempts = parseInt(retryAttempts, 10);
     }
-    if (element.dataset.lazysrcRetryDelay) {
-      config.retryDelay = parseInt(element.dataset.lazysrcRetryDelay, 10);
+    const retryDelay = this.getAttr(element, 'retry-delay');
+    if (retryDelay) {
+      config.retryDelay = parseInt(retryDelay, 10);
     }
 
     // Native loading
-    if (element.dataset.lazysrcUseNative !== undefined) {
-      config.useNativeLoading = element.dataset.lazysrcUseNative !== 'false';
+    if (this.hasAttr(element, 'use-native')) {
+      config.useNativeLoading = this.getAttr(element, 'use-native') !== 'false';
     }
 
     return config;
@@ -795,15 +915,15 @@ class Lazysrc extends BaseComponent {
       }
 
       /* Store and clear img src/srcset */
-      if (element.src && !element.dataset.lazysrcSrc) {
+      if (element.src && !this.hasAttr(element, 'src')) {
         state.originalSrc = element.src;
         element.removeAttribute('src');
       }
-      if (element.srcset && !element.dataset.lazysrcSrcset) {
+      if (element.srcset && !this.hasAttr(element, 'srcset')) {
         state.originalSrcset = element.srcset;
         element.removeAttribute('srcset');
       }
-      if (element.sizes && !element.dataset.lazysrcSizes) {
+      if (element.sizes && !this.hasAttr(element, 'sizes')) {
         state.originalSizes = element.sizes;
       }
     } else if (element.tagName === 'PICTURE') {
@@ -926,7 +1046,7 @@ class Lazysrc extends BaseComponent {
 
     try {
       // Handle different element types
-      if (element.dataset.lazysrcBg) {
+      if (this.hasAttr(element, 'bg')) {
         await this._loadBackgroundImage(element, componentState);
       } else if (element.tagName === 'PICTURE') {
         await this._loadPictureElement(element, componentState);
@@ -992,9 +1112,9 @@ class Lazysrc extends BaseComponent {
         };
 
         // Get src and srcset
-        const src = element.dataset.lazysrcSrc || state.originalSrc;
-        const srcset = element.dataset.lazysrcSrcset || state.originalSrcset;
-        const sizes = element.dataset.lazysrcSizes || state.originalSizes;
+        const src = this.getAttr(element, 'src') || state.originalSrc;
+        const srcset = this.getAttr(element, 'srcset') || state.originalSrcset;
+        const sizes = this.getAttr(element, 'sizes') || state.originalSizes;
 
         // Set srcset and sizes first (browser will choose best image)
         if (srcset) {
@@ -1054,7 +1174,7 @@ class Lazysrc extends BaseComponent {
    */
   _loadBackgroundImage(element, state) {
     return new Promise((resolve, reject) => {
-      const bgUrl = element.dataset.lazysrcBg;
+      const bgUrl = this.getAttr(element, 'bg');
       if (!bgUrl) {
         reject(new Error('No background image URL specified'));
         return;
@@ -1084,22 +1204,25 @@ class Lazysrc extends BaseComponent {
    */
   _applySources(element, state) {
     // Apply srcset - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSrcset) {
-      element.srcset = element.dataset.lazysrcSrcset;
+    const srcset = this.getAttr(element, 'srcset');
+    if (srcset) {
+      element.srcset = srcset;
     } else if (state.originalSrcset) {
       element.srcset = state.originalSrcset;
     }
 
     // Apply sizes - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSizes) {
-      element.sizes = element.dataset.lazysrcSizes;
+    const sizes = this.getAttr(element, 'sizes');
+    if (sizes) {
+      element.sizes = sizes;
     } else if (state.originalSizes) {
       element.sizes = state.originalSizes;
     }
 
     // Apply src - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSrc) {
-      element.src = element.dataset.lazysrcSrc;
+    const src = this.getAttr(element, 'src');
+    if (src) {
+      element.src = src;
     } else if (state.originalSrc) {
       element.src = state.originalSrc;
     }

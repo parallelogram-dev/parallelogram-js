@@ -1,12 +1,65 @@
-# Lightbox State Management Improvements
+# Lightbox Component - State Management Guide
 
-This document outlines the improvements made to the Lightbox component to better utilize the state management system.
+**Component**: `Lightbox.js`
+**Status**: ✅ Complete with State-Based CSS
+**Last Updated**: 2025-11-19
 
-## Key Improvements
+---
 
-###
+## Overview
 
- 1. **Proper State Tracking**
+The Lightbox component is an image/media gallery viewer with proper state management. It uses state-based CSS with the `data-lightbox` attribute to handle smooth animations between states.
+
+## State Machine
+
+### States
+
+The Lightbox component uses five states:
+
+1. **`closed`** - Lightbox is not visible
+2. **`opening`** - Lightbox is transitioning in (fade in animation)
+3. **`open`** - Lightbox is fully visible and interactive
+4. **`transitioning`** - Lightbox is changing images (slide animation)
+5. **`closing`** - Lightbox is transitioning out (fade out animation)
+
+### State Transitions
+
+```mermaid
+stateDiagram-v2
+    [*] --> closed
+    closed --> opening: open()
+    opening --> open: animation complete
+    open --> transitioning: next()/previous()
+    transitioning --> open: image loaded
+    open --> closing: close()
+    closing --> closed: animation complete
+
+    note right of opening
+      Prevents opening while
+      already opening/open
+    end note
+
+    note right of closing
+      Pointer events disabled
+      during animation
+    end note
+```
+
+### Transition Rules
+
+- **From `closed`**: Can transition to `opening` when gallery image is clicked
+- **From `opening`**: Automatically transitions to `open` after fade-in animation completes
+- **From `open`**: Can transition to `transitioning` (when navigating images) or `closing` (when closing)
+- **From `transitioning`**: Automatically transitions back to `open` after image slide animation
+- **From `closing`**: Automatically transitions to `closed` after fade-out animation completes
+
+---
+
+## Implementation
+
+### Key Improvements
+
+#### 1. **Proper State Tracking**
 
 **Before:**
 ```javascript
@@ -25,24 +78,7 @@ state.currentIndex = 0;
 state.galleryElements = [];
 ```
 
-### 2. **State Machine Pattern**
-
-The component now follows a proper state machine with defined transitions:
-
-```
-closed → opening → open → transitioning → open
-                    ↓
-                 closing → closed
-```
-
-**States:**
-- `closed` - Lightbox is not visible
-- `opening` - Lightbox is transitioning in (fade in animation)
-- `open` - Lightbox is fully visible and interactive
-- `transitioning` - Lightbox is changing images (slide animation)
-- `closing` - Lightbox is transitioning out (fade out animation)
-
-### 3. **State-Based CSS Classes**
+#### 2. **State-Based Attributes (Not Classes)**
 
 **Before:**
 ```javascript
@@ -52,9 +88,10 @@ this.lightboxElement.classList.add('show');
 
 **After:**
 ```javascript
-// Automatic state-based classes
-// Classes applied based on state: .is-closed, .is-opening, .is-open, .is-transitioning, .is-closing
+// Automatic state-based data attribute
+// State exposed via [data-lightbox="state"] attribute
 this._setState(element, 'open');
+// Sets: <div data-lightbox="open" class="lightbox__overlay">
 ```
 
 ### 4. **Configuration Stored in State**
@@ -129,35 +166,104 @@ lightbox.mount(gallery2);
 // Each gallery maintains independent state
 ```
 
-## CSS Integration
+## CSS State-Based Styling
 
-The state classes can be used for styling:
+The lightbox uses `data-lightbox` attribute for state-based styling:
+
+```scss
+:root {
+  --lightbox-transition-duration: 0.3s;
+  --lightbox-transition-easing: ease-out;
+}
+
+/* State-based CSS using data-lightbox attribute */
+[data-lightbox="closed"] {
+  display: none;
+  opacity: 0;
+}
+
+[data-lightbox="opening"] {
+  display: flex;
+  opacity: 0;
+  will-change: opacity;
+  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+}
+
+[data-lightbox="open"] {
+  display: flex;
+  opacity: 1;
+}
+
+[data-lightbox="transitioning"] {
+  display: flex;
+  opacity: 1;
+  will-change: opacity;
+  /* During image transitions */
+}
+
+[data-lightbox="closing"] {
+  display: flex;
+  opacity: 1;
+  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  pointer-events: none; /* Prevent interaction during close */
+}
+
+/* Animations */
+@keyframes lightboxFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lightboxFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Accessibility: Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  [data-lightbox] {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  [data-lightbox="opening"],
+  [data-lightbox="closing"] {
+    will-change: auto;
+  }
+
+  /* Instant state changes */
+  [data-lightbox="opening"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-lightbox="closing"] {
+    opacity: 0;
+    transform: none;
+  }
+}
+```
+
+### CSS Variables
+
+You can customize transitions globally:
 
 ```css
-/* Lightbox states */
-.lightbox__overlay.is-closed {
-  display: none;
-}
-
-.lightbox__overlay.is-opening {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.lightbox__overlay.is-open {
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 0.3s, transform 0.3s;
-}
-
-.lightbox__overlay.is-transitioning {
-  pointer-events: none; /* Prevent interaction during transitions */
-}
-
-.lightbox__overlay.is-closing {
-  opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 0.3s, transform 0.3s;
+:root {
+  --lightbox-transition-duration: 0.5s; /* Slower transitions */
+  --lightbox-transition-easing: cubic-bezier(0.4, 0, 0.2, 1); /* Custom easing */
 }
 ```
 

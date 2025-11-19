@@ -30,6 +30,15 @@ import { generateId } from '../utils/dom-utils.js';
  */
 export default class Tabs extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-tabs';
+  }
+
+  /**
    * Default configuration for tabs component
    * @returns {Object} Default config
    */
@@ -74,13 +83,13 @@ export default class Tabs extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const defaultTab = this._getDataAttr(element, 'tabs-default-tab', Tabs.defaults.defaultTab);
-    const keyboardNav = this._getDataAttr(
+    const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
+    const keyboardNav = this.getAttr(
       element,
-      'tabs-keyboard',
+      'keyboard',
       Tabs.defaults.keyboardNavigation
     );
-    const autoFocus = this._getDataAttr(element, 'tabs-autofocus', Tabs.defaults.autoFocus);
+    const autoFocus = this.getAttr(element, 'autofocus', Tabs.defaults.autoFocus);
 
     // Store elements and config in state
     state.tabsList = tabsList;
@@ -105,14 +114,14 @@ export default class Tabs extends BaseComponent {
     this._setupEventListeners(element, state);
 
     // Mark as enhanced
-    element.setAttribute('data-tabs-enhanced', 'true');
+    this.setAttr(element, 'enhanced', 'true');
     element.classList.add('tabs--enhanced');
 
     // Setup cleanup
     const originalCleanup = state.cleanup;
     state.cleanup = () => {
       this._removeEventListeners(element, state);
-      element.removeAttribute('data-tabs-enhanced');
+      this.removeAttr(element, 'enhanced');
       element.classList.remove('tabs--enhanced');
       originalCleanup();
     };
@@ -408,20 +417,22 @@ export default class Tabs extends BaseComponent {
    * @returns {Object} Component status
    */
   getStatus() {
-    const containers = document.querySelectorAll('[data-tabs-enhanced="true"]');
+    const containers = document.querySelectorAll('[data-tabs]');
+    const enhancedContainers = [];
     let totalTabs = 0;
     let totalPanels = 0;
 
     containers.forEach(container => {
       const state = this.getState(container);
-      if (state) {
+      if (state && this.hasAttr(container, 'enhanced')) {
+        enhancedContainers.push(container);
         totalTabs += state.tabs.length;
         totalPanels += state.panels.length;
       }
     });
 
     return {
-      containers: containers.length,
+      containers: enhancedContainers.length,
       totalTabs,
       totalPanels,
       keyboardNavigationSupported: true,
