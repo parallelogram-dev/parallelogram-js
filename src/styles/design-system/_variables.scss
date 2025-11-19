@@ -1,63 +1,129 @@
-/* Design System Variables */
-/* This file contains design tokens that can be shared across all components */
+/* Design System Variables - LEGACY */
+/* ============================================================================
+   DEPRECATION NOTICE
+   ============================================================================
+   This file provides backwards compatibility for existing components.
+   New components should use the new design system tokens from _tokens.scss
 
-/* Colors */
+   Import the new system with:
+   @use '../../design-system' as ds;
+
+   These legacy variables will be removed in v0.3.0
+   ============================================================================ */
+
+/* Forward tokens so they're available to components using @use 'variables' */
+@forward 'tokens';
+
+/* Use tokens internally to create legacy mappings */
+@use 'tokens' as *;
+
+/* ============================================================================
+   Legacy Color Mappings
+   ============================================================================ */
+
+/* Basic colors */
 $color-white: #fff;
 $color-black: #000;
-$color-border: #e2e8f0;
-$color-border-hover: #cbd5e1;
-$color-border-active: #3b82f6;
-$color-bg-light: #f8fafc;
-$color-bg-lighter: #f1f5f9;
-$color-bg-hover: #eff6ff;
-$color-bg-overlay: rgba(255, 255, 255, 0.95);
-$color-error: #dc2626;
-$color-error-bg: #fee2e2;
-$color-primary: #3b82f6;
-$color-primary-dark: #2563eb;
-$color-text-muted: rgba(0, 0, 0, 0.5);
-$color-progress-bar: #eee;
-$color-progress-value: #ccc;
 
-/* Spacing */
-$spacing-xs: 0.1875rem;   /* 3px */
-$spacing-sm: 0.375rem;    /* 6px */
-$spacing-md: 0.5rem;      /* 8px */
-$spacing-lg: 0.75rem;     /* 12px */
-$spacing-xl: 1rem;        /* 16px */
-$spacing-2xl: 2rem;       /* 32px */
+/* Border colors - map to new tokens */
+$legacy-color-border: rgba(0, 0, 0, 0.1);
+$legacy-color-border-hover: $neutral-300;
+$legacy-color-border-active: $primary;
 
-/* Sizing */
+/* Background colors */
+$legacy-color-bg-light: $neutral-100;
+$legacy-color-bg-lighter: $neutral-100;
+$legacy-color-bg-hover: rgba(0, 0, 0, 0.05);
+$legacy-color-bg-overlay: rgba(255, 255, 255, 0.95);
+
+/* State colors */
+$legacy-color-error: $error-dark;
+$legacy-color-error-bg: #fee2e2;
+
+/* Primary colors */
+$legacy-color-primary: $primary;
+$legacy-color-primary-dark: $primary-dark;
+
+/* Text colors */
+$legacy-color-text-muted: rgba(0, 0, 0, 0.5);
+
+/* Progress colors */
+$legacy-color-progress-bar: $neutral-100;
+$legacy-color-progress-value: $neutral-300;
+
+/* Export with original names for backwards compatibility */
+$color-border: $legacy-color-border;
+$color-border-hover: $legacy-color-border-hover;
+$color-border-active: $legacy-color-border-active;
+$color-bg-light: $legacy-color-bg-light;
+$color-bg-lighter: $legacy-color-bg-lighter;
+$color-bg-hover: $legacy-color-bg-hover;
+$color-bg-overlay: $legacy-color-bg-overlay;
+$color-error: $legacy-color-error;
+$color-error-bg: $legacy-color-error-bg;
+$color-primary: $legacy-color-primary;
+$color-primary-dark: $legacy-color-primary-dark;
+$color-text-muted: $legacy-color-text-muted;
+$color-progress-bar: $legacy-color-progress-bar;
+$color-progress-value: $legacy-color-progress-value;
+
+/* ============================================================================
+   Legacy Spacing Mappings
+   ============================================================================ */
+
+$spacing-xs: 0.1875rem;   /* 3px - no direct mapping, keep as-is */
+$spacing-sm: 0.375rem;    /* 6px - close to $space-sm (0.25em = 4px) */
+$spacing-md: 0.5rem;      /* 8px - maps to $space-md (0.5em) */
+$spacing-lg: 0.75rem;     /* 12px - maps to $space-lg (0.75em) */
+$spacing-xl: 1rem;        /* 16px - close to $space-xl (1.25em = 20px) */
+$spacing-2xl: 2rem;       /* 32px - maps to $space-2xl (2em) */
+
+/* ============================================================================
+   Legacy Sizing
+   ============================================================================ */
+
 $size-icon-sm: 1.25rem;
 $size-icon-md: 1.25rem;
 $size-preview: 6rem;
 $size-field-height: 1.25rem;
 
-/* Typography */
+/* ============================================================================
+   Legacy Typography Mappings
+   ============================================================================ */
+
 $font-family: inherit;
-$font-size-xs: 0.625rem;  /* 10px */
-$font-size-sm: 0.75rem;   /* 12px */
-$font-size-md: 0.875rem;  /* 14px */
-$font-size-base: 1rem;    /* 16px */
-$font-weight-normal: 400;
-$font-weight-semibold: 600;
-$font-weight-bold: 700;
+$font-size-xs: 0.625rem;  /* 10px - smaller than new system */
+$font-size-sm: 0.75rem;   /* 12px - maps to $font-xs */
+$font-size-md: 0.875rem;  /* 14px - maps to $font-sm */
+$font-size-base: 1rem;    /* 16px - maps to $font-base */
+$font-weight-normal: $font-normal;
+$font-weight-semibold: $font-semibold;
+$font-weight-bold: $font-bold;
 $line-height-tight: 0.75rem;
 $line-height-base: 1.125rem;
 
-/* Borders */
-$border-width-sm: 1px;
-$border-width-md: 2px;
-$border-radius-sm: 0.125rem;
+/* ============================================================================
+   Legacy Border Mappings
+   ============================================================================ */
 
-/* Transitions */
-$transition-fast: 0.2s;
-$transition-normal: 0.375s;
-$transition-slow: 0.4s;
-$easing-standard: cubic-bezier(0.5, 0, 0, 1);
+$border-width-sm: $border-width;
+$border-width-md: $border-width-thick;
+$border-radius-sm: $radius-sm;
+
+/* ============================================================================
+   Legacy Transition Mappings
+   ============================================================================ */
+
+$transition-fast: $duration-fast;
+$transition-normal: $duration-normal;
+$transition-slow: $duration-slow;
+$easing-standard: $ease-standard;
 $easing-ease-out: cubic-bezier(0.77, 0, 0.175, 1);
 
-/* Z-index */
-$z-overlay: 10;
-$z-panel: 2;
+/* ============================================================================
+   Legacy Z-index Mappings
+   ============================================================================ */
+
+$z-overlay: $z-dropdown;
+$z-panel: $z-base;
 $z-preview: 3;

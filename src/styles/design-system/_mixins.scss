@@ -1,0 +1,110 @@
+/* Design System Mixins */
+/* Utility mixins for common patterns */
+
+@use 'tokens' as *;
+
+/* ============================================================================
+   Accessibility Mixins
+   ============================================================================ */
+
+/* Conditional transition that respects prefers-reduced-motion */
+@mixin transition($property: all, $duration: $duration-fast, $easing: $ease-smooth) {
+  @media (prefers-reduced-motion: no-preference) {
+    transition: $property $duration $easing;
+  }
+}
+
+/* Focus visible styles (keyboard focus only) */
+@mixin focus-visible($color: $color-focus-shadow) {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px $color;
+  }
+}
+
+/* Screen reader only content */
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================================
+   Dark Mode Mixin
+   ============================================================================ */
+
+/* Simplified dark mode wrapper */
+@mixin dark-mode {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+/* ============================================================================
+   Layout Mixins
+   ============================================================================ */
+
+/* Flex center alignment */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Truncate text with ellipsis */
+@mixin truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   Button Reset Mixin
+   ============================================================================ */
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+/* ============================================================================
+   Hover State Mixin (with hover support detection)
+   ============================================================================ */
+
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+/* ============================================================================
+   Elevation Mixin
+   ============================================================================ */
+
+@mixin elevation($level: 1) {
+  @if $level == 1 {
+    box-shadow: $shadow-sm;
+  } @else if $level == 2 {
+    box-shadow: $shadow-md;
+  } @else if $level == 3 {
+    box-shadow: $shadow-lg;
+  }
+}
