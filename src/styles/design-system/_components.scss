@@ -61,6 +61,16 @@
   --surface-card-color-bg: #ffffff;
   --surface-card-color-text: #{$color-text};
   --surface-card-shadow: none;
+
+  /* Touch surfaces (interactive areas with hover feedback) */
+  --surface-touch-radius: #{$radius-xs};
+  --surface-touch-border-width: #{$border-width};
+  --surface-touch-border-color: #{$neutral-300};
+  --surface-touch-color-bg: #{$neutral-100};
+  --surface-touch-color-text: #{$color-text};
+  --surface-touch-shadow: none;
+  --surface-touch-hover-bg: #{$neutral-100};
+  --surface-touch-hover-border-color: #{$neutral-600};
 }
 
 /* ============================================================================
