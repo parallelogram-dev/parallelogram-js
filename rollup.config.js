@@ -7,6 +7,9 @@ import commonjs from '@rollup/plugin-commonjs';
 // Get all component files
 const componentFiles = glob.sync('src/components/*.js');
 
+// Get all core files
+const coreFiles = glob.sync('src/core/*.js');
+
 // Create completely separate builds for each component
 const componentConfigs = componentFiles.map(file => {
   const name = path.basename(file, '.js');
@@ -20,6 +23,25 @@ const componentConfigs = componentFiles.map(file => {
       inlineDynamicImports: true,
     },
     // No external dependencies - bundle everything into the component
+    plugins: [
+      resolve({
+        extensions: ['.js'],
+      }),
+      commonjs(),
+    ],
+  };
+});
+
+// Create separate builds for each core utility
+const coreConfigs = coreFiles.map(file => {
+  const name = path.basename(file, '.js');
+
+  return {
+    input: file,
+    output: {
+      file: `dist/core/${name}.js`,
+      format: 'esm',
+    },
     plugins: [
       resolve({
         extensions: ['.js'],
@@ -46,4 +68,7 @@ export default [
 
   // Individual component builds
   ...componentConfigs,
+
+  // Individual core utility builds
+  ...coreConfigs,
 ];
