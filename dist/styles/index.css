@@ -438,6 +438,7 @@ th.sortable:hover {
 }
 .lightbox__overlay.show {
   opacity: 1;
+  will-change: opacity;
 }
 .lightbox__container {
   position: relative;
@@ -460,10 +461,12 @@ th.sortable:hover {
 .lightbox__image.slide-left {
   transform: translateX(-100%);
   opacity: 0;
+  will-change: transform, opacity;
 }
 .lightbox__image.slide-right {
   transform: translateX(100%);
   opacity: 0;
+  will-change: transform, opacity;
 }
 .lightbox__close {
   position: absolute;
@@ -576,6 +579,7 @@ th.sortable:hover {
   background-image: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.1) 51%, transparent 51%), linear-gradient(-45deg, transparent 49%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.1) 51%, transparent 51%);
   background-size: 20px 20px;
   animation: lazysrc-shimmer 1.5s ease-in-out infinite;
+  will-change: opacity, background-position;
 }
 
 .lazysrc--loaded,
