@@ -142,165 +142,23 @@ export default class PSelect extends HTMLElement {
 
   _render() {
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: inline-block;
-          position: relative;
-          box-sizing: border-box;
-        }
+      <style>${styles}</style>
 
-        /* CSS custom properties with fallbacks to parent/theme colors */
-        :host {
-          --select-border-color: var(--border-color, var(--color-border, #e2e8f0));
-          --select-focus-color: var(--accent-color, var(--color-primary, #3b82f6));
-          --select-bg: var(--background-color, var(--color-surface, #fff));
-          --select-text: var(--text-color, var(--color-text, currentColor));
-          --select-placeholder: var(--text-muted, var(--color-text-secondary, #64748b));
-          --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(0,0,0,0.05)));
-          --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.1)));
-          --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(0,0,0,0.1)));
-          --select-padding: 0.45rem 0.6rem;
-          --select-border-radius: 6px;
-          --select-border: 1px solid var(--select-border-color);
-          --select-focus-shadow: 0 0 0 3px var(--focus-shadow-color, rgba(59, 130, 246, 0.1));
-        }
-
-        /* Dark mode adjustments */
-        @media (prefers-color-scheme: dark) {
-          :host {
-            --select-border-color: var(--border-color, var(--color-border, #374151));
-            --select-bg: var(--background-color, var(--color-surface, #1f2937));
-            --select-text: var(--text-color, var(--color-text, #f9fafb));
-            --select-placeholder: var(--text-muted, var(--color-text-secondary, #9ca3af));
-            --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(255,255,255,0.1)));
-            --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.2)));
-            --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(255,255,255,0.1)));
-          }
-        }
-
-        .root {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          background: inherit;
-          color: inherit;
-          font-family: inherit;
-          font-size: inherit;
-          border: inherit;
-          border-radius: inherit;
-          padding: inherit;
-        }
-
-        .control {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          cursor: pointer;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          box-sizing: border-box;
-          padding: inherit;
-        }
-
-        .input {
-          border: 0;
-          outline: 0;
-          flex: 1;
-          min-width: 2ch;
-          background: transparent;
-          color: inherit;
-          font: inherit;
-          padding: 0;
-        }
-
-        .input::placeholder {
-          color: inherit;
-          opacity: 0.6;
-        }
-
-        .arrow {
-          pointer-events: none;
-          transition: transform 0.15s ease;
-          user-select: none;
-          flex-shrink: 0;
-          margin-left: auto;
-        }
-
-        .control[aria-expanded="true"] .arrow {
-          transform: rotate(180deg);
-        }
-
-        .menu {
-          position: absolute;
-          z-index: 10;
-          left: 0;
-          right: 0;
-          top: 100%;
-          margin-top: 0.25rem;
-          background: var(--select-bg);
-          color: var(--select-text);
-          border: 1px solid var(--select-border-color);
-          border-radius: 10px;
-          max-height: 240px;
-          overflow: auto;
-          box-shadow: 0 10px 30px var(--shadow-color, rgba(0, 0, 0, 0.08));
-        }
-
-        .option {
-          padding: 0.45rem 0.6rem;
-          cursor: pointer;
-          transition: background-color 0.15s ease;
-        }
-
-        .option:hover {
-          background: var(--select-hover-bg);
-        }
-
-        .option[aria-selected="true"] {
-          background: var(--select-selected-bg);
-          font-weight: 500;
-        }
-
-        .option[aria-current="true"] {
-          background: var(--select-current-bg);
-        }
-
-        .option[aria-disabled="true"] {
-          opacity: 0.5;
-          cursor: not-allowed;
-          background: transparent !important;
-        }
-
-        .noresults {
-          padding: 0.6rem;
-          font-style: italic;
-          text-align: center;
-          opacity: 0.6;
-        }
-      </style>
-      
       <div class="root">
-        <div 
-          class="control" 
-          role="combobox" 
-          aria-expanded="false" 
+        <div
+          class="control"
+          role="combobox"
+          aria-expanded="false"
           aria-haspopup="listbox"
         >
-          <input 
-            class="input" 
-            type="text" 
+          <input
+            class="input"
+            type="text"
             autocomplete="off"
           />
           <span class="arrow" aria-hidden="true">▾</span>
         </div>
-        
+
         <div class="menu" role="listbox" hidden></div>
       </div>
     `;
@@ -490,7 +348,15 @@ export default class PSelect extends HTMLElement {
     this.state.filtered = this.state.options.filter(option =>
       option.label.toLowerCase().includes(searchTerm)
     );
-    this.state.highlightedIndex = this.state.filtered.length > 0 ? 0 : -1;
+
+    // If no search query, highlight selected item; otherwise highlight first result
+    if (!searchTerm && this.state.value) {
+      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
+      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
+    } else {
+      this.state.highlightedIndex = this.state.filtered.length > 0 ? 0 : -1;
+    }
+
     this._renderOptions();
   }
 
@@ -528,7 +394,14 @@ export default class PSelect extends HTMLElement {
     if (this.state.open || this.state.disabled) return;
 
     this.state.open = true;
-    this.state.highlightedIndex = 0;
+
+    // Set highlighted index to currently selected item, or -1 if no selection
+    if (this.state.value) {
+      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
+      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
+    } else {
+      this.state.highlightedIndex = -1;
+    }
 
     this._els.control.setAttribute('aria-expanded', 'true');
     this._els.menu.hidden = false;
@@ -641,7 +514,9 @@ export default class PSelect extends HTMLElement {
       const optionEl = document.createElement('div');
       optionEl.className = 'option';
       optionEl.setAttribute('role', 'option');
-      optionEl.setAttribute('aria-selected', String(option.value === this.state.value));
+      // Only mark as selected if both values are truthy and equal (don't mark empty placeholder as selected)
+      const isSelected = this.state.value && option.value === this.state.value;
+      optionEl.setAttribute('aria-selected', String(isSelected));
       optionEl.textContent = option.label;
 
       // CRITICAL: Set aria-disabled attribute for disabled options

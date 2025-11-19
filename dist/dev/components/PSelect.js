@@ -63,6 +63,8 @@ class TransitionManager {
   }
 }
 
+var css_248z = ":root{--surface-control-radius:0.25em;--surface-control-border-width:1px;--surface-control-border-color:rgba(0,0,0,.1);--surface-control-color-bg:#fff;--surface-control-color-text:currentColor;--surface-control-shadow:none;--surface-button-radius:0.25em;--surface-button-border-width:1px;--surface-button-shadow:none;--surface-panel-radius:0.5em;--surface-panel-border-width:1px;--surface-panel-border-color:rgba(0,0,0,.1);--surface-panel-color-bg:#fff;--surface-panel-color-text:currentColor;--surface-panel-shadow:0 4px 6px rgba(0,0,0,.12);--surface-dialog-radius:0.75em;--surface-dialog-border-width:1px;--surface-dialog-border-color:rgba(0,0,0,.1);--surface-dialog-color-bg:#fff;--surface-dialog-color-text:currentColor;--surface-dialog-shadow:0 1.25em 3em rgba(0,0,0,.5);--surface-dropdown-radius:0.25em;--surface-dropdown-border-width:1px;--surface-dropdown-border-color:rgba(0,0,0,.1);--surface-dropdown-color-bg:#fff;--surface-dropdown-color-text:currentColor;--surface-dropdown-shadow:0 4px 6px rgba(0,0,0,.12);--surface-dropdown-item-hover-bg:#f5f5f5;--surface-dropdown-item-selected-bg:rgba(59,130,246,.1);--surface-dropdown-item-current-bg:#f5f5f5;--surface-item-radius:0.25em;--surface-item-border-width:1px;--surface-item-border-color:rgba(0,0,0,.1);--surface-item-color-bg:transparent;--surface-item-color-text:currentColor;--surface-item-shadow:none;--surface-card-radius:0.125em;--surface-card-border-width:1px;--surface-card-border-color:#d4d4d4;--surface-card-color-bg:#fff;--surface-card-color-text:currentColor;--surface-card-shadow:none;--surface-touch-radius:0.125em;--surface-touch-border-width:1px;--surface-touch-border-color:#d4d4d4;--surface-touch-color-bg:#f5f5f5;--surface-touch-color-text:currentColor;--surface-touch-shadow:none;--surface-touch-hover-bg:#f5f5f5;--surface-touch-hover-border-color:rgba(59,130,246,.5);--form-control-padding-y:0.25em;--form-control-padding-x:0.75em;--form-control-padding-y-sm:0.125em;--form-control-padding-x-sm:0.5em;--form-control-padding-y-lg:0.5em;--form-control-padding-x-lg:1.25em;--form-control-border-width:var(--surface-control-border-width);--form-control-border-color:var(--surface-control-border-color);--form-control-border-radius:var(--surface-control-radius);--form-control-bg:var(--surface-control-color-bg);--form-control-color:var(--surface-control-color-text);--form-control-placeholder-color:rgba(0,0,0,.5);--form-control-focus-ring-width:2px;--form-control-focus-ring-color:#3b82f6;--form-control-focus-border-color:#3b82f6;--form-control-hover-border-color:#d4d4d4;--form-control-disabled-opacity:0.3;--form-control-disabled-bg:#f5f5f5;--form-control-font-size:0.875em;--form-control-font-size-sm:0.75em;--form-control-font-size-lg:1em;--form-control-font-family:inherit;--button-padding-y:0.25em;--button-padding-x:0.75em;--button-padding-y-sm:0.125em;--button-padding-x-sm:0.5em;--button-padding-y-lg:0.5em;--button-padding-x-lg:1.25em;--button-font-size:0.875em;--button-font-size-sm:0.75em;--button-font-size-lg:1em;--button-font-weight:600;--button-border-width:var(--surface-button-border-width);--button-border-radius:var(--surface-button-radius);--button-min-height:2.5em;--button-min-height-sm:2em;--button-min-height-lg:3em;--button-primary-bg:#3b82f6;--button-primary-color:#fff;--button-primary-border:#3b82f6;--button-primary-hover-bg:#2563eb;--button-primary-hover-border:#2563eb;--button-secondary-bg:transparent;--button-secondary-color:currentColor;--button-secondary-border:#d4d4d4;--button-secondary-hover-bg:#f5f5f5;--button-secondary-hover-border:#d4d4d4;--button-danger-bg:#ef4444;--button-danger-color:#fff;--button-danger-border:#ef4444;--button-danger-hover-bg:#dc2626;--button-danger-hover-border:#dc2626;--button-ghost-bg:transparent;--button-ghost-color:currentColor;--button-ghost-border:currentColor;--button-ghost-hover-bg:rgba(0,0,0,.05);--panel-bg:var(--surface-panel-color-bg);--panel-border-width:var(--surface-panel-border-width);--panel-border-color:var(--surface-panel-border-color);--panel-border-radius:var(--surface-panel-radius);--panel-color:var(--surface-panel-color-text);--panel-shadow:var(--surface-panel-shadow);--panel-padding:0.75em;--panel-padding-sm:0.5em;--panel-padding-lg:1.25em;--panel-header-padding:0.5em 0.75em;--panel-header-border:1px solid rgba(0,0,0,.1);--panel-footer-padding:0.5em 0.75em;--panel-footer-border:1px solid rgba(0,0,0,.1);--modal-bg:var(--surface-dialog-color-bg);--modal-border-width:var(--surface-dialog-border-width);--modal-border-color:var(--surface-dialog-border-color);--modal-border-radius:var(--surface-dialog-radius);--modal-color:var(--surface-dialog-color-text);--modal-shadow:var(--surface-dialog-shadow);--modal-backdrop-bg:rgba(0,0,0,.5)}@media (prefers-color-scheme:dark){:root{--form-control-bg:#171717;--form-control-color:#fff;--form-control-border-color:#525252;--form-control-placeholder-color:hsla(0,0%,100%,.5);--button-secondary-hover-bg:#525252;--panel-bg:#171717;--panel-border-color:#525252}}:host{box-sizing:border-box;display:inline-block;position:relative}:host{--select-border-color:var(--surface-control-border-color);--select-focus-color:#3b82f6;--select-bg:var(--surface-control-color-bg);--select-text:var(--surface-control-color-text);--select-placeholder:rgba(0,0,0,.5);--select-hover-bg:var(--surface-dropdown-item-hover-bg);--select-selected-bg:var(--surface-dropdown-item-selected-bg);--select-current-bg:var(--surface-dropdown-item-current-bg);--select-padding:0.45rem 0.6rem;--select-border-radius:var(--surface-control-radius);--select-border:var(--surface-control-border-width) solid var(--select-border-color);--select-focus-shadow:inset 0 0 0 3px rgba(59,130,246,.3);--menu-border-radius:var(--surface-dropdown-radius);--menu-border-color:var(--surface-dropdown-border-color);--menu-bg:var(--surface-dropdown-color-bg);--menu-shadow:var(--surface-dropdown-shadow)}@media (prefers-color-scheme:dark){:host{--select-placeholder:hsla(0,0%,100%,.5);--select-hover-bg:hsla(0,0%,100%,.1)}}.root{background:inherit;border:inherit;border-radius:inherit;color:inherit;font-family:inherit;font-size:inherit;height:100%;width:100%}.control,.root{box-sizing:border-box;left:0;padding:inherit;position:absolute;top:0}.control{align-items:center;bottom:0;cursor:pointer;display:flex;gap:.4rem;right:0;transition:border-color .2s ease,box-shadow .2s ease}.input{background:transparent;border:0;color:inherit;flex:1;font:inherit;min-width:2ch;outline:0;padding:0}.input::placeholder{color:inherit;opacity:.6}.arrow{flex-shrink:0;margin-left:auto;pointer-events:none;transition:transform .15s ease;user-select:none}.control[aria-expanded=true] .arrow{transform:rotate(180deg)}.menu{background:var(--menu-bg);border:var(--surface-dropdown-border-width,1px) solid var(--menu-border-color);border-radius:var(--menu-border-radius);box-shadow:var(--menu-shadow);color:var(--select-text);left:0;margin-top:.25rem;max-height:240px;overflow:auto;position:absolute;right:0;top:100%;z-index:10}.option{cursor:pointer;padding:.45rem .6rem;transition:background-color .15s ease}.option:hover{background:var(--select-hover-bg)}.option[aria-selected=true]{background:var(--select-selected-bg);font-weight:500}.option[aria-current=true]{background:var(--select-current-bg)}.option[aria-disabled=true]{background:transparent!important;cursor:not-allowed;opacity:.5}.noresults{font-style:italic;opacity:.6;padding:.6rem;text-align:center}";
+
 /**
  * PSelect - Enhanced select/combobox web component
  *
@@ -202,165 +204,23 @@ class PSelect extends HTMLElement {
 
   _render() {
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: inline-block;
-          position: relative;
-          box-sizing: border-box;
-        }
+      <style>${css_248z}</style>
 
-        /* CSS custom properties with fallbacks to parent/theme colors */
-        :host {
-          --select-border-color: var(--border-color, var(--color-border, #e2e8f0));
-          --select-focus-color: var(--accent-color, var(--color-primary, #3b82f6));
-          --select-bg: var(--background-color, var(--color-surface, #fff));
-          --select-text: var(--text-color, var(--color-text, currentColor));
-          --select-placeholder: var(--text-muted, var(--color-text-secondary, #64748b));
-          --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(0,0,0,0.05)));
-          --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.1)));
-          --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(0,0,0,0.1)));
-          --select-padding: 0.45rem 0.6rem;
-          --select-border-radius: 6px;
-          --select-border: 1px solid var(--select-border-color);
-          --select-focus-shadow: 0 0 0 3px var(--focus-shadow-color, rgba(59, 130, 246, 0.1));
-        }
-
-        /* Dark mode adjustments */
-        @media (prefers-color-scheme: dark) {
-          :host {
-            --select-border-color: var(--border-color, var(--color-border, #374151));
-            --select-bg: var(--background-color, var(--color-surface, #1f2937));
-            --select-text: var(--text-color, var(--color-text, #f9fafb));
-            --select-placeholder: var(--text-muted, var(--color-text-secondary, #9ca3af));
-            --select-hover-bg: var(--hover-bg, var(--color-surface-hover, rgba(255,255,255,0.1)));
-            --select-selected-bg: var(--selected-bg, var(--color-surface-active, rgba(59, 130, 246, 0.2)));
-            --select-current-bg: var(--current-bg, var(--color-surface-focus, rgba(255,255,255,0.1)));
-          }
-        }
-
-        .root {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          background: inherit;
-          color: inherit;
-          font-family: inherit;
-          font-size: inherit;
-          border: inherit;
-          border-radius: inherit;
-          padding: inherit;
-        }
-
-        .control {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          cursor: pointer;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          box-sizing: border-box;
-          padding: inherit;
-        }
-
-        .input {
-          border: 0;
-          outline: 0;
-          flex: 1;
-          min-width: 2ch;
-          background: transparent;
-          color: inherit;
-          font: inherit;
-          padding: 0;
-        }
-
-        .input::placeholder {
-          color: inherit;
-          opacity: 0.6;
-        }
-
-        .arrow {
-          pointer-events: none;
-          transition: transform 0.15s ease;
-          user-select: none;
-          flex-shrink: 0;
-          margin-left: auto;
-        }
-
-        .control[aria-expanded="true"] .arrow {
-          transform: rotate(180deg);
-        }
-
-        .menu {
-          position: absolute;
-          z-index: 10;
-          left: 0;
-          right: 0;
-          top: 100%;
-          margin-top: 0.25rem;
-          background: var(--select-bg);
-          color: var(--select-text);
-          border: 1px solid var(--select-border-color);
-          border-radius: 10px;
-          max-height: 240px;
-          overflow: auto;
-          box-shadow: 0 10px 30px var(--shadow-color, rgba(0, 0, 0, 0.08));
-        }
-
-        .option {
-          padding: 0.45rem 0.6rem;
-          cursor: pointer;
-          transition: background-color 0.15s ease;
-        }
-
-        .option:hover {
-          background: var(--select-hover-bg);
-        }
-
-        .option[aria-selected="true"] {
-          background: var(--select-selected-bg);
-          font-weight: 500;
-        }
-
-        .option[aria-current="true"] {
-          background: var(--select-current-bg);
-        }
-
-        .option[aria-disabled="true"] {
-          opacity: 0.5;
-          cursor: not-allowed;
-          background: transparent !important;
-        }
-
-        .noresults {
-          padding: 0.6rem;
-          font-style: italic;
-          text-align: center;
-          opacity: 0.6;
-        }
-      </style>
-      
       <div class="root">
-        <div 
-          class="control" 
-          role="combobox" 
-          aria-expanded="false" 
+        <div
+          class="control"
+          role="combobox"
+          aria-expanded="false"
           aria-haspopup="listbox"
         >
-          <input 
-            class="input" 
-            type="text" 
+          <input
+            class="input"
+            type="text"
             autocomplete="off"
           />
           <span class="arrow" aria-hidden="true">▾</span>
         </div>
-        
+
         <div class="menu" role="listbox" hidden></div>
       </div>
     `;
@@ -550,7 +410,15 @@ class PSelect extends HTMLElement {
     this.state.filtered = this.state.options.filter(option =>
       option.label.toLowerCase().includes(searchTerm)
     );
-    this.state.highlightedIndex = this.state.filtered.length > 0 ? 0 : -1;
+
+    // If no search query, highlight selected item; otherwise highlight first result
+    if (!searchTerm && this.state.value) {
+      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
+      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
+    } else {
+      this.state.highlightedIndex = this.state.filtered.length > 0 ? 0 : -1;
+    }
+
     this._renderOptions();
   }
 
@@ -588,7 +456,14 @@ class PSelect extends HTMLElement {
     if (this.state.open || this.state.disabled) return;
 
     this.state.open = true;
-    this.state.highlightedIndex = 0;
+
+    // Set highlighted index to currently selected item, or -1 if no selection
+    if (this.state.value) {
+      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
+      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
+    } else {
+      this.state.highlightedIndex = -1;
+    }
 
     this._els.control.setAttribute('aria-expanded', 'true');
     this._els.menu.hidden = false;
@@ -701,7 +576,9 @@ class PSelect extends HTMLElement {
       const optionEl = document.createElement('div');
       optionEl.className = 'option';
       optionEl.setAttribute('role', 'option');
-      optionEl.setAttribute('aria-selected', String(option.value === this.state.value));
+      // Only mark as selected if both values are truthy and equal (don't mark empty placeholder as selected)
+      const isSelected = this.state.value && option.value === this.state.value;
+      optionEl.setAttribute('aria-selected', String(isSelected));
       optionEl.textContent = option.label;
 
       // CRITICAL: Set aria-disabled attribute for disabled options

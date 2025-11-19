@@ -25,13 +25,13 @@
   --color-text-medium: #374151;
   --color-text-muted: #6b7280;
 
-  /* Focus States */
-  --focus-ring-primary: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  --focus-ring-secondary: 0 0 0 3px rgba(249, 115, 22, 0.1);
-  --focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  --focus-ring-success: 0 0 0 3px rgba(16, 185, 129, 0.1);
-  --focus-ring-warning: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  --focus-ring-info: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  /* Focus States - inset with darker colors */
+  --focus-ring-primary: inset 0 0 0 3px rgba(37, 99, 235, 0.3);
+  --focus-ring-secondary: inset 0 0 0 3px rgba(234, 88, 12, 0.3);
+  --focus-ring-error: inset 0 0 0 3px rgba(220, 38, 38, 0.3);
+  --focus-ring-success: inset 0 0 0 3px rgba(22, 163, 74, 0.3);
+  --focus-ring-warning: inset 0 0 0 3px rgba(217, 119, 6, 0.3);
+  --focus-ring-info: inset 0 0 0 3px rgba(8, 145, 178, 0.3);
 
   /* Button Variants */
   --btn-info: #06b6d4;
@@ -106,10 +106,12 @@
 %input_base {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--demo-border, var(--color-border));
-  border-radius: 4px;
-  background: var(--demo-panel-bg, white);
-  color: var(--demo-text, var(--color-text-dark));
+
+  /* Use surface-control tokens for consistent decoration */
+  border: var(--surface-control-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-control-radius);
+  background: var(--surface-control-color-bg);
+  color: var(--surface-control-color-text);
   transition: border-color 0.2s ease;
 
   &:focus {
@@ -179,8 +181,11 @@
 /*  Base button styles */
 %button_base {
   padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
+
+  /* Use surface-button tokens for consistent decoration */
+  border: var(--surface-button-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-button-radius);
+
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
