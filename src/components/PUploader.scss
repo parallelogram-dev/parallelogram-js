@@ -1,0 +1,335 @@
+/* PUploader Web Component Styles */
+@use '../styles/web-components/variables' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  position: relative;
+  border: $border-width-md solid $color-black;
+  padding: $spacing-sm;
+  background: $color-white;
+  transition: border-color $transition-fast ease-out, background-color $transition-fast ease-out;
+  font-family: $font-family;
+}
+
+:host([dragging]) {
+  opacity: 0.5;
+  transition: none;
+}
+
+:host([drag-over]) {
+  border-color: $color-border-active;
+  background: $color-bg-hover;
+  transform: translateY(-4px);
+}
+
+:host([draggable="true"]) {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:host([draggable="true"]:active) {
+  cursor: grabbing;
+}
+
+button,
+textarea,
+input {
+  font-family: $font-family;
+}
+
+.uploader {
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: $color-bg-overlay;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: $z-overlay;
+    padding: 0 $spacing-sm 0 6.75rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $transition-normal $easing-standard;
+
+    &--show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__progress {
+    width: 100%;
+    height: $spacing-md;
+  }
+
+  &__container {
+    display: flex;
+    gap: $spacing-sm;
+    position: relative;
+  }
+
+  &__preview {
+    flex-shrink: 0;
+    width: $size-preview;
+    height: $size-preview;
+    pointer-events: none;
+    user-select: none;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    height: $size-preview;
+    overflow: hidden;
+  }
+
+  &__panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    height: $size-preview;
+    background: $color-white;
+    transform: translateY(-100%);
+    transition: transform $transition-normal $easing-standard;
+    will-change: transform;
+
+    &--show {
+      transform: translateY(0);
+    }
+
+    &[data-panel="info"] {
+      transform: translateY(100%);
+
+      &.uploader__panel--activated {
+        transform: translateY(-100%);
+      }
+
+      &.uploader__panel--show {
+        transform: translateY(0);
+      }
+    }
+
+    &[data-panel="delete"],
+    &[data-panel^="edit-"] {
+      transform: translateY(100%);
+
+      &.uploader__panel--show {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  &__body,
+  &__alert {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: $size-preview;
+    position: relative;
+  }
+
+  &__alert {
+    justify-content: space-between;
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__filename,
+  &__heading {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    padding-right: $spacing-2xl;
+    height: $line-height-base;
+    line-height: $line-height-base;
+    margin: 0 0 $spacing-md;
+    display: flex;
+    align-items: center;
+  }
+
+  &__filename {
+    font-family: monospace;
+  }
+
+  &__field {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: $spacing-sm;
+    height: $size-field-height;
+    padding-top: $spacing-xs;
+    padding-bottom: $spacing-xs;
+    margin: 0;
+  }
+
+  &__delete-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: $size-icon-md;
+    height: $size-icon-md;
+    border: none;
+    background-size: contain;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
+    background-color: $color-white;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity $transition-fast;
+    pointer-events: auto;
+    padding: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-sm;
+    justify-content: flex-end;
+    padding-left: $spacing-sm;
+  }
+
+  &__btn {
+    padding: $spacing-sm $spacing-lg;
+    border: $border-width-sm solid $color-border-hover;
+    background: $color-white;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    transition: all $transition-fast;
+    pointer-events: auto;
+    flex-shrink: 0;
+
+    &:hover {
+      background: $color-bg-lighter;
+    }
+
+    &--secondary {
+      background: transparent;
+      border-color: currentColor;
+    }
+
+    &--delete {
+      color: $color-error;
+      border-color: $color-error;
+
+      &:hover {
+        background: $color-error-bg;
+      }
+    }
+
+    &--primary {
+      background: $color-primary;
+      color: $color-white;
+      border-color: $color-primary;
+
+      &:hover {
+        background: $color-primary-dark;
+      }
+    }
+  }
+
+  &__input,
+  &__textarea {
+    flex: 1 0 auto;
+    height: 100%;
+    padding: $spacing-sm;
+    border: $border-width-sm solid $color-border-hover;
+    margin: 0;
+    font-family: $font-family;
+    font-size: $font-size-sm;
+    pointer-events: auto;
+    outline: 0 none;
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+}
+
+.field {
+  &__label {
+    opacity: $color-text-muted;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    flex: 0 0 4rem;
+  }
+
+  &__value {
+    opacity: $color-text-muted;
+    font-size: $font-size-sm;
+    line-height: $size-field-height;
+    word-break: break-word;
+    height: $size-field-height;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 0 1 auto;
+
+    &--editable {
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__edit {
+    width: $size-icon-sm;
+    height: $size-icon-sm;
+    border: none;
+    background-size: contain;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
+    background-color: $color-white;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity $transition-fast;
+    pointer-events: auto;
+    padding: 0;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.error-message {
+  color: $color-error;
+  background: $color-error-bg;
+  padding: $spacing-md;
+  font-size: $font-size-sm;
+}
+
+slot {
+  display: none;
+}
