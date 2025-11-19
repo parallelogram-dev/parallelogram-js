@@ -33,3 +33,17 @@
     padding: 1rem 0;
   }
 }
+
+/* State-based panel selectors */
+[data-tab-panel='active'] {
+  display: block;
+}
+
+[data-tab-panel='inactive'] {
+  display: none;
+}
+
+[data-tab-panel='transitioning'] {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
