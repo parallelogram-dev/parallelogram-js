@@ -7,7 +7,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## High Priority
 
 ### State Management System Completion
-**Status**: 3 of 7 phases complete (Phases 1-3 done, 4-7 remaining)
+**Status**: 3 of 8 phases complete (Phases 1-3 done, 4-8 remaining)
 **Last Updated**: 2025-11-19
 **Plan Document**: `docs/guides/state-management-completion-plan.md`
 
@@ -40,12 +40,19 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - [ ] Implement state-based CSS in SCSS file
   - [ ] Already documented, needs CSS implementation
 
-- [ ] **Phase 6: Documentation & State Diagrams** (PENDING)
+- [ ] **Phase 6: BaseComponent API Enhancement** (PENDING - **NEW**)
+  - [ ] Add setState/getElementState/setAttr/getAttr/removeAttr/hasAttr methods
+  - [ ] Eliminate hardcoded component names throughout codebase
+  - [ ] Migrate all 15+ components to use new API with fine-tooth comb
+  - [ ] Update documentation and coding standards
+  - [ ] Estimated code savings: 4500-9000 characters across all components
+
+- [ ] **Phase 7: Documentation & State Diagrams** (PENDING)
   - [ ] Create visual state machine diagrams for all components
   - [ ] Central state management guide
   - [ ] Best practices documentation
 
-- [ ] **Phase 7: State Debugger Tool** (OPTIONAL)
+- [ ] **Phase 8: State Debugger Tool** (OPTIONAL)
   - [ ] Dev mode overlay showing component states
   - [ ] Real-time state transition monitoring
   - [ ] Visual debugging interface
