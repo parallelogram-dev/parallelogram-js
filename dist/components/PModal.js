@@ -44,6 +44,42 @@ function trapFocus(container, event) {
 }
 
 /**
+ * ComponentStates - Standard state values for component lifecycle
+ *
+ * These states are used in data attributes to track component initialization
+ * and lifecycle. Each component uses its selector attribute (e.g., data-lazysrc)
+ * to store its current state.
+ *
+ * @example
+ * // Initial HTML
+ * <img data-lazysrc data-lazysrc-src="/image.jpg">
+ *
+ * // After mounting
+ * <img data-lazysrc="mounted" data-lazysrc-src="/image.jpg">
+ *
+ * // After loading
+ * <img data-lazysrc="loaded" data-lazysrc-src="/image.jpg" src="/image.jpg">
+ *
+ * @example
+ * // CSS Hooks
+ * [data-lazysrc="loading"] { opacity: 0.5; }
+ * [data-lazysrc="loaded"] { opacity: 1; }
+ * [data-lazysrc="error"] { border: 2px solid red; }
+ */
+
+
+/**
+ * Extended states for specific component behaviors
+ * Components can use these in addition to core states
+ */
+const ExtendedStates = {
+  // Interactive states (for Toggle, Modal, etc.)
+  OPEN: 'open',
+  CLOSED: 'closed',
+  OPENING: 'opening',
+  CLOSING: 'closing'};
+
+/**
  * PModal - Modal dialog web component
  * Can be used standalone without the framework
  * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
@@ -437,6 +473,9 @@ class PModal extends HTMLElement {
     // Bind event handlers
     this._onKeydown = this._onKeydown.bind(this);
     this._onFocus = this._onFocus.bind(this);
+
+    // Initialize with closed state
+    this.setAttribute('data-modal', ExtendedStates.CLOSED);
   }
 
   connectedCallback() {
@@ -486,17 +525,35 @@ class PModal extends HTMLElement {
   }
 
   /**
-   * Open the modal
+   * Open the modal with state management
    */
   open() {
+    /* Set opening state */
+    this.setAttribute('data-modal', ExtendedStates.OPENING);
     this.setAttribute('open', '');
+
+    /* Transition to fully open after animation starts */
+    requestAnimationFrame(() => {
+      this.setAttribute('data-modal', ExtendedStates.OPEN);
+    });
   }
 
   /**
-   * Close the modal
+   * Close the modal with state management
    */
   close() {
-    this.removeAttribute('open');
+    /* Set closing state */
+    this.setAttribute('data-modal', ExtendedStates.CLOSING);
+
+    /* Wait for closing animation before removing open attribute */
+    const duration =
+      parseFloat(getComputedStyle(this).getPropertyValue('--modal-animation-duration') || '0.2') *
+      1000;
+
+    setTimeout(() => {
+      this.removeAttribute('open');
+      this.setAttribute('data-modal', ExtendedStates.CLOSED);
+    }, duration);
   }
 
   /**
