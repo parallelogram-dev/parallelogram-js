@@ -186,12 +186,8 @@
 
 /* Button Mixins */
 
-@mixin button-reset {
-  @include mix.button-reset;
-}
-
 @mixin button-base {
-  @include button-reset;
+  @include mix.button-reset;
 
   padding: var(--button-padding-y) var(--button-padding-x);
   min-height: var(--button-min-height);
@@ -303,7 +299,7 @@
   --panel-footer-border: #{$border-width} solid #{$color-border};
 
   /* Modal specific (elevated panel) */
-  --modal-shadow: 0 #{$space-xl} #{$space-2xl * 1.5} rgba(0, 0, 0, 0.5);
+  --modal-shadow: 0 #{$space-xl} 3em rgba(0, 0, 0, 0.5);
   --modal-backdrop-bg: #{$color-bg-overlay};
 }
 
@@ -391,7 +387,7 @@
     --form-control-placeholder-color: #{$color-text-muted-dark};
 
     /* Buttons in dark mode */
-    --button-secondary-hover-bg: #{$neutral-800};
+    --button-secondary-hover-bg: #{$neutral-600};
 
     /* Panels in dark mode */
     --panel-bg: #{$neutral-900};
