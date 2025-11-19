@@ -1,6 +1,6 @@
 /* PUploader Host Element Styles */
 /* These styles apply to the <p-uploader> host element in the light DOM */
-@use '../styles/web-components/variables' as *;
+@use '../../design-system/variables' as *;
 
 :host {
   font-family: $font-family;
