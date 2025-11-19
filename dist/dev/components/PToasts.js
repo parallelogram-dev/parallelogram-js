@@ -1,78 +1,12 @@
+var css_248z = ":host{display:grid;gap:8px;inset:auto auto auto 0;padding:12px;pointer-events:none;position:fixed;z-index:2147483647}:host([placement=top-left]){left:0;top:0}:host([placement=top-right]){left:auto;right:0;top:0}:host([placement=bottom-right]){bottom:0;left:auto;right:0}:host([placement=bottom-left]){bottom:0;left:0}.toast{animation:toast-in .18s ease-out forwards;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);color:#fff;cursor:pointer;font:14px/1.4 system-ui,-apple-system,sans-serif;min-width:300px;opacity:0;outline:none;padding:10px 12px;pointer-events:auto;transform:translateY(-6px)}.toast.info{background:#111827}.toast.success{background:#065f46}.toast.warning{background:#7c2d12}.toast.error{background:#7f1d1d}@keyframes toast-in{to{opacity:1;transform:none}}.row{align-items:center;display:flex;gap:8px}.msg{flex:1;white-space:pre-wrap}.btn.close{all:unset;align-items:center;background:hsla(0,0%,100%,.1);border-radius:6px;cursor:pointer;display:inline-flex;font-weight:700;height:24px;justify-content:center;min-height:24px;width:24px}.btn.close:hover{background:hsla(0,0%,100%,.2)}";
+
 class PToasts extends HTMLElement {
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
 
     root.innerHTML = `
-      <style>  
-        :host {
-          position: fixed;
-          inset: auto auto auto 0;
-          padding: 12px;
-          z-index: 2147483647;
-          display: grid;
-          gap: 8px;
-          pointer-events: none;
-        }
-        
-        :host([placement="top-left"]) { top: 0; left: 0; }
-        :host([placement="top-right"]) { top: 0; right: 0; left: auto; }
-        :host([placement="bottom-right"]) { bottom: 0; right: 0; left: auto; }
-        :host([placement="bottom-left"]) { bottom: 0; left: 0; }
-        
-        .toast {
-          padding: 10px 12px;
-          border-radius: 8px;
-          color: #fff;
-          box-shadow: 0 6px 20px rgba(0,0,0,.25);
-          opacity: 0;
-          transform: translateY(-6px);
-          animation: toast-in 0.18s ease-out forwards;
-          cursor: pointer;
-          font: 14px/1.4 system-ui, -apple-system, sans-serif;
-          outline: none;
-          pointer-events: auto;
-          min-width: 300px;
-        }
-        
-        .toast.info { background: #111827; }
-        .toast.success { background: #065f46; }
-        .toast.warning { background: #7c2d12; }
-        .toast.error { background: #7f1d1d; }
-        
-        @keyframes toast-in { 
-          to { opacity: 1; transform: none; } 
-        }
-        
-        .row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .msg {
-          white-space: pre-wrap;
-          flex: 1;
-        }
-        
-        .btn.close {
-          all: unset;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          min-height: 24px;
-          border-radius: 6px;
-          font-weight: 700;
-          background: rgba(255,255,255,0.1);
-          cursor: pointer;
-        }
-        
-        .btn.close:hover {
-          background: rgba(255,255,255,0.2);
-        }
-      </style>  
+      <style>${css_248z}</style>  
       <div id="container" role="region" aria-live="polite"></div>
     `;
 

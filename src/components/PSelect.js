@@ -1,6 +1,8 @@
 import { TransitionManager } from '../managers/index.js';
 import { default as PToasts } from './PToasts.js';
 
+import styles from '../styles/framework/components/PSelect.scss';
+
 /**
  * PSelect - Enhanced select/combobox web component
  *
