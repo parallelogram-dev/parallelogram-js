@@ -1,11 +1,14 @@
 /* Design System - Main Entry Point */
-/* Import this file to access all design tokens and mixins */
+/* Import this file to access all design tokens, mixins, and component patterns */
 
 /* Forward all tokens so they're available when using @use */
 @forward 'tokens';
 
 /* Forward all mixins */
 @forward 'mixins';
+
+/* Forward component patterns */
+@forward 'components';
 
 /* Forward legacy variables for backwards compatibility */
 @forward 'variables';
@@ -17,9 +20,14 @@
  *   padding: ds.$space-md;
  *   color: ds.$primary;
  *
- * Or use mixins:
+ * Use mixins:
  *   @include ds.transition(opacity);
  *   @include ds.focus-visible;
+ *
+ * Use component patterns:
+ *   @include ds.form-control;
+ *   @include ds.button-primary;
+ *   @include ds.panel-base;
  *
  * Legacy components can still use:
  * @use '../../design-system/variables' as *;
