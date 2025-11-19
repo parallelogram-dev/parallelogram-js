@@ -1,0 +1,26 @@
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens and mixins */
+
+/* Forward all tokens so they're available when using @use */
+@forward 'tokens';
+
+/* Forward all mixins */
+@forward 'mixins';
+
+/* Forward legacy variables for backwards compatibility */
+@forward 'variables';
+
+/* Usage in components:
+ * @use '../../design-system' as ds;
+ *
+ * Then access tokens:
+ *   padding: ds.$space-md;
+ *   color: ds.$primary;
+ *
+ * Or use mixins:
+ *   @include ds.transition(opacity);
+ *   @include ds.focus-visible;
+ *
+ * Legacy components can still use:
+ * @use '../../design-system/variables' as *;
+ */

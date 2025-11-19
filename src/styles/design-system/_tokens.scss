@@ -1,0 +1,164 @@
+/* Design System Tokens */
+/* Minimal, opinionated design tokens for Parallelogram components */
+
+/* ============================================================================
+   Base Color Palette
+   ============================================================================ */
+
+/* Neutrals (4 shades only) */
+$neutral-100: #f5f5f5;  /* Light backgrounds */
+$neutral-300: #d4d4d4;  /* Borders, disabled */
+$neutral-600: #525252;  /* Muted text */
+$neutral-900: #171717;  /* Primary text */
+
+/* Primary (Blue) */
+$primary:       #3b82f6;
+$primary-light: #60a5fa;
+$primary-dark:  #2563eb;
+
+/* Success (Green) */
+$success:       #22c55e;
+$success-light: #4ade80;
+$success-dark:  #16a34a;
+
+/* Warning (Orange) */
+$warning:       #f97316;
+$warning-light: #fb923c;
+$warning-dark:  #ea580c;
+
+/* Error (Red) */
+$error:       #ef4444;
+$error-light: #f87171;
+$error-dark:  #dc2626;
+
+/* ============================================================================
+   Spacing Scale (Golden Ratio: ~1.618)
+   ============================================================================ */
+
+/* Using em units for scalability with font-size */
+$space-xs:  0.125em;  /* ~2px at 16px base */
+$space-sm:  0.25em;   /* ~4px */
+$space-md:  0.5em;    /* ~8px */
+$space-lg:  0.75em;   /* ~12px */
+$space-xl:  1.25em;   /* ~20px - golden ratio jump */
+$space-xxl: 2em;      /* ~32px */
+
+/* ============================================================================
+   Typography Scale
+   ============================================================================ */
+
+/* Font Sizes (minimal scale) */
+$font-xs:   0.75em;   /* 12px at 16px base */
+$font-sm:   0.875em;  /* 14px */
+$font-base: 1em;      /* 16px */
+$font-lg:   1.125em;  /* 18px */
+
+/* Font Weights */
+$font-normal:   400;
+$font-medium:   500;
+$font-semibold: 600;
+$font-bold:     700;
+
+/* Line Heights */
+$leading-tight:  1.25;
+$leading-normal: 1.5;
+$leading-relaxed: 1.75;
+
+/* ============================================================================
+   Borders
+   ============================================================================ */
+
+/* Border Widths (1px and 2px only) */
+$border-width:       1px;
+$border-width-thick: 2px;
+
+/* Border Radius (3 settings) */
+$radius-sm: 0.25em;  /* ~4px - subtle */
+$radius-md: 0.5em;   /* ~8px - default */
+$radius-lg: 0.75em;  /* ~12px - panel/modal */
+
+/* ============================================================================
+   Shadows & Elevation
+   ============================================================================ */
+
+/* Base shadow color as CSS custom property for theme support */
+$shadow-color: rgba(0, 0, 0, 0.12);
+
+/* Shadow Scale */
+$shadow-sm: 0 1px 2px $shadow-color;
+$shadow-md: 0 4px 6px $shadow-color;
+$shadow-lg: 0 10px 30px $shadow-color;
+
+/* ============================================================================
+   Transitions & Animation
+   ============================================================================ */
+
+/* Duration */
+$duration-fast:   0.15s;
+$duration-normal: 0.3s;
+$duration-slow:   0.5s;
+
+/* Easing Functions */
+$ease-standard: cubic-bezier(0.5, 0, 0, 1);
+$ease-smooth:   ease-in-out;
+
+/* ============================================================================
+   Z-Index Scale
+   ============================================================================ */
+
+/* Simplified layering */
+$z-base:     1;
+$z-dropdown: 10;
+$z-overlay:  100;
+$z-modal:    1000;
+$z-toast:    2000;
+
+/* ============================================================================
+   Opacity Scale
+   ============================================================================ */
+
+$opacity-disabled: 0.3;
+$opacity-muted:    0.6;
+$opacity-icon:     0.7;
+$opacity-hover:    0.9;
+
+/* ============================================================================
+   CSS Custom Properties (for runtime theming)
+   ============================================================================ */
+
+/* These can be overridden at runtime by developers or through theme switching */
+
+/* Text Colors */
+$color-text:       currentColor;
+$color-text-muted: rgba(0, 0, 0, 0.5);
+
+/* Background Colors */
+$color-bg:         #ffffff;
+$color-bg-hover:   rgba(0, 0, 0, 0.05);
+$color-bg-overlay: rgba(0, 0, 0, 0.5);
+$color-bg-light:   $neutral-100;
+
+/* Border Colors */
+$color-border:       rgba(0, 0, 0, 0.1);
+$color-border-hover: $neutral-300;
+
+/* Accent/Interactive Colors */
+$color-accent: $primary;
+$color-accent-hover: $primary-dark;
+
+/* Shadow Colors */
+$color-shadow:       rgba(0, 0, 0, 0.12);
+$color-focus-shadow: rgba(59, 130, 246, 0.1);
+
+/* State Colors */
+$color-error:       $error-dark;
+$color-error-bg:    #fee2e2;
+$color-success:     $success-dark;
+$color-success-bg:  #dcfce7;
+$color-warning:     $warning-dark;
+$color-warning-bg:  #ffedd5;
+
+/* Dark Mode Overrides */
+/* Components should wrap these in @media (prefers-color-scheme: dark) {} */
+$color-text-muted-dark: rgba(255, 255, 255, 0.5);
+$color-bg-hover-dark:   rgba(255, 255, 255, 0.1);
