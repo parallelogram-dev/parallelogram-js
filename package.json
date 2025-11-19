@@ -26,16 +26,18 @@
     "progressive-enhancement"
   ],
   "license": "MIT",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/components/*.js",
+    "*.css"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.esm.js",
       "require": "./dist/index.cjs",
       "browser": "./dist/index.umd.js"
     },
-    "./components/*": {
-      "import": "./dist/components/*.js"
-    },
+    "./components/*": "./dist/components/*.js",
+    "./core/*": "./dist/core/*.js",
     "./styles": "./dist/styles/index.min.css"
   },
   "files": [
