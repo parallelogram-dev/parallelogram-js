@@ -87,7 +87,7 @@ export default class Scrollreveal extends BaseComponent {
     this._setInitialState(element, state);
 
     // Mark as enhanced for status tracking
-    element.setAttribute('data-scrollreveal-enhanced', 'true');
+    element.setAttribute('data-reveal-enhanced', 'true');
 
     // Create observer with element-specific threshold if needed
     if (state.threshold !== Scrollreveal.defaults.threshold) {
@@ -545,7 +545,7 @@ export default class Scrollreveal extends BaseComponent {
    * @returns {Object} Component status
    */
   getStatus() {
-    const elements = document.querySelectorAll('[data-scrollreveal-enhanced="true"]');
+    const elements = document.querySelectorAll('[data-reveal-enhanced="true"]');
     let revealedCount = 0;
     let revealingCount = 0;
 
@@ -580,7 +580,7 @@ export default class Scrollreveal extends BaseComponent {
     this.logger?.info('Scrollreveal destroyed');
   }
 
-  static enhanceAll(selector = '[data-scrollreveal]', options) {
+  static enhanceAll(selector = '[data-reveal]', options) {
     const instance = new Scrollreveal(options);
     const elements = document.querySelectorAll(selector);
 
