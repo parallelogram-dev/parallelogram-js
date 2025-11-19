@@ -3,7 +3,10 @@
  * Imports all demo-specific SCSS files and component styles
  */
 
-/*  Settings and variables (must be first) */
+/*  Design system (must be first to provide tokens) */
+@use '../design-system';
+
+/*  Settings and variables */
 @use 'settings';
 
 /*  Base demo styles (shared across all pages) */

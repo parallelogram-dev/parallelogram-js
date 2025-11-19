@@ -3,7 +3,389 @@
  * Demo Styles Entry Point
  * Imports all demo-specific SCSS files and component styles
  */
-/*  Settings and variables (must be first) */
+/*  Design system (must be first to provide tokens) */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Tokens */
+/* Minimal, opinionated design tokens for Parallelogram components */
+/* ============================================================================
+   Base Color Palette
+   ============================================================================ */
+/* Neutrals (4 shades only) */
+/* Light backgrounds */
+/* Borders, disabled */
+/* Muted text */
+/* Primary text */
+/* Primary (Blue) */
+/* Success (Green) */
+/* Warning (Orange) */
+/* Error (Red) */
+/* ============================================================================
+   Spacing Scale (Golden Ratio: ~1.618)
+   ============================================================================ */
+/* Using em units for scalability with font-size */
+/* ~2px at 16px base */
+/* ~4px */
+/* ~8px */
+/* ~12px */
+/* ~20px - golden ratio jump */
+/* ~32px */
+/* ============================================================================
+   Typography Scale
+   ============================================================================ */
+/* Font Sizes (minimal scale) */
+/* 12px at 16px base */
+/* 14px */
+/* 16px */
+/* 18px */
+/* Font Weights */
+/* Line Heights */
+/* ============================================================================
+   Borders
+   ============================================================================ */
+/* Border Widths (1px and 2px only) */
+/* Border Radius (3 settings) */
+/* ~4px - subtle */
+/* ~8px - default */
+/* ~12px - panel/modal */
+/* ============================================================================
+   Shadows & Elevation
+   ============================================================================ */
+/* Base shadow color as CSS custom property for theme support */
+/* Shadow Scale */
+/* ============================================================================
+   Transitions & Animation
+   ============================================================================ */
+/* Duration */
+/* Easing Functions */
+/* ============================================================================
+   Z-Index Scale
+   ============================================================================ */
+/* Simplified layering */
+/* ============================================================================
+   Opacity Scale
+   ============================================================================ */
+/* ============================================================================
+   CSS Custom Properties (for runtime theming)
+   ============================================================================ */
+/* These can be overridden at runtime by developers or through theme switching */
+/* Text Colors */
+/* Background Colors */
+/* Border Colors */
+/* Accent/Interactive Colors */
+/* Shadow Colors */
+/* State Colors */
+/* Dark Mode Overrides */
+/* Components should wrap these in @media (prefers-color-scheme: dark) {} */
+/* Forward all mixins */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Mixins */
+/* Utility mixins for common patterns */
+/* ============================================================================
+   Accessibility Mixins
+   ============================================================================ */
+/* Conditional transition that respects prefers-reduced-motion */
+/* Focus visible styles (keyboard focus only) */
+/* Screen reader only content */
+/* ============================================================================
+   Dark Mode Mixin
+   ============================================================================ */
+/* Simplified dark mode wrapper */
+/* ============================================================================
+   Layout Mixins
+   ============================================================================ */
+/* Flex center alignment */
+/* Truncate text with ellipsis */
+/* ============================================================================
+   Button Reset Mixin
+   ============================================================================ */
+/* ============================================================================
+   Hover State Mixin (with hover support detection)
+   ============================================================================ */
+/* ============================================================================
+   Elevation Mixin
+   ============================================================================ */
+/* Forward component patterns */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Forward all mixins */
+/* Component Tokens & Patterns */
+/* Reusable component styling patterns using CSS custom properties */
+/* ============================================================================
+   SURFACE TOKENS (shared decorative properties for UI containers)
+   ============================================================================ */
+:root {
+  /* Control surfaces (form inputs, selects, textareas) */
+  --surface-control-radius: 0.25em;
+  --surface-control-border-width: 1px;
+  --surface-control-border-color: rgba(0, 0, 0, 0.1);
+  --surface-control-color-bg: #ffffff;
+  --surface-control-color-text: currentColor;
+  --surface-control-shadow: none;
+  /* Button surfaces */
+  --surface-button-radius: 0.25em;
+  --surface-button-border-width: 1px;
+  --surface-button-shadow: none;
+  /* Panel surfaces (cards, containers, file items) */
+  --surface-panel-radius: 0.5em;
+  --surface-panel-border-width: 1px;
+  --surface-panel-border-color: rgba(0, 0, 0, 0.1);
+  --surface-panel-color-bg: #ffffff;
+  --surface-panel-color-text: currentColor;
+  --surface-panel-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  /* Dialog surfaces (modals, dialogs, popovers) */
+  --surface-dialog-radius: 0.75em;
+  --surface-dialog-border-width: 1px;
+  --surface-dialog-border-color: rgba(0, 0, 0, 0.1);
+  --surface-dialog-color-bg: #ffffff;
+  --surface-dialog-color-text: currentColor;
+  --surface-dialog-shadow: 0 1.25em 3em rgba(0, 0, 0, 0.5);
+  /* Dropdown surfaces */
+  --surface-dropdown-radius: 0.25em;
+  --surface-dropdown-border-width: 1px;
+  --surface-dropdown-border-color: rgba(0, 0, 0, 0.1);
+  --surface-dropdown-color-bg: #ffffff;
+  --surface-dropdown-color-text: currentColor;
+  --surface-dropdown-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  /* Item surfaces (list items, chips, tags) */
+  --surface-item-radius: 0.25em;
+  --surface-item-border-width: 1px;
+  --surface-item-border-color: rgba(0, 0, 0, 0.1);
+  --surface-item-color-bg: transparent;
+  --surface-item-color-text: currentColor;
+  --surface-item-shadow: none;
+  /* Card surfaces (nested items within panels) */
+  --surface-card-radius: 0.25em;
+  --surface-card-border-width: 1px;
+  --surface-card-border-color: #d4d4d4;
+  --surface-card-color-bg: #ffffff;
+  --surface-card-color-text: currentColor;
+  --surface-card-shadow: none;
+}
+
+/* ============================================================================
+   FORM CONTROLS (inputs, selects, textareas)
+   ============================================================================ */
+/* Base Form Control Tokens */
+:root {
+  /* Padding */
+  --form-control-padding-y: 0.25em;
+  --form-control-padding-x: 0.75em;
+  --form-control-padding-y-sm: 0.125em;
+  --form-control-padding-x-sm: 0.5em;
+  --form-control-padding-y-lg: 0.5em;
+  --form-control-padding-x-lg: 1.25em;
+  /* Surface properties */
+  --form-control-border-width: var(--surface-control-border-width);
+  --form-control-border-color: var(--surface-control-border-color);
+  --form-control-border-radius: var(--surface-control-radius);
+  --form-control-bg: var(--surface-control-color-bg);
+  --form-control-color: var(--surface-control-color-text);
+  --form-control-placeholder-color: rgba(0, 0, 0, 0.5);
+  /* Focus state */
+  --form-control-focus-ring-width: 2px;
+  --form-control-focus-ring-color: #3b82f6;
+  --form-control-focus-border-color: #3b82f6;
+  /* Hover state */
+  --form-control-hover-border-color: #d4d4d4;
+  /* Disabled state */
+  --form-control-disabled-opacity: 0.3;
+  --form-control-disabled-bg: #f5f5f5;
+  /* Typography */
+  --form-control-font-size: 0.875em;
+  --form-control-font-size-sm: 0.75em;
+  --form-control-font-size-lg: 1em;
+  --form-control-font-family: inherit;
+}
+
+/* Form Control Mixins */
+/* Complete form control with all states */
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+/* Button Tokens */
+:root {
+  /* Base button */
+  --button-padding-y: 0.25em;
+  --button-padding-x: 0.75em;
+  --button-padding-y-sm: 0.125em;
+  --button-padding-x-sm: 0.5em;
+  --button-padding-y-lg: 0.5em;
+  --button-padding-x-lg: 1.25em;
+  --button-font-size: 0.875em;
+  --button-font-size-sm: 0.75em;
+  --button-font-size-lg: 1em;
+  --button-font-weight: 600;
+  /* Surface properties */
+  --button-border-width: var(--surface-button-border-width);
+  --button-border-radius: var(--surface-button-radius);
+  --button-min-height: 2.5em;
+  --button-min-height-sm: 2em;
+  --button-min-height-lg: 3em;
+  /* Primary button */
+  --button-primary-bg: #3b82f6;
+  --button-primary-color: white;
+  --button-primary-border: #3b82f6;
+  --button-primary-hover-bg: #2563eb;
+  --button-primary-hover-border: #2563eb;
+  /* Secondary button */
+  --button-secondary-bg: transparent;
+  --button-secondary-color: currentColor;
+  --button-secondary-border: #d4d4d4;
+  --button-secondary-hover-bg: #f5f5f5;
+  --button-secondary-hover-border: #d4d4d4;
+  /* Danger button */
+  --button-danger-bg: #ef4444;
+  --button-danger-color: white;
+  --button-danger-border: #ef4444;
+  --button-danger-hover-bg: #dc2626;
+  --button-danger-hover-border: #dc2626;
+  /* Ghost button (no background) */
+  --button-ghost-bg: transparent;
+  --button-ghost-color: currentColor;
+  --button-ghost-border: currentColor;
+  --button-ghost-hover-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Button Mixins */
+/* ============================================================================
+   PANELS/CARDS
+   ============================================================================ */
+/* Panel Tokens */
+:root {
+  /* Surface properties */
+  --panel-bg: var(--surface-panel-color-bg);
+  --panel-border-width: var(--surface-panel-border-width);
+  --panel-border-color: var(--surface-panel-border-color);
+  --panel-border-radius: var(--surface-panel-radius);
+  --panel-color: var(--surface-panel-color-text);
+  --panel-shadow: var(--surface-panel-shadow);
+  /* Padding */
+  --panel-padding: 0.75em;
+  /* Panel variants */
+  --panel-padding-sm: 0.5em;
+  --panel-padding-lg: 1.25em;
+  /* Panel header/footer */
+  --panel-header-padding: 0.5em 0.75em;
+  --panel-header-border: 1px solid rgba(0, 0, 0, 0.1);
+  --panel-footer-padding: 0.5em 0.75em;
+  --panel-footer-border: 1px solid rgba(0, 0, 0, 0.1);
+  /* Modal specific (elevated panel using dialog surface) */
+  --modal-bg: var(--surface-dialog-color-bg);
+  --modal-border-width: var(--surface-dialog-border-width);
+  --modal-border-color: var(--surface-dialog-border-color);
+  --modal-border-radius: var(--surface-dialog-radius);
+  --modal-color: var(--surface-dialog-color-text);
+  --modal-shadow: var(--surface-dialog-shadow);
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* Panel Mixins */
+/* ============================================================================
+   INTERACTIVE STATES (for custom elements)
+   ============================================================================ */
+/* Generic interactive element (clickable cells, items, etc.) */
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Form controls in dark mode */
+    --form-control-bg: #171717;
+    --form-control-color: white;
+    --form-control-border-color: #525252;
+    --form-control-placeholder-color: rgba(255, 255, 255, 0.5);
+    /* Buttons in dark mode */
+    --button-secondary-hover-bg: #525252;
+    /* Panels in dark mode */
+    --panel-bg: #171717;
+    --panel-border-color: #525252;
+  }
+}
+/* Forward legacy variables for backwards compatibility */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Variables - LEGACY */
+/* ============================================================================
+   DEPRECATION NOTICE
+   ============================================================================
+   This file provides backwards compatibility for existing components.
+   New components should use the new design system tokens from _tokens.scss
+
+   Import the new system with:
+   @use '../../design-system' as ds;
+
+   These legacy variables will be removed in v0.3.0
+   ============================================================================ */
+/* Forward tokens so they're available to components using @use 'variables' */
+/* Use tokens internally to create legacy mappings */
+/* ============================================================================
+   Legacy Color Mappings
+   ============================================================================ */
+/* Basic colors */
+/* Border colors - map to new tokens */
+/* Background colors */
+/* State colors */
+/* Primary colors */
+/* Text colors */
+/* Progress colors */
+/* Export with original names for backwards compatibility */
+/* ============================================================================
+   Legacy Spacing Mappings
+   ============================================================================ */
+/* 3px - no direct mapping, keep as-is */
+/* 6px - close to $space-sm (0.25em = 4px) */
+/* 8px - maps to $space-md (0.5em) */
+/* 12px - maps to $space-lg (0.75em) */
+/* 16px - close to $space-xl (1.25em = 20px) */
+/* 32px - maps to $space-2xl (2em) */
+/* ============================================================================
+   Legacy Sizing
+   ============================================================================ */
+/* ============================================================================
+   Legacy Typography Mappings
+   ============================================================================ */
+/* 10px - smaller than new system */
+/* 12px - maps to $font-xs */
+/* 14px - maps to $font-sm */
+/* 16px - maps to $font-base */
+/* ============================================================================
+   Legacy Border Mappings
+   ============================================================================ */
+/* ============================================================================
+   Legacy Transition Mappings
+   ============================================================================ */
+/* ============================================================================
+   Legacy Z-index Mappings
+   ============================================================================ */
+/* Usage in components:
+ * @use '../../design-system' as ds;
+ *
+ * Then access tokens:
+ *   padding: ds.$space-md;
+ *   color: ds.$primary;
+ *
+ * Use mixins:
+ *   @include ds.transition(opacity);
+ *   @include ds.focus-visible;
+ *
+ * Use component patterns:
+ *   @include ds.form-control;
+ *   @include ds.button-primary;
+ *   @include ds.panel-base;
+ *
+ * Legacy components can still use:
+ * @use '../../design-system/variables' as *;
+ */
+/*  Settings and variables */
 /* settings.css - Global CSS Custom Properties */
 :root {
   /* ==========================================
