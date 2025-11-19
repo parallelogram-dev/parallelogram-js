@@ -1,0 +1,400 @@
+/* Component Tokens & Patterns */
+/* Reusable component styling patterns using CSS custom properties */
+
+@use 'tokens' as *;
+@use 'mixins' as mix;
+
+/* ============================================================================
+   FORM CONTROLS (inputs, selects, textareas)
+   ============================================================================ */
+
+/* Base Form Control Tokens */
+:root {
+  /* Padding */
+  --form-control-padding-y: #{$space-sm};
+  --form-control-padding-x: #{$space-lg};
+  --form-control-padding-y-sm: #{$space-xs};
+  --form-control-padding-x-sm: #{$space-md};
+  --form-control-padding-y-lg: #{$space-md};
+  --form-control-padding-x-lg: #{$space-xl};
+
+  /* Borders */
+  --form-control-border-width: #{$border-width};
+  --form-control-border-color: #{$color-border};
+  --form-control-border-radius: #{$radius-md};
+  --form-control-border-radius-sm: #{$radius-sm};
+  --form-control-border-radius-lg: #{$radius-lg};
+
+  /* Colors */
+  --form-control-bg: #ffffff;
+  --form-control-color: #{$color-text};
+  --form-control-placeholder-color: #{$color-text-muted};
+
+  /* Focus state */
+  --form-control-focus-ring-width: 2px;
+  --form-control-focus-ring-color: #{$primary};
+  --form-control-focus-border-color: #{$primary};
+
+  /* Hover state */
+  --form-control-hover-border-color: #{$color-border-hover};
+
+  /* Disabled state */
+  --form-control-disabled-opacity: #{$opacity-disabled};
+  --form-control-disabled-bg: #{$neutral-100};
+
+  /* Typography */
+  --form-control-font-size: #{$font-sm};
+  --form-control-font-size-sm: #{$font-xs};
+  --form-control-font-size-lg: #{$font-base};
+  --form-control-font-family: inherit;
+}
+
+/* Form Control Mixins */
+
+@mixin form-control-base {
+  padding: var(--form-control-padding-y) var(--form-control-padding-x);
+  border: var(--form-control-border-width) solid var(--form-control-border-color);
+  border-radius: var(--form-control-border-radius);
+  background: var(--form-control-bg);
+  color: var(--form-control-color);
+  font-family: var(--form-control-font-family);
+  font-size: var(--form-control-font-size);
+  outline: none;
+  appearance: none;
+
+  @include mix.transition(border-color, $duration-fast);
+  @include mix.transition(box-shadow, $duration-fast);
+}
+
+@mixin form-control-sm {
+  --form-control-padding-y: var(--form-control-padding-y-sm);
+  --form-control-padding-x: var(--form-control-padding-x-sm);
+  --form-control-font-size: var(--form-control-font-size-sm);
+  --form-control-border-radius: var(--form-control-border-radius-sm);
+}
+
+@mixin form-control-lg {
+  --form-control-padding-y: var(--form-control-padding-y-lg);
+  --form-control-padding-x: var(--form-control-padding-x-lg);
+  --form-control-font-size: var(--form-control-font-size-lg);
+  --form-control-border-radius: var(--form-control-border-radius-lg);
+}
+
+@mixin form-control-focus {
+  border-color: var(--form-control-focus-border-color);
+  box-shadow: inset 0 0 0 var(--form-control-focus-ring-width) var(--form-control-focus-ring-color);
+}
+
+@mixin form-control-hover {
+  @include mix.hover {
+    border-color: var(--form-control-hover-border-color);
+  }
+}
+
+@mixin form-control-disabled {
+  opacity: var(--form-control-disabled-opacity);
+  background: var(--form-control-disabled-bg);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@mixin form-control-placeholder {
+  &::placeholder {
+    color: var(--form-control-placeholder-color);
+    opacity: #{$opacity-muted};
+  }
+
+  &[data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--form-control-placeholder-color);
+    opacity: #{$opacity-muted};
+  }
+}
+
+/* Complete form control with all states */
+@mixin form-control {
+  @include form-control-base;
+  @include form-control-placeholder;
+  @include form-control-hover;
+
+  &:focus,
+  &.is-focused {
+    @include form-control-focus;
+  }
+
+  &:disabled,
+  &[disabled] {
+    @include form-control-disabled;
+  }
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+/* Button Tokens */
+:root {
+  /* Base button */
+  --button-padding-y: #{$space-sm};
+  --button-padding-x: #{$space-lg};
+  --button-padding-y-sm: #{$space-xs};
+  --button-padding-x-sm: #{$space-md};
+  --button-padding-y-lg: #{$space-md};
+  --button-padding-x-lg: #{$space-xl};
+
+  --button-font-size: #{$font-sm};
+  --button-font-size-sm: #{$font-xs};
+  --button-font-size-lg: #{$font-base};
+  --button-font-weight: #{$font-semibold};
+
+  --button-border-width: #{$border-width};
+  --button-border-radius: #{$radius-md};
+  --button-border-radius-sm: #{$radius-sm};
+  --button-border-radius-lg: #{$radius-lg};
+
+  --button-min-height: 2.5em;
+  --button-min-height-sm: 2em;
+  --button-min-height-lg: 3em;
+
+  /* Primary button */
+  --button-primary-bg: #{$primary};
+  --button-primary-color: white;
+  --button-primary-border: #{$primary};
+  --button-primary-hover-bg: #{$primary-dark};
+  --button-primary-hover-border: #{$primary-dark};
+
+  /* Secondary button */
+  --button-secondary-bg: transparent;
+  --button-secondary-color: currentColor;
+  --button-secondary-border: #{$neutral-300};
+  --button-secondary-hover-bg: #{$neutral-100};
+  --button-secondary-hover-border: #{$neutral-300};
+
+  /* Danger button */
+  --button-danger-bg: #{$error};
+  --button-danger-color: white;
+  --button-danger-border: #{$error};
+  --button-danger-hover-bg: #{$error-dark};
+  --button-danger-hover-border: #{$error-dark};
+
+  /* Ghost button (no background) */
+  --button-ghost-bg: transparent;
+  --button-ghost-color: currentColor;
+  --button-ghost-border: currentColor;
+  --button-ghost-hover-bg: #{$color-bg-hover};
+}
+
+/* Button Mixins */
+
+@mixin button-reset {
+  @include mix.button-reset;
+}
+
+@mixin button-base {
+  @include button-reset;
+
+  padding: var(--button-padding-y) var(--button-padding-x);
+  min-height: var(--button-min-height);
+  border: var(--button-border-width) solid var(--button-border);
+  border-radius: var(--button-border-radius);
+  background: var(--button-bg);
+  color: var(--button-color);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: #{$space-sm};
+
+  @include mix.transition(all, $duration-fast);
+
+  &:disabled,
+  &[disabled] {
+    opacity: #{$opacity-disabled};
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+@mixin button-sm {
+  --button-padding-y: var(--button-padding-y-sm);
+  --button-padding-x: var(--button-padding-x-sm);
+  --button-font-size: var(--button-font-size-sm);
+  --button-border-radius: var(--button-border-radius-sm);
+  --button-min-height: var(--button-min-height-sm);
+}
+
+@mixin button-lg {
+  --button-padding-y: var(--button-padding-y-lg);
+  --button-padding-x: var(--button-padding-x-lg);
+  --button-font-size: var(--button-font-size-lg);
+  --button-border-radius: var(--button-border-radius-lg);
+  --button-min-height: var(--button-min-height-lg);
+}
+
+@mixin button-primary {
+  --button-bg: var(--button-primary-bg);
+  --button-color: var(--button-primary-color);
+  --button-border: var(--button-primary-border);
+
+  @include mix.hover {
+    --button-bg: var(--button-primary-hover-bg);
+    --button-border: var(--button-primary-hover-border);
+  }
+}
+
+@mixin button-secondary {
+  --button-bg: var(--button-secondary-bg);
+  --button-color: var(--button-secondary-color);
+  --button-border: var(--button-secondary-border);
+
+  @include mix.hover {
+    --button-bg: var(--button-secondary-hover-bg);
+    --button-border: var(--button-secondary-hover-border);
+  }
+}
+
+@mixin button-danger {
+  --button-bg: var(--button-danger-bg);
+  --button-color: var(--button-danger-color);
+  --button-border: var(--button-danger-border);
+
+  @include mix.hover {
+    --button-bg: var(--button-danger-hover-bg);
+    --button-border: var(--button-danger-hover-border);
+  }
+}
+
+@mixin button-ghost {
+  --button-bg: var(--button-ghost-bg);
+  --button-color: var(--button-ghost-color);
+  --button-border: var(--button-ghost-border);
+
+  @include mix.hover {
+    --button-bg: var(--button-ghost-hover-bg);
+  }
+}
+
+/* ============================================================================
+   PANELS/CARDS
+   ============================================================================ */
+
+/* Panel Tokens */
+:root {
+  /* Base panel */
+  --panel-bg: #ffffff;
+  --panel-border-width: #{$border-width};
+  --panel-border-color: #{$color-border};
+  --panel-border-radius: #{$radius-lg};
+  --panel-padding: #{$space-lg};
+  --panel-shadow: #{$shadow-md};
+
+  /* Panel variants */
+  --panel-padding-sm: #{$space-md};
+  --panel-padding-lg: #{$space-xl};
+  --panel-border-radius-sm: #{$radius-md};
+  --panel-border-radius-lg: #{$radius-lg};
+
+  /* Panel header/footer */
+  --panel-header-padding: #{$space-md} #{$space-lg};
+  --panel-header-border: #{$border-width} solid #{$color-border};
+  --panel-footer-padding: #{$space-md} #{$space-lg};
+  --panel-footer-border: #{$border-width} solid #{$color-border};
+
+  /* Modal specific (elevated panel) */
+  --modal-shadow: 0 #{$space-xl} #{$space-2xl * 1.5} rgba(0, 0, 0, 0.5);
+  --modal-backdrop-bg: #{$color-bg-overlay};
+}
+
+/* Panel Mixins */
+
+@mixin panel-base {
+  background: var(--panel-bg);
+  border: var(--panel-border-width) solid var(--panel-border-color);
+  border-radius: var(--panel-border-radius);
+  padding: var(--panel-padding);
+  box-shadow: var(--panel-shadow);
+}
+
+@mixin panel-sm {
+  --panel-padding: var(--panel-padding-sm);
+  --panel-border-radius: var(--panel-border-radius-sm);
+}
+
+@mixin panel-lg {
+  --panel-padding: var(--panel-padding-lg);
+  --panel-border-radius: var(--panel-border-radius-lg);
+}
+
+@mixin panel-header {
+  padding: var(--panel-header-padding);
+  border-bottom: var(--panel-header-border);
+  display: flex;
+  align-items: center;
+  gap: #{$space-sm};
+}
+
+@mixin panel-footer {
+  padding: var(--panel-footer-padding);
+  border-top: var(--panel-footer-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: #{$space-sm};
+}
+
+@mixin panel-modal {
+  --panel-shadow: var(--modal-shadow);
+  --panel-border-radius: var(--panel-border-radius-lg);
+}
+
+/* ============================================================================
+   INTERACTIVE STATES (for custom elements)
+   ============================================================================ */
+
+/* Generic interactive element (clickable cells, items, etc.) */
+@mixin interactive-item {
+  cursor: pointer;
+  @include mix.transition(background-color, $duration-fast);
+  @include mix.transition(color, $duration-fast);
+
+  @include mix.hover {
+    background: var(--item-hover-bg, #{$color-bg-hover});
+  }
+
+  &.selected,
+  &[aria-selected="true"] {
+    background: var(--item-selected-bg, #{$primary});
+    color: var(--item-selected-color, white);
+  }
+
+  &:disabled,
+  &[disabled],
+  &[aria-disabled="true"] {
+    opacity: #{$opacity-disabled};
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+
+@include mix.dark-mode {
+  :root {
+    /* Form controls in dark mode */
+    --form-control-bg: #{$neutral-900};
+    --form-control-color: white;
+    --form-control-border-color: #{$neutral-600};
+    --form-control-placeholder-color: #{$color-text-muted-dark};
+
+    /* Buttons in dark mode */
+    --button-secondary-hover-bg: #{$neutral-800};
+
+    /* Panels in dark mode */
+    --panel-bg: #{$neutral-900};
+    --panel-border-color: #{$neutral-600};
+  }
+}
