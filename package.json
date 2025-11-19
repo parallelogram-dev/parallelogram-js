@@ -32,12 +32,19 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs",
-      "browser": "./dist/index.umd.js"
+      "import": {
+        "development": "./dist/dev/index.esm.js",
+        "default": "./dist/index.esm.js"
+      },
+      "require": {
+        "development": "./dist/dev/index.cjs",
+        "default": "./dist/index.cjs"
+      }
     },
     "./components/*": "./dist/components/*.js",
+    "./dev/components/*": "./dist/dev/components/*.js",
     "./core/*": "./dist/core/*.js",
+    "./dev/core/*": "./dist/dev/core/*.js",
     "./styles": "./dist/styles/index.min.css"
   },
   "files": [
@@ -50,10 +57,13 @@
     "test": "test"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@rollup/plugin-babel": "^6.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "clean-css-cli": "^5.6.3",
     "cssnano": "^7.1.1",
     "postcss": "^8.5.6",
