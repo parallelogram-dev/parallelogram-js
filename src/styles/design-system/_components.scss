@@ -9,13 +9,50 @@
    ============================================================================ */
 
 :root {
-  /* Border radius by usage context */
-  --surface-control: #{$radius-sm};   /* Form inputs, selects, textareas */
-  --surface-button: #{$radius-sm};    /* Buttons and button-like elements */
-  --surface-panel: #{$radius-md};     /* Cards, containers, file items */
-  --surface-dialog: #{$radius-lg};    /* Modals, dialogs, popovers */
-  --surface-dropdown: #{$radius-sm};  /* Dropdown menus, selects */
-  --surface-item: #{$radius-sm};      /* List items, chips, tags */
+  /* Control surfaces (form inputs, selects, textareas) */
+  --surface-control-radius: #{$radius-sm};
+  --surface-control-border-width: #{$border-width};
+  --surface-control-border-color: #{$color-border};
+  --surface-control-color-bg: #ffffff;
+  --surface-control-color-text: #{$color-text};
+  --surface-control-shadow: none;
+
+  /* Button surfaces */
+  --surface-button-radius: #{$radius-sm};
+  --surface-button-border-width: #{$border-width};
+  --surface-button-shadow: none;
+
+  /* Panel surfaces (cards, containers, file items) */
+  --surface-panel-radius: #{$radius-md};
+  --surface-panel-border-width: #{$border-width};
+  --surface-panel-border-color: #{$color-border};
+  --surface-panel-color-bg: #ffffff;
+  --surface-panel-color-text: #{$color-text};
+  --surface-panel-shadow: #{$shadow-md};
+
+  /* Dialog surfaces (modals, dialogs, popovers) */
+  --surface-dialog-radius: #{$radius-lg};
+  --surface-dialog-border-width: #{$border-width};
+  --surface-dialog-border-color: #{$color-border};
+  --surface-dialog-color-bg: #ffffff;
+  --surface-dialog-color-text: #{$color-text};
+  --surface-dialog-shadow: 0 #{$space-xl} 3em rgba(0, 0, 0, 0.5);
+
+  /* Dropdown surfaces */
+  --surface-dropdown-radius: #{$radius-sm};
+  --surface-dropdown-border-width: #{$border-width};
+  --surface-dropdown-border-color: #{$color-border};
+  --surface-dropdown-color-bg: #ffffff;
+  --surface-dropdown-color-text: #{$color-text};
+  --surface-dropdown-shadow: #{$shadow-md};
+
+  /* Item surfaces (list items, chips, tags) */
+  --surface-item-radius: #{$radius-sm};
+  --surface-item-border-width: #{$border-width};
+  --surface-item-border-color: #{$color-border};
+  --surface-item-color-bg: transparent;
+  --surface-item-color-text: #{$color-text};
+  --surface-item-shadow: none;
 }
 
 /* ============================================================================
@@ -32,14 +69,12 @@
   --form-control-padding-y-lg: #{$space-md};
   --form-control-padding-x-lg: #{$space-xl};
 
-  /* Borders */
-  --form-control-border-width: #{$border-width};
-  --form-control-border-color: #{$color-border};
-  --form-control-border-radius: var(--surface-control);
-
-  /* Colors */
-  --form-control-bg: #ffffff;
-  --form-control-color: #{$color-text};
+  /* Surface properties */
+  --form-control-border-width: var(--surface-control-border-width);
+  --form-control-border-color: var(--surface-control-border-color);
+  --form-control-border-radius: var(--surface-control-radius);
+  --form-control-bg: var(--surface-control-color-bg);
+  --form-control-color: var(--surface-control-color-text);
   --form-control-placeholder-color: #{$color-text-muted};
 
   /* Focus state */
@@ -157,8 +192,9 @@
   --button-font-size-lg: #{$font-base};
   --button-font-weight: #{$font-semibold};
 
-  --button-border-width: #{$border-width};
-  --button-border-radius: var(--surface-button);
+  /* Surface properties */
+  --button-border-width: var(--surface-button-border-width);
+  --button-border-radius: var(--surface-button-radius);
 
   --button-min-height: 2.5em;
   --button-min-height-sm: 2em;
@@ -284,13 +320,16 @@
 
 /* Panel Tokens */
 :root {
-  /* Base panel */
-  --panel-bg: #ffffff;
-  --panel-border-width: #{$border-width};
-  --panel-border-color: #{$color-border};
-  --panel-border-radius: var(--surface-panel);
+  /* Surface properties */
+  --panel-bg: var(--surface-panel-color-bg);
+  --panel-border-width: var(--surface-panel-border-width);
+  --panel-border-color: var(--surface-panel-border-color);
+  --panel-border-radius: var(--surface-panel-radius);
+  --panel-color: var(--surface-panel-color-text);
+  --panel-shadow: var(--surface-panel-shadow);
+
+  /* Padding */
   --panel-padding: #{$space-lg};
-  --panel-shadow: #{$shadow-md};
 
   /* Panel variants */
   --panel-padding-sm: #{$space-md};
@@ -302,8 +341,13 @@
   --panel-footer-padding: #{$space-md} #{$space-lg};
   --panel-footer-border: #{$border-width} solid #{$color-border};
 
-  /* Modal specific (elevated panel) */
-  --modal-shadow: 0 #{$space-xl} 3em rgba(0, 0, 0, 0.5);
+  /* Modal specific (elevated panel using dialog surface) */
+  --modal-bg: var(--surface-dialog-color-bg);
+  --modal-border-width: var(--surface-dialog-border-width);
+  --modal-border-color: var(--surface-dialog-border-color);
+  --modal-border-radius: var(--surface-dialog-radius);
+  --modal-color: var(--surface-dialog-color-text);
+  --modal-shadow: var(--surface-dialog-shadow);
   --modal-backdrop-bg: #{$color-bg-overlay};
 }
 
@@ -343,8 +387,12 @@
 }
 
 @mixin panel-modal {
+  --panel-bg: var(--modal-bg);
+  --panel-border-width: var(--modal-border-width);
+  --panel-border-color: var(--modal-border-color);
+  --panel-border-radius: var(--modal-border-radius);
+  --panel-color: var(--modal-color);
   --panel-shadow: var(--modal-shadow);
-  --panel-border-radius: var(--surface-dialog);
 }
 
 /* ============================================================================
