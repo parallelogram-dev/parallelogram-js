@@ -72,10 +72,12 @@ $leading-relaxed: 1.75;
 $border-width:       1px;
 $border-width-thick: 2px;
 
-/* Border Radius (3 settings) */
-$radius-sm: 0.25em;  /* ~4px - subtle */
-$radius-md: 0.5em;   /* ~8px - default */
-$radius-lg: 0.75em;  /* ~12px - panel/modal */
+/* Border Radius (optically consistent with padding scale) */
+/* Each radius reduces by the padding amount to maintain visual curve alignment */
+$radius-xs: 0.125em;  /* ~2px - inner elements with xs padding */
+$radius-sm: 0.25em;   /* ~4px - inner elements with sm padding */
+$radius-md: 0.5em;    /* ~8px - default containers */
+$radius-lg: 0.75em;   /* ~12px - panels/modals */
 
 /* ============================================================================
    Shadows & Elevation
