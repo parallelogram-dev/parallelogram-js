@@ -30,29 +30,28 @@
   }
 
   &__selector {
-    /* Use surface-panel tokens for consistent decoration */
-    border-radius: var(--surface-panel-radius);
-    border-width: var(--surface-panel-border-width);
+    /* Use surface-touch tokens for interactive area with hover feedback */
+    border-radius: var(--surface-touch-radius);
+    border-width: var(--surface-touch-border-width);
     border-style: solid;
-    border-color: var(--surface-panel-border-color);
-    background: var(--surface-panel-color-bg);
-    color: var(--surface-panel-color-text);
-    box-shadow: var(--surface-panel-shadow);
+    border-color: var(--surface-touch-border-color);
+    background: var(--surface-touch-color-bg);
+    color: var(--surface-touch-color-text);
+    box-shadow: var(--surface-touch-shadow);
 
     /* Customize for file upload area */
     padding: $space-xxl;
     border-width: $border-width-thick;
-    border-color: $neutral-300;
-    background: $neutral-100;
 
     text-align: center;
     cursor: pointer;
 
-    @include transition(all);
+    @include transition(border-color);
+    @include transition(background-color);
 
     @include hover {
-      border-color: $neutral-600;
-      background: $neutral-100;
+      border-color: var(--surface-touch-hover-border-color);
+      background: var(--surface-touch-hover-bg);
     }
 
     &.dragover {
