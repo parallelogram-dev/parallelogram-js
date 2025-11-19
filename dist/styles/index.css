@@ -75,6 +75,56 @@ th.sortable:hover {
   border-color: #3b82f6;
 }
 
+/* State-based styling */
+[data-datatable=loading] {
+  pointer-events: none;
+  position: relative;
+  opacity: 0.6;
+}
+[data-datatable=loading]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 0 A20 20 0 0 1 40 20' fill='none' stroke='%233b82f6' stroke-width='4'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 20 20' to='360 20 20' dur='1s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+[data-datatable=error] {
+  border: 2px solid var(--brand-danger, #ef4444);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+[data-datatable=error]::before {
+  content: attr(data-error-message);
+  display: block;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--brand-danger, #ef4444);
+  border-radius: 4px;
+  color: var(--brand-danger, #ef4444);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+[data-datatable=empty] tbody::after {
+  content: "No data available";
+  display: table-row;
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+[data-datatable=loaded],
+[data-datatable=mounted] {
+  /* Normal state - no special styling */
+}
+
 /* ============================================
    LIGHTBOX COMPONENT
    BEM-compliant styles for lightbox gallery viewer

@@ -1,0 +1,1 @@
+const e={MOUNTED:"mounted",ERROR:"error"},E={LOADING:"loading",LOADED:"loaded",HIDDEN:"hidden",REVEALING:"revealing",REVEALED:"revealed",OPEN:"open",CLOSED:"closed",OPENING:"opening",CLOSING:"closing",PROCESSING:"processing",COMPLETE:"complete",VALIDATING:"validating",VALIDATED:"validated",PLAYING:"playing",PAUSED:"paused",BUFFERING:"buffering"};export{e as C,E};

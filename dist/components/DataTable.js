@@ -462,6 +462,78 @@ class BaseComponent {
 }
 
 /**
+ * ComponentStates - Standard state values for component lifecycle
+ *
+ * These states are used in data attributes to track component initialization
+ * and lifecycle. Each component uses its selector attribute (e.g., data-lazysrc)
+ * to store its current state.
+ *
+ * @example
+ * // Initial HTML
+ * <img data-lazysrc data-lazysrc-src="/image.jpg">
+ *
+ * // After mounting
+ * <img data-lazysrc="mounted" data-lazysrc-src="/image.jpg">
+ *
+ * // After loading
+ * <img data-lazysrc="loaded" data-lazysrc-src="/image.jpg" src="/image.jpg">
+ *
+ * @example
+ * // CSS Hooks
+ * [data-lazysrc="loading"] { opacity: 0.5; }
+ * [data-lazysrc="loaded"] { opacity: 1; }
+ * [data-lazysrc="error"] { border: 2px solid red; }
+ */
+
+/**
+ * Core lifecycle states - common to all components
+ */
+const ComponentStates = {
+  /**
+   * MOUNTED - Component has been initialized and is ready
+   * This is the baseline "active" state for most components
+   */
+  MOUNTED: 'mounted',
+
+  /**
+   * ERROR - Component initialization or operation failed
+   * Check console for error details
+   */
+  ERROR: 'error'};
+
+/**
+ * Extended states for specific component behaviors
+ * Components can use these in addition to core states
+ */
+const ExtendedStates = {
+  // Loading states (for Lazysrc, async components)
+  LOADING: 'loading',
+  LOADED: 'loaded',
+
+  // Animation/reveal states (for Scrollreveal, transitions)
+  HIDDEN: 'hidden',
+  REVEALING: 'revealing',
+  REVEALED: 'revealed',
+
+  // Interactive states (for Toggle, Modal, etc.)
+  OPEN: 'open',
+  CLOSED: 'closed',
+  OPENING: 'opening',
+  CLOSING: 'closing',
+
+  // Processing states (for forms, uploaders)
+  PROCESSING: 'processing',
+  COMPLETE: 'complete',
+  VALIDATING: 'validating',
+  VALIDATED: 'validated',
+
+  // Media states (for video, audio)
+  PLAYING: 'playing',
+  PAUSED: 'paused',
+  BUFFERING: 'buffering',
+};
+
+/**
  * DOM Utility Functions
  * Shared utilities for both BaseComponent and Web Components
  */
@@ -569,10 +641,13 @@ class DataTable extends BaseComponent {
   _init(element) {
     const state = super._init(element);
 
-    // Get configuration
+    /* Initialize with idle state */
+    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
+
+    /* Get configuration */
     const config = this._getConfiguration(element);
 
-    // Store original data
+    /* Store original data */
     const rows = Array.from(element.querySelectorAll('tbody tr'));
 
     state.config = config;
@@ -581,8 +656,9 @@ class DataTable extends BaseComponent {
     state.currentSort = { column: null, direction: null };
     state.currentPage = 1;
     state.searchTerm = '';
+    state.errorMessage = null;
 
-    // Set up functionality
+    /* Set up functionality */
     if (config.sortable) this._setupSorting(element, state);
     if (config.filterable) this._setupFiltering(element, state);
     if (config.paginate) this._setupPagination(element, state);
@@ -792,7 +868,7 @@ class DataTable extends BaseComponent {
 
     if (totalPages <= 1) return;
 
-    // Previous button
+    /* Previous button */
     const prevBtn = document.createElement('button');
     prevBtn.textContent = 'Previous';
     prevBtn.disabled = state.currentPage === 1;
@@ -804,7 +880,7 @@ class DataTable extends BaseComponent {
     });
     container.appendChild(prevBtn);
 
-    // Page numbers
+    /* Page numbers */
     for (let i = 1; i <= totalPages; i++) {
       const pageBtn = document.createElement('button');
       pageBtn.textContent = i;
@@ -816,7 +892,7 @@ class DataTable extends BaseComponent {
       container.appendChild(pageBtn);
     }
 
-    // Next button
+    /* Next button */
     const nextBtn = document.createElement('button');
     nextBtn.textContent = 'Next';
     nextBtn.disabled = state.currentPage === totalPages;
@@ -827,6 +903,106 @@ class DataTable extends BaseComponent {
       }
     });
     container.appendChild(nextBtn);
+  }
+
+  /**
+   * Load data asynchronously from a URL
+   * @param {HTMLElement} element - Table element
+   * @param {string} url - URL to fetch data from
+   * @param {Function} rowMapper - Function to convert data item to table row
+   */
+  async loadData(element, url, rowMapper) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    try {
+      /* Set loading state */
+      element.setAttribute('data-datatable', ExtendedStates.LOADING);
+      state.errorMessage = null;
+
+      /* Fetch data */
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error('Response data must be an array');
+      }
+
+      /* Check for empty data */
+      if (data.length === 0) {
+        element.setAttribute('data-datatable', 'empty');
+        state.originalRows = [];
+        state.filteredRows = [];
+        this._render(element, state);
+        this._dispatch(element, 'datatable:empty', { url });
+        return;
+      }
+
+      /* Convert data to table rows using mapper function */
+      const tbody = element.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      const rows = data.map(item => rowMapper(item));
+      state.originalRows = rows;
+      state.filteredRows = [...rows];
+      state.currentPage = 1;
+
+      /* Set loaded state */
+      element.setAttribute('data-datatable', ExtendedStates.LOADED);
+
+      /* Render the table */
+      this._render(element, state);
+
+      /* Dispatch success event */
+      this._dispatch(element, 'datatable:loaded', {
+        url,
+        rowCount: data.length,
+      });
+
+      this.eventBus?.emit('datatable:loaded', {
+        element,
+        url,
+        rowCount: data.length,
+      });
+    } catch (error) {
+      /* Set error state */
+      element.setAttribute('data-datatable', ComponentStates.ERROR);
+      element.setAttribute('data-error-message', error.message);
+      state.errorMessage = error.message;
+
+      /* Dispatch error event */
+      this._dispatch(element, 'datatable:error', {
+        error,
+        url,
+        message: error.message,
+      });
+
+      this.eventBus?.emit('datatable:error', {
+        element,
+        error,
+        url,
+        message: error.message,
+      });
+
+      this.logger?.error('DataTable: Failed to load data', { error, url });
+    }
+  }
+
+  /**
+   * Clear error state and return to normal
+   * @param {HTMLElement} element - Table element
+   */
+  clearError(element) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    state.errorMessage = null;
+    element.removeAttribute('data-error-message');
+    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
   }
 
   // Public API methods
