@@ -204,3 +204,4 @@ export class DemoSelectLoader extends BaseComponent {
     }
   }
 }
+export default DemoSelectLoader;

@@ -336,4 +336,4 @@ export class DemoFileUploader extends BaseComponent {
     
     return 'File';
   }
-}
+}export default DemoFileUploader;

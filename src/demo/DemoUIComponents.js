@@ -296,3 +296,4 @@ export class DemoUIComponents extends BaseComponent {
     }
   }
 }
+export default DemoUIComponents;

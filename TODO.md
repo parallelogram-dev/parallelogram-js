@@ -8,7 +8,6 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 
 ### State Management System Completion
 - [ ] Migrate remaining components to state-based system
-  - [ ] Carousel component state integration
   - [ ] Lightbox component state integration
   - [ ] Modal component state integration
   - [ ] Tabs component state integration
@@ -122,11 +121,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ### Component Improvements
 
 #### Existing Components
-- [ ] **Lazysrc** - Add blur-up/LQIP (Low Quality Image Placeholder) support
-- [ ] **Lazysrc** - WebP/AVIF format support with fallbacks
 - [ ] **Lazysrc** - Intersection Observer v2 for visibility detection
-- [ ] **Carousel** - Add autoplay, swipe gestures, thumbnail navigation
-- [ ] **Carousel** - Infinite loop mode
 - [ ] **Modal** - Stack management for nested modals
 - [ ] **Modal** - Focus trap improvements
 - [ ] **Toggle** - Animation presets (slide, fade, scale)

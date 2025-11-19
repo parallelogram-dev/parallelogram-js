@@ -4,7 +4,6 @@
  */
 
 /* Component imports */
-@use './components/carousel.scss';
 @use './components/datatable.scss';
 @use './components/lightbox.scss';
 @use './components/lazysrc.scss';
@@ -28,7 +27,6 @@
 /* Global focus styles for framework components */
 [data-lazysrc],
 [data-modal],
-[data-carousel],
 [data-lightbox],
 [data-form-enhancer],
 [data-copy-to-clipboard],

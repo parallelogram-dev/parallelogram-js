@@ -840,3 +840,4 @@ export class DemoPerformance extends BaseComponent {
     });
   }
 }
+export default DemoPerformance;
