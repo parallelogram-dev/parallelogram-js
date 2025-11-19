@@ -178,3 +178,5 @@ export class DemoHome extends BaseComponent {
     }
   }
 }
+
+export default DemoHome;

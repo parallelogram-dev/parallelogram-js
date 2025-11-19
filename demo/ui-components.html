@@ -573,32 +573,40 @@
 
             <section class="demo__section" data-demo-section>
                 <h2>Image Lightbox Gallery</h2>
-                <p>Click images to open them in a fullscreen lightbox with navigation:</p>
+                <p>Click images to open them in a fullscreen lightbox with navigation. This gallery uses <strong>data-lightbox-preload="all"</strong> to eager-load all gallery images when opened:</p>
 
                 <div class="gallery__grid">
                     <figure class="gallery__item">
-                        <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=1">
-                            <img src="https://picsum.photos/150/150?random=1" alt="Demo Image 1" />
+                        <a data-lightbox="demo-gallery" data-lightbox-preload="all" href="https://picsum.photos/800/600?random=1">
+                            <img data-lazysrc
+                                 data-lazysrc-src="https://picsum.photos/150/150?random=1"
+                                 alt="Demo Image 1" />
                         </a>
-                        <figcaption>Gallery Image 1</figcaption>
+                        <figcaption>Gallery Image 1 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=2">
-                            <img src="https://picsum.photos/150/150?random=2" alt="Demo Image 2" />
+                            <img data-lazysrc
+                                 data-lazysrc-src="https://picsum.photos/150/150?random=2"
+                                 alt="Demo Image 2" />
                         </a>
-                        <figcaption>Gallery Image 2</figcaption>
+                        <figcaption>Gallery Image 2 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=3">
-                            <img src="https://picsum.photos/150/150?random=3" alt="Demo Image 3" />
+                            <img data-lazysrc
+                                 data-lazysrc-src="https://picsum.photos/150/150?random=3"
+                                 alt="Demo Image 3" />
                         </a>
-                        <figcaption>Gallery Image 3</figcaption>
+                        <figcaption>Gallery Image 3 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=4">
-                            <img src="https://picsum.photos/150/150?random=4" alt="Demo Image 4" />
+                            <img data-lazysrc
+                                 data-lazysrc-src="https://picsum.photos/150/150?random=4"
+                                 alt="Demo Image 4" />
                         </a>
-                        <figcaption>Gallery Image 4</figcaption>
+                        <figcaption>Gallery Image 4 (lazy loaded)</figcaption>
                     </figure>
                 </div>
 
@@ -609,6 +617,14 @@
                         <li><strong>Accessibility:</strong> Keyboard support with Escape to close</li>
                         <li><strong>Backdrop Control:</strong> Click outside to close (configurable)</li>
                         <li><strong>Image Counter:</strong> Shows current position in gallery</li>
+                        <li><strong>Lazy Loading Integration:</strong> Automatically eager-loads lazy images when lightbox opens</li>
+                        <li><strong>Preload Strategies:</strong> Configure preloading with <code>data-lightbox-preload="adjacent|all|none"</code>
+                            <ul>
+                                <li><code>adjacent</code> (default): Preload current + previous + next images</li>
+                                <li><code>all</code>: Preload entire gallery for instant navigation</li>
+                                <li><code>none</code>: No preloading (lazy load only)</li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </section>

@@ -4,11 +4,12 @@ import terser from '@rollup/plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 
 export default {
-  input: 'src/demo/demo.js', // Your demo entry point
+  input: 'src/demo/demo.js',
   output: {
-    file: 'demo/dist/parallelogram-demo.min.js',
-    format: 'iife', // Self-executing function for browsers
-    name: 'ParallelogramDemo',
+    dir: 'demo/dist',
+    format: 'es',
+    entryFileNames: 'parallelogram-demo.min.js',
+    chunkFileNames: '[name]-[hash].js',
   },
   plugins: [
     postcss({

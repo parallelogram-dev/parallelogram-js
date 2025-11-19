@@ -18,7 +18,6 @@
 @use 'pages/performance';
 
 /*  Component styles needed for demo functionality */
-@use '../framework/components/carousel.scss';
 @use '../framework/components/toasts.scss';
 @use '../framework/components/datatable.scss';
 @use '../framework/components/lightbox.scss';
@@ -50,7 +49,7 @@
 @use './components/copy-demo.scss';
 @use './components/video.scss';
 @use './components/component-status.scss';
-@use '../components/datetime.scss';
+@use './components/datetime.scss';
 @use './components/uploader.scss';
 @use './components/select-loader.scss';
 
