@@ -942,7 +942,6 @@ class PUploaderFile extends HTMLElement {
           display: flex;
           flex-direction: row;
           align-items: center;
-          padding-left: 0.375rem;
           min-height: 6rem;
           position: relative;
         }
@@ -1056,6 +1055,7 @@ class PUploaderFile extends HTMLElement {
           font-size: 0.75rem;
           transition: all 0.2s;
           pointer-events: auto;
+          flex-shrink: 0;
         }
 
         .uploader__btn:hover {
@@ -1088,7 +1088,8 @@ class PUploaderFile extends HTMLElement {
 
         .uploader__input,
         .uploader__textarea {
-          width: 100%;
+          flex: 1 0 auto;
+          height: 100%;
           padding: 0.375rem;
           border: 1px solid #cbd5e1;
           margin: 0;
