@@ -23,6 +23,7 @@
  */
 
 import { getFocusableElements, trapFocus } from '../utils/dom-utils.js';
+import { ExtendedStates } from '../core/ComponentStates.js';
 
 export default class PModal extends HTMLElement {
   static get observedAttributes() {
@@ -393,6 +394,9 @@ export default class PModal extends HTMLElement {
     // Bind event handlers
     this._onKeydown = this._onKeydown.bind(this);
     this._onFocus = this._onFocus.bind(this);
+
+    // Initialize with closed state
+    this.setAttribute('data-modal', ExtendedStates.CLOSED);
   }
 
   connectedCallback() {
@@ -442,17 +446,35 @@ export default class PModal extends HTMLElement {
   }
 
   /**
-   * Open the modal
+   * Open the modal with state management
    */
   open() {
+    /* Set opening state */
+    this.setAttribute('data-modal', ExtendedStates.OPENING);
     this.setAttribute('open', '');
+
+    /* Transition to fully open after animation starts */
+    requestAnimationFrame(() => {
+      this.setAttribute('data-modal', ExtendedStates.OPEN);
+    });
   }
 
   /**
-   * Close the modal
+   * Close the modal with state management
    */
   close() {
-    this.removeAttribute('open');
+    /* Set closing state */
+    this.setAttribute('data-modal', ExtendedStates.CLOSING);
+
+    /* Wait for closing animation before removing open attribute */
+    const duration =
+      parseFloat(getComputedStyle(this).getPropertyValue('--modal-animation-duration') || '0.2') *
+      1000;
+
+    setTimeout(() => {
+      this.removeAttribute('open');
+      this.setAttribute('data-modal', ExtendedStates.CLOSED);
+    }, duration);
   }
 
   /**
