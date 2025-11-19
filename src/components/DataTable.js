@@ -1,4 +1,5 @@
 import { BaseComponent } from '@parallelogram-js/core';
+import { ComponentStates, ExtendedStates } from '../core/ComponentStates.js';
 import { createElement, generateId, debounce } from '../utils/dom-utils.js';
 
 /**
@@ -45,10 +46,13 @@ export class DataTable extends BaseComponent {
   _init(element) {
     const state = super._init(element);
 
-    // Get configuration
+    /* Initialize with idle state */
+    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
+
+    /* Get configuration */
     const config = this._getConfiguration(element);
 
-    // Store original data
+    /* Store original data */
     const rows = Array.from(element.querySelectorAll('tbody tr'));
 
     state.config = config;
@@ -57,8 +61,9 @@ export class DataTable extends BaseComponent {
     state.currentSort = { column: null, direction: null };
     state.currentPage = 1;
     state.searchTerm = '';
+    state.errorMessage = null;
 
-    // Set up functionality
+    /* Set up functionality */
     if (config.sortable) this._setupSorting(element, state);
     if (config.filterable) this._setupFiltering(element, state);
     if (config.paginate) this._setupPagination(element, state);
@@ -268,7 +273,7 @@ export class DataTable extends BaseComponent {
 
     if (totalPages <= 1) return;
 
-    // Previous button
+    /* Previous button */
     const prevBtn = document.createElement('button');
     prevBtn.textContent = 'Previous';
     prevBtn.disabled = state.currentPage === 1;
@@ -280,7 +285,7 @@ export class DataTable extends BaseComponent {
     });
     container.appendChild(prevBtn);
 
-    // Page numbers
+    /* Page numbers */
     for (let i = 1; i <= totalPages; i++) {
       const pageBtn = document.createElement('button');
       pageBtn.textContent = i;
@@ -292,7 +297,7 @@ export class DataTable extends BaseComponent {
       container.appendChild(pageBtn);
     }
 
-    // Next button
+    /* Next button */
     const nextBtn = document.createElement('button');
     nextBtn.textContent = 'Next';
     nextBtn.disabled = state.currentPage === totalPages;
@@ -303,6 +308,106 @@ export class DataTable extends BaseComponent {
       }
     });
     container.appendChild(nextBtn);
+  }
+
+  /**
+   * Load data asynchronously from a URL
+   * @param {HTMLElement} element - Table element
+   * @param {string} url - URL to fetch data from
+   * @param {Function} rowMapper - Function to convert data item to table row
+   */
+  async loadData(element, url, rowMapper) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    try {
+      /* Set loading state */
+      element.setAttribute('data-datatable', ExtendedStates.LOADING);
+      state.errorMessage = null;
+
+      /* Fetch data */
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error('Response data must be an array');
+      }
+
+      /* Check for empty data */
+      if (data.length === 0) {
+        element.setAttribute('data-datatable', 'empty');
+        state.originalRows = [];
+        state.filteredRows = [];
+        this._render(element, state);
+        this._dispatch(element, 'datatable:empty', { url });
+        return;
+      }
+
+      /* Convert data to table rows using mapper function */
+      const tbody = element.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      const rows = data.map(item => rowMapper(item));
+      state.originalRows = rows;
+      state.filteredRows = [...rows];
+      state.currentPage = 1;
+
+      /* Set loaded state */
+      element.setAttribute('data-datatable', ExtendedStates.LOADED);
+
+      /* Render the table */
+      this._render(element, state);
+
+      /* Dispatch success event */
+      this._dispatch(element, 'datatable:loaded', {
+        url,
+        rowCount: data.length,
+      });
+
+      this.eventBus?.emit('datatable:loaded', {
+        element,
+        url,
+        rowCount: data.length,
+      });
+    } catch (error) {
+      /* Set error state */
+      element.setAttribute('data-datatable', ComponentStates.ERROR);
+      element.setAttribute('data-error-message', error.message);
+      state.errorMessage = error.message;
+
+      /* Dispatch error event */
+      this._dispatch(element, 'datatable:error', {
+        error,
+        url,
+        message: error.message,
+      });
+
+      this.eventBus?.emit('datatable:error', {
+        element,
+        error,
+        url,
+        message: error.message,
+      });
+
+      this.logger?.error('DataTable: Failed to load data', { error, url });
+    }
+  }
+
+  /**
+   * Clear error state and return to normal
+   * @param {HTMLElement} element - Table element
+   */
+  clearError(element) {
+    const state = this.getState(element);
+    if (!state) return;
+
+    state.errorMessage = null;
+    element.removeAttribute('data-error-message');
+    element.setAttribute('data-datatable', ComponentStates.MOUNTED);
   }
 
   // Public API methods
