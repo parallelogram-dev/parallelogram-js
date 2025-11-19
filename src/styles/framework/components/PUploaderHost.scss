@@ -1,38 +1,45 @@
 /* PUploader Host Element Styles */
 /* These styles apply to the <p-uploader> host element in the light DOM */
-@use '../../design-system/variables' as *;
+@use '../../design-system' as *;
 
 :host {
-  font-family: $font-family;
+  font-family: inherit;
   display: block;
   position: relative;
-  padding: $spacing-sm;
-  border: $border-width-md solid $color-black;
+  padding: $space-sm;
+  border: $border-width-thick solid black;
 }
 
 .uploader {
   &__files {
     display: grid;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
+    gap: $space-sm;
+    margin-bottom: $space-sm;
   }
 
   &__selector {
-    border: $border-width-md solid $color-border-hover;
-    padding: $spacing-2xl;
+    /* Use panel pattern for consistent styling */
+    @include panel-base;
+
+    /* Customize for file upload area */
+    padding: $space-xxl;
+    border-width: $border-width-thick;
+    border-color: $neutral-300;
+    background: $neutral-100;
+
     text-align: center;
-    background: $color-bg-light;
-    transition: all $transition-fast;
     cursor: pointer;
 
-    &:hover {
-      border-color: #94a3b8;
-      background: $color-bg-lighter;
+    @include transition(all);
+
+    @include hover {
+      border-color: $neutral-600;
+      background: $neutral-100;
     }
 
     &.dragover {
-      border-color: $color-border-active;
-      background: $color-bg-hover;
+      border-color: $primary;
+      background: rgba(59, 130, 246, 0.05);
     }
   }
 
@@ -41,7 +48,7 @@
   }
 
   &__label {
-    font-size: $font-size-base;
+    font-size: $font-base;
     cursor: pointer;
   }
 }
