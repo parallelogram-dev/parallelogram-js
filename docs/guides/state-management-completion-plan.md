@@ -1,6 +1,6 @@
 # State Management System Completion Plan
 
-**Status**: 3 of 7 Phases Complete (43%)
+**Status**: 3 of 8 Phases Complete (38%)
 **Priority**: High
 **Last Updated**: 2025-11-19
 **Next Session**: Resume with Phase 4 (Toggle State-Based CSS)
@@ -9,18 +9,19 @@
 
 ## Progress Summary
 
-### ✅ Completed Phases (3/7)
+### ✅ Completed Phases (3/8)
 
 - **Phase 1**: Modal State Machine - COMPLETE (2025-11-19)
 - **Phase 2**: Tabs State-Based CSS - COMPLETE (2025-11-19)
 - **Phase 3**: DataTable Async States - COMPLETE (2025-11-19)
 
-### 📋 Remaining Phases (4/7)
+### 📋 Remaining Phases (5/8)
 
 - **Phase 4**: Toggle State-Based CSS Enhancement
 - **Phase 5**: Lightbox CSS Implementation
-- **Phase 6**: Documentation & State Diagrams
-- **Phase 7**: State Debugger Tool (Optional)
+- **Phase 6**: BaseComponent API Enhancement (setState/setAttr) - **NEW**
+- **Phase 7**: Documentation & State Diagrams
+- **Phase 8**: State Debugger Tool (Optional)
 
 ---
 
@@ -614,11 +615,264 @@ async _toggle(trigger, state) {
 
 ---
 
-## Phase 6: Documentation & State Diagrams
+## Phase 6: BaseComponent API Enhancement (setState/getState/setAttr/getAttr)
+
+**Estimated Effort**: 6-8 hours
+**Priority**: High
+**Dependencies**: Phase 5 complete
+**Status**: ⏸️ PENDING
+
+### Overview
+
+Add convenience methods to BaseComponent to eliminate hardcoded component names throughout the codebase. This will improve DRY principles, reduce code size, and make components more maintainable.
+
+### Problem Statement
+
+Currently, components hardcode their selector names when setting state and attributes:
+
+```javascript
+// In Toggle.js - component name repeated everywhere
+element.setAttribute('data-toggle', ExtendedStates.OPEN);
+element.setAttribute('data-toggle-duration', '300');
+const disabled = element.getAttribute('data-toggle-disabled');
+```
+
+This violates DRY and makes refactoring difficult.
+
+### Proposed Solution
+
+Add helper methods to BaseComponent that use the component's selector automatically:
+
+```javascript
+// In Toggle.js - component name inferred from this.selector
+this.setState(element, ExtendedStates.OPEN);
+this.setAttr(element, 'duration', '300');
+const disabled = this.getAttr(element, 'disabled');
+```
+
+### Required Changes
+
+#### 6.1 Implement BaseComponent Methods (2-3 hours)
+
+**File**: `src/core/BaseComponent.js`
+
+Add the following methods:
+
+```javascript
+/**
+ * Set component state (data-<component>="<state>")
+ * @param {HTMLElement} element - Target element
+ * @param {string} state - State value
+ */
+setState(element, state) {
+  element.setAttribute(this.selector, state);
+}
+
+/**
+ * Get component state (data-<component>)
+ * Note: getState() already exists but returns WeakMap state object
+ * This could be renamed to getElementState() for clarity
+ * @param {HTMLElement} element - Target element
+ * @returns {string} Current state value
+ */
+getElementState(element) {
+  return element.getAttribute(this.selector);
+}
+
+/**
+ * Set component attribute (data-<component>-<attr>="<value>")
+ * @param {HTMLElement} element - Target element
+ * @param {string} attr - Attribute name (without data- prefix)
+ * @param {string} value - Attribute value
+ */
+setAttr(element, attr, value) {
+  element.setAttribute(`${this.selector}-${attr}`, value);
+}
+
+/**
+ * Get component attribute (data-<component>-<attr>)
+ * @param {HTMLElement} element - Target element
+ * @param {string} attr - Attribute name (without data- prefix)
+ * @returns {string|null} Attribute value or null
+ */
+getAttr(element, attr) {
+  return element.getAttribute(`${this.selector}-${attr}`);
+}
+
+/**
+ * Remove component attribute (data-<component>-<attr>)
+ * @param {HTMLElement} element - Target element
+ * @param {string} attr - Attribute name (without data- prefix)
+ */
+removeAttr(element, attr) {
+  element.removeAttribute(`${this.selector}-${attr}`);
+}
+
+/**
+ * Check if component attribute exists (data-<component>-<attr>)
+ * @param {HTMLElement} element - Target element
+ * @param {string} attr - Attribute name (without data- prefix)
+ * @returns {boolean}
+ */
+hasAttr(element, attr) {
+  return element.hasAttribute(`${this.selector}-${attr}`);
+}
+```
+
+**Note on naming conflict**: BaseComponent already has a `getState(element)` method that returns the WeakMap-stored state object. We need to either:
+- Rename new method to `getElementState()` for DOM attribute state
+- Or keep existing pattern and document the difference
+
+#### 6.2 Update All Components to Use New API (3-4 hours)
+
+**CRITICAL**: Go through each component with a fine-tooth comb to ensure proper migration.
+
+Components to update (in order of complexity):
+
+1. **PModal** (just completed Phase 1)
+   - Replace `setAttribute('data-modal', ...)` with `setState(...)`
+   - Test all state transitions
+
+2. **Tabs** (just completed Phase 2)
+   - Replace panel state setting with new API
+   - Test tab switching
+
+3. **DataTable** (just completed Phase 3)
+   - Replace `setAttribute('data-datatable', ...)` with `setState(...)`
+   - Replace `setAttribute('data-error-message', ...)` with `setAttr(..., 'error-message', ...)`
+   - Test async operations
+
+4. **Toggle** (Phase 4 - pending)
+   - Migrate as part of Phase 4 implementation
+
+5. **Lightbox** (Phase 5 - pending)
+   - Migrate as part of Phase 5 implementation
+
+6. **All remaining components**:
+   - Lazysrc
+   - Scrollreveal
+   - Videoplay
+   - Scrollhide
+   - SelectLoader
+   - Toast
+   - FormEnhancer
+   - CopyToClipboard
+   - Modal (wrapper component)
+
+**Migration checklist per component**:
+- [ ] Find all `setAttribute('data-<component>', ...)` → replace with `setState()`
+- [ ] Find all `getAttribute('data-<component>')` → replace with `getElementState()`
+- [ ] Find all `setAttribute('data-<component>-<attr>', ...)` → replace with `setAttr()`
+- [ ] Find all `getAttribute('data-<component>-<attr>')` → replace with `getAttr()`
+- [ ] Find all `removeAttribute('data-<component>-<attr>')` → replace with `removeAttr()`
+- [ ] Test all functionality
+- [ ] Update documentation if needed
+
+#### 6.3 Update Documentation (1 hour)
+
+**File**: `docs/guides/creating-components.md`
+
+Add section on new BaseComponent methods:
+
+```markdown
+## Working with Component State and Attributes
+
+BaseComponent provides convenience methods for setting component state and attributes:
+
+### State Management
+\`\`\`javascript
+// Set component state (data-<component>="<state>")
+this.setState(element, 'loading');
+
+// Get component state
+const state = this.getElementState(element); // "loading"
+\`\`\`
+
+### Attribute Management
+\`\`\`javascript
+// Set attribute (data-<component>-duration="300")
+this.setAttr(element, 'duration', '300');
+
+// Get attribute
+const duration = this.getAttr(element, 'duration'); // "300"
+
+// Check if attribute exists
+if (this.hasAttr(element, 'disabled')) { ... }
+
+// Remove attribute
+this.removeAttr(element, 'duration');
+\`\`\`
+
+### Benefits
+- DRY: Component name defined once in selector
+- Smaller code: Less typing, fewer characters
+- Maintainable: Change selector in one place
+- Type-safe: Easier to add TypeScript later
+\`\`\`
+
+**File**: `docs/guides/coding-standards.md`
+
+Add to best practices:
+```markdown
+## Component State and Attributes
+
+**DO**: Use BaseComponent helper methods
+\`\`\`javascript
+this.setState(element, 'open');
+this.setAttr(element, 'duration', '300');
+\`\`\`
+
+**DON'T**: Hardcode component names
+\`\`\`javascript
+element.setAttribute('data-toggle', 'open'); // ❌
+element.setAttribute('data-toggle-duration', '300'); // ❌
+\`\`\`
+```
+
+#### 6.4 Testing (1 hour)
+
+**Unit Tests**: Add tests for new BaseComponent methods
+- Test setState/getElementState
+- Test setAttr/getAttr/removeAttr/hasAttr
+- Test with different selectors
+
+**Integration Tests**: Verify all components work with new API
+- Run full test suite
+- Manual testing of each component in demo
+
+### Success Criteria
+
+- [ ] BaseComponent has all 6 new methods implemented
+- [ ] All components migrated to use new API
+- [ ] No `setAttribute('data-<component>', ...)` patterns remain (except in BaseComponent)
+- [ ] All tests pass
+- [ ] Documentation updated with examples
+- [ ] Coding standards updated
+- [ ] Demo works correctly with all components
+
+### Benefits
+
+1. **Code Reduction**: ~30-40% less code in component methods
+2. **DRY Compliance**: Selector defined once
+3. **Maintainability**: Easy to refactor component names
+4. **Consistency**: All components use same pattern
+5. **Future-Proof**: Easier to add TypeScript definitions
+
+### Estimated Code Savings
+
+Based on current codebase analysis:
+- Average component: ~20-30 setAttribute/getAttribute calls
+- Savings per call: ~15-20 characters
+- Total estimated reduction: ~300-600 characters per component
+- Across 15 components: ~4500-9000 characters saved
+
+---
+
+## Phase 7: Documentation & State Diagrams
 
 **Estimated Effort**: 4-6 hours
 **Priority**: Medium
-**Dependencies**: Phases 1-4 complete
+**Dependencies**: Phase 6 complete
 
 ### Required Deliverables
 
