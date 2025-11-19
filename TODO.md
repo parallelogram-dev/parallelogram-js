@@ -7,13 +7,23 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## High Priority
 
 ### State Management System Completion
-- [ ] Migrate remaining components to state-based system
-  - [ ] Lightbox component state integration
-  - [ ] Modal component state integration
-  - [ ] Tabs component state integration
-  - [ ] DataTable component state integration
+- [x] Migrate remaining components to state-based system
+  - [x] Lightbox component state integration (COMPLETE - with state machine & docs)
+  - [ ] Modal component state integration (uses basic state, needs state machine)
+  - [ ] Tabs component state integration (uses basic state, needs state-based CSS)
+  - [ ] DataTable component state integration (has state, needs loading/error states)
 - [ ] Add state-based CSS for all components in `src/styles/framework/components/`
+  - [x] Lightbox (documented but needs implementation in SCSS)
+  - [ ] Toggle (needs .is-opening, .is-open, .is-closing classes)
+  - [ ] Tabs (needs state-based transition classes)
+  - [ ] DataTable (needs .is-loading, .is-error, .is-empty classes)
+  - [ ] Modal (needs state machine CSS classes)
 - [ ] Document state transition diagrams for each component
+  - [x] Lightbox state management guide
+  - [ ] Modal state transitions
+  - [ ] Toggle state transitions
+  - [ ] Tabs state transitions
+  - [ ] DataTable state transitions
 - [ ] Create visual state debugger tool (dev mode overlay showing component states)
 
 ### Testing & Quality
@@ -121,15 +131,15 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ### Component Improvements
 
 #### Existing Components
-- [ ] **Lazysrc** - Intersection Observer v2 for visibility detection
+- [ ] **Lazysrc** - Enhanced visibility detection (CSS visibility, occlusion when supported)
 - [ ] **Modal** - Stack management for nested modals
 - [ ] **Modal** - Focus trap improvements
 - [ ] **Toggle** - Animation presets (slide, fade, scale)
 - [ ] **DataTable** - Virtual scrolling for large datasets
 - [ ] **DataTable** - Column resizing, reordering
 - [ ] **DataTable** - Export to CSV/Excel/PDF
-- [ ] **Reveal** - Custom animation curves/easings
-- [ ] **Reveal** - Group animations (sequential, parallel)
+- [ ] **Scrollreveal** - Custom animation curves/easings
+- [ ] **Scrollreveal** - Group animations (sequential, parallel)
 - [ ] **Tabs** - Deep linking support (URL hash navigation)
 - [ ] **Tabs** - AJAX content loading
 - [ ] **FormEnhancer** - Real-time validation
@@ -213,8 +223,8 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## Maintenance & Housekeeping
 
 ### Code Quality
-- [ ] Migrate WIP.js components to proper files
-- [ ] Remove deprecated/unused code
+- [x] Migrate WIP.js components to proper files (COMPLETE - WIP.js deleted)
+- [x] Remove deprecated/unused code (COMPLETE - Carousel, Uploader removed)
 - [ ] Consistent error handling across all components
 - [ ] Standardize JSDoc comments
 - [ ] Linting rules enforcement (ESLint, Prettier)
