@@ -1,0 +1,493 @@
+/* Global Hidden Rule */
+[hidden] {
+  display: none !important;
+}
+
+/* Host & Core Properties */
+:host {
+  display: inline-block;
+  position: relative;
+  box-sizing: border-box;
+
+  /* Colors */
+  --datetime-text: currentColor;
+  --datetime-muted: rgba(0, 0, 0, 0.5);
+  --datetime-accent: #3b82f6;
+  --datetime-hover: rgba(0, 0, 0, 0.05);
+  --datetime-bg: #ffffff;
+  --datetime-border: rgba(0, 0, 0, 0.1);
+  --datetime-shadow-color: rgba(0, 0, 0, 0.12);
+  --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
+  --datetime-btn-hover-bg: rgba(0, 0, 0, 0.08);
+
+  /* Opacity */
+  --datetime-placeholder-opacity: 0.6;
+  --datetime-icon-opacity: 0.7;
+  --datetime-disabled-opacity: 0.3;
+
+  /* Spacing */
+  --datetime-padding-x: 0.75em;
+  --datetime-padding-y: 0.375em;
+  --datetime-space-xs: 0.125em;
+  --datetime-space-sm: 0.25em;
+  --datetime-space-md: 0.5em;
+  --datetime-space-lg: 0.75em;
+  --datetime-gap: 0.5em;
+
+  /* Border Radius */
+  --datetime-radius: 0.5em;
+  --datetime-radius-lg: 0.75em;
+  --datetime-radius-xl: 1em;
+
+  /* Borders */
+  --datetime-border-width: 1px;
+  --datetime-focus-ring-width: 2px;
+  --datetime-today-border-width: 2px;
+
+  /* Shadows */
+  --datetime-shadow: 0 0.625em 1.875em var(--datetime-shadow-color);
+
+  /* Timing */
+  --datetime-transition: 0.15s ease;
+  --datetime-animation-duration: 0.5s;
+
+  /* Sizes */
+  --datetime-cell-size: 2.5em;
+  --datetime-font-sm: 0.75em;
+  --datetime-font-md: 0.875em;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --datetime-muted: rgba(255, 255, 255, 0.5);
+    --datetime-hover: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Shared - Border Properties */
+.panel,
+.time-select,
+.ampm,
+.preset,
+.btn {
+  border: var(--datetime-border-width) solid var(--datetime-border);
+}
+
+.grid-container,
+.time,
+.quick-dates,
+.actions {
+  border-top: var(--datetime-border-width) solid var(--datetime-border);
+}
+
+/* Shared - Border Radius */
+.nav button,
+.month-year,
+.day,
+.month,
+.year,
+.time-select,
+.ampm,
+.btn {
+  border-radius: var(--datetime-radius);
+}
+
+/* Shared - Flex Center Layout */
+.calendar-btn,
+.nav button,
+.month-year,
+.day,
+.month,
+.year,
+.time,
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Shared - Transitions (only for users who prefer motion) */
+@media (prefers-reduced-motion: no-preference) {
+  .panel,
+  .nav button,
+  .day,
+  .month,
+  .year,
+  .time-select,
+  .ampm,
+  .btn {
+    transition: all var(--datetime-transition);
+  }
+}
+
+/* Shared - Font Sizes */
+.month-year,
+.day,
+.month,
+.year,
+.time-select,
+.ampm,
+.btn {
+  font-size: var(--datetime-font-md);
+}
+
+.preset,
+.range-info {
+  font-size: 0.8em;
+}
+
+/* Shared - Hover States (consolidated for performance) */
+@media (hover: hover) {
+  .calendar-btn:hover,
+  .nav button:hover,
+  .month-year:hover {
+    background: var(--datetime-hover);
+    color: var(--datetime-accent);
+  }
+
+  .day:hover,
+  .month:hover,
+  .year:hover {
+    background: var(--datetime-hover);
+  }
+
+  .time-select:hover,
+  .ampm:hover {
+    border-color: var(--datetime-accent);
+    background-color: var(--datetime-hover);
+  }
+
+  .preset:hover {
+    background: var(--datetime-accent);
+    color: var(--datetime-bg);
+    border-color: var(--datetime-accent);
+  }
+
+  .btn:hover {
+    background: var(--datetime-btn-hover-bg);
+    border-color: var(--datetime-accent);
+  }
+
+  .btn.primary:hover {
+    opacity: 0.9;
+  }
+}
+
+/* Field & Input Containers */
+.field {
+  font: inherit;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.input {
+  padding: var(--datetime-padding-y) var(--datetime-padding-x);
+  color: var(--datetime-text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  transition: box-shadow var(--datetime-transition);
+  border-radius: inherit;
+}
+
+.input:first-of-type:not(:only-of-type) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input:nth-of-type(2) {
+  border-left: var(--datetime-border-width) solid var(--datetime-border);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.input.is-focused {
+  box-shadow: inset 0 0 0 var(--datetime-focus-ring-width) var(--datetime-accent);
+}
+
+.input[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--datetime-muted);
+  opacity: var(--datetime-placeholder-opacity);
+}
+
+/* Buttons - Base Reset */
+.nav button,
+.month-year,
+.calendar-btn,
+.day,
+.month,
+.year,
+.preset,
+.btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.calendar-btn {
+  padding: 0 var(--datetime-padding-x);
+  opacity: var(--datetime-icon-opacity);
+}
+
+/* Panel */
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--datetime-gap);
+  background: var(--datetime-bg);
+  border-radius: var(--datetime-radius-lg);
+  box-shadow: var(--datetime-shadow);
+  padding: var(--datetime-space-lg);
+  z-index: 9;
+  min-width: 20em;
+  opacity: 0;
+  transform: translateY(-0.5em);
+  pointer-events: none;
+}
+
+.panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding-bottom: var(--datetime-space-lg);
+}
+
+.nav button {
+  padding: var(--datetime-gap);
+  color: var(--datetime-muted);
+}
+
+.month-year {
+  font-weight: 600;
+  padding: var(--datetime-space-sm) var(--datetime-gap);
+  transition: background-color var(--datetime-transition);
+  color: var(--datetime-text);
+  gap: var(--datetime-space-sm);
+}
+
+.month-year:active {
+  background: var(--datetime-hover);
+  opacity: 0.8;
+}
+
+.month-year svg {
+  opacity: var(--datetime-placeholder-opacity);
+  margin-left: var(--datetime-space-xs);
+}
+
+/* Grids - Container & Layout */
+.grid-container {
+  padding-top: var(--datetime-space-lg);
+  position: relative;
+  overflow: hidden;
+  height: 18.75em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--datetime-space-xs);
+  justify-items: center;
+  align-content: start;
+  grid-template-rows: 2em repeat(6, var(--datetime-cell-size));
+  height: 18em;
+}
+
+.grid.month-view,
+.grid.year-view {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: var(--datetime-gap);
+}
+
+.grid--animating {
+  position: absolute;
+  top: var(--datetime-space-lg);
+  left: 0;
+  right: 0;
+}
+
+.grid.animating {
+  transition: transform var(--datetime-animation-duration) cubic-bezier(0.5, 0, 0, 1);
+}
+
+.grid--prev.grid--out {
+  transform: translateX(100%);
+}
+
+.grid--prev.grid--in {
+  transform: translateX(-100%);
+}
+
+.grid--next.grid--out {
+  transform: translateX(-100%);
+}
+
+.grid--next.grid--in {
+  transform: translateX(100%);
+}
+
+.grid:not(.grid--in):not(.grid--out) {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid {
+    transition: opacity var(--datetime-transition);
+    transform: none !important;
+  }
+}
+
+/* Grid Cells - Day/Month/Year */
+.wd {
+  font-size: var(--datetime-font-sm);
+  opacity: var(--datetime-placeholder-opacity);
+  font-weight: 600;
+  padding: var(--datetime-gap) 0;
+  text-transform: uppercase;
+}
+
+.day,
+.month,
+.year {
+  width: 100%;
+  height: var(--datetime-cell-size);
+}
+
+.day.today,
+.month.today,
+.year.today {
+  border: var(--datetime-today-border-width) solid var(--datetime-accent);
+  position: relative;
+}
+
+.day.in-range {
+  background: var(--datetime-accent);
+  color: var(--datetime-bg);
+  opacity: 0.6;
+}
+
+.day.selected,
+.month.selected,
+.year.selected,
+.day.range-start,
+.day.range-end {
+  background: var(--datetime-accent);
+  color: var(--datetime-bg);
+  opacity: 1;
+}
+
+.month,
+.year {
+  height: 3em;
+}
+
+.day:disabled {
+  opacity: var(--datetime-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.day.range-hover {
+  background: var(--datetime-focus-shadow);
+}
+
+/* Time Picker */
+.time {
+  gap: var(--datetime-gap);
+  padding: var(--datetime-space-lg) 0;
+}
+
+.time-separator {
+  font-size: 1.25em;
+  color: var(--datetime-muted);
+  font-weight: 600;
+}
+
+.time-select,
+.ampm {
+  appearance: none;
+  background-color: var(--datetime-bg);
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>');
+  background-position: right var(--datetime-gap) center;
+  background-repeat: no-repeat;
+  background-size: 1em;
+  padding: var(--datetime-gap) 1.75em var(--datetime-gap) var(--datetime-space-lg);
+  font-weight: 500;
+  color: var(--datetime-text);
+  cursor: pointer;
+  min-width: 4em;
+}
+
+.time-select:focus,
+.ampm:focus {
+  outline: none;
+  border-color: var(--datetime-accent);
+  box-shadow: 0 0 0 3px var(--datetime-focus-shadow);
+}
+
+/* Quick Dates & Presets */
+.quick-dates {
+  display: flex;
+  gap: 0.375em;
+  padding: var(--datetime-space-lg) 0;
+  flex-wrap: wrap;
+}
+
+.preset {
+  padding: 0.375em var(--datetime-space-lg);
+  border-radius: var(--datetime-radius-xl);
+  color: var(--datetime-muted);
+}
+
+/* Action Buttons */
+.actions {
+  display: flex;
+  gap: var(--datetime-gap);
+  justify-content: space-between;
+  padding-top: var(--datetime-space-lg);
+}
+
+.btn {
+  background: var(--datetime-hover);
+  padding: 0.625em 1em;
+  min-height: var(--datetime-cell-size);
+  color: var(--datetime-text);
+}
+
+.btn.primary {
+  background: var(--datetime-accent);
+  color: var(--datetime-bg);
+  border-color: var(--datetime-accent);
+}
+
+/* Range Info */
+.range-info {
+  padding: var(--datetime-gap) var(--datetime-gap);
+  margin-bottom: var(--datetime-space-lg);
+  background: var(--datetime-hover);
+  color: var(--datetime-muted);
+  text-align: center;
+}

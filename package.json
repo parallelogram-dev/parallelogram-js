@@ -3,9 +3,8 @@
   "version": "0.2.0",
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
-  "browser": "dist/index.umd.js",
   "scripts": {
     "build": "rollup -c && npm run build-css",
     "build-css": "npm run compile-scss && npm run minify-css",
