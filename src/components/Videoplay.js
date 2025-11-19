@@ -37,6 +37,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  */
 export default class Videoplay extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-videoplay';
+  }
+
+  /**
    * Default configuration for videoplay component
    * @returns {Object} Default config
    */
@@ -116,7 +125,7 @@ export default class Videoplay extends BaseComponent {
     const state = super._init(element);
 
     // Get target video element
-    const videoSelector = this._getDataAttr(element, 'video-target');
+    const videoSelector = this.getAttr(element, 'target');
     const video = videoSelector
       ? document.querySelector(videoSelector)
       : element.tagName === 'VIDEO'
@@ -132,44 +141,44 @@ export default class Videoplay extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const playThreshold = this._getDataAttr(
+    const playThreshold = this.getAttr(
       element,
-      'videoplay-threshold',
+      'threshold',
       Videoplay.defaults.playThreshold
     );
-    const pauseThreshold = this._getDataAttr(
+    const pauseThreshold = this.getAttr(
       element,
-      'videoplay-pause-threshold',
+      'pause-threshold',
       Videoplay.defaults.pauseThreshold
     );
-    const pauseOnExit = this._getDataAttr(
+    const pauseOnExit = this.getAttr(
       element,
-      'videoplay-autopause',
+      'autopause',
       Videoplay.defaults.pauseOnExit
     );
-    const muteWhenPlaying = this._getDataAttr(
+    const muteWhenPlaying = this.getAttr(
       element,
-      'videoplay-automute',
+      'automute',
       Videoplay.defaults.muteWhenPlaying
     );
-    const restoreVolumeOnPause = this._getDataAttr(
+    const restoreVolumeOnPause = this.getAttr(
       element,
-      'videoplay-restore-volume',
+      'restore-volume',
       Videoplay.defaults.restoreVolumeOnPause
     );
-    const enableInBackground = this._getDataAttr(
+    const enableInBackground = this.getAttr(
       element,
-      'videoplay-background',
+      'background',
       Videoplay.defaults.enableInBackground
     );
-    const preloadOnMount = this._getDataAttr(
+    const preloadOnMount = this.getAttr(
       element,
-      'videoplay-preload',
+      'preload',
       Videoplay.defaults.preloadOnMount
     );
-    const requireUserInteraction = this._getDataAttr(
+    const requireUserInteraction = this.getAttr(
       element,
-      'videoplay-require-interaction',
+      'require-interaction',
       Videoplay.defaults.requireUserInteraction
     );
 

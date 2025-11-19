@@ -12,6 +12,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  * </form>
  */
 export class FormEnhancer extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-form-enhancer';
+  }
+
   static get defaults() {
     return {
       validateOnInput: true,
@@ -74,23 +83,23 @@ export class FormEnhancer extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      validateOnInput: this._getDataAttr(
+      validateOnInput: this.getAttr(
         element,
         'validate-on-input',
         FormEnhancer.defaults.validateOnInput
       ),
-      validateOnBlur: this._getDataAttr(
+      validateOnBlur: this.getAttr(
         element,
         'validate-on-blur',
         FormEnhancer.defaults.validateOnBlur
       ),
-      showErrorsImmediately: this._getDataAttr(
+      showErrorsImmediately: this.getAttr(
         element,
         'show-errors-immediately',
         FormEnhancer.defaults.showErrorsImmediately
       ),
       debounce: parseInt(
-        this._getDataAttr(element, 'validate-debounce', FormEnhancer.defaults.debounce)
+        this.getAttr(element, 'validate-debounce', FormEnhancer.defaults.debounce)
       ),
     };
   }

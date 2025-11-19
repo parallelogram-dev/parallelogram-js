@@ -34,6 +34,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  */
 export default class Scrollhide extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-scrollhide';
+  }
+
+  /**
    * Default configuration for scrollhide component
    * @returns {Object} Default config
    */
@@ -57,7 +66,7 @@ export default class Scrollhide extends BaseComponent {
     const state = super._init(element);
 
     // Get target element (could be self or specified target)
-    const targetSelector = this._getDataAttr(element, 'scrollhide-target');
+    const targetSelector = this.getAttr(element, 'target');
     const target = targetSelector ? document.querySelector(targetSelector) : element;
 
     if (!target) {
@@ -69,27 +78,27 @@ export default class Scrollhide extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const scrollThreshold = this._getDataAttr(
+    const scrollThreshold = this.getAttr(
       element,
       'scroll-threshold',
       Scrollhide.defaults.scrollThreshold
     );
-    const overlayThreshold = this._getDataAttr(
+    const overlayThreshold = this.getAttr(
       element,
       'overlay-threshold',
       Scrollhide.defaults.overlayThreshold
     );
-    const scrolledClass = this._getDataAttr(
+    const scrolledClass = this.getAttr(
       element,
       'scrolled-class',
       Scrollhide.defaults.scrolledClass
     );
-    const overlayClass = this._getDataAttr(
+    const overlayClass = this.getAttr(
       element,
       'overlay-class',
       Scrollhide.defaults.overlayClass
     );
-    const debounce = this._getDataAttr(element, 'debounce', Scrollhide.defaults.debounce);
+    const debounce = this.getAttr(element, 'debounce', Scrollhide.defaults.debounce);
 
     // Store state
     state.target = target;

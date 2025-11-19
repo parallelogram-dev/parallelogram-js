@@ -4,10 +4,19 @@ import { BaseComponent } from '@parallelogram-js/core';
  * CopyToClipboard Component - Copy text to clipboard
  *
  * @example
- * <button data-copy-to-clipboard data-copy-target="#code-block">Copy Code</button>
+ * <button data-copytoclipboard data-copytoclipboard-target="#code-block">Copy Code</button>
  * <pre id="code-block">logger?.info('Hello World');</pre>
  */
 export class CopyToClipboard extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-copytoclipboard';
+  }
+
   static get defaults() {
     return {
       successMessage: 'Copied!',
@@ -39,31 +48,31 @@ export class CopyToClipboard extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      successMessage: this._getDataAttr(
+      successMessage: this.getAttr(
         element,
-        'copy-success-message',
+        'success-message',
         CopyToClipboard.defaults.successMessage
       ),
-      errorMessage: this._getDataAttr(
+      errorMessage: this.getAttr(
         element,
-        'copy-error-message',
+        'error-message',
         CopyToClipboard.defaults.errorMessage
       ),
       successDuration: parseInt(
-        this._getDataAttr(
+        this.getAttr(
           element,
-          'copy-success-duration',
+          'success-duration',
           CopyToClipboard.defaults.successDuration
         )
       ),
-      successClass: this._getDataAttr(
+      successClass: this.getAttr(
         element,
-        'copy-success-class',
+        'success-class',
         CopyToClipboard.defaults.successClass
       ),
-      errorClass: this._getDataAttr(
+      errorClass: this.getAttr(
         element,
-        'copy-error-class',
+        'error-class',
         CopyToClipboard.defaults.errorClass
       ),
     };

@@ -1,4 +1,5 @@
 import { BaseComponent } from '@parallelogram-js/core';
+import { ExtendedStates } from '../core/ComponentStates.js';
 /**
  * Toggle Component
  *
@@ -50,6 +51,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  */
 export default class Toggle extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-toggle';
+  }
+
+  /**
    * Default configuration for toggle component
    * @returns {Object} Default config
    */
@@ -76,7 +86,7 @@ export default class Toggle extends BaseComponent {
     const state = super._init(element);
 
     // Get target element
-    const targetSelector = this._getDataAttr(element, 'toggle-target');
+    const targetSelector = this.getAttr(element, 'target');
     if (!targetSelector) {
       this.logger?.warn('Toggle: No data-toggle-target attribute found', element);
       return state;
@@ -89,19 +99,19 @@ export default class Toggle extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const capture = this._getDataAttr(element, 'toggle-capture', Toggle.defaults.capture);
+    const capture = this.getAttr(element, 'capture', Toggle.defaults.capture);
     const manual =
       target.hasAttribute('data-toggle-manual') ||
-      this._getDataAttr(element, 'toggle-manual', Toggle.defaults.manual);
-    const multiple = this._getDataAttr(element, 'toggle-multiple', Toggle.defaults.multiple);
-    const animateToggle = this._getDataAttr(
+      this.getAttr(element, 'manual', Toggle.defaults.manual);
+    const multiple = this.getAttr(element, 'multiple', Toggle.defaults.multiple);
+    const animateToggle = this.getAttr(
       element,
-      'toggle-animate',
+      'animate',
       Toggle.defaults.animateToggle
     );
-    const closeOnNavigation = this._getDataAttr(
+    const closeOnNavigation = this.getAttr(
       element,
-      'toggle-close-navigation',
+      'close-navigation',
       Toggle.defaults.closeOnNavigation
     );
 
@@ -115,6 +125,10 @@ export default class Toggle extends BaseComponent {
     state.closeOnNavigation = closeOnNavigation;
     state.isOpen = target.classList.contains(Toggle.defaults.openClass);
     state.transitionTimer = null;
+
+    // Set initial state attribute on target
+    const initialState = state.isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED;
+    this.setAttr(target, 'target', initialState);
 
     // Set up click handler
     const clickHandler = e => this._handleClick(e, element, state);
@@ -219,35 +233,47 @@ export default class Toggle extends BaseComponent {
     const state = this.getState(element);
     if (!state) return;
 
-    // Check if already open to avoid redundant operations
-    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
-    if (isActuallyOpen) return;
+    // Check current state to prevent transitions during animation
+    const currentState = this.getAttr(state.target, 'target');
+    if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
+      return;
+    }
 
     // Close other toggles if multiple is not allowed
     if (!state.multiple) {
       this._closeOtherToggles(element);
     }
 
-    // Update state for this trigger
+    // Update internal state for this trigger
     state.isOpen = true;
 
     // Update state for all triggers targeting the same element
     this._syncTriggerStates(state.targetSelector, true);
 
-    // Update classes and ARIA
-    this._updateElementStates(element, state, true);
+    // Update ARIA attributes
+    element.setAttribute('aria-expanded', 'true');
+    this._updateRelatedTriggers(state.targetSelector, true);
 
     // Set up global listeners for outside click capture or navigation link detection
     if (state.capture || state.closeOnNavigation) {
       this._setupGlobalListeners(element, state);
     }
 
-    // Handle transitions
+    // Handle state transitions with animation
     if (state.animateToggle) {
-      state.target.classList.add(Toggle.defaults.transitioningClass);
+      // Set opening state
+      this.setAttr(state.target, 'target', ExtendedStates.OPENING);
+      state.target.classList.add(Toggle.defaults.openClass);
+
+      // Transition to fully open after animation
       state.transitionTimer = setTimeout(() => {
-        this._endTransition(state);
+        this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+        state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
+    } else {
+      // No animation - set open state immediately
+      this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+      state.target.classList.add(Toggle.defaults.openClass);
     }
 
     // Dispatch events
@@ -273,28 +299,40 @@ export default class Toggle extends BaseComponent {
     const state = this.getState(element);
     if (!state) return;
 
-    // Check if already closed to avoid redundant operations
-    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
-    if (!isActuallyOpen) return;
+    // Check current state to prevent transitions during animation
+    const currentState = this.getAttr(state.target, 'target');
+    if (currentState === ExtendedStates.CLOSING || currentState === ExtendedStates.CLOSED) {
+      return;
+    }
 
-    // Update state for this trigger
+    // Update internal state for this trigger
     state.isOpen = false;
 
     // Update state for all triggers targeting the same element
     this._syncTriggerStates(state.targetSelector, false);
 
-    // Update classes and ARIA
-    this._updateElementStates(element, state, false);
+    // Update ARIA attributes
+    element.setAttribute('aria-expanded', 'false');
+    this._updateRelatedTriggers(state.targetSelector, false);
 
     // Remove global listeners
     this._removeGlobalListeners(state);
 
-    // Handle transitions
+    // Handle state transitions with animation
     if (state.animateToggle) {
-      state.target.classList.add(Toggle.defaults.transitioningClass);
+      // Set closing state
+      this.setAttr(state.target, 'target', ExtendedStates.CLOSING);
+
+      // Wait for animation before removing open class and setting closed state
       state.transitionTimer = setTimeout(() => {
-        this._endTransition(state);
+        state.target.classList.remove(Toggle.defaults.openClass);
+        this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
+        state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
+    } else {
+      // No animation - set closed state immediately
+      state.target.classList.remove(Toggle.defaults.openClass);
+      this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
     }
 
     // Dispatch events
@@ -338,34 +376,17 @@ export default class Toggle extends BaseComponent {
   }
 
   /**
-   * Update element classes and ARIA attributes
+   * Update ARIA attributes for related triggers
    * @private
-   * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
+   * @param {string} targetSelector - Target selector
    * @param {boolean} isOpen - Whether the toggle is open
    */
-  _updateElementStates(element, state, isOpen) {
-    // Update trigger
-    element.setAttribute('aria-expanded', String(isOpen));
-
-    // Update target
-    if (isOpen) {
-      state.target.classList.add(Toggle.defaults.openClass);
-    } else {
-      state.target.classList.remove(Toggle.defaults.openClass);
-    }
-
-    // Update related triggers (same target)
+  _updateRelatedTriggers(targetSelector, isOpen) {
     const relatedTriggers = document.querySelectorAll(
-      `[data-toggle-target="${state.targetSelector}"]`
+      `[data-toggle-target="${targetSelector}"]`
     );
     relatedTriggers.forEach(trigger => {
       trigger.setAttribute('aria-expanded', String(isOpen));
-      if (isOpen) {
-        trigger.classList.add(Toggle.defaults.openClass);
-      } else {
-        trigger.classList.remove(Toggle.defaults.openClass);
-      }
     });
   }
 
@@ -446,16 +467,6 @@ export default class Toggle extends BaseComponent {
       current = current.parentElement;
     }
     return false;
-  }
-
-  /**
-   * End transition animation
-   * @private
-   * @param {Object} state - Component state
-   */
-  _endTransition(state) {
-    state.target.classList.remove(Toggle.defaults.transitioningClass);
-    state.transitionTimer = null;
   }
 
   /**

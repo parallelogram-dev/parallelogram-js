@@ -65,6 +65,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  *      alt="Description">
  */
 export default class Lazysrc extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-lazysrc';
+  }
+
   static get defaults() {
     return {
       threshold: 0.1,
@@ -182,42 +191,50 @@ export default class Lazysrc extends BaseComponent {
     const config = { ...Lazysrc.defaults };
 
     // Threshold
-    if (element.dataset.lazysrcThreshold) {
-      config.threshold = parseFloat(element.dataset.lazysrcThreshold);
+    const threshold = this.getAttr(element, 'threshold');
+    if (threshold) {
+      config.threshold = parseFloat(threshold);
     }
 
     // Root margin
-    if (element.dataset.lazysrcRootMargin) {
-      config.rootMargin = element.dataset.lazysrcRootMargin;
+    const rootMargin = this.getAttr(element, 'root-margin');
+    if (rootMargin) {
+      config.rootMargin = rootMargin;
     }
 
     // CSS Classes
-    if (element.dataset.lazysrcLoadingClass) {
-      config.loadingClass = element.dataset.lazysrcLoadingClass;
+    const loadingClass = this.getAttr(element, 'loading-class');
+    if (loadingClass) {
+      config.loadingClass = loadingClass;
     }
-    if (element.dataset.lazysrcLoadedClass) {
-      config.loadedClass = element.dataset.lazysrcLoadedClass;
+    const loadedClass = this.getAttr(element, 'loaded-class');
+    if (loadedClass) {
+      config.loadedClass = loadedClass;
     }
-    if (element.dataset.lazysrcErrorClass) {
-      config.errorClass = element.dataset.lazysrcErrorClass;
+    const errorClass = this.getAttr(element, 'error-class');
+    if (errorClass) {
+      config.errorClass = errorClass;
     }
 
     // Animation
-    if (element.dataset.lazysrcFadeDuration) {
-      config.fadeInDuration = parseInt(element.dataset.lazysrcFadeDuration, 10);
+    const fadeDuration = this.getAttr(element, 'fade-duration');
+    if (fadeDuration) {
+      config.fadeInDuration = parseInt(fadeDuration, 10);
     }
 
     // Retry logic
-    if (element.dataset.lazysrcRetryAttempts) {
-      config.retryAttempts = parseInt(element.dataset.lazysrcRetryAttempts, 10);
+    const retryAttempts = this.getAttr(element, 'retry-attempts');
+    if (retryAttempts) {
+      config.retryAttempts = parseInt(retryAttempts, 10);
     }
-    if (element.dataset.lazysrcRetryDelay) {
-      config.retryDelay = parseInt(element.dataset.lazysrcRetryDelay, 10);
+    const retryDelay = this.getAttr(element, 'retry-delay');
+    if (retryDelay) {
+      config.retryDelay = parseInt(retryDelay, 10);
     }
 
     // Native loading
-    if (element.dataset.lazysrcUseNative !== undefined) {
-      config.useNativeLoading = element.dataset.lazysrcUseNative !== 'false';
+    if (this.hasAttr(element, 'use-native')) {
+      config.useNativeLoading = this.getAttr(element, 'use-native') !== 'false';
     }
 
     return config;
@@ -334,15 +351,15 @@ export default class Lazysrc extends BaseComponent {
       }
 
       /* Store and clear img src/srcset */
-      if (element.src && !element.dataset.lazysrcSrc) {
+      if (element.src && !this.hasAttr(element, 'src')) {
         state.originalSrc = element.src;
         element.removeAttribute('src');
       }
-      if (element.srcset && !element.dataset.lazysrcSrcset) {
+      if (element.srcset && !this.hasAttr(element, 'srcset')) {
         state.originalSrcset = element.srcset;
         element.removeAttribute('srcset');
       }
-      if (element.sizes && !element.dataset.lazysrcSizes) {
+      if (element.sizes && !this.hasAttr(element, 'sizes')) {
         state.originalSizes = element.sizes;
       }
     } else if (element.tagName === 'PICTURE') {
@@ -465,7 +482,7 @@ export default class Lazysrc extends BaseComponent {
 
     try {
       // Handle different element types
-      if (element.dataset.lazysrcBg) {
+      if (this.hasAttr(element, 'bg')) {
         await this._loadBackgroundImage(element, componentState);
       } else if (element.tagName === 'PICTURE') {
         await this._loadPictureElement(element, componentState);
@@ -531,9 +548,9 @@ export default class Lazysrc extends BaseComponent {
         };
 
         // Get src and srcset
-        const src = element.dataset.lazysrcSrc || state.originalSrc;
-        const srcset = element.dataset.lazysrcSrcset || state.originalSrcset;
-        const sizes = element.dataset.lazysrcSizes || state.originalSizes;
+        const src = this.getAttr(element, 'src') || state.originalSrc;
+        const srcset = this.getAttr(element, 'srcset') || state.originalSrcset;
+        const sizes = this.getAttr(element, 'sizes') || state.originalSizes;
 
         // Set srcset and sizes first (browser will choose best image)
         if (srcset) {
@@ -593,7 +610,7 @@ export default class Lazysrc extends BaseComponent {
    */
   _loadBackgroundImage(element, state) {
     return new Promise((resolve, reject) => {
-      const bgUrl = element.dataset.lazysrcBg;
+      const bgUrl = this.getAttr(element, 'bg');
       if (!bgUrl) {
         reject(new Error('No background image URL specified'));
         return;
@@ -623,22 +640,25 @@ export default class Lazysrc extends BaseComponent {
    */
   _applySources(element, state) {
     // Apply srcset - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSrcset) {
-      element.srcset = element.dataset.lazysrcSrcset;
+    const srcset = this.getAttr(element, 'srcset');
+    if (srcset) {
+      element.srcset = srcset;
     } else if (state.originalSrcset) {
       element.srcset = state.originalSrcset;
     }
 
     // Apply sizes - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSizes) {
-      element.sizes = element.dataset.lazysrcSizes;
+    const sizes = this.getAttr(element, 'sizes');
+    if (sizes) {
+      element.sizes = sizes;
     } else if (state.originalSizes) {
       element.sizes = state.originalSizes;
     }
 
     // Apply src - prefer data attribute, fall back to stored original
-    if (element.dataset.lazysrcSrc) {
-      element.src = element.dataset.lazysrcSrc;
+    const src = this.getAttr(element, 'src');
+    if (src) {
+      element.src = src;
     } else if (state.originalSrc) {
       element.src = state.originalSrc;
     }

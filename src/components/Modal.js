@@ -31,6 +31,15 @@ import { generateId, createElement } from '../utils/dom-utils.js';
 
 export default class Modal extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-modal';
+  }
+
+  /**
    * Default options for modal enhancement
    */
   static get defaults() {
@@ -55,17 +64,18 @@ export default class Modal extends BaseComponent {
     const state = super._init(element);
 
     // Get configuration from data attributes
-    const target = this._getDataAttr(element, 'modal-target');
-    const size = this._getDataAttr(element, 'modal-size', Modal.defaults.size);
-    const closable = this._getDataAttr(element, 'modal-closable', Modal.defaults.closable);
-    const backdropClose = this._getDataAttr(
+    // Note: getAttr automatically adds component prefix (data-modal-)
+    const target = this.getAttr(element, 'target');
+    const size = this.getAttr(element, 'size', Modal.defaults.size);
+    const closable = this.getAttr(element, 'closable', Modal.defaults.closable);
+    const backdropClose = this.getAttr(
       element,
-      'modal-backdrop-close',
+      'backdrop-close',
       Modal.defaults.backdropClose
     );
-    const keyboard = this._getDataAttr(element, 'modal-keyboard', Modal.defaults.keyboard);
-    const focus = this._getDataAttr(element, 'modal-focus', Modal.defaults.focus);
-    const multiple = this._getDataAttr(element, 'modal-multiple', Modal.defaults.multiple);
+    const keyboard = this.getAttr(element, 'keyboard', Modal.defaults.keyboard);
+    const focus = this.getAttr(element, 'focus', Modal.defaults.focus);
+    const multiple = this.getAttr(element, 'multiple', Modal.defaults.multiple);
 
     if (!target) {
       this.logger?.warn('Modal: No data-modal-target attribute found', element);
@@ -220,19 +230,19 @@ export default class Modal extends BaseComponent {
    */
   _configureModal(modalElement, config) {
     if (config.size) {
-      modalElement.setAttribute('data-modal-size', config.size);
+      this.setAttr(modalElement, 'size', config.size);
     }
 
     if (config.closable !== undefined) {
-      modalElement.setAttribute('data-modal-closable', String(config.closable));
+      this.setAttr(modalElement, 'closable', String(config.closable));
     }
 
     if (config.backdropClose !== undefined) {
-      modalElement.setAttribute('data-modal-backdrop-close', String(config.backdropClose));
+      this.setAttr(modalElement, 'backdrop-close', String(config.backdropClose));
     }
 
     if (config.keyboard !== undefined) {
-      modalElement.setAttribute('data-modal-keyboard', String(config.keyboard));
+      this.setAttr(modalElement, 'keyboard', String(config.keyboard));
     }
   }
 

@@ -357,7 +357,7 @@ class BaseComponent {
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
     const viewAttr = `${dataAttr}-view`;
-    const viewName = this._getDataAttr(element, viewAttr);
+    const viewName = this.getAttr(element, viewAttr);
 
     if (viewName) {
       const target = document.querySelector(`[data-view="${viewName}"]`);
@@ -372,7 +372,7 @@ class BaseComponent {
     }
 
     /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
-    const selector = this._getDataAttr(element, dataAttr);
+    const selector = this.getAttr(element, dataAttr);
     if (!selector) {
       if (options.required) {
         this.logger?.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
@@ -390,14 +390,20 @@ class BaseComponent {
   /**
    * Parse multiple data attributes into configuration object
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to data attribute names
+   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
    * @returns {Object} Configuration object
+   * @example
+   * // In SelectLoader component:
+   * const config = this._getConfigFromAttrs(element, {
+   *   target: 'target',           // Uses data-selectloader-target
+   *   loadingClass: 'loading-class' // Uses data-selectloader-loading-class
+   * });
    */
   _getConfigFromAttrs(element, mapping) {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this._getDataAttr(element, attrName, defaultValue);
+      config[key] = this.getAttr(element, attrName, defaultValue);
     }
     return config;
   }
@@ -459,7 +465,140 @@ class BaseComponent {
     this.eventBus?.emit(eventType, { element, ...detail });
     return event;
   }
+
+  /**
+   * Get the component's data attribute selector
+   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
+   * Can be overridden in subclasses if needed
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    if (this._selector) return this._selector;
+
+    // Extract component name from class name and convert to kebab-case
+    const className = this.constructor.name;
+    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
+    const kebab = className
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase();
+
+    this._selector = `data-${kebab}`;
+    return this._selector;
+  }
+
+  /**
+   * Set component state using data attribute (data-<component>="<state>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} state - State value
+   * @example
+   * // In Toggle component:
+   * this.setState(element, ExtendedStates.OPEN);
+   * // Sets: <div data-toggle="open">
+   */
+  setState(element, state) {
+    element.setAttribute(this._getSelector(), state);
+  }
+
+  /**
+   * Get component state from data attribute
+   * @param {HTMLElement} element - Target element
+   * @returns {string|null} Current state value
+   * @example
+   * const state = this.getElementState(element); // "open"
+   */
+  getElementState(element) {
+    return element.getAttribute(this._getSelector());
+  }
+
+  /**
+   * Set component attribute (data-<component>-<attr>="<value>")
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {string|number|boolean} value - Attribute value
+   * @example
+   * // In Toggle component:
+   * this.setAttr(element, 'duration', '300');
+   * // Sets: <div data-toggle-duration="300">
+   */
+  setAttr(element, attr, value) {
+    element.setAttribute(`${this._getSelector()}-${attr}`, String(value));
+  }
+
+  /**
+   * Get component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {*} defaultValue - Default value if attribute doesn't exist
+   * @returns {string|null} Attribute value or null
+   * @example
+   * const duration = this.getAttr(element, 'duration', '300'); // "300"
+   */
+  getAttr(element, attr, defaultValue = null) {
+    const value = element.getAttribute(`${this._getSelector()}-${attr}`);
+    return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Remove component attribute (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @example
+   * this.removeAttr(element, 'duration');
+   * // Removes: data-toggle-duration
+   */
+  removeAttr(element, attr) {
+    element.removeAttribute(`${this._getSelector()}-${attr}`);
+  }
+
+  /**
+   * Check if component attribute exists (data-<component>-<attr>)
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @returns {boolean}
+   * @example
+   * if (this.hasAttr(element, 'disabled')) { ... }
+   */
+  hasAttr(element, attr) {
+    return element.hasAttribute(`${this._getSelector()}-${attr}`);
+  }
 }
+
+/**
+ * ComponentStates - Standard state values for component lifecycle
+ *
+ * These states are used in data attributes to track component initialization
+ * and lifecycle. Each component uses its selector attribute (e.g., data-lazysrc)
+ * to store its current state.
+ *
+ * @example
+ * // Initial HTML
+ * <img data-lazysrc data-lazysrc-src="/image.jpg">
+ *
+ * // After mounting
+ * <img data-lazysrc="mounted" data-lazysrc-src="/image.jpg">
+ *
+ * // After loading
+ * <img data-lazysrc="loaded" data-lazysrc-src="/image.jpg" src="/image.jpg">
+ *
+ * @example
+ * // CSS Hooks
+ * [data-lazysrc="loading"] { opacity: 0.5; }
+ * [data-lazysrc="loaded"] { opacity: 1; }
+ * [data-lazysrc="error"] { border: 2px solid red; }
+ */
+
+
+/**
+ * Extended states for specific component behaviors
+ * Components can use these in addition to core states
+ */
+const ExtendedStates = {
+  // Interactive states (for Toggle, Modal, etc.)
+  OPEN: 'open',
+  CLOSED: 'closed',
+  OPENING: 'opening',
+  CLOSING: 'closing'};
 
 /**
  * Toggle Component
@@ -512,6 +651,15 @@ class BaseComponent {
  */
 class Toggle extends BaseComponent {
   /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-toggle';
+  }
+
+  /**
    * Default configuration for toggle component
    * @returns {Object} Default config
    */
@@ -538,7 +686,7 @@ class Toggle extends BaseComponent {
     const state = super._init(element);
 
     // Get target element
-    const targetSelector = this._getDataAttr(element, 'toggle-target');
+    const targetSelector = this.getAttr(element, 'target');
     if (!targetSelector) {
       this.logger?.warn('Toggle: No data-toggle-target attribute found', element);
       return state;
@@ -551,19 +699,19 @@ class Toggle extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const capture = this._getDataAttr(element, 'toggle-capture', Toggle.defaults.capture);
+    const capture = this.getAttr(element, 'capture', Toggle.defaults.capture);
     const manual =
       target.hasAttribute('data-toggle-manual') ||
-      this._getDataAttr(element, 'toggle-manual', Toggle.defaults.manual);
-    const multiple = this._getDataAttr(element, 'toggle-multiple', Toggle.defaults.multiple);
-    const animateToggle = this._getDataAttr(
+      this.getAttr(element, 'manual', Toggle.defaults.manual);
+    const multiple = this.getAttr(element, 'multiple', Toggle.defaults.multiple);
+    const animateToggle = this.getAttr(
       element,
-      'toggle-animate',
+      'animate',
       Toggle.defaults.animateToggle
     );
-    const closeOnNavigation = this._getDataAttr(
+    const closeOnNavigation = this.getAttr(
       element,
-      'toggle-close-navigation',
+      'close-navigation',
       Toggle.defaults.closeOnNavigation
     );
 
@@ -577,6 +725,10 @@ class Toggle extends BaseComponent {
     state.closeOnNavigation = closeOnNavigation;
     state.isOpen = target.classList.contains(Toggle.defaults.openClass);
     state.transitionTimer = null;
+
+    // Set initial state attribute on target
+    const initialState = state.isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED;
+    this.setAttr(target, 'target', initialState);
 
     // Set up click handler
     const clickHandler = e => this._handleClick(e, element, state);
@@ -681,35 +833,47 @@ class Toggle extends BaseComponent {
     const state = this.getState(element);
     if (!state) return;
 
-    // Check if already open to avoid redundant operations
-    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
-    if (isActuallyOpen) return;
+    // Check current state to prevent transitions during animation
+    const currentState = this.getAttr(state.target, 'target');
+    if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
+      return;
+    }
 
     // Close other toggles if multiple is not allowed
     if (!state.multiple) {
       this._closeOtherToggles(element);
     }
 
-    // Update state for this trigger
+    // Update internal state for this trigger
     state.isOpen = true;
 
     // Update state for all triggers targeting the same element
     this._syncTriggerStates(state.targetSelector, true);
 
-    // Update classes and ARIA
-    this._updateElementStates(element, state, true);
+    // Update ARIA attributes
+    element.setAttribute('aria-expanded', 'true');
+    this._updateRelatedTriggers(state.targetSelector, true);
 
     // Set up global listeners for outside click capture or navigation link detection
     if (state.capture || state.closeOnNavigation) {
       this._setupGlobalListeners(element, state);
     }
 
-    // Handle transitions
+    // Handle state transitions with animation
     if (state.animateToggle) {
-      state.target.classList.add(Toggle.defaults.transitioningClass);
+      // Set opening state
+      this.setAttr(state.target, 'target', ExtendedStates.OPENING);
+      state.target.classList.add(Toggle.defaults.openClass);
+
+      // Transition to fully open after animation
       state.transitionTimer = setTimeout(() => {
-        this._endTransition(state);
+        this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+        state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
+    } else {
+      // No animation - set open state immediately
+      this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+      state.target.classList.add(Toggle.defaults.openClass);
     }
 
     // Dispatch events
@@ -735,28 +899,40 @@ class Toggle extends BaseComponent {
     const state = this.getState(element);
     if (!state) return;
 
-    // Check if already closed to avoid redundant operations
-    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
-    if (!isActuallyOpen) return;
+    // Check current state to prevent transitions during animation
+    const currentState = this.getAttr(state.target, 'target');
+    if (currentState === ExtendedStates.CLOSING || currentState === ExtendedStates.CLOSED) {
+      return;
+    }
 
-    // Update state for this trigger
+    // Update internal state for this trigger
     state.isOpen = false;
 
     // Update state for all triggers targeting the same element
     this._syncTriggerStates(state.targetSelector, false);
 
-    // Update classes and ARIA
-    this._updateElementStates(element, state, false);
+    // Update ARIA attributes
+    element.setAttribute('aria-expanded', 'false');
+    this._updateRelatedTriggers(state.targetSelector, false);
 
     // Remove global listeners
     this._removeGlobalListeners(state);
 
-    // Handle transitions
+    // Handle state transitions with animation
     if (state.animateToggle) {
-      state.target.classList.add(Toggle.defaults.transitioningClass);
+      // Set closing state
+      this.setAttr(state.target, 'target', ExtendedStates.CLOSING);
+
+      // Wait for animation before removing open class and setting closed state
       state.transitionTimer = setTimeout(() => {
-        this._endTransition(state);
+        state.target.classList.remove(Toggle.defaults.openClass);
+        this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
+        state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
+    } else {
+      // No animation - set closed state immediately
+      state.target.classList.remove(Toggle.defaults.openClass);
+      this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
     }
 
     // Dispatch events
@@ -800,34 +976,17 @@ class Toggle extends BaseComponent {
   }
 
   /**
-   * Update element classes and ARIA attributes
+   * Update ARIA attributes for related triggers
    * @private
-   * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
+   * @param {string} targetSelector - Target selector
    * @param {boolean} isOpen - Whether the toggle is open
    */
-  _updateElementStates(element, state, isOpen) {
-    // Update trigger
-    element.setAttribute('aria-expanded', String(isOpen));
-
-    // Update target
-    if (isOpen) {
-      state.target.classList.add(Toggle.defaults.openClass);
-    } else {
-      state.target.classList.remove(Toggle.defaults.openClass);
-    }
-
-    // Update related triggers (same target)
+  _updateRelatedTriggers(targetSelector, isOpen) {
     const relatedTriggers = document.querySelectorAll(
-      `[data-toggle-target="${state.targetSelector}"]`
+      `[data-toggle-target="${targetSelector}"]`
     );
     relatedTriggers.forEach(trigger => {
       trigger.setAttribute('aria-expanded', String(isOpen));
-      if (isOpen) {
-        trigger.classList.add(Toggle.defaults.openClass);
-      } else {
-        trigger.classList.remove(Toggle.defaults.openClass);
-      }
     });
   }
 
@@ -908,16 +1067,6 @@ class Toggle extends BaseComponent {
       current = current.parentElement;
     }
     return false;
-  }
-
-  /**
-   * End transition animation
-   * @private
-   * @param {Object} state - Component state
-   */
-  _endTransition(state) {
-    state.target.classList.remove(Toggle.defaults.transitioningClass);
-    state.transitionTimer = null;
   }
 
   /**

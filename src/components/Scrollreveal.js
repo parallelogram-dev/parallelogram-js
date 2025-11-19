@@ -6,6 +6,15 @@ import { BaseComponent } from '@parallelogram-js/core';
  * Elements are revealed in the order they enter the viewport with simple staggering
  */
 export default class Scrollreveal extends BaseComponent {
+  /**
+   * Override _getSelector to prevent minification issues
+   * @returns {string} Data attribute selector
+   * @private
+   */
+  _getSelector() {
+    return 'data-reveal';
+  }
+
   static get defaults() {
     return {
       threshold: 0.1,
@@ -44,21 +53,21 @@ export default class Scrollreveal extends BaseComponent {
     const state = super._init(element);
 
     // Get configuration from data attributes
-    const threshold = this._getDataAttr(
+    const threshold = this.getAttr(
       element,
-      'reveal-threshold',
+      'threshold',
       Scrollreveal.defaults.threshold
     );
-    const once = this._getDataAttr(element, 'reveal-once', Scrollreveal.defaults.once);
-    const delay = this._getDataAttr(element, 'reveal-delay', Scrollreveal.defaults.delay);
-    const stagger = this._getDataAttr(
+    const once = this.getAttr(element, 'once', Scrollreveal.defaults.once);
+    const delay = this.getAttr(element, 'delay', Scrollreveal.defaults.delay);
+    const stagger = this.getAttr(
       element,
-      'reveal-stagger',
+      'stagger',
       Scrollreveal.defaults.stagger
     );
-    const initialState = this._getDataAttr(
+    const initialState = this.getAttr(
       element,
-      'reveal-initial',
+      'initial',
       Scrollreveal.defaults.initialState
     );
 
@@ -140,7 +149,7 @@ export default class Scrollreveal extends BaseComponent {
       }
 
       // Mark as not yet revealed
-      element.setAttribute('data-reveal-state', 'hidden');
+      this.setAttr(element, 'state', 'hidden');
     }
   }
 
@@ -325,7 +334,7 @@ export default class Scrollreveal extends BaseComponent {
    */
   async _revealItems(items, container) {
     const promises = items.map(async item => {
-      item.setAttribute('data-reveal-state', 'revealing');
+      this.setAttr(item, 'state', 'revealing');
 
       try {
         // Check for CSS class-based animation first
@@ -343,9 +352,9 @@ export default class Scrollreveal extends BaseComponent {
           item.style.opacity = '1';
           item.style.transform = 'translateY(0)';
         }
-        item.setAttribute('data-reveal-state', 'visible');
+        this.setAttr(item, 'state', 'visible');
       } catch (error) {
-        item.setAttribute('data-reveal-state', 'error');
+        this.setAttr(item, 'state', 'error');
         throw error;
       }
     });
@@ -361,7 +370,7 @@ export default class Scrollreveal extends BaseComponent {
    */
   async _hideItems(items, container) {
     const promises = items.map(async item => {
-      item.setAttribute('data-reveal-state', 'hiding');
+      this.setAttr(item, 'state', 'hiding');
 
       try {
         const revealClass = item.dataset.revealClass;
@@ -379,9 +388,9 @@ export default class Scrollreveal extends BaseComponent {
           item.style.opacity = '0';
           item.style.transform = `translateY(${y})`;
         }
-        item.setAttribute('data-reveal-state', 'hidden');
+        this.setAttr(item, 'state', 'hidden');
       } catch (error) {
-        item.setAttribute('data-reveal-state', 'error');
+        this.setAttr(item, 'state', 'error');
         throw error;
       }
     });
