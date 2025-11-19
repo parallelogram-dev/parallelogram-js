@@ -1,7 +1,3 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
 /**
  * ComponentRegistry - Core utility for building component registries
  * Provides a fluent API for defining component loader configurations
@@ -3429,12 +3425,4 @@ class ComponentRegistrationHelper {
   }
 }
 
-exports.BaseComponent = BaseComponent;
-exports.ComponentRegistry = ComponentRegistry;
-exports.DevLogger = DevLogger;
-exports.EventManager = EventManager;
-exports.PageManager = PageManager;
-exports.Parallelogram = Parallelogram;
-exports.RouterManager = RouterManager;
-exports.WebComponentLoader = WebComponentLoader;
-exports.default = Parallelogram;
+export { Parallelogram, Parallelogram as default };
