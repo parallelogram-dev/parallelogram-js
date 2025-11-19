@@ -18,8 +18,14 @@
   }
 
   &__selector {
-    /* Use panel pattern for consistent styling */
-    @include panel-base;
+    /* Use surface-panel tokens for consistent decoration */
+    border-radius: var(--surface-panel-radius);
+    border-width: var(--surface-panel-border-width);
+    border-style: solid;
+    border-color: var(--surface-panel-border-color);
+    background: var(--surface-panel-color-bg);
+    color: var(--surface-panel-color-text);
+    box-shadow: var(--surface-panel-shadow);
 
     /* Customize for file upload area */
     padding: $space-xxl;
