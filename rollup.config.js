@@ -3,6 +3,8 @@ import glob from 'glob';
 import path from 'path';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import postcss from 'rollup-plugin-postcss';
+import fs from 'fs';
 
 // Get all component files
 const componentFiles = glob.sync('src/components/*.js');
@@ -24,8 +26,20 @@ const componentConfigs = componentFiles.map(file => {
     },
     // No external dependencies - bundle everything into the component
     plugins: [
+      postcss({
+        extensions: ['.scss', '.css'],
+        inject: false,
+        extract: false,
+        minimize: true,
+        sourceMap: false,
+        use: [
+          ['sass', {
+            includePaths: ['src/styles']
+          }]
+        ]
+      }),
       resolve({
-        extensions: ['.js'],
+        extensions: ['.js', '.scss', '.css'],
       }),
       commonjs(),
     ],

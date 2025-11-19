@@ -1,0 +1,55 @@
+/* PUploader Host Element Styles */
+/* These styles apply to the <p-uploader> host element in the light DOM */
+@use '../styles/web-components/variables' as *;
+
+:host {
+  font-family: $font-family;
+  display: block;
+  position: relative;
+  padding: $spacing-sm;
+  border: $border-width-md solid $color-black;
+}
+
+.uploader {
+  &__files {
+    display: grid;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__selector {
+    border: $border-width-md solid $color-border-hover;
+    padding: $spacing-2xl;
+    text-align: center;
+    background: $color-bg-light;
+    transition: all $transition-fast;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #94a3b8;
+      background: $color-bg-lighter;
+    }
+
+    &.dragover {
+      border-color: $color-border-active;
+      background: $color-bg-hover;
+    }
+  }
+
+  &__fileinput {
+    display: none;
+  }
+
+  &__label {
+    font-size: $font-size-base;
+    cursor: pointer;
+  }
+}
+
+::slotted(p-uploader-file) {
+  display: block;
+}
+
+::slotted(p-uploader-fields) {
+  display: none;
+}
