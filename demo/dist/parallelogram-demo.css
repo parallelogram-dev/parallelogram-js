@@ -45,10 +45,12 @@
    Borders
    ============================================================================ */
 /* Border Widths (1px and 2px only) */
-/* Border Radius (3 settings) */
-/* ~4px - subtle */
-/* ~8px - default */
-/* ~12px - panel/modal */
+/* Border Radius (optically consistent with padding scale) */
+/* Each radius reduces by the padding amount to maintain visual curve alignment */
+/* ~2px - inner elements with xs padding */
+/* ~4px - inner elements with sm padding */
+/* ~8px - default containers */
+/* ~12px - panels/modals */
 /* ============================================================================
    Shadows & Elevation
    ============================================================================ */
@@ -159,12 +161,21 @@
   --surface-item-color-text: currentColor;
   --surface-item-shadow: none;
   /* Card surfaces (nested items within panels) */
-  --surface-card-radius: 0.25em;
+  --surface-card-radius: 0.125em;
   --surface-card-border-width: 1px;
   --surface-card-border-color: #d4d4d4;
   --surface-card-color-bg: #ffffff;
   --surface-card-color-text: currentColor;
   --surface-card-shadow: none;
+  /* Touch surfaces (interactive areas with hover feedback) */
+  --surface-touch-radius: 0.125em;
+  --surface-touch-border-width: 1px;
+  --surface-touch-border-color: #d4d4d4;
+  --surface-touch-color-bg: #f5f5f5;
+  --surface-touch-color-text: currentColor;
+  --surface-touch-shadow: none;
+  --surface-touch-hover-bg: #f5f5f5;
+  --surface-touch-hover-border-color: #525252;
 }
 
 /* ============================================================================

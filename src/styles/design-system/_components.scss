@@ -70,7 +70,7 @@
   --surface-touch-color-text: #{$color-text};
   --surface-touch-shadow: none;
   --surface-touch-hover-bg: #{$neutral-100};
-  --surface-touch-hover-border-color: #{$neutral-600};
+  --surface-touch-hover-border-color: rgba(59, 130, 246, 0.5); /* Primary at 50% opacity */
 }
 
 /* ============================================================================
