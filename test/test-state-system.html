@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State System Test - Parallelogram-JS</title>
+
+  <!-- Framework CSS -->
+  <link rel="stylesheet" href="dist/styles/index.min.css">
+
+  <style>
+    /* Test page specific styles */
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+
+    h1, h2, h3 {
+      color: #111827;
+    }
+
+    .test-section {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .test-item {
+      padding: 1rem;
+      background: #f3f4f6;
+      border-radius: 4px;
+      min-height: 200px;
+    }
+
+    /* State indicator */
+    .state-indicator {
+      font-family: monospace;
+      font-size: 0.875rem;
+      padding: 0.5rem;
+      background: #1f2937;
+      color: #10b981;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      word-break: break-all;
+    }
+
+    /* Toggle target styles */
+    .toggle-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.75s ease-in-out;
+    }
+
+    .toggle-content.open {
+      max-height: 500px;
+    }
+
+    /* Button styles */
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .btn--primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn--primary:hover {
+      background: #2563eb;
+    }
+
+    /* Custom reveal animations */
+    [data-reveal="revealed"].custom-fade {
+      animation: customFadeIn 0.6s ease;
+    }
+
+    @keyframes customFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Multi-component test specific */
+    .multi-component-item {
+      border: 2px dashed #d1d5db;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Image placeholder */
+    .img-placeholder {
+      width: 100%;
+      height: 200px;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
+
+    /* Status panel */
+    .status-panel {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: white;
+      border: 2px solid #3b82f6;
+      border-radius: 8px;
+      padding: 1rem;
+      max-width: 300px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .status-panel h3 {
+      margin-top: 0;
+      font-size: 1rem;
+      color: #3b82f6;
+    }
+
+    .status-item {
+      font-size: 0.875rem;
+      padding: 0.25rem 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-label {
+      color: #6b7280;
+    }
+
+    .status-value {
+      font-weight: 600;
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 State Management System Test</h1>
+  <p>This page tests the new state-based component system with multiple components on single elements.</p>
+
+  <!-- Status Panel -->
+  <div class="status-panel">
+    <h3>📊 Component Status</h3>
+    <div id="status-content">
+      <div class="status-item">
+        <span class="status-label">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test 1: Multiple Components on Same Element -->
+  <section class="test-section">
+    <h2>Test 1: Multiple Components on Same Element</h2>
+    <p>Critical test: Lazysrc + Reveal on the same image element</p>
+
+    <div class="test-grid">
+      <div class="multi-component-item">
+        <h3>Image 1: Lazysrc + Reveal</h3>
+        <img
+          data-lazysrc
+          data-reveal
+          data-lazysrc-src="https://picsum.photos/400/300?random=1"
+          alt="Test image 1"
+          class="img-placeholder"
+        >
+        <div class="state-indicator" data-state-for="img1">
+          Waiting for states...
+        </div>
+      </div>
+
+      <div class="multi-component-item">
+        <h3>Image 2: Lazysrc + Reveal (Delayed)</h3>
+        <img
+          data-lazysrc
+          data-reveal
+          data-reveal-delay="500"
+          data-lazysrc-src="https://picsum.photos/400/300?random=2"
+          alt="Test image 2"
+          class="img-placeholder"
+        >
+        <div class="state-indicator" data-state-for="img2">
+          Waiting for states...
+        </div>
+      </div>
+
+      <div class="multi-component-item">
+        <h3>Image 3: Lazysrc + Reveal + Custom Animation</h3>
+        <img
+          data-lazysrc
+          data-reveal
+          data-reveal-delay="800"
+          data-lazysrc-src="https://picsum.photos/400/300?random=3"
+          alt="Test image 3"
+          class="img-placeholder custom-fade"
+        >
+        <div class="state-indicator" data-state-for="img3">
+          Waiting for states...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test 2: Reveal Component States -->
+  <section class="test-section">
+    <h2>Test 2: Reveal Component States</h2>
+    <p>Scroll down to see reveal animations trigger</p>
+
+    <div class="test-grid">
+      <div class="test-item" data-reveal data-reveal-delay="0">
+        <h3>Reveal 1 (No Delay)</h3>
+        <p>Should fade in immediately when scrolled into view.</p>
+        <div class="state-indicator" data-state-for="reveal1">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+
+      <div class="test-item" data-reveal data-reveal-delay="200">
+        <h3>Reveal 2 (200ms Delay)</h3>
+        <p>Should fade in 200ms after entering viewport.</p>
+        <div class="state-indicator" data-state-for="reveal2">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+
+      <div class="test-item" data-reveal data-reveal-delay="400">
+        <h3>Reveal 3 (400ms Delay)</h3>
+        <p>Should fade in 400ms after entering viewport.</p>
+        <div class="state-indicator" data-state-for="reveal3">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test 3: Toggle Component States -->
+  <section class="test-section">
+    <h2>Test 3: Toggle Component States</h2>
+    <p>Click buttons to test toggle state transitions</p>
+
+    <div class="test-grid">
+      <div>
+        <button
+          class="btn btn--primary"
+          data-toggle
+          data-toggle-target="#toggle-content-1"
+        >
+          Toggle Content 1
+        </button>
+        <div class="state-indicator" data-state-for="toggle1">
+          State: <span class="state-value">waiting...</span>
+        </div>
+        <div id="toggle-content-1" class="toggle-content">
+          <div style="padding: 1rem; background: #dbeafe; margin-top: 1rem; border-radius: 4px;">
+            <h4>Toggle Content 1</h4>
+            <p>This content should smoothly toggle open and closed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button
+          class="btn btn--primary"
+          data-toggle
+          data-toggle-target="#toggle-content-2"
+          data-toggle-animate="true"
+        >
+          Toggle Content 2
+        </button>
+        <div class="state-indicator" data-state-for="toggle2">
+          State: <span class="state-value">waiting...</span>
+        </div>
+        <div id="toggle-content-2" class="toggle-content">
+          <div style="padding: 1rem; background: #dcfce7; margin-top: 1rem; border-radius: 4px;">
+            <h4>Toggle Content 2</h4>
+            <p>Another toggle with animation tracking.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test 4: Lazysrc States -->
+  <section class="test-section">
+    <h2>Test 4: Lazysrc Component States</h2>
+    <p>Test lazy loading states: loading → loaded, and error handling</p>
+
+    <div class="test-grid">
+      <div>
+        <h3>Valid Image</h3>
+        <img
+          data-lazysrc
+          data-lazysrc-src="https://picsum.photos/300/200?random=4"
+          alt="Valid lazy image"
+          class="img-placeholder"
+        >
+        <div class="state-indicator" data-state-for="lazy1">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+
+      <div>
+        <h3>Invalid Image (Error Test)</h3>
+        <img
+          data-lazysrc
+          data-lazysrc-src="https://invalid-url-that-will-fail.example/image.jpg"
+          alt="Invalid lazy image"
+          class="img-placeholder"
+        >
+        <div class="state-indicator" data-state-for="lazy2">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+
+      <div>
+        <h3>Another Valid Image</h3>
+        <img
+          data-lazysrc
+          data-lazysrc-src="https://picsum.photos/300/200?random=5"
+          alt="Another valid lazy image"
+          class="img-placeholder"
+        >
+        <div class="state-indicator" data-state-for="lazy3">
+          State: <span class="state-value">waiting...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test 5: Staggered Reveals -->
+  <section class="test-section">
+    <h2>Test 5: Staggered Reveal (FIFO Queue)</h2>
+    <p>Multiple elements with stagger delay</p>
+
+    <div class="test-grid">
+      <div class="test-item" data-reveal data-reveal-stagger="100">
+        <h3>Stagger Item 1</h3>
+        <p>First in queue</p>
+      </div>
+      <div class="test-item" data-reveal data-reveal-stagger="100">
+        <h3>Stagger Item 2</h3>
+        <p>Second in queue</p>
+      </div>
+      <div class="test-item" data-reveal data-reveal-stagger="100">
+        <h3>Stagger Item 3</h3>
+        <p>Third in queue</p>
+      </div>
+      <div class="test-item" data-reveal data-reveal-stagger="100">
+        <h3>Stagger Item 4</h3>
+        <p>Fourth in queue</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spacer for scroll testing -->
+  <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #e5e7eb; border-radius: 8px;">
+    <h2>Scroll down to trigger more reveals ↓</h2>
+  </div>
+
+  <!-- More reveal tests below the fold -->
+  <section class="test-section">
+    <h2>Test 6: Below-the-Fold Reveals</h2>
+    <p>These should only reveal when scrolled into view</p>
+
+    <div class="test-grid">
+      <div class="test-item" data-reveal>
+        <h3>Below Fold 1</h3>
+        <p>Should start hidden</p>
+      </div>
+      <div class="test-item" data-reveal>
+        <h3>Below Fold 2</h3>
+        <p>Should start hidden</p>
+      </div>
+      <div class="test-item" data-reveal>
+        <h3>Below Fold 3</h3>
+        <p>Should start hidden</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Framework JavaScript -->
+  <script type="module">
+    import { Parallelogram } from './dist/index.esm.js';
+
+    // Create app instance
+    const app = Parallelogram.create({
+      mode: 'development',
+      debug: true
+    });
+
+    // Register components
+    app.components
+      .add('[data-lazysrc]', () => import('./dist/components/Lazysrc.js'))
+      .add('[data-reveal]', () => import('./dist/components/Scrollreveal.js'))
+      .add('[data-toggle]', () => import('./dist/components/Toggle.js'));
+
+    // Initialize
+    app.run();
+
+    // State monitoring and display
+    function updateStateIndicators() {
+      // Update state indicators using data-state-for attribute matching
+
+      // Update multi-component images (Test 1)
+      ['img1', 'img2', 'img3'].forEach(id => {
+        const img = document.querySelector(`[data-lazysrc][data-reveal]`);
+        const imgs = document.querySelectorAll('[data-lazysrc][data-reveal]');
+        const idx = parseInt(id.replace('img', '')) - 1;
+        const el = imgs[idx];
+        if (el) {
+          const lazysrcState = el.getAttribute('data-lazysrc') || 'mounted';
+          const revealState = el.getAttribute('data-reveal') || 'mounted';
+          const indicator = document.querySelector(`[data-state-for="${id}"]`);
+          if (indicator) {
+            indicator.innerHTML = `
+              <strong>data-lazysrc:</strong> "${lazysrcState}"<br>
+              <strong>data-reveal:</strong> "${revealState}"
+            `;
+          }
+        }
+      });
+
+      // Update Test 4 lazysrc-only images
+      ['lazy1', 'lazy2', 'lazy3'].forEach((id, relativeIdx) => {
+        // Find lazysrc elements that are NOT part of multi-component test
+        const allLazysrc = Array.from(document.querySelectorAll('[data-lazysrc]'));
+        const lazysrcOnly = allLazysrc.filter(el => !el.hasAttribute('data-reveal'));
+        const el = lazysrcOnly[relativeIdx];
+        if (el) {
+          const state = el.getAttribute('data-lazysrc') || 'mounted';
+          const indicator = document.querySelector(`[data-state-for="${id}"]`);
+          if (indicator) {
+            const stateValue = indicator.querySelector('.state-value');
+            if (stateValue) {
+              stateValue.textContent = state;
+            } else {
+              indicator.innerHTML = `State: <span class="state-value">${state}</span>`;
+            }
+          }
+        }
+      });
+
+      // Update reveal elements (Test 2, 5, 6)
+      ['reveal1', 'reveal2', 'reveal3'].forEach((id, relativeIdx) => {
+        // Find reveal elements that are NOT part of multi-component test
+        const allReveal = Array.from(document.querySelectorAll('[data-reveal]'));
+        const revealOnly = allReveal.filter(el => !el.hasAttribute('data-lazysrc'));
+        const el = revealOnly[relativeIdx];
+        if (el) {
+          const state = el.getAttribute('data-reveal') || 'mounted';
+          const indicator = document.querySelector(`[data-state-for="${id}"]`);
+          if (indicator) {
+            const stateValue = indicator.querySelector('.state-value');
+            if (stateValue) {
+              stateValue.textContent = state;
+            }
+          }
+        }
+      });
+
+      // Update toggle elements (Test 3)
+      ['toggle1', 'toggle2'].forEach((id, idx) => {
+        const toggles = document.querySelectorAll('[data-toggle]');
+        const el = toggles[idx];
+        if (el) {
+          const state = el.getAttribute('data-toggle') || 'mounted';
+          const indicator = document.querySelector(`[data-state-for="${id}"]`);
+          if (indicator) {
+            const stateValue = indicator.querySelector('.state-value');
+            if (stateValue) {
+              stateValue.textContent = state;
+            }
+          }
+        }
+      });
+
+      // Update status panel
+      const statusContent = document.getElementById('status-content');
+      const lazysrcCount = document.querySelectorAll('[data-lazysrc]').length;
+      const revealCount = document.querySelectorAll('[data-reveal]').length;
+      const toggleCount = document.querySelectorAll('[data-toggle]').length;
+
+      const multiComponentCount = Array.from(document.querySelectorAll('[data-lazysrc]'))
+        .filter(el => el.hasAttribute('data-reveal')).length;
+
+      statusContent.innerHTML = `
+        <div class="status-item">
+          <span class="status-label">Lazysrc Elements:</span>
+          <span class="status-value">${lazysrcCount}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Reveal Elements:</span>
+          <span class="status-value">${revealCount}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Toggle Elements:</span>
+          <span class="status-value">${toggleCount}</span>
+        </div>
+        <div class="status-item" style="border-top: 1px solid #e5e7eb; margin-top: 0.5rem; padding-top: 0.5rem;">
+          <span class="status-label">Multi-Component:</span>
+          <span class="status-value" style="color: #10b981;">${multiComponentCount}</span>
+        </div>
+      `;
+    }
+
+    // Update state indicators periodically
+    setInterval(updateStateIndicators, 500);
+
+    // Initial update
+    setTimeout(updateStateIndicators, 100);
+
+    // Log component events
+    app.eventBus.on('lazysrc:loading-start', ({ element }) => {
+      console.log('Lazysrc loading started:', element);
+    });
+
+    app.eventBus.on('lazysrc:loaded', ({ element }) => {
+      console.log('Lazysrc loaded:', element);
+    });
+
+    app.eventBus.on('lazysrc:error', ({ element, error }) => {
+      console.error('Lazysrc error:', element, error);
+    });
+
+    app.eventBus.on('scrollreveal:reveal-start', ({ element }) => {
+      console.log('👁️ Reveal started:', element);
+    });
+
+    app.eventBus.on('scrollreveal:reveal-complete', ({ element }) => {
+      console.log('✨ Reveal completed:', element);
+    });
+
+    app.eventBus.on('toggle:show', ({ element, target }) => {
+      console.log('Toggle opened:', element, target);
+      target.classList.add('open');
+    });
+
+    app.eventBus.on('toggle:hide', ({ element, target }) => {
+      console.log('Toggle closed:', element, target);
+      target.classList.remove('open');
+    });
+
+    // Make app available for debugging
+    window.app = app;
+    console.log('🧪 Test page loaded. App instance available as window.app');
+    console.log('📊 Use window.app to inspect the framework state');
+  </script>
+</body>
+</html>

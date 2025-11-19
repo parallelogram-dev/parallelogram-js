@@ -78,7 +78,7 @@ async function initFramework() {
       .component('scrollhide', '[data-scrollhide]', {
         loader: createComponentLoader(Scrollhide),
       })
-      .component('scrollreveal', '[data-scrollreveal]', {
+      .component('scrollreveal', '[data-reveal]', {
         loader: createComponentLoader(Scrollreveal),
       })
       .component('tabs', '[data-tabs]', {

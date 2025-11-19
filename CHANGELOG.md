@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-01-19
+
+### Added
+- Component state management system (ComponentStates.js)
+- State-based CSS architecture with attribute selectors
+- Multi-component support - multiple components can now mount on same element
+- `will-change` performance optimizations in component CSS
+- Comprehensive test suite (test/test-state-system.html, test/TEST-CHECKLIST.md)
+- TODO.md with framework roadmap and improvement ideas
+- Organized test directory with README documentation
+- reveal.scss - New component stylesheet for Reveal component
+- toggle.scss - New component stylesheet for Toggle component
+
+### Changed
+- **BREAKING**: Renamed `data-scrollreveal` to `data-reveal` throughout framework
+- Updated Reveal component CSS with optimized transition timing
+- State tracking now uses component-specific attributes instead of generic `data-component-mounted`
+- BaseComponent now supports `stateAttribute` parameter and state management methods
+- ComponentRegistry extracts state attribute from selectors automatically
+- Updated all demos to use current attribute naming conventions
+- Reorganized documentation into subdirectories (architecture/, getting-started/, guides/, reference/)
+- Updated all documentation package names (`@peptolab/parallelogram` → `@parallelogram-js/core`)
+- Updated documentation import paths (removed unnecessary `/dist/` prefix)
+- Removed emojis from all documentation and demo files
+
+### Fixed
+- Critical bug where multiple components couldn't mount on same element
+- Reveal component initial state timing (elements now start hidden immediately)
+- Lazysrc error state styling (changed from border to box-shadow to prevent layout shift)
+- Demo component registry to use `[data-reveal]` selector
+- Documentation accuracy across all guides and references
+
+### Performance
+- Added `will-change` CSS property to active animation states in:
+  - Reveal component (revealing state)
+  - Lazysrc component (loading state)
+  - Toggle component (opening/closing states)
+  - Lightbox component (active animation states)
+
+## [0.1.1] - 2025-01-19
+
+### Added
+- Simplified API with `createApp()` and `app.run()` methods
+- Web component lazy-loading support via `WebComponentLoader`
+- Documentation for simplified API (simplified-api.md)
+- Documentation for web component lazy-loading (web-component-lazy-loading.md)
+
+### Changed
+- Improved async/defer script handling in initialization
+- Enhanced ComponentRegistry validation and error messaging
+
 ## [0.1.0] - 2025-01-18
 
 ### Changed
