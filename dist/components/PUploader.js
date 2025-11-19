@@ -13,6 +13,10 @@ function generateId(prefix = 'elem') {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+var css_248z$1 = ":host{border:2px solid #000;display:block;font-family:inherit;padding:.375rem;position:relative}.uploader__files{display:grid;gap:.375rem;margin-bottom:.375rem}.uploader__selector{background:#f8fafc;border:2px solid #cbd5e1;cursor:pointer;padding:2rem;text-align:center;transition:all .2s}.uploader__selector:hover{background:#f1f5f9;border-color:#94a3b8}.uploader__selector.dragover{background:#eff6ff;border-color:#3b82f6}.uploader__fileinput{display:none}.uploader__label{cursor:pointer;font-size:1rem}::slotted(p-uploader-file){display:block}::slotted(p-uploader-fields){display:none}";
+
+var css_248z = "*,:after,:before{box-sizing:border-box}:host{background:#fff;border:2px solid #000;display:block;font-family:inherit;padding:.375rem;position:relative;transition:border-color .2s ease-out,background-color .2s ease-out}:host([dragging]){opacity:.5;transition:none}:host([drag-over]){background:#eff6ff;border-color:#3b82f6;transform:translateY(-4px)}:host([draggable=true]){cursor:grab;user-select:none;-webkit-user-select:none}:host([draggable=true]:active){cursor:grabbing}button,input,textarea{font-family:inherit}.uploader__overlay{align-items:center;background:hsla(0,0%,100%,.95);display:flex;inset:0;justify-content:center;opacity:0;padding:0 .375rem 0 6.75rem;pointer-events:none;position:absolute;transition:opacity .375s cubic-bezier(.5,0,0,1);z-index:10}.uploader__overlay--show{opacity:1;pointer-events:auto}.uploader__progress{height:.5rem;width:100%}.uploader__container{display:flex;gap:.375rem;position:relative}.uploader__preview{flex-shrink:0;height:6rem;pointer-events:none;user-select:none;width:6rem}.uploader__preview img{height:100%;object-fit:cover;width:100%}.uploader__content{flex:1;min-width:0;overflow:hidden;position:relative}.uploader__content,.uploader__panel{display:flex;flex-direction:column;height:6rem}.uploader__panel{background:#fff;left:0;pointer-events:auto;position:absolute;right:0;top:0;transform:translateY(-100%);transition:transform .375s cubic-bezier(.5,0,0,1);will-change:transform}.uploader__panel--show{transform:translateY(0)}.uploader__panel[data-panel=info]{transform:translateY(100%)}.uploader__panel[data-panel=info].uploader__panel--activated{transform:translateY(-100%)}.uploader__panel[data-panel=info].uploader__panel--show{transform:translateY(0)}.uploader__panel[data-panel=delete],.uploader__panel[data-panel^=edit-]{transform:translateY(100%)}.uploader__panel[data-panel=delete].uploader__panel--show,.uploader__panel[data-panel^=edit-].uploader__panel--show{transform:translateY(0)}.uploader__alert,.uploader__body{align-items:center;display:flex;flex:1;flex-direction:row;min-height:6rem;position:relative}.uploader__alert{justify-content:space-between}.uploader__fields{display:flex;flex-direction:column}.uploader__filename,.uploader__heading{align-items:center;display:flex;font-size:.75rem;font-weight:600;height:1.125rem;line-height:1.125rem;margin:0 0 .5rem;padding-right:2rem}.uploader__filename{font-family:monospace}.uploader__field{align-items:center;display:flex;gap:.375rem;height:1.25rem;justify-content:flex-start;margin:0;padding-bottom:.1875rem;padding-top:.1875rem}.uploader__delete-icon{background-color:#fff;background-image:url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E\");background-position:50%;background-repeat:no-repeat;background-size:contain;border:none;cursor:pointer;height:1.25rem;opacity:.6;padding:0;pointer-events:auto;position:absolute;right:0;top:0;transition:opacity .2s;width:1.25rem}.uploader__delete-icon:hover{opacity:1}.uploader__actions{display:flex;gap:.375rem;justify-content:flex-end;padding-left:.375rem}.uploader__btn{background:#fff;border:1px solid #cbd5e1;cursor:pointer;flex-shrink:0;font-size:.75rem;padding:.375rem .75rem;pointer-events:auto;transition:all .2s}.uploader__btn:hover{background:#f1f5f9}.uploader__btn--secondary{background:transparent;border-color:currentColor}.uploader__btn--delete{border-color:#dc2626;color:#dc2626}.uploader__btn--delete:hover{background:#fee2e2}.uploader__btn--primary{background:#3b82f6;border-color:#3b82f6;color:#fff}.uploader__btn--primary:hover{background:#2563eb}.uploader__input,.uploader__textarea{border:1px solid #cbd5e1;flex:1 0 auto;font-family:inherit;font-size:.75rem;height:100%;margin:0;outline:0 none;padding:.375rem;pointer-events:auto}.uploader__textarea{min-height:60px;resize:vertical}.field__label{flex:0 0 4rem;font-weight:600}.field__label,.field__value{font-size:.75rem;opacity:rgba(0,0,0,.5)}.field__value{flex:0 1 auto;height:1.25rem;line-height:1.25rem;overflow:hidden;text-overflow:ellipsis;word-break:break-word}.field__value--editable{cursor:pointer}.field__value--editable:hover{opacity:1;text-decoration:underline}.field__edit{background-color:#fff;background-image:url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E\");background-position:50%;background-repeat:no-repeat;background-size:contain;border:none;cursor:pointer;flex-shrink:0;height:1.25rem;opacity:.6;padding:0;pointer-events:auto;transition:opacity .2s;width:1.25rem}.field__edit:hover{opacity:1}.error-message{background:#fee2e2;color:#dc2626;font-size:.75rem;padding:.5rem}slot{display:none}";
+
 /**
  * PUploader - Web Component for file uploads with configurable fields
  *
@@ -238,57 +242,7 @@ class PUploader extends HTMLElement {
     const acceptTypes = this.getAttribute('accept-types') || '*/*';
 
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          font-family: inherit;
-          display: block;
-          position: relative;
-          padding: 0.375rem;
-          border: 2px solid #000;
-        }
-
-        .uploader__files {
-          display: grid;
-          gap: 0.375rem;
-          margin-bottom: 0.375rem;
-        }
-
-        .uploader__selector {
-          border: 2px solid #cbd5e1;
-          padding: 2rem;
-          text-align: center;
-          background: #f8fafc;
-          transition: all 0.2s;
-          cursor: pointer;
-        }
-
-        .uploader__selector:hover {
-          border-color: #94a3b8;
-          background: #f1f5f9;
-        }
-
-        .uploader__selector.dragover {
-          border-color: #3b82f6;
-          background: #dbeafe;
-        }
-
-        .uploader__fileinput {
-          display: none;
-        }
-
-        .uploader__label {
-          font-size: 1rem;
-          cursor: pointer;
-        }
-
-        ::slotted(p-uploader-file) {
-          display: block;
-        }
-
-        ::slotted(p-uploader-fields) {
-          display: none;
-        }
-      </style>
+      <style>${css_248z$1}</style>
 
       <slot name="field-definitions"></slot>
 
@@ -798,321 +752,10 @@ class PUploaderFile extends HTMLElement {
     }
 
     this.shadowRoot.innerHTML = `
-      <style>
-        *,
-        *::before,
-        *::after {
-          box-sizing: border-box;
-        }
-
-        :host {
-          display: block;
-          position: relative;
-          border: 2px solid #e2e8f0;
-          padding: 0.375rem;
-          background: white;
-          transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
-          font-family: inherit;
-        }
-
-        :host([dragging]) {
-          opacity: 0.5;
-          transition: none;
-        }
-
-        :host([drag-over]) {
-          border-color: #3b82f6;
-          background: #eff6ff;
-          transform: translateY(-4px);
-        }
-
-        :host([draggable="true"]) {
-          cursor: grab;
-          user-select: none;
-          -webkit-user-select: none;
-        }
-
-        :host([draggable="true"]:active) {
-          cursor: grabbing;
-        }
-        
-        button, textarea, input {
-          font-family: inherit;
-        }
-
-        .uploader__overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(255, 255, 255, 0.95);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10;
-          padding: 0 0.375rem 0 6.75rem;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.375s cubic-bezier(0.5, 0, 0, 1);
-        }
-
-        .uploader__overlay--show {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-        .uploader__progress {
-          width: 100%;
-          height: 0.5rem;
-        }
-
-        .uploader__container {
-          display: flex;
-          gap: 0.375rem;
-          position: relative;
-        }
-
-        .uploader__preview {
-          flex-shrink: 0;
-          width: 6rem;
-          height: 6rem;
-          display: ${preview ? 'block' : 'none'};
-          pointer-events: none;
-          user-select: none;
-        }
-
-        .uploader__preview img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .uploader__content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-          position: relative;
-          height: 6rem;
-          overflow: hidden;
-        }
-
-        .uploader__panel {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          flex-direction: column;
-          pointer-events: auto;
-          height: 6rem;
-          background: white;
-          transform: translateY(-100%);
-          transition: transform 0.375s cubic-bezier(0.5, 0, 0, 1);
-          will-change: transform;
-        }
-
-        .uploader__panel--show {
-          transform: translateY(0);
-        }
-
-        .uploader__panel[data-panel="info"] {
-          transform: translateY(100%);
-        }
-
-        .uploader__panel[data-panel="info"].uploader__panel--activated {
-          transform: translateY(-100%);
-        }
-
-        .uploader__panel[data-panel="info"].uploader__panel--show {
-          transform: translateY(0);
-        }
-
-        .uploader__panel[data-panel="delete"],
-        .uploader__panel[data-panel^="edit-"] {
-          transform: translateY(100%);
-        }
-
-        .uploader__panel[data-panel="delete"].uploader__panel--show,
-        .uploader__panel[data-panel^="edit-"].uploader__panel--show {
-          transform: translateY(0);
-        }
-
-        .uploader__body,
-        .uploader__alert {
-          flex: 1;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          min-height: 6rem;
-          position: relative;
-        }
-        
-        .uploader__alert {
-          justify-content: space-between;
-        }
-        
-        .uploader__fields {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .uploader__filename,
-        .uploader__heading {
-          font-weight: 600;
-          font-size: 0.75rem;
-          padding-right: 2rem;
-          height: 1.125rem;
-          line-height: 1.125rem;
-          margin: 0 0 0.5rem;
-          display: flex;
-          align-items: center;
-        }
-
-        .uploader__filename {
-          font-family: monospace;
-        }
-
-        .uploader__field {
-          display: flex;
-          justify-content: flex-start;
-          align-items: center;
-          gap: 0.375rem;
-          height: 1rem;
-          padding-top: 0.1875rem;
-          padding-bottom: 0.1875rem;
-          margin: 0;
-        }
-
-        .uploader__field-label {
-          opacity: 0.5;
-          font-weight: 600;
-          font-size: 0.75rem;
-          min-width: 4rem;
-        }
-
-        .uploader__field-value {
-          opacity: 0.5;
-          font-size: 0.75rem;
-          line-height: 0.75rem;
-          word-break: break-word;
-        }
-
-        .uploader__field-value--editable {
-          cursor: pointer;
-        }
-
-        .uploader__field-value--editable:hover {
-          opacity: 1;
-          text-decoration: underline;
-        }
-
-        .uploader__delete-icon,
-        .uploader__field-edit {
-          width: 1.75rem;
-          height: 1.75rem;
-          border: none;
-          background-size: contain;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-          background-color: white;
-          background-repeat: no-repeat;
-          background-position: center;
-          cursor: pointer;
-          opacity: 0.6;
-          transition: opacity 0.2s;
-          pointer-events: auto;
-          padding: 0;
-        }
-
-        .uploader__delete-icon {
-          position: absolute;
-          top: 0;
-          right: 0;
-        }
-
-        .uploader__delete-icon:hover,
-        .uploader__field-edit:hover {
-          opacity: 1;
-        }
-
-        .uploader__field-edit {
-          width: 1rem;
-          height: 1rem;
-          background-size: contain;
-          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-        }
-
-        .uploader__actions {
-          display: flex;
-          gap: 0.375rem;
-          justify-content: flex-end;
-          padding-left: 0.375rem;
-        }
-
-        .uploader__btn {
-          padding: 0.375rem 0.75rem;
-          border: 1px solid #cbd5e1;
-          background: white;
-          cursor: pointer;
-          font-size: 0.75rem;
-          transition: all 0.2s;
-          pointer-events: auto;
-          flex-shrink: 0;
-        }
-
-        .uploader__btn:hover {
-          background: #f1f5f9;
-        }
-
-        .uploader__btn--secondary {
-          background: transparent;
-          border-color: currentColor;
-        }
-
-        .uploader__btn--delete {
-          color: #dc2626;
-          border-color: #dc2626;
-        }
-
-        .uploader__btn--delete:hover {
-          background: #fee2e2;
-        }
-
-        .uploader__btn--primary {
-          background: #3b82f6;
-          color: white;
-          border-color: #3b82f6;
-        }
-
-        .uploader__btn--primary:hover {
-          background: #2563eb;
-        }
-
-        .uploader__input,
-        .uploader__textarea {
-          flex: 1 0 auto;
-          height: 100%;
-          padding: 0.375rem;
-          border: 1px solid #cbd5e1;
-          margin: 0;
-          font-family: inherit;
-          font-size: 0.75rem;
-          pointer-events: auto;
-        }
-
-        .uploader__textarea {
-          resize: vertical;
-          min-height: 60px;
-        }
-
-        .error-message {
-          color: #dc2626;
-          background: #fee2e2;
-          padding: 0.5rem;
-          font-size: 0.75rem;
-        }
-
-        slot {
-          display: none;
-        }
+      <style>${css_248z}
+      .uploader__preview {
+        display: ${preview ? 'block' : 'none'};
+      }
       </style>
 
       <slot></slot>
@@ -1185,11 +828,11 @@ class PUploaderFile extends HTMLElement {
       const value = this._fieldData.get(key) || '';
       html += `
         <div class="uploader__field">
-          <label class="uploader__field-label">${fieldDef.label}</label>
-          <span class="uploader__field-value ${allowEdit ? 'uploader__field-value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>-</em>'}</span>
+          <label class="field__label">${fieldDef.label}</label>
+          <span class="field__value ${allowEdit ? 'field__value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>-</em>'}</span>
           ${
             allowEdit
-              ? `<button class="uploader__field-edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}"></button>`
+              ? `<button class="field__edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}"></button>`
               : ''
           }
         </div>
@@ -1308,7 +951,7 @@ class PUploaderFile extends HTMLElement {
   _updateFieldDisplay(fieldKey, newValue) {
     const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
     if (infoPanel) {
-      const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].uploader__field-value`);
+      const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].field__value`);
       if (fieldValueElement) {
         fieldValueElement.innerHTML = newValue || '<em>-</em>';
       }
@@ -1545,6 +1188,13 @@ class PUploaderFile extends HTMLElement {
   async _handleConfirmDelete() {
     const uploader = this.closest('p-uploader');
     const fileId = this.getAttribute('file-id');
+    const currentState = this.getAttribute('state');
+
+    /* If file is in error state or was never uploaded, just remove it locally */
+    if (currentState === 'error' || currentState === 'uploading') {
+      this._removeFile();
+      return;
+    }
 
     if (!uploader || !uploader.config.deleteAction) {
       /* No delete action configured, just remove locally */
