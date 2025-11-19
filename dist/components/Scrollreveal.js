@@ -651,7 +651,7 @@ class Scrollreveal extends BaseComponent {
     this._setInitialState(element, state);
 
     // Mark as enhanced for status tracking
-    element.setAttribute('data-reveal-enhanced', 'true');
+    this.setAttr(element, 'enhanced', 'true');
 
     // Create observer with element-specific threshold if needed
     if (state.threshold !== Scrollreveal.defaults.threshold) {
@@ -1109,7 +1109,8 @@ class Scrollreveal extends BaseComponent {
    * @returns {Object} Component status
    */
   getStatus() {
-    const elements = document.querySelectorAll('[data-reveal-enhanced="true"]');
+    const selector = `[${this._getSelector()}-enhanced="true"]`;
+    const elements = document.querySelectorAll(selector);
     let revealedCount = 0;
     let revealingCount = 0;
 
