@@ -12,6 +12,7 @@
  */
 
 @use '../includes/common';
+@use '../../design-system' as *;
 
 /*  === FORM VARIABLES === */
 :root {
@@ -166,11 +167,12 @@
   padding: var(--form-input-padding-md);
   font-size: var(--form-font-size-md);
 
-  background: var(--form-control-bg);
-  border: 1px solid var(--form-control-border);
-  border-radius: 6px;
+  /* Use surface-control tokens for consistent decoration */
+  background: var(--surface-control-color-bg);
+  border: var(--surface-control-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-control-radius);
 
-  color: var(--demo-text, #1f2937);
+  color: var(--surface-control-color-text);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -242,10 +244,11 @@
   padding: var(--form-input-padding-md);
   font-size: var(--form-font-size-md);
 
-  background: var(--form-control-bg);
-  border: 1px solid var(--form-control-border);
-  border-radius: 6px;
-  color: var(--demo-text, #1f2937);
+  /* Use surface-button tokens for consistent decoration */
+  background: var(--surface-control-color-bg);
+  border: var(--surface-button-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-button-radius);
+  color: var(--surface-control-color-text);
 
   text-decoration: none;
   cursor: pointer;
@@ -263,7 +266,6 @@
 
   &:focus {
     outline: none;
-    border-color: var(--form-control-focus);
     box-shadow: var(--focus-ring-primary);
   }
 
@@ -279,7 +281,7 @@
 
     &:hover {
       background: var(--demo-muted, #f3f4f6);
-      border-color: var(--form-control-border);
+      border-color: var(--surface-control-border-color);
     }
   }
 
@@ -308,7 +310,8 @@
     }
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      border-color: var(--form-control-focus);
+      box-shadow: var(--focus-ring-primary);
     }
   }
 
@@ -323,6 +326,7 @@
     }
 
     &:focus {
+      border-color: var(--color-secondary);
       box-shadow: var(--focus-ring-secondary);
     }
   }
@@ -338,6 +342,7 @@
     }
 
     &:focus {
+      border-color: var(--form-success-color);
       box-shadow: var(--focus-ring-success);
     }
   }
@@ -353,6 +358,7 @@
     }
 
     &:focus {
+      border-color: var(--form-error-color);
       box-shadow: var(--focus-ring-error);
     }
   }
@@ -365,6 +371,11 @@
     &:hover {
       background: rgba(59, 130, 246, 0.05);
     }
+
+    &:focus {
+      border-color: var(--form-control-focus);
+      box-shadow: var(--focus-ring-primary);
+    }
   }
 
   &--ghost {
@@ -373,6 +384,10 @@
 
     &:hover {
       background: var(--demo-muted, #f3f4f6);
+    }
+
+    &:focus {
+      box-shadow: var(--focus-ring-primary);
     }
   }
 

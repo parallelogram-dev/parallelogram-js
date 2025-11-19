@@ -1,11 +1,18 @@
+/* PToasts Web Component Styles */
+@use '../../design-system' as *;
+
 :host {
   position: fixed;
   inset: auto auto auto 0;
-  padding: 12px;
-  z-index: 2147483647;
+  padding: #{$space-lg};
+  z-index: #{$z-toast};
   display: grid;
-  gap: 8px;
+  gap: #{$space-md};
   pointer-events: none;
+
+  /* Toast surface styling using panel tokens */
+  --toast-border-radius: var(--surface-panel-radius);
+  --toast-shadow: var(--surface-panel-shadow);
 }
 
 :host([placement="top-left"]) { top: 0; left: 0; }
@@ -14,24 +21,25 @@
 :host([placement="bottom-left"]) { bottom: 0; left: 0; }
 
 .toast {
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: #{$space-sm} #{$space-lg};
+  border-radius: var(--toast-border-radius);
   color: #fff;
-  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  box-shadow: var(--toast-shadow);
   opacity: 0;
   transform: translateY(-6px);
-  animation: toast-in 0.18s ease-out forwards;
+  animation: toast-in $duration-fast ease-out forwards;
   cursor: pointer;
-  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  font: #{$font-sm}/1.4 system-ui, -apple-system, sans-serif;
   outline: none;
   pointer-events: auto;
   min-width: 300px;
 }
 
-.toast.info { background: #111827; }
-.toast.success { background: #065f46; }
-.toast.warning { background: #7c2d12; }
-.toast.error { background: #7f1d1d; }
+/* Toast type backgrounds - intentionally opinionated dark colors for visibility */
+.toast.info { background: #{$neutral-900}; }
+.toast.success { background: #{$success-dark}; }
+.toast.warning { background: #{$warning-dark}; }
+.toast.error { background: #{$error-dark}; }
 
 @keyframes toast-in {
   to { opacity: 1; transform: none; }
@@ -40,7 +48,7 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: #{$space-md};
 }
 
 .msg {
@@ -56,12 +64,13 @@
   width: 24px;
   height: 24px;
   min-height: 24px;
-  border-radius: 6px;
-  font-weight: 700;
-  background: rgba(255,255,255,0.1);
+  border-radius: #{$radius-sm};
+  font-weight: #{$font-bold};
+  background: rgba(255, 255, 255, 0.1);
   cursor: pointer;
+  transition: background $duration-fast ease;
 }
 
 .btn.close:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }

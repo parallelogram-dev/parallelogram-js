@@ -1,0 +1,72 @@
+@charset "UTF-8";
+:root {
+  --lazy-transition-duration: 0.3s;
+  --lazy-transition-easing: ease-in-out;
+  --lazy-placeholder-bg: #f3f4f6;
+  --lazy-error-bg: #fef2f2;
+  --lazy-error-color: #dc2626;
+  --lazy-loading-opacity: 0.7;
+}
+
+.lazysrc {
+  transition: opacity var(--lazy-transition-duration) var(--lazy-transition-easing);
+}
+
+[data-lazysrc] {
+  transition: opacity var(--lazy-transition-duration) var(--lazy-transition-easing);
+}
+
+.lazysrc--loading,
+[data-lazysrc].lazysrc--loading {
+  opacity: var(--lazy-loading-opacity);
+  background-color: var(--lazy-placeholder-bg);
+  background-image: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.1) 51%, transparent 51%), linear-gradient(-45deg, transparent 49%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.1) 51%, transparent 51%);
+  background-size: 20px 20px;
+  animation: lazysrc-shimmer 1.5s ease-in-out infinite;
+  will-change: opacity, background-position;
+}
+
+.lazysrc--loaded,
+[data-lazysrc].lazysrc--loaded {
+  opacity: 1;
+}
+
+.lazysrc--error,
+[data-lazysrc].lazysrc--error {
+  opacity: 1;
+  background-color: var(--lazy-error-bg);
+  border: 2px solid var(--lazy-error-color);
+  position: relative;
+}
+
+.lazysrc--error::after,
+[data-lazysrc].lazysrc--error::after {
+  content: "⚠";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--lazy-error-color);
+  font-size: 24px;
+  pointer-events: none;
+}
+
+@keyframes lazysrc-shimmer {
+  0% {
+    background-position: 0 0, 10px 10px;
+  }
+  100% {
+    background-position: 20px 20px, 30px 30px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lazysrc,
+  [data-lazysrc] {
+    transition: none;
+  }
+  .lazysrc--loading,
+  [data-lazysrc].lazysrc--loading {
+    animation: none;
+    background-image: none;
+  }
+}

@@ -1,6 +1,3 @@
-/* PDatetime Web Component Styles */
-@use '../../design-system' as *;
-
 /* Global Hidden Rule */
 [hidden] {
   display: none !important;
@@ -11,23 +8,20 @@
   display: inline-block;
   position: relative;
   box-sizing: border-box;
-
-  /* Colors using surface tokens and design system variables */
-  --datetime-text: var(--surface-control-color-text);
-  --datetime-muted: #{$color-text-muted};
-  --datetime-accent: #{$primary};
-  --datetime-hover: var(--surface-dropdown-item-hover-bg);
-  --datetime-bg: var(--surface-dropdown-color-bg);
-  --datetime-border: var(--surface-control-border-color);
-  --datetime-shadow-color: #{$color-shadow};
-  --datetime-focus-shadow: #{$color-focus-shadow};
-  --datetime-btn-hover-bg: #{$color-bg-hover};
-
-  /* Opacity (aligned with design system tokens) */
-  --datetime-placeholder-opacity: #{$opacity-muted};
-  --datetime-icon-opacity: #{$opacity-icon};
-  --datetime-disabled-opacity: #{$opacity-disabled};
-
+  /* Colors */
+  --datetime-text: currentColor;
+  --datetime-muted: rgba(0, 0, 0, 0.5);
+  --datetime-accent: #3b82f6;
+  --datetime-hover: rgba(0, 0, 0, 0.05);
+  --datetime-bg: #ffffff;
+  --datetime-border: rgba(0, 0, 0, 0.1);
+  --datetime-shadow-color: rgba(0, 0, 0, 0.12);
+  --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
+  --datetime-btn-hover-bg: rgba(0, 0, 0, 0.08);
+  /* Opacity */
+  --datetime-placeholder-opacity: 0.6;
+  --datetime-icon-opacity: 0.7;
+  --datetime-disabled-opacity: 0.3;
   /* Spacing */
   --datetime-padding-x: 0.75em;
   --datetime-padding-y: 0.375em;
@@ -36,24 +30,19 @@
   --datetime-space-md: 0.5em;
   --datetime-space-lg: 0.75em;
   --datetime-gap: 0.5em;
-
-  /* Border Radius using surface tokens */
-  --datetime-radius: var(--surface-control-radius);
-  --datetime-radius-lg: var(--surface-dropdown-radius);
+  /* Border Radius */
+  --datetime-radius: 0.5em;
+  --datetime-radius-lg: 0.75em;
   --datetime-radius-xl: 1em;
-
-  /* Borders using surface tokens */
-  --datetime-border-width: var(--surface-control-border-width);
+  /* Borders */
+  --datetime-border-width: 1px;
   --datetime-focus-ring-width: 2px;
   --datetime-today-border-width: 2px;
-
-  /* Shadows using surface tokens */
-  --datetime-shadow: var(--surface-dropdown-shadow);
-
+  /* Shadows */
+  --datetime-shadow: 0 0.625em 1.875em var(--datetime-shadow-color);
   /* Timing */
   --datetime-transition: 0.15s ease;
   --datetime-animation-duration: 0.5s;
-
   /* Sizes */
   --datetime-cell-size: 2.5em;
   --datetime-font-sm: 0.75em;
@@ -62,11 +51,10 @@
 
 @media (prefers-color-scheme: dark) {
   :host {
-    --datetime-muted: #{$color-text-muted-dark};
-    --datetime-hover: #{$color-bg-hover-dark};
+    --datetime-muted: rgba(255, 255, 255, 0.5);
+    --datetime-hover: rgba(255, 255, 255, 0.1);
   }
 }
-
 /* Shared - Border Properties */
 .panel,
 .time-select,
@@ -122,7 +110,6 @@
     transition: all var(--datetime-transition);
   }
 }
-
 /* Shared - Font Sizes */
 .month-year,
 .day,
@@ -147,35 +134,29 @@
     background: var(--datetime-hover);
     color: var(--datetime-accent);
   }
-
   .day:hover,
   .month:hover,
   .year:hover {
     background: var(--datetime-hover);
   }
-
   .time-select:hover,
   .ampm:hover {
     border-color: var(--datetime-accent);
     background-color: var(--datetime-hover);
   }
-
   .preset:hover {
     background: var(--datetime-accent);
     color: var(--datetime-bg);
     border-color: var(--datetime-accent);
   }
-
   .btn:hover {
     background: var(--datetime-btn-hover-bg);
     border-color: var(--datetime-accent);
   }
-
   .btn.primary:hover {
     opacity: 0.9;
   }
 }
-
 /* Field & Input Containers */
 .field {
   font: inherit;
@@ -256,7 +237,7 @@
   border-radius: var(--datetime-radius-lg);
   box-shadow: var(--datetime-shadow);
   padding: var(--datetime-space-lg);
-  z-index: #{$z-dropdown};
+  z-index: 9;
   min-width: 20em;
   opacity: 0;
   transform: translateY(-0.5em);
@@ -363,7 +344,6 @@
     transform: none !important;
   }
 }
-
 /* Grid Cells - Day/Month/Year */
 .wd {
   font-size: var(--datetime-font-sm);

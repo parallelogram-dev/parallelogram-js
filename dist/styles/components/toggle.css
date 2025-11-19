@@ -1,0 +1,109 @@
+@charset "UTF-8";
+/**
+ * Toggle Component Styles
+ * State-based styling using data-toggle-target attribute values
+ *
+ * States: closed → opening → open → closing → closed
+ */
+:root {
+  --toggle-transition-duration: 0.75s;
+  --toggle-transition-easing: ease-in-out;
+}
+
+/* Base styles for all toggle trigger elements */
+[data-toggle] {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Toggle target states */
+[data-toggle-target] {
+  transition: opacity var(--toggle-transition-duration) var(--toggle-transition-easing), max-height var(--toggle-transition-duration) var(--toggle-transition-easing), transform var(--toggle-transition-duration) var(--toggle-transition-easing), visibility var(--toggle-transition-duration) var(--toggle-transition-easing);
+}
+
+/* State: Closed - toggle is fully closed */
+[data-toggle-target=closed] {
+  display: none;
+  opacity: 0;
+  max-height: 0;
+  visibility: hidden;
+}
+
+/* State: Opening - toggle is animating to open */
+[data-toggle-target=opening] {
+  display: block;
+  opacity: 0;
+  max-height: 0;
+  visibility: visible;
+  animation: slideDown var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
+  will-change: opacity, max-height, transform;
+}
+
+/* State: Open - toggle is fully open */
+[data-toggle-target=open] {
+  display: block;
+  opacity: 1;
+  max-height: none;
+  visibility: visible;
+}
+
+/* State: Closing - toggle is animating to closed */
+[data-toggle-target=closing] {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  animation: slideUp var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
+  will-change: opacity, max-height, transform;
+  pointer-events: none;
+}
+
+/* Animation keyframes */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 100vh;
+    transform: translateY(0);
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 100vh;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [data-toggle] {
+    transition: none;
+  }
+  [data-toggle-target] {
+    transition: none;
+    animation: none !important;
+  }
+  [data-toggle-target=opening],
+  [data-toggle-target=closing] {
+    will-change: auto;
+  }
+  /* Instant state changes for reduced motion */
+  [data-toggle-target=opening] {
+    opacity: 1;
+    max-height: none;
+    transform: none;
+  }
+  [data-toggle-target=closing] {
+    opacity: 0;
+    max-height: 0;
+    transform: none;
+  }
+}

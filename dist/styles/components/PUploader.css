@@ -1,0 +1,692 @@
+/* PUploader Web Component Styles */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Tokens */
+/* Minimal, opinionated design tokens for Parallelogram components */
+/* ============================================================================
+   Base Color Palette
+   ============================================================================ */
+/* Neutrals (4 shades only) */
+/* Light backgrounds */
+/* Borders, disabled */
+/* Muted text */
+/* Primary text */
+/* Primary (Blue) */
+/* Success (Green) */
+/* Warning (Orange) */
+/* Error (Red) */
+/* ============================================================================
+   Spacing Scale (Golden Ratio: ~1.618)
+   ============================================================================ */
+/* Using em units for scalability with font-size */
+/* ~2px at 16px base */
+/* ~4px */
+/* ~8px */
+/* ~12px */
+/* ~20px - golden ratio jump */
+/* ~32px */
+/* ============================================================================
+   Typography Scale
+   ============================================================================ */
+/* Font Sizes (minimal scale) */
+/* 12px at 16px base */
+/* 14px */
+/* 16px */
+/* 18px */
+/* Font Weights */
+/* Line Heights */
+/* ============================================================================
+   Borders
+   ============================================================================ */
+/* Border Widths (1px and 2px only) */
+/* Border Radius (optically consistent with padding scale) */
+/* Each radius reduces by the padding amount to maintain visual curve alignment */
+/* ~2px - inner elements with xs padding */
+/* ~4px - inner elements with sm padding */
+/* ~8px - default containers */
+/* ~12px - panels/modals */
+/* ============================================================================
+   Shadows & Elevation
+   ============================================================================ */
+/* Base shadow color as CSS custom property for theme support */
+/* Shadow Scale */
+/* ============================================================================
+   Transitions & Animation
+   ============================================================================ */
+/* Duration */
+/* Easing Functions */
+/* ============================================================================
+   Z-Index Scale
+   ============================================================================ */
+/* Simplified layering */
+/* ============================================================================
+   Opacity Scale
+   ============================================================================ */
+/* ============================================================================
+   CSS Custom Properties (for runtime theming)
+   ============================================================================ */
+/* These can be overridden at runtime by developers or through theme switching */
+/* Text Colors */
+/* Background Colors */
+/* Border Colors */
+/* Accent/Interactive Colors */
+/* Shadow Colors */
+/* State Colors */
+/* Dark Mode Overrides */
+/* Components should wrap these in @media (prefers-color-scheme: dark) {} */
+/* Forward all mixins */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Mixins */
+/* Utility mixins for common patterns */
+/* ============================================================================
+   Accessibility Mixins
+   ============================================================================ */
+/* Conditional transition that respects prefers-reduced-motion */
+/* Focus visible styles (keyboard focus only) */
+/* Screen reader only content */
+/* ============================================================================
+   Dark Mode Mixin
+   ============================================================================ */
+/* Simplified dark mode wrapper */
+/* ============================================================================
+   Layout Mixins
+   ============================================================================ */
+/* Flex center alignment */
+/* Truncate text with ellipsis */
+/* ============================================================================
+   Button Reset Mixin
+   ============================================================================ */
+/* ============================================================================
+   Hover State Mixin (with hover support detection)
+   ============================================================================ */
+/* ============================================================================
+   Elevation Mixin
+   ============================================================================ */
+/* Forward component patterns */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Forward all mixins */
+/* Component Tokens & Patterns */
+/* Reusable component styling patterns using CSS custom properties */
+/* ============================================================================
+   SURFACE TOKENS (shared decorative properties for UI containers)
+   ============================================================================ */
+:root {
+  /* Control surfaces (form inputs, selects, textareas) */
+  --surface-control-radius: 0.25em;
+  --surface-control-border-width: 1px;
+  --surface-control-border-color: rgba(0, 0, 0, 0.1);
+  --surface-control-color-bg: #ffffff;
+  --surface-control-color-text: currentColor;
+  --surface-control-shadow: none;
+  /* Button surfaces */
+  --surface-button-radius: 0.25em;
+  --surface-button-border-width: 1px;
+  --surface-button-shadow: none;
+  /* Panel surfaces (cards, containers, file items) */
+  --surface-panel-radius: 0.5em;
+  --surface-panel-border-width: 1px;
+  --surface-panel-border-color: rgba(0, 0, 0, 0.1);
+  --surface-panel-color-bg: #ffffff;
+  --surface-panel-color-text: currentColor;
+  --surface-panel-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  /* Dialog surfaces (modals, dialogs, popovers) */
+  --surface-dialog-radius: 0.75em;
+  --surface-dialog-border-width: 1px;
+  --surface-dialog-border-color: rgba(0, 0, 0, 0.1);
+  --surface-dialog-color-bg: #ffffff;
+  --surface-dialog-color-text: currentColor;
+  --surface-dialog-shadow: 0 1.25em 3em rgba(0, 0, 0, 0.5);
+  /* Dropdown surfaces */
+  --surface-dropdown-radius: 0.25em;
+  --surface-dropdown-border-width: 1px;
+  --surface-dropdown-border-color: rgba(0, 0, 0, 0.1);
+  --surface-dropdown-color-bg: #ffffff;
+  --surface-dropdown-color-text: currentColor;
+  --surface-dropdown-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  /* Dropdown item states */
+  --surface-dropdown-item-hover-bg: #f5f5f5;
+  --surface-dropdown-item-selected-bg: rgba(59, 130, 246, 0.1);
+  --surface-dropdown-item-current-bg: #f5f5f5;
+  /* Item surfaces (list items, chips, tags) */
+  --surface-item-radius: 0.25em;
+  --surface-item-border-width: 1px;
+  --surface-item-border-color: rgba(0, 0, 0, 0.1);
+  --surface-item-color-bg: transparent;
+  --surface-item-color-text: currentColor;
+  --surface-item-shadow: none;
+  /* Card surfaces (nested items within panels) */
+  --surface-card-radius: 0.125em;
+  --surface-card-border-width: 1px;
+  --surface-card-border-color: #d4d4d4;
+  --surface-card-color-bg: #ffffff;
+  --surface-card-color-text: currentColor;
+  --surface-card-shadow: none;
+  /* Touch surfaces (interactive areas with hover feedback) */
+  --surface-touch-radius: 0.125em;
+  --surface-touch-border-width: 1px;
+  --surface-touch-border-color: #d4d4d4;
+  --surface-touch-color-bg: #f5f5f5;
+  --surface-touch-color-text: currentColor;
+  --surface-touch-shadow: none;
+  --surface-touch-hover-bg: #f5f5f5;
+  --surface-touch-hover-border-color: rgba(59, 130, 246, 0.5); /* Primary at 50% opacity */
+}
+
+/* ============================================================================
+   FORM CONTROLS (inputs, selects, textareas)
+   ============================================================================ */
+/* Base Form Control Tokens */
+:root {
+  /* Padding */
+  --form-control-padding-y: 0.25em;
+  --form-control-padding-x: 0.75em;
+  --form-control-padding-y-sm: 0.125em;
+  --form-control-padding-x-sm: 0.5em;
+  --form-control-padding-y-lg: 0.5em;
+  --form-control-padding-x-lg: 1.25em;
+  /* Surface properties */
+  --form-control-border-width: var(--surface-control-border-width);
+  --form-control-border-color: var(--surface-control-border-color);
+  --form-control-border-radius: var(--surface-control-radius);
+  --form-control-bg: var(--surface-control-color-bg);
+  --form-control-color: var(--surface-control-color-text);
+  --form-control-placeholder-color: rgba(0, 0, 0, 0.5);
+  /* Focus state */
+  --form-control-focus-ring-width: 2px;
+  --form-control-focus-ring-color: #3b82f6;
+  --form-control-focus-border-color: #3b82f6;
+  /* Hover state */
+  --form-control-hover-border-color: #d4d4d4;
+  /* Disabled state */
+  --form-control-disabled-opacity: 0.3;
+  --form-control-disabled-bg: #f5f5f5;
+  /* Typography */
+  --form-control-font-size: 0.875em;
+  --form-control-font-size-sm: 0.75em;
+  --form-control-font-size-lg: 1em;
+  --form-control-font-family: inherit;
+}
+
+/* Form Control Mixins */
+/* Complete form control with all states */
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+/* Button Tokens */
+:root {
+  /* Base button */
+  --button-padding-y: 0.25em;
+  --button-padding-x: 0.75em;
+  --button-padding-y-sm: 0.125em;
+  --button-padding-x-sm: 0.5em;
+  --button-padding-y-lg: 0.5em;
+  --button-padding-x-lg: 1.25em;
+  --button-font-size: 0.875em;
+  --button-font-size-sm: 0.75em;
+  --button-font-size-lg: 1em;
+  --button-font-weight: 600;
+  /* Surface properties */
+  --button-border-width: var(--surface-button-border-width);
+  --button-border-radius: var(--surface-button-radius);
+  --button-min-height: 2.5em;
+  --button-min-height-sm: 2em;
+  --button-min-height-lg: 3em;
+  /* Primary button */
+  --button-primary-bg: #3b82f6;
+  --button-primary-color: white;
+  --button-primary-border: #3b82f6;
+  --button-primary-hover-bg: #2563eb;
+  --button-primary-hover-border: #2563eb;
+  /* Secondary button */
+  --button-secondary-bg: transparent;
+  --button-secondary-color: currentColor;
+  --button-secondary-border: #d4d4d4;
+  --button-secondary-hover-bg: #f5f5f5;
+  --button-secondary-hover-border: #d4d4d4;
+  /* Danger button */
+  --button-danger-bg: #ef4444;
+  --button-danger-color: white;
+  --button-danger-border: #ef4444;
+  --button-danger-hover-bg: #dc2626;
+  --button-danger-hover-border: #dc2626;
+  /* Ghost button (no background) */
+  --button-ghost-bg: transparent;
+  --button-ghost-color: currentColor;
+  --button-ghost-border: currentColor;
+  --button-ghost-hover-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Button Mixins */
+/* ============================================================================
+   PANELS/CARDS
+   ============================================================================ */
+/* Panel Tokens */
+:root {
+  /* Surface properties */
+  --panel-bg: var(--surface-panel-color-bg);
+  --panel-border-width: var(--surface-panel-border-width);
+  --panel-border-color: var(--surface-panel-border-color);
+  --panel-border-radius: var(--surface-panel-radius);
+  --panel-color: var(--surface-panel-color-text);
+  --panel-shadow: var(--surface-panel-shadow);
+  /* Padding */
+  --panel-padding: 0.75em;
+  /* Panel variants */
+  --panel-padding-sm: 0.5em;
+  --panel-padding-lg: 1.25em;
+  /* Panel header/footer */
+  --panel-header-padding: 0.5em 0.75em;
+  --panel-header-border: 1px solid rgba(0, 0, 0, 0.1);
+  --panel-footer-padding: 0.5em 0.75em;
+  --panel-footer-border: 1px solid rgba(0, 0, 0, 0.1);
+  /* Modal specific (elevated panel using dialog surface) */
+  --modal-bg: var(--surface-dialog-color-bg);
+  --modal-border-width: var(--surface-dialog-border-width);
+  --modal-border-color: var(--surface-dialog-border-color);
+  --modal-border-radius: var(--surface-dialog-radius);
+  --modal-color: var(--surface-dialog-color-text);
+  --modal-shadow: var(--surface-dialog-shadow);
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* Panel Mixins */
+/* ============================================================================
+   INTERACTIVE STATES (for custom elements)
+   ============================================================================ */
+/* Generic interactive element (clickable cells, items, etc.) */
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Form controls in dark mode */
+    --form-control-bg: #171717;
+    --form-control-color: white;
+    --form-control-border-color: #525252;
+    --form-control-placeholder-color: rgba(255, 255, 255, 0.5);
+    /* Buttons in dark mode */
+    --button-secondary-hover-bg: #525252;
+    /* Panels in dark mode */
+    --panel-bg: #171717;
+    --panel-border-color: #525252;
+  }
+}
+/* Forward legacy variables for backwards compatibility */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System - Main Entry Point */
+/* Import this file to access all design tokens, mixins, and component patterns */
+/* Forward all tokens so they're available when using @use */
+/* Design System Variables - LEGACY */
+/* ============================================================================
+   DEPRECATION NOTICE
+   ============================================================================
+   This file provides backwards compatibility for existing components.
+   New components should use the new design system tokens from _tokens.scss
+
+   Import the new system with:
+   @use '../../design-system' as ds;
+
+   These legacy variables will be removed in v0.3.0
+   ============================================================================ */
+/* Forward tokens so they're available to components using @use 'variables' */
+/* Use tokens internally to create legacy mappings */
+/* ============================================================================
+   Legacy Color Mappings
+   ============================================================================ */
+/* Basic colors */
+/* Border colors - map to new tokens */
+/* Background colors */
+/* State colors */
+/* Primary colors */
+/* Text colors */
+/* Progress colors */
+/* Export with original names for backwards compatibility */
+/* ============================================================================
+   Legacy Spacing Mappings
+   ============================================================================ */
+/* 3px - no direct mapping, keep as-is */
+/* 6px - close to $space-sm (0.25em = 4px) */
+/* 8px - maps to $space-md (0.5em) */
+/* 12px - maps to $space-lg (0.75em) */
+/* 16px - close to $space-xl (1.25em = 20px) */
+/* 32px - maps to $space-2xl (2em) */
+/* ============================================================================
+   Legacy Sizing
+   ============================================================================ */
+/* ============================================================================
+   Legacy Typography Mappings
+   ============================================================================ */
+/* 10px - smaller than new system */
+/* 12px - maps to $font-xs */
+/* 14px - maps to $font-sm */
+/* 16px - maps to $font-base */
+/* ============================================================================
+   Legacy Border Mappings
+   ============================================================================ */
+/* ============================================================================
+   Legacy Transition Mappings
+   ============================================================================ */
+/* ============================================================================
+   Legacy Z-index Mappings
+   ============================================================================ */
+/* Usage in components:
+ * @use '../../design-system' as ds;
+ *
+ * Then access tokens:
+ *   padding: ds.$space-md;
+ *   color: ds.$primary;
+ *
+ * Use mixins:
+ *   @include ds.transition(opacity);
+ *   @include ds.focus-visible;
+ *
+ * Use component patterns:
+ *   @include ds.form-control;
+ *   @include ds.button-primary;
+ *   @include ds.panel-base;
+ *
+ * Legacy components can still use:
+ * @use '../../design-system/variables' as *;
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  position: relative;
+  /* Use surface-card tokens for nested items within panels */
+  border-radius: var(--surface-card-radius);
+  border-width: var(--surface-card-border-width);
+  border-style: solid;
+  border-color: var(--surface-card-border-color);
+  background: var(--surface-card-color-bg);
+  color: var(--surface-card-color-text);
+  box-shadow: var(--surface-card-shadow);
+  /* Customize */
+  padding: 0.25em;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+  font-family: inherit;
+}
+
+:host([dragging]) {
+  opacity: 0.5;
+  transition: none;
+}
+
+:host([drag-over]) {
+  border-color: #3b82f6;
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+}
+
+:host([draggable=true]) {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:host([draggable=true]:active) {
+  cursor: grabbing;
+}
+
+button,
+textarea,
+input {
+  font-family: inherit;
+}
+
+.uploader__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 0 0.25em 0 6.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.5, 0, 0, 1);
+}
+.uploader__overlay--show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.uploader__progress {
+  width: 100%;
+  height: 0.5em;
+}
+.uploader__container {
+  display: flex;
+  gap: 0.25em;
+  position: relative;
+}
+.uploader__preview {
+  flex-shrink: 0;
+  width: 6rem;
+  height: 6rem;
+  pointer-events: none;
+  user-select: none;
+}
+.uploader__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.uploader__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  height: 6rem;
+  overflow: hidden;
+}
+.uploader__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  height: 6rem;
+  background: white;
+  transform: translateY(-100%);
+  transition: transform 0.3s cubic-bezier(0.5, 0, 0, 1);
+  will-change: transform;
+}
+.uploader__panel--show {
+  transform: translateY(0);
+}
+.uploader__panel[data-panel=info] {
+  transform: translateY(100%);
+}
+.uploader__panel[data-panel=info].uploader__panel--activated {
+  transform: translateY(-100%);
+}
+.uploader__panel[data-panel=info].uploader__panel--show {
+  transform: translateY(0);
+}
+.uploader__panel[data-panel=delete], .uploader__panel[data-panel^=edit-] {
+  transform: translateY(100%);
+}
+.uploader__panel[data-panel=delete].uploader__panel--show, .uploader__panel[data-panel^=edit-].uploader__panel--show {
+  transform: translateY(0);
+}
+.uploader__body, .uploader__alert {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 6rem;
+  position: relative;
+}
+.uploader__alert {
+  justify-content: space-between;
+}
+.uploader__fields {
+  display: flex;
+  flex-direction: column;
+}
+.uploader__filename, .uploader__heading {
+  font-weight: 600;
+  font-size: 0.875em;
+  padding-right: 2em;
+  height: 1.125rem;
+  line-height: 1.125rem;
+  margin: 0 0 0.5em;
+  display: flex;
+  align-items: center;
+}
+.uploader__filename {
+  font-family: monospace;
+}
+.uploader__field {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.25em;
+  height: 1.25rem;
+  padding-top: 0.125em;
+  padding-bottom: 0.125em;
+  margin: 0;
+}
+.uploader__delete-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  pointer-events: auto;
+  padding: 0;
+}
+.uploader__delete-icon:hover {
+  opacity: 1;
+}
+.uploader__actions {
+  display: flex;
+  gap: 0.25em;
+  justify-content: flex-end;
+  padding-left: 0.25em;
+}
+.uploader__btn {
+  padding: 0.25em 0.75em;
+  border: 1px solid #d4d4d4;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875em;
+  transition: all 0.15s;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+.uploader__btn:hover {
+  background: #f5f5f5;
+}
+.uploader__btn--secondary {
+  background: transparent;
+  border-color: currentColor;
+}
+.uploader__btn--delete {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+.uploader__btn--delete:hover {
+  background: #fee2e2;
+}
+.uploader__btn--primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+.uploader__btn--primary:hover {
+  background: #2563eb;
+}
+.uploader__input, .uploader__textarea {
+  flex: 1 0 auto;
+  height: 100%;
+  padding: 0.25em;
+  border: 1px solid #d4d4d4;
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.875em;
+  pointer-events: auto;
+  outline: 0 none;
+}
+.uploader__textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.field__label {
+  opacity: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  font-size: 0.875em;
+  flex: 0 0 4rem;
+}
+.field__value {
+  opacity: rgba(0, 0, 0, 0.5);
+  font-size: 0.875em;
+  line-height: 1.25rem;
+  word-break: break-word;
+  height: 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+.field__value--editable {
+  cursor: pointer;
+}
+.field__value--editable:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+.field__edit {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  background-size: contain;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  pointer-events: auto;
+  padding: 0;
+  flex-shrink: 0;
+}
+.field__edit:hover {
+  opacity: 1;
+}
+
+.error-message {
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 0.5em;
+  font-size: 0.875em;
+}
+
+slot {
+  display: none;
+}

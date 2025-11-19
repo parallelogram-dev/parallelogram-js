@@ -153,6 +153,10 @@
   --surface-dropdown-color-bg: #ffffff;
   --surface-dropdown-color-text: currentColor;
   --surface-dropdown-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  /* Dropdown item states */
+  --surface-dropdown-item-hover-bg: #f5f5f5;
+  --surface-dropdown-item-selected-bg: rgba(59, 130, 246, 0.1);
+  --surface-dropdown-item-current-bg: #f5f5f5;
   /* Item surfaces (list items, chips, tags) */
   --surface-item-radius: 0.25em;
   --surface-item-border-width: 1px;
@@ -175,7 +179,7 @@
   --surface-touch-color-text: currentColor;
   --surface-touch-shadow: none;
   --surface-touch-hover-bg: #f5f5f5;
-  --surface-touch-hover-border-color: #525252;
+  --surface-touch-hover-border-color: rgba(59, 130, 246, 0.5); /* Primary at 50% opacity */
 }
 
 /* ============================================================================
@@ -1743,13 +1747,13 @@ body {
   --color-text-dark: #1f2937;
   --color-text-medium: #374151;
   --color-text-muted: #6b7280;
-  /* Focus States */
-  --focus-ring-primary: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  --focus-ring-secondary: 0 0 0 3px rgba(249, 115, 22, 0.1);
-  --focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  --focus-ring-success: 0 0 0 3px rgba(16, 185, 129, 0.1);
-  --focus-ring-warning: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  --focus-ring-info: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  /* Focus States - inset with darker colors */
+  --focus-ring-primary: inset 0 0 0 3px rgba(37, 99, 235, 0.3);
+  --focus-ring-secondary: inset 0 0 0 3px rgba(234, 88, 12, 0.3);
+  --focus-ring-error: inset 0 0 0 3px rgba(220, 38, 38, 0.3);
+  --focus-ring-success: inset 0 0 0 3px rgba(22, 163, 74, 0.3);
+  --focus-ring-warning: inset 0 0 0 3px rgba(217, 119, 6, 0.3);
+  --focus-ring-info: inset 0 0 0 3px rgba(8, 145, 178, 0.3);
   /* Button Variants */
   --btn-info: #06b6d4;
   --btn-info-hover: #0891b2;
@@ -1812,10 +1816,11 @@ body {
 .copy-demo__content input, .copy-demo__input, .form__input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--demo-border, var(--color-border));
-  border-radius: 4px;
-  background: var(--demo-panel-bg, white);
-  color: var(--demo-text, var(--color-text-dark));
+  /* Use surface-control tokens for consistent decoration */
+  border: var(--surface-control-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-control-radius);
+  background: var(--surface-control-color-bg);
+  color: var(--surface-control-color-text);
   transition: border-color 0.2s ease;
 }
 .copy-demo__content input:focus, .copy-demo__input:focus, .form__input:focus {
@@ -1877,8 +1882,9 @@ body {
 /*  Base button styles */
 .performance__test-btn {
   padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
+  /* Use surface-button tokens for consistent decoration */
+  border: var(--surface-button-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-button-radius);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3320,6 +3326,11 @@ th.sortable:hover {
  * Comprehensive dashboard styles for performance monitoring
  */
 /**
+ * Demo Styles Entry Point
+ * Imports all demo-specific SCSS files and component styles
+ */
+/*  Design system (must be first to provide tokens) */
+/**
  * Standardized Form Framework
  * Provides consistent structure and styling for all form elements
  *
@@ -3462,10 +3473,11 @@ th.sortable:hover {
   min-height: var(--form-input-min-height-md);
   padding: var(--form-input-padding-md);
   font-size: var(--form-font-size-md);
-  background: var(--form-control-bg);
-  border: 1px solid var(--form-control-border);
-  border-radius: 6px;
-  color: var(--demo-text, #1f2937);
+  /* Use surface-control tokens for consistent decoration */
+  background: var(--surface-control-color-bg);
+  border: var(--surface-control-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-control-radius);
+  color: var(--surface-control-color-text);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
@@ -3531,10 +3543,11 @@ th.sortable:hover {
   min-height: var(--form-input-min-height-md);
   padding: var(--form-input-padding-md);
   font-size: var(--form-font-size-md);
-  background: var(--form-control-bg);
-  border: 1px solid var(--form-control-border);
-  border-radius: 6px;
-  color: var(--demo-text, #1f2937);
+  /* Use surface-button tokens for consistent decoration */
+  background: var(--surface-control-color-bg);
+  border: var(--surface-button-border-width) solid var(--surface-control-border-color);
+  border-radius: var(--surface-button-radius);
+  color: var(--surface-control-color-text);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3549,7 +3562,6 @@ th.sortable:hover {
 }
 .btn:focus {
   outline: none;
-  border-color: var(--form-control-focus);
   box-shadow: var(--focus-ring-primary);
 }
 .btn:active {
@@ -3563,7 +3575,7 @@ th.sortable:hover {
 }
 .btn:disabled:hover {
   background: var(--demo-muted, #f3f4f6);
-  border-color: var(--form-control-border);
+  border-color: var(--surface-control-border-color);
 }
 .btn {
   /*  Size variants matching form controls */
@@ -3591,7 +3603,8 @@ th.sortable:hover {
   border-color: var(--color-primary-hover);
 }
 .btn--primary:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--form-control-focus);
+  box-shadow: var(--focus-ring-primary);
 }
 .btn--secondary {
   background: var(--color-secondary);
@@ -3603,6 +3616,7 @@ th.sortable:hover {
   border-color: var(--color-secondary-hover);
 }
 .btn--secondary:focus {
+  border-color: var(--color-secondary);
   box-shadow: var(--focus-ring-secondary);
 }
 .btn--success {
@@ -3615,6 +3629,7 @@ th.sortable:hover {
   border-color: #059669;
 }
 .btn--success:focus {
+  border-color: var(--form-success-color);
   box-shadow: var(--focus-ring-success);
 }
 .btn--danger {
@@ -3627,6 +3642,7 @@ th.sortable:hover {
   border-color: #dc2626;
 }
 .btn--danger:focus {
+  border-color: var(--form-error-color);
   box-shadow: var(--focus-ring-error);
 }
 .btn--outline {
@@ -3637,12 +3653,19 @@ th.sortable:hover {
 .btn--outline:hover {
   background: rgba(59, 130, 246, 0.05);
 }
+.btn--outline:focus {
+  border-color: var(--form-control-focus);
+  box-shadow: var(--focus-ring-primary);
+}
 .btn--ghost {
   background: transparent;
   border: 1px solid transparent;
 }
 .btn--ghost:hover {
   background: var(--demo-muted, #f3f4f6);
+}
+.btn--ghost:focus {
+  box-shadow: var(--focus-ring-primary);
 }
 .btn {
   /*  Block variant (full width) */

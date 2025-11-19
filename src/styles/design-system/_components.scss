@@ -46,6 +46,11 @@
   --surface-dropdown-color-text: #{$color-text};
   --surface-dropdown-shadow: #{$shadow-md};
 
+  /* Dropdown item states */
+  --surface-dropdown-item-hover-bg: #{$neutral-100};
+  --surface-dropdown-item-selected-bg: rgba(59, 130, 246, 0.1);
+  --surface-dropdown-item-current-bg: #{$neutral-100};
+
   /* Item surfaces (list items, chips, tags) */
   --surface-item-radius: #{$radius-sm};
   --surface-item-border-width: #{$border-width};
