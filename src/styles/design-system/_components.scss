@@ -55,7 +55,7 @@
   --surface-item-shadow: none;
 
   /* Card surfaces (nested items within panels) */
-  --surface-card-radius: #{$radius-sm};
+  --surface-card-radius: #{$radius-xs};
   --surface-card-border-width: #{$border-width};
   --surface-card-border-color: #{$neutral-300};
   --surface-card-color-bg: #ffffff;
