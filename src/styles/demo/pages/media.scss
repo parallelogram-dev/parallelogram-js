@@ -175,51 +175,6 @@
   }
 }
 
-/*  Carousel enhancements for demo */
-.carousel {
-  margin: var(--demo-spacing-lg) 0;
-
-  &__image {
-    transition: opacity var(--transition-normal, 0.2s) ease;
-
-    &[data-lazysrc-loading] {
-      opacity: 0.7;
-    }
-
-    &[data-lazysrc-loaded] {
-      opacity: 1;
-    }
-
-    &[data-lazysrc-error] {
-      opacity: 0.5;
-      filter: grayscale(1);
-    }
-  }
-
-  &__caption {
-    backdrop-filter: blur(8px);
-    font-weight: var(--font-weight-medium, 500);
-  }
-
-  /*  Demo-specific loading indicator */
-  &--demo-loading {
-    position: relative;
-
-    &::after {
-      content: 'Loading media...';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: var(--demo-spacing-md);
-      border-radius: var(--border-radius, 0.25rem);
-      font-weight: var(--font-weight-medium, 500);
-      z-index: 10;
-    }
-  }
-}
 
 /*  Performance indicators */
 .performance-indicator {

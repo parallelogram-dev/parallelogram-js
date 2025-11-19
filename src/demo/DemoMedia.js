@@ -167,3 +167,4 @@ export class DemoMedia extends BaseComponent {
     this.updateMetricsDisplay();
   }
 }
+export default DemoMedia;

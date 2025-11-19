@@ -134,11 +134,25 @@ export default class Lazysrc extends BaseComponent {
       this._setupIntersectionLoading(element, state);
     }
 
+    // Listen for force load events (e.g., from Lightbox component)
+    const forceLoadHandler = async (event) => {
+      const statePromise = this.getState(element);
+      const state = statePromise instanceof Promise ? await statePromise : statePromise;
+
+      // Only force load if element hasn't been loaded yet and has valid state
+      if (state && !state.isLoaded && !state.isLoading) {
+        await this._loadElement(element, state);
+      }
+      // If state.isLoaded is true or state doesn't exist, silently ignore
+    };
+    element.addEventListener('lazysrc:forceLoad', forceLoadHandler);
+
     // Setup cleanup
     const originalCleanup = state.cleanup;
     state.cleanup = () => {
       this.observer.unobserve(element);
       this.loadingAttempts.delete(element);
+      element.removeEventListener('lazysrc:forceLoad', forceLoadHandler);
       originalCleanup();
     };
 
@@ -677,9 +691,6 @@ export default class Lazysrc extends BaseComponent {
 
     element.classList.remove(state.config.loadingClass);
     element.classList.add(state.config.loadedClass);
-    
-    // Mark element as complete
-    element.setAttribute('data-lazysrc-complete', 'true');
 
     // Apply fade-in effect
     if (state.config.fadeInDuration > 0) {

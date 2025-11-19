@@ -46,19 +46,19 @@ export default class Scrollreveal extends BaseComponent {
     // Get configuration from data attributes
     const threshold = this._getDataAttr(
       element,
-      'scrollreveal-threshold',
+      'reveal-threshold',
       Scrollreveal.defaults.threshold
     );
-    const once = this._getDataAttr(element, 'scrollreveal-once', Scrollreveal.defaults.once);
-    const delay = this._getDataAttr(element, 'scrollreveal-delay', Scrollreveal.defaults.delay);
+    const once = this._getDataAttr(element, 'reveal-once', Scrollreveal.defaults.once);
+    const delay = this._getDataAttr(element, 'reveal-delay', Scrollreveal.defaults.delay);
     const stagger = this._getDataAttr(
       element,
-      'scrollreveal-stagger',
+      'reveal-stagger',
       Scrollreveal.defaults.stagger
     );
     const initialState = this._getDataAttr(
       element,
-      'scrollreveal-initial',
+      'reveal-initial',
       Scrollreveal.defaults.initialState
     );
 
@@ -128,7 +128,7 @@ export default class Scrollreveal extends BaseComponent {
   _setInitialState(element, state) {
     if (state.initialState === 'hidden') {
       // Check if using CSS class animation
-      const revealClass = element.dataset.scrollrevealClass;
+      const revealClass = element.dataset.revealClass;
 
       if (!revealClass) {
         // Only set inline styles if not using CSS classes
@@ -329,7 +329,7 @@ export default class Scrollreveal extends BaseComponent {
 
       try {
         // Check for CSS class-based animation first
-        const revealClass = item.dataset.scrollrevealClass;
+        const revealClass = item.dataset.revealClass;
 
         if (revealClass) {
           // Use CSS class animation
@@ -364,8 +364,8 @@ export default class Scrollreveal extends BaseComponent {
       item.setAttribute('data-reveal-state', 'hiding');
 
       try {
-        const revealClass = item.dataset.scrollrevealClass;
-        const exitClass = item.dataset.scrollrevealExitClass;
+        const revealClass = item.dataset.revealClass;
+        const exitClass = item.dataset.revealExitClass;
 
         if (exitClass) {
           await this._animateWithClass(item, exitClass);
