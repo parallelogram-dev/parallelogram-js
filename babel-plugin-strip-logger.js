@@ -1,6 +1,7 @@
 /**
- * Babel plugin to strip this.logger and this.eventBus calls
+ * Babel plugin to strip this.logger calls
  * Used for production builds to remove debug code
+ * Note: eventBus calls are preserved as they are functional, not debug code
  */
 export default function stripLoggerPlugin() {
   return {
@@ -14,13 +15,12 @@ export default function stripLoggerPlugin() {
         if (expression.type === 'OptionalCallExpression') {
           const callee = expression.callee;
 
-          // Check if it's this.logger?.method or this.eventBus?.method
+          // Check if it's this.logger?.method (NOT eventBus)
           if (
             callee.type === 'OptionalMemberExpression' &&
             callee.object.type === 'MemberExpression' &&
             callee.object.object.type === 'ThisExpression' &&
-            (callee.object.property.name === 'logger' ||
-             callee.object.property.name === 'eventBus')
+            callee.object.property.name === 'logger'
           ) {
             // Remove the entire statement
             path.remove();
@@ -35,8 +35,7 @@ export default function stripLoggerPlugin() {
             callee.type === 'MemberExpression' &&
             callee.object.type === 'MemberExpression' &&
             callee.object.object.type === 'ThisExpression' &&
-            (callee.object.property.name === 'logger' ||
-             callee.object.property.name === 'eventBus')
+            callee.object.property.name === 'logger'
           ) {
             path.remove();
           }
