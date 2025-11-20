@@ -49,7 +49,9 @@
   "files": [
     "dist",
     "src",
+    "docs",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "directories": {
