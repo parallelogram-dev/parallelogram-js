@@ -14,12 +14,16 @@ export class RouterManager {
       fragmentSelector: '[data-router-fragment]',
       loadingClass: 'router-loading',
       errorClass: 'router-error',
+      // Smooth scroll options
+      scrollDuration: 800, // 800ms default for snappy feel
+      scrollEasing: 'ease-in-out', // CSS easing function
       ...options,
     };
 
     this.controller = null;
     this.currentUrl = new URL(location.href);
     this.isNavigating = false;
+    this.scrollAnimationFrame = null;
 
     // Bind event handlers
     this.boundPopState = this._onPopState.bind(this);
@@ -66,6 +70,14 @@ export class RouterManager {
         link.addEventListener('click', this.boundLinkClick);
         link.setAttribute('data-router-enhanced', 'true');
         this.logger?.debug('Enhanced link', { href: link.href });
+      } else {
+        // Handle hash-only links for smooth scrolling
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          link.addEventListener('click', this._onAnchorClick.bind(this));
+          link.setAttribute('data-router-enhanced', 'anchor');
+          this.logger?.debug('Enhanced anchor link', { href });
+        }
       }
     });
   }
@@ -86,6 +98,11 @@ export class RouterManager {
       return false;
     }
 
+    // Skip hash-only links (in-page anchors)
+    if (href.startsWith('#')) {
+      return false;
+    }
+
     // Skip if explicitly marked to skip
     if (link.hasAttribute('data-router-skip')) {
       return false;
@@ -102,6 +119,63 @@ export class RouterManager {
     }
 
     return true;
+  }
+
+  /**
+   * Smooth scroll to element using native browser behavior
+   */
+  _smoothScrollTo(targetElement) {
+    targetElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+
+  /**
+   * Handle anchor link clicks for smooth scrolling
+   */
+  _onAnchorClick(event) {
+    // Allow default behavior with modifier keys
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    // Allow default for middle mouse button
+    if (event.which === 2) {
+      return;
+    }
+
+    const link = event.currentTarget;
+    const href = link.getAttribute('href');
+
+    if (!href || !href.startsWith('#')) {
+      return;
+    }
+
+    // Get the target element
+    const targetId = href.substring(1);
+    const targetElement = targetId ? document.getElementById(targetId) : null;
+
+    if (targetElement) {
+      event.preventDefault();
+
+      // Use native smooth scrolling
+      this._smoothScrollTo(targetElement);
+
+      // Update URL hash without triggering navigation
+      if (targetId) {
+        history.replaceState(null, '', href);
+      }
+
+      this.eventBus.emit('router:anchor-scroll', {
+        target: targetElement,
+        hash: href,
+        trigger: 'anchor-click',
+        element: link,
+      });
+
+      this.logger?.debug('Scrolled to anchor', { href, targetId });
+    }
   }
 
   /**
@@ -410,10 +484,22 @@ export class RouterManager {
     window.removeEventListener('popstate', this.boundPopState);
 
     // Remove enhanced link listeners
-    document.querySelectorAll('a[data-router-enhanced]').forEach(link => {
+    document.querySelectorAll('a[data-router-enhanced="true"]').forEach(link => {
       link.removeEventListener('click', this.boundLinkClick);
       link.removeAttribute('data-router-enhanced');
     });
+
+    // Remove anchor link listeners
+    document.querySelectorAll('a[data-router-enhanced="anchor"]').forEach(link => {
+      link.removeEventListener('click', this._onAnchorClick);
+      link.removeAttribute('data-router-enhanced');
+    });
+
+    // Cancel any ongoing scroll animation
+    if (this.scrollAnimationFrame) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+      this.scrollAnimationFrame = null;
+    }
 
     // Abort any pending requests
     this._abortInFlight();
