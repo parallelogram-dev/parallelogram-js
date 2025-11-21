@@ -45,7 +45,43 @@
                 </div>
             </section>
 
-            <section class="features">
+            <section class="smooth-scroll-demo" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 1.5rem; margin: 2rem 0; border-radius: 8px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 0.5rem;">Smooth Scroll Navigation Demo</h2>
+                <p style="color: rgba(255,255,255,0.9); text-align: center; margin-bottom: 2rem;">Experience customizable smooth scrolling with different durations and easing functions</p>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 6px; margin-bottom: 2rem;">
+                    <h3 style="color: white; font-size: 1.1rem; margin-bottom: 1rem;">Try Different Easing Functions (800ms duration)</h3>
+                    <nav style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="#features" data-scroll-easing="ease-in-out" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">ease-in-out</a>
+                        <a href="#features" data-scroll-easing="ease-in" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">ease-in</a>
+                        <a href="#features" data-scroll-easing="ease-out" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">ease-out</a>
+                        <a href="#features" data-scroll-easing="ease-in-out-cubic" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">cubic</a>
+                        <a href="#features" data-scroll-easing="linear" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">linear</a>
+                    </nav>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 6px; margin-bottom: 2rem;">
+                    <h3 style="color: white; font-size: 1.1rem; margin-bottom: 1rem;">Try Different Durations (ease-in-out)</h3>
+                    <nav style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="#quick-start" data-scroll-duration="300" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">300ms Instant</a>
+                        <a href="#quick-start" data-scroll-duration="600" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">600ms Quick</a>
+                        <a href="#quick-start" data-scroll-duration="800" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">800ms Default</a>
+                        <a href="#quick-start" data-scroll-duration="1200" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">1200ms Smooth</a>
+                        <a href="#quick-start" data-scroll-duration="2000" style="background: white; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">2000ms Slow</a>
+                    </nav>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 6px;">
+                    <h3 style="color: white; font-size: 1.1rem; margin-bottom: 1rem;">Jump to Sections</h3>
+                    <nav style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="#features" style="background: rgba(255,255,255,0.95); color: #667eea; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600;">Features</a>
+                        <a href="#quick-start" style="background: rgba(255,255,255,0.95); color: #667eea; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600;">Quick Start</a>
+                        <a href="#footer-nav" style="background: rgba(255,255,255,0.95); color: #667eea; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600;">Footer</a>
+                    </nav>
+                </div>
+            </section>
+
+            <section id="features" class="features">
                 <div class="features__grid">
                     <div class="features__item">
                         <h3>🎨 UI Components</h3>
@@ -85,7 +121,7 @@
                 </div>
             </section>
 
-            <section class="usage">
+            <section id="quick-start" class="usage">
                 <h2>Quick Start</h2>
                 <p>Get started with the Enhancement Framework in just a few lines of code:</p>
 
@@ -117,7 +153,7 @@ router.enhanceLinks();
 pageManager.scanAndMount();</code></pre>
             </section>
 
-            <footer class="page__footer">
+            <footer id="footer-nav" class="page__footer">
                 <nav class="footer__nav">
                     <h3>Quick Navigation</h3>
                     <ul class="footer__list">
