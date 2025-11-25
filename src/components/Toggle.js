@@ -318,20 +318,21 @@ export default class Toggle extends BaseComponent {
     // Remove global listeners
     this._removeGlobalListeners(state);
 
+    // Remove open class immediately
+    state.target.classList.remove(Toggle.defaults.openClass);
+
     // Handle state transitions with animation
     if (state.animateToggle) {
       // Set closing state
       this.setAttr(state.target, 'target', ExtendedStates.CLOSING);
 
-      // Wait for animation before removing open class and setting closed state
+      // Wait for animation before setting closed state
       state.transitionTimer = setTimeout(() => {
-        state.target.classList.remove(Toggle.defaults.openClass);
         this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
         state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
     } else {
       // No animation - set closed state immediately
-      state.target.classList.remove(Toggle.defaults.openClass);
       this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
     }
 
