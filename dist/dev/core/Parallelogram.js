@@ -2040,7 +2040,9 @@ class PageManager {
       // 2. Scroll to top immediately after out transition (before content swap)
       // This creates a smoother experience - content fades out, then scroll snaps, then new content fades in
       // Use 'instant' behavior to override any CSS scroll-behavior: smooth on the document
-      if (!options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
+      // Only scroll for the 'main' fragment to avoid scrolling when other fragments (navbar, etc.) are processed
+      if (viewTarget === 'main' && !options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
+        await new Promise(resolve => requestAnimationFrame(resolve));
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
