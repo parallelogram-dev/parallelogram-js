@@ -1892,16 +1892,13 @@ class PageManager {
     });
 
     try {
-      // Store current scroll position if needed
+      // Store current scroll position if needed for preservation
       let scrollPosition = null;
       if (preserveScroll) {
         scrollPosition = {
           x: window.scrollX,
           y: window.scrollY,
         };
-      } else if (this.options.scrollPosition === 'top' && !fromPopstate) {
-        // Scroll to top immediately before content replacement to avoid visual jump
-        window.scrollTo(0, 0);
       }
 
       // Parse the incoming HTML once
@@ -2040,7 +2037,13 @@ class PageManager {
         await this._performFragmentTransition(targetFragment, 'out', transitionConfig);
       }
 
-      // 2. Unmount components only within the target fragment
+      // 2. Scroll to top immediately after out transition (before content swap)
+      // This creates a smoother experience - content fades out, then scroll snaps, then new content fades in
+      if (viewTarget === 'main' && !options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
+        window.scrollTo(0, 0);
+      }
+
+      // 3. Unmount components only within the target fragment
       this.unmountAllWithin(targetFragment);
 
       // 3 & 4. Replace content and prepare for IN transition in same frame
@@ -2553,6 +2556,8 @@ class PageManager {
 
   /**
    * Handle scroll restoration based on configuration
+   * Note: For 'top' scroll position, scrolling is handled in _processSingleFragment
+   * after the out transition completes for a smoother experience
    */
   _handleScrollRestoration(storedPosition, options) {
     if (options.preserveScroll && storedPosition) {
@@ -2563,7 +2568,11 @@ class PageManager {
 
     switch (this.options.scrollPosition) {
       case 'top':
-        window.scrollTo(0, 0);
+        // Scroll to top is now handled in _processSingleFragment after out transition
+        // Only scroll here for popstate events (browser back/forward)
+        if (options.fromPopstate) {
+          window.scrollTo(0, 0);
+        }
         break;
       case 'element':
         if (this.options.scrollElement) {
