@@ -2039,8 +2039,9 @@ class PageManager {
 
       // 2. Scroll to top immediately after out transition (before content swap)
       // This creates a smoother experience - content fades out, then scroll snaps, then new content fades in
-      if (viewTarget === 'main' && !options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
-        window.scrollTo(0, 0);
+      // Use 'instant' behavior to override any CSS scroll-behavior: smooth on the document
+      if (!options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
       // 3. Unmount components only within the target fragment
@@ -2562,7 +2563,7 @@ class PageManager {
   _handleScrollRestoration(storedPosition, options) {
     if (options.preserveScroll && storedPosition) {
       // Restore exact scroll position
-      window.scrollTo(storedPosition.x, storedPosition.y);
+      window.scrollTo({ top: storedPosition.y, left: storedPosition.x, behavior: 'instant' });
       return;
     }
 
@@ -2571,7 +2572,7 @@ class PageManager {
         // Scroll to top is now handled in _processSingleFragment after out transition
         // Only scroll here for popstate events (browser back/forward)
         if (options.fromPopstate) {
-          window.scrollTo(0, 0);
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         }
         break;
       case 'element':
