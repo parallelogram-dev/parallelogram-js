@@ -7,26 +7,25 @@
   display: block;
   position: relative;
 
-  /* Use surface-panel tokens for consistent decoration */
-  border-radius: var(--surface-panel-radius);
-  border-width: var(--surface-panel-border-width);
+  /* Overridable via --puploader-* custom properties */
+  border-radius: var(--puploader-radius, var(--surface-panel-radius));
+  border-width: var(--puploader-border-width, #{$border-width-thick});
   border-style: solid;
-  border-color: var(--surface-panel-border-color);
-  background: var(--surface-panel-color-bg);
-  color: var(--surface-panel-color-text);
-  box-shadow: var(--surface-panel-shadow);
-
-  /* Customize */
-  padding: $space-sm;
-  border-width: $border-width-thick;
-  border-color: black;
+  border-color: var(--puploader-border-color, black);
+  background: var(--puploader-bg, var(--surface-panel-color-bg));
+  color: var(--puploader-color, var(--surface-panel-color-text));
+  box-shadow: var(--puploader-shadow, var(--surface-panel-shadow));
+  padding: var(--puploader-padding, #{$space-sm});
 }
 
 .uploader {
   &__files {
     display: grid;
     gap: $space-sm;
-    margin-bottom: $space-sm;
+
+    & + & {
+      margin-top: $space-sm;
+    }
   }
 
   &__selector {
