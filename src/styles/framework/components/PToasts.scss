@@ -13,6 +13,8 @@
   /* Toast surface styling using panel tokens */
   --toast-border-radius: var(--surface-panel-radius);
   --toast-shadow: var(--surface-panel-shadow);
+  --toast-padding-x: #{$space-lg};
+  --toast-padding-y: #{$space-sm};
 }
 
 :host([placement="top-left"]) { top: 0; left: 0; }
@@ -21,7 +23,7 @@
 :host([placement="bottom-left"]) { bottom: 0; left: 0; }
 
 .toast {
-  padding: #{$space-sm} #{$space-lg};
+  padding: var(--toast-padding-y) var(--toast-padding-x);
   border-radius: var(--toast-border-radius);
   color: #fff;
   box-shadow: var(--toast-shadow);
@@ -61,16 +63,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-height: 24px;
-  border-radius: #{$radius-sm};
-  font-weight: #{$font-bold};
-  background: rgba(255, 255, 255, 0.1);
+  font-size: 1.25em;
+  line-height: 1;
+  opacity: 0.6;
   cursor: pointer;
-  transition: background $duration-fast ease;
+  transition: opacity $duration-fast ease;
 }
 
 .btn.close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
 }
