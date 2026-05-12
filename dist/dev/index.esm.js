@@ -263,9 +263,7 @@ class DevLogger {
   }
 
   warn(...args) {
-    if (this.enabled) {
-      console.warn(this._getPrefix('WARN'), ...args);
-    }
+    console.warn(this._getPrefix('WARN'), ...args);
   }
 
   error(...args) {
@@ -1404,6 +1402,42 @@ class BaseComponent {
     this._keys?.delete(element);
   }
 
+  /**
+   * Initialize per-element state. Called by mount() the first time an element
+   * is encountered; the returned object is stored in this.elements (a WeakMap)
+   * and retrieved later by getState() / unmount().
+   *
+   * Subclasses MUST override and return a ComponentState object. The returned
+   * state's cleanup() will be invoked by unmount() and is responsible for
+   * releasing every per-element resource the component allocated (listeners,
+   * observers, timers, DOM nodes, etc).
+   *
+   * Recommended pattern — call super._init(element) to inherit the base
+   * AbortController + element tracking, then extend the returned state and
+   * wrap cleanup so the base teardown still runs:
+   *
+   *   _init(element) {
+   *     const state = super._init(element);
+   *     const baseCleanup = state.cleanup;
+   *
+   *     element.addEventListener('click', this._onClick, { signal: state.controller.signal });
+   *     state.observer = new ResizeObserver(...);
+   *     state.observer.observe(element);
+   *
+   *     state.cleanup = () => {
+   *       state.observer.disconnect();
+   *       baseCleanup();   // aborts the controller and untracks the element
+   *     };
+   *     return state;
+   *   }
+   *
+   * Listeners attached with { signal: state.controller.signal } are removed
+   * automatically when baseCleanup() runs — no manual removeEventListener()
+   * calls needed.
+   *
+   * @param {HTMLElement} element - Element being mounted
+   * @returns {ComponentState} State stored in this.elements for the element
+   */
   _init(element) {
     const controller = new AbortController();
     const cleanup = () => {
@@ -2748,22 +2782,31 @@ class PageManager {
       return matches;
     });
 
-    if (elements.length === 0) return;
+    if (elements.length === 0) {
+      if (addedNodes && addedNodes.length > 0) {
+        this.logger?.warn(
+          `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
+          { config: config.name, selector: config.selector, addedNodesCount: addedNodes.length, fragmentTarget }
+        );
+      }
+      return;
+    }
 
     const instance = this._ensureInstance(config);
     let mountedCount = 0;
 
     for (const element of elements) {
       try {
-        // Check if element is already mounted
-        if (element.hasAttribute('data-component-mounted')) {
+        if (instance.elements?.has(element)) {
+          this.logger?.warn(
+            `[PageManager] Skipping ${config.name} mount — element already mounted by this component`,
+            { config: config.name, element }
+          );
           continue;
         }
 
         instance.mount(element);
-        element.setAttribute('data-component-mounted', config.name);
 
-        // Track which fragment this component belongs to
         if (fragmentTarget) {
           element.setAttribute('data-fragment-target', fragmentTarget);
         }
@@ -2805,7 +2848,6 @@ class PageManager {
           if (root.contains(element)) {
             try {
               instance.unmount(element);
-              element.removeAttribute('data-component-mounted');
               element.removeAttribute('data-fragment-target');
               unmountedCount++;
 
@@ -2926,8 +2968,6 @@ class PageManager {
           try {
             realInstance[action](element);
             if (action === 'mount') {
-              element.setAttribute('data-component-mounted', config.name);
-              // Remove loading state from successfully mounted elements
               element.classList.remove('component-loading');
               element.removeAttribute('data-component-state');
             }
