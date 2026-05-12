@@ -31,9 +31,7 @@ class DevLogger {
   }
 
   warn(...args) {
-    if (this.enabled) {
-      console.warn(this._getPrefix('WARN'), ...args);
-    }
+    console.warn(this._getPrefix('WARN'), ...args);
   }
 
   error(...args) {

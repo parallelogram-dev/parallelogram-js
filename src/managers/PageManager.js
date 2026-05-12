@@ -1059,22 +1059,31 @@ export class PageManager {
       return matches;
     });
 
-    if (elements.length === 0) return;
+    if (elements.length === 0) {
+      if (addedNodes && addedNodes.length > 0) {
+        this.logger?.warn(
+          `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
+          { config: config.name, selector: config.selector, addedNodesCount: addedNodes.length, fragmentTarget }
+        );
+      }
+      return;
+    }
 
     const instance = this._ensureInstance(config);
     let mountedCount = 0;
 
     for (const element of elements) {
       try {
-        // Check if element is already mounted
-        if (element.hasAttribute('data-component-mounted')) {
+        if (instance.elements?.has(element)) {
+          this.logger?.warn(
+            `[PageManager] Skipping ${config.name} mount — element already mounted by this component`,
+            { config: config.name, element }
+          );
           continue;
         }
 
         instance.mount(element);
-        element.setAttribute('data-component-mounted', config.name);
 
-        // Track which fragment this component belongs to
         if (fragmentTarget) {
           element.setAttribute('data-fragment-target', fragmentTarget);
         }
@@ -1116,7 +1125,6 @@ export class PageManager {
           if (root.contains(element)) {
             try {
               instance.unmount(element);
-              element.removeAttribute('data-component-mounted');
               element.removeAttribute('data-fragment-target');
               unmountedCount++;
 
@@ -1237,8 +1245,6 @@ export class PageManager {
           try {
             realInstance[action](element);
             if (action === 'mount') {
-              element.setAttribute('data-component-mounted', config.name);
-              // Remove loading state from successfully mounted elements
               element.classList.remove('component-loading');
               element.removeAttribute('data-component-state');
             }
