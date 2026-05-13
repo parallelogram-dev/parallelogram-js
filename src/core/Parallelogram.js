@@ -44,7 +44,9 @@ export class Parallelogram {
    * Create a new Parallelogram instance
    * @param {Object} config - Configuration options
    * @param {string} [config.mode='production'] - Framework mode ('development' or 'production')
-   * @param {boolean} [config.debug=false] - Enable debug logging
+   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. Default false.
+   * @param {boolean} [config.silent=false] - Suppress ALL logger output, including warn and error.
+   *   Use in production when console pollution is unacceptable. Overrides `debug`.
    * @param {Object} [config.router] - Router configuration (enables router if provided)
    * @param {Object} [config.pageManager] - PageManager configuration
    * @returns {Parallelogram}
@@ -57,6 +59,7 @@ export class Parallelogram {
     this.config = {
       mode: config.mode || 'production',
       debug: config.debug || false,
+      silent: config.silent || false,
       router: config.router || null,
       pageManager: config.pageManager || {},
     };
@@ -113,7 +116,7 @@ export class Parallelogram {
     }
 
     // Create logger
-    this.logger = new DevLogger({}, this.config.debug);
+    this.logger = new DevLogger({}, this.config.debug, this.config.silent);
     this.logger?.info('Parallelogram initializing', {
       mode: this.config.mode,
       debug: this.config.debug,
