@@ -1,11 +1,16 @@
 export class DevLogger {
-  constructor(namespace, enabled = false) {
+  constructor(namespace, enabled = false, silent = false) {
     this.namespace = namespace;
     this.enabled = enabled;
+    this.silent = silent;
   }
 
   setEnabled(enabled) {
     this.enabled = Boolean(enabled);
+  }
+
+  setSilent(silent) {
+    this.silent = Boolean(silent);
   }
 
   _getPrefix(level) {
@@ -13,37 +18,36 @@ export class DevLogger {
   }
 
   debug(...args) {
-    if (this.enabled) {
-      console.debug(this._getPrefix('DEBUG'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.debug(this._getPrefix('DEBUG'), ...args);
   }
 
   log(...args) {
-    if (this.enabled) {
-      console.log(this._getPrefix('LOG'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.log(this._getPrefix('LOG'), ...args);
   }
 
   info(...args) {
-    if (this.enabled) {
-      console.info(this._getPrefix('INFO'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.info(this._getPrefix('INFO'), ...args);
   }
 
   warn(...args) {
+    if (this.silent) return;
     console.warn(this._getPrefix('WARN'), ...args);
   }
 
   error(...args) {
+    if (this.silent) return;
     console.error(this._getPrefix('ERROR'), ...args);
   }
 
   child(subNamespace) {
-    return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled);
+    return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled, this.silent);
   }
 
   group(label, data) {
-    if (!this.enabled || !console.groupCollapsed) return;
+    if (this.silent || !this.enabled || !console.groupCollapsed) return;
 
     /* Open the group with just the label */
     console.groupCollapsed(`[${this.namespace}] ${label}`);
@@ -54,7 +58,8 @@ export class DevLogger {
     }
   }
   groupEnd() {
-    if (this.enabled && console.groupEnd) console.groupEnd();
+    if (this.silent || !this.enabled || !console.groupEnd) return;
+    console.groupEnd();
   }
 }
 
