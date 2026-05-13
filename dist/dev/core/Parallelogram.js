@@ -231,13 +231,18 @@ class ComponentRegistry {
 }
 
 class DevLogger {
-  constructor(namespace, enabled = false) {
+  constructor(namespace, enabled = false, silent = false) {
     this.namespace = namespace;
     this.enabled = enabled;
+    this.silent = silent;
   }
 
   setEnabled(enabled) {
     this.enabled = Boolean(enabled);
+  }
+
+  setSilent(silent) {
+    this.silent = Boolean(silent);
   }
 
   _getPrefix(level) {
@@ -245,37 +250,36 @@ class DevLogger {
   }
 
   debug(...args) {
-    if (this.enabled) {
-      console.debug(this._getPrefix('DEBUG'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.debug(this._getPrefix('DEBUG'), ...args);
   }
 
   log(...args) {
-    if (this.enabled) {
-      console.log(this._getPrefix('LOG'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.log(this._getPrefix('LOG'), ...args);
   }
 
   info(...args) {
-    if (this.enabled) {
-      console.info(this._getPrefix('INFO'), ...args);
-    }
+    if (this.silent || !this.enabled) return;
+    console.info(this._getPrefix('INFO'), ...args);
   }
 
   warn(...args) {
+    if (this.silent) return;
     console.warn(this._getPrefix('WARN'), ...args);
   }
 
   error(...args) {
+    if (this.silent) return;
     console.error(this._getPrefix('ERROR'), ...args);
   }
 
   child(subNamespace) {
-    return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled);
+    return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled, this.silent);
   }
 
   group(label, data) {
-    if (!this.enabled || !console.groupCollapsed) return;
+    if (this.silent || !this.enabled || !console.groupCollapsed) return;
 
     /* Open the group with just the label */
     console.groupCollapsed(`[${this.namespace}] ${label}`);
@@ -286,7 +290,8 @@ class DevLogger {
     }
   }
   groupEnd() {
-    if (this.enabled && console.groupEnd) console.groupEnd();
+    if (this.silent || !this.enabled || !console.groupEnd) return;
+    console.groupEnd();
   }
 }
 
@@ -2784,7 +2789,7 @@ class PageManager {
 
     if (elements.length === 0) {
       if (addedNodes && addedNodes.length > 0) {
-        this.logger?.warn(
+        this.logger?.debug(
           `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
           { config: config.name, selector: config.selector, addedNodesCount: addedNodes.length, fragmentTarget }
         );
@@ -2798,7 +2803,7 @@ class PageManager {
     for (const element of elements) {
       try {
         if (instance.elements?.has(element)) {
-          this.logger?.warn(
+          this.logger?.debug(
             `[PageManager] Skipping ${config.name} mount — element already mounted by this component`,
             { config: config.name, element }
           );
@@ -3390,7 +3395,9 @@ class Parallelogram {
    * Create a new Parallelogram instance
    * @param {Object} config - Configuration options
    * @param {string} [config.mode='production'] - Framework mode ('development' or 'production')
-   * @param {boolean} [config.debug=false] - Enable debug logging
+   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. Default false.
+   * @param {boolean} [config.silent=false] - Suppress ALL logger output, including warn and error.
+   *   Use in production when console pollution is unacceptable. Overrides `debug`.
    * @param {Object} [config.router] - Router configuration (enables router if provided)
    * @param {Object} [config.pageManager] - PageManager configuration
    * @returns {Parallelogram}
@@ -3403,6 +3410,7 @@ class Parallelogram {
     this.config = {
       mode: config.mode || 'production',
       debug: config.debug || false,
+      silent: config.silent || false,
       router: config.router || null,
       pageManager: config.pageManager || {},
     };
@@ -3459,7 +3467,7 @@ class Parallelogram {
     }
 
     // Create logger
-    this.logger = new DevLogger({}, this.config.debug);
+    this.logger = new DevLogger({}, this.config.debug, this.config.silent);
     this.logger?.info('Parallelogram initializing', {
       mode: this.config.mode,
       debug: this.config.debug,

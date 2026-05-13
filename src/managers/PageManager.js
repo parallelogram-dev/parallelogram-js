@@ -1061,7 +1061,7 @@ export class PageManager {
 
     if (elements.length === 0) {
       if (addedNodes && addedNodes.length > 0) {
-        this.logger?.warn(
+        this.logger?.debug(
           `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
           { config: config.name, selector: config.selector, addedNodesCount: addedNodes.length, fragmentTarget }
         );
@@ -1075,7 +1075,7 @@ export class PageManager {
     for (const element of elements) {
       try {
         if (instance.elements?.has(element)) {
-          this.logger?.warn(
+          this.logger?.debug(
             `[PageManager] Skipping ${config.name} mount — element already mounted by this component`,
             { config: config.name, element }
           );
