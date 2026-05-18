@@ -3,7 +3,19 @@
     "allow": [
       "Bash(npm run build-css:*)",
       "Bash(npm run compile-scss-components:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm version:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm publish)",
+      "Bash(git fetch *)",
+      "Bash(git stash *)",
+      "Bash(git restore *)",
+      "Bash(npm whoami *)",
+      "Bash(npm view *)",
+      "Bash(grep -oE \"logger[^,\\)]{0,30}\\\\.\\(warn|error\\)\" /Users/peptolab/Sites/parallelogram-js/dist/index.esm.js)",
+      "Bash(grep *)"
     ],
     "deny": [],
     "ask": []
