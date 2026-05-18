@@ -1,4 +1,4 @@
-var css_248z = ":root{--surface-control-radius:0.25em;--surface-control-border-width:1px;--surface-control-border-color:rgba(0,0,0,.1);--surface-control-color-bg:#fff;--surface-control-color-text:currentColor;--surface-control-shadow:none;--surface-button-radius:0.25em;--surface-button-border-width:1px;--surface-button-shadow:none;--surface-panel-radius:0.5em;--surface-panel-border-width:1px;--surface-panel-border-color:rgba(0,0,0,.1);--surface-panel-color-bg:#fff;--surface-panel-color-text:currentColor;--surface-panel-shadow:0 4px 6px rgba(0,0,0,.12);--surface-dialog-radius:0.75em;--surface-dialog-border-width:1px;--surface-dialog-border-color:rgba(0,0,0,.1);--surface-dialog-color-bg:#fff;--surface-dialog-color-text:currentColor;--surface-dialog-shadow:0 1.25em 3em rgba(0,0,0,.5);--surface-dropdown-radius:0.25em;--surface-dropdown-border-width:1px;--surface-dropdown-border-color:rgba(0,0,0,.1);--surface-dropdown-color-bg:#fff;--surface-dropdown-color-text:currentColor;--surface-dropdown-shadow:0 4px 6px rgba(0,0,0,.12);--surface-dropdown-item-hover-bg:#f5f5f5;--surface-dropdown-item-selected-bg:rgba(59,130,246,.1);--surface-dropdown-item-current-bg:#f5f5f5;--surface-item-radius:0.25em;--surface-item-border-width:1px;--surface-item-border-color:rgba(0,0,0,.1);--surface-item-color-bg:transparent;--surface-item-color-text:currentColor;--surface-item-shadow:none;--surface-card-radius:0.125em;--surface-card-border-width:1px;--surface-card-border-color:#d4d4d4;--surface-card-color-bg:#fff;--surface-card-color-text:currentColor;--surface-card-shadow:none;--surface-touch-radius:0.125em;--surface-touch-border-width:1px;--surface-touch-border-color:#d4d4d4;--surface-touch-color-bg:#f5f5f5;--surface-touch-color-text:currentColor;--surface-touch-shadow:none;--surface-touch-hover-bg:#f5f5f5;--surface-touch-hover-border-color:rgba(59,130,246,.5);--form-control-padding-y:0.25em;--form-control-padding-x:0.75em;--form-control-padding-y-sm:0.125em;--form-control-padding-x-sm:0.5em;--form-control-padding-y-lg:0.5em;--form-control-padding-x-lg:1.25em;--form-control-border-width:var(--surface-control-border-width);--form-control-border-color:var(--surface-control-border-color);--form-control-border-radius:var(--surface-control-radius);--form-control-bg:var(--surface-control-color-bg);--form-control-color:var(--surface-control-color-text);--form-control-placeholder-color:rgba(0,0,0,.5);--form-control-focus-ring-width:2px;--form-control-focus-ring-color:#3b82f6;--form-control-focus-border-color:#3b82f6;--form-control-hover-border-color:#d4d4d4;--form-control-disabled-opacity:0.3;--form-control-disabled-bg:#f5f5f5;--form-control-font-size:0.875em;--form-control-font-size-sm:0.75em;--form-control-font-size-lg:1em;--form-control-font-family:inherit;--button-padding-y:0.25em;--button-padding-x:0.75em;--button-padding-y-sm:0.125em;--button-padding-x-sm:0.5em;--button-padding-y-lg:0.5em;--button-padding-x-lg:1.25em;--button-font-size:0.875em;--button-font-size-sm:0.75em;--button-font-size-lg:1em;--button-font-weight:600;--button-border-width:var(--surface-button-border-width);--button-border-radius:var(--surface-button-radius);--button-min-height:2.5em;--button-min-height-sm:2em;--button-min-height-lg:3em;--button-primary-bg:#3b82f6;--button-primary-color:#fff;--button-primary-border:#3b82f6;--button-primary-hover-bg:#2563eb;--button-primary-hover-border:#2563eb;--button-secondary-bg:transparent;--button-secondary-color:currentColor;--button-secondary-border:#d4d4d4;--button-secondary-hover-bg:#f5f5f5;--button-secondary-hover-border:#d4d4d4;--button-danger-bg:#ef4444;--button-danger-color:#fff;--button-danger-border:#ef4444;--button-danger-hover-bg:#dc2626;--button-danger-hover-border:#dc2626;--button-ghost-bg:transparent;--button-ghost-color:currentColor;--button-ghost-border:currentColor;--button-ghost-hover-bg:rgba(0,0,0,.05);--panel-bg:var(--surface-panel-color-bg);--panel-border-width:var(--surface-panel-border-width);--panel-border-color:var(--surface-panel-border-color);--panel-border-radius:var(--surface-panel-radius);--panel-color:var(--surface-panel-color-text);--panel-shadow:var(--surface-panel-shadow);--panel-padding:0.75em;--panel-padding-sm:0.5em;--panel-padding-lg:1.25em;--panel-header-padding:0.5em 0.75em;--panel-header-border:1px solid rgba(0,0,0,.1);--panel-footer-padding:0.5em 0.75em;--panel-footer-border:1px solid rgba(0,0,0,.1);--modal-bg:var(--surface-dialog-color-bg);--modal-border-width:var(--surface-dialog-border-width);--modal-border-color:var(--surface-dialog-border-color);--modal-border-radius:var(--surface-dialog-radius);--modal-color:var(--surface-dialog-color-text);--modal-shadow:var(--surface-dialog-shadow);--modal-backdrop-bg:rgba(0,0,0,.5)}@media (prefers-color-scheme:dark){:root{--form-control-bg:#171717;--form-control-color:#fff;--form-control-border-color:#525252;--form-control-placeholder-color:hsla(0,0%,100%,.5);--button-secondary-hover-bg:#525252;--panel-bg:#171717;--panel-border-color:#525252}}[hidden]{display:none!important}:host{--datetime-text:var(--surface-control-color-text);--datetime-muted:rgba(0,0,0,.5);--datetime-accent:#3b82f6;--datetime-hover:var(--surface-dropdown-item-hover-bg);--datetime-bg:var(--surface-dropdown-color-bg);--datetime-border:var(--surface-control-border-color);--datetime-shadow-color:rgba(0,0,0,.12);--datetime-focus-shadow:rgba(59,130,246,.1);--datetime-btn-hover-bg:rgba(0,0,0,.05);--datetime-placeholder-opacity:0.6;--datetime-icon-opacity:0.7;--datetime-disabled-opacity:0.3;--datetime-padding-x:0.75em;--datetime-padding-y:0.375em;--datetime-space-xs:0.125em;--datetime-space-sm:0.25em;--datetime-space-md:0.5em;--datetime-space-lg:0.75em;--datetime-gap:0.5em;--datetime-radius:var(--surface-control-radius);--datetime-radius-lg:var(--surface-dropdown-radius);--datetime-radius-xl:1em;--datetime-border-width:var(--surface-control-border-width);--datetime-focus-ring-width:2px;--datetime-today-border-width:2px;--datetime-shadow:var(--surface-dropdown-shadow);--datetime-transition:0.15s ease;--datetime-animation-duration:0.5s;--datetime-cell-size:2.5em;--datetime-font-sm:0.75em;--datetime-font-md:0.875em;box-sizing:border-box;display:inline-block;position:relative}@media (prefers-color-scheme:dark){:host{--datetime-muted:hsla(0,0%,100%,.5);--datetime-hover:hsla(0,0%,100%,.1)}}.ampm,.btn,.panel,.preset,.time-select{border:var(--datetime-border-width) solid var(--datetime-border)}.actions,.grid-container,.quick-dates,.time{border-top:var(--datetime-border-width) solid var(--datetime-border)}.ampm,.btn,.day,.month,.month-year,.nav button,.time-select,.year{border-radius:var(--datetime-radius)}.btn,.calendar-btn,.day,.month,.month-year,.nav button,.time,.year{align-items:center;display:flex;justify-content:center}@media (prefers-reduced-motion:no-preference){.ampm,.btn,.day,.month,.nav button,.panel,.time-select,.year{transition:all var(--datetime-transition)}}.ampm,.btn,.day,.month,.month-year,.time-select,.year{font-size:var(--datetime-font-md)}.preset,.range-info{font-size:.8em}@media (hover:hover){.calendar-btn:hover,.month-year:hover,.nav button:hover{background:var(--datetime-hover);color:var(--datetime-accent)}.day:hover,.month:hover,.year:hover{background:var(--datetime-hover)}.ampm:hover,.time-select:hover{background-color:var(--datetime-hover);border-color:var(--datetime-accent)}.preset:hover{background:var(--datetime-accent);color:var(--datetime-bg)}.btn:hover,.preset:hover{border-color:var(--datetime-accent)}.btn:hover{background:var(--datetime-btn-hover-bg)}.btn.primary:hover{opacity:.9}}.field{align-items:stretch;bottom:0;box-sizing:border-box;font:inherit;left:0;position:absolute;right:0;top:0}.field,.input{border-radius:inherit;display:flex;overflow:hidden}.input{align-items:center;color:var(--datetime-text);flex:1;min-width:0;padding:var(--datetime-padding-y) var(--datetime-padding-x);text-overflow:ellipsis;transition:box-shadow var(--datetime-transition);white-space:nowrap}.input:first-of-type:not(:only-of-type){border-bottom-right-radius:0;border-top-right-radius:0}.input:nth-of-type(2){border-bottom-left-radius:0;border-left:var(--datetime-border-width) solid var(--datetime-border);border-top-left-radius:0}.input.is-focused{box-shadow:inset 0 0 0 var(--datetime-focus-ring-width) var(--datetime-accent)}.input[data-placeholder]:empty:before{color:var(--datetime-muted);content:attr(data-placeholder);opacity:var(--datetime-placeholder-opacity)}.btn,.calendar-btn,.day,.month,.month-year,.nav button,.preset,.year{background:none;border:none;color:inherit;cursor:pointer}.calendar-btn{opacity:var(--datetime-icon-opacity);padding:0 var(--datetime-padding-x)}.panel{background:var(--datetime-bg);border-radius:var(--datetime-radius-lg);box-shadow:var(--datetime-shadow);left:0;margin-top:var(--datetime-gap);min-width:20em;opacity:0;padding:var(--datetime-space-lg);pointer-events:none;position:absolute;top:100%;transform:translateY(-.5em);z-index:10}.panel.open{opacity:1;pointer-events:all;transform:translateY(0)}.nav{align-items:center;display:flex;justify-content:space-between;margin:0;padding-bottom:var(--datetime-space-lg)}.nav button{color:var(--datetime-muted);padding:var(--datetime-gap)}.month-year{color:var(--datetime-text);font-weight:600;gap:var(--datetime-space-sm);padding:var(--datetime-space-sm) var(--datetime-gap);transition:background-color var(--datetime-transition)}.month-year:active{background:var(--datetime-hover);opacity:.8}.month-year svg{margin-left:var(--datetime-space-xs);opacity:var(--datetime-placeholder-opacity)}.grid-container{height:18.75em;overflow:hidden;padding-top:var(--datetime-space-lg);position:relative}.grid{align-content:start;display:grid;gap:var(--datetime-space-xs);grid-template-columns:repeat(7,1fr);grid-template-rows:2em repeat(6,var(--datetime-cell-size));height:18em;justify-items:center}.grid.month-view,.grid.year-view{gap:var(--datetime-gap);grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr)}.grid--animating{left:0;position:absolute;right:0;top:var(--datetime-space-lg)}.grid.animating{transition:transform var(--datetime-animation-duration) cubic-bezier(.5,0,0,1)}.grid--prev.grid--out{transform:translateX(100%)}.grid--next.grid--out,.grid--prev.grid--in{transform:translateX(-100%)}.grid--next.grid--in{transform:translateX(100%)}.grid:not(.grid--in):not(.grid--out){transform:translateX(0)}@media (prefers-reduced-motion:reduce){.grid{transform:none!important;transition:opacity var(--datetime-transition)}}.wd{font-size:var(--datetime-font-sm);font-weight:600;opacity:var(--datetime-placeholder-opacity);padding:var(--datetime-gap) 0;text-transform:uppercase}.day,.month,.year{height:var(--datetime-cell-size);width:100%}.day.today,.month.today,.year.today{border:var(--datetime-today-border-width) solid var(--datetime-accent);position:relative}.day.in-range{background:var(--datetime-accent);color:var(--datetime-bg);opacity:.6}.day.range-end,.day.range-start,.day.selected,.month.selected,.year.selected{background:var(--datetime-accent);color:var(--datetime-bg);opacity:1}.month,.year{height:3em}.day:disabled{cursor:not-allowed;opacity:var(--datetime-disabled-opacity)}.day.range-hover{background:var(--datetime-focus-shadow)}.time{gap:var(--datetime-gap);padding:var(--datetime-space-lg) 0}.time-separator{color:var(--datetime-muted);font-size:1.25em;font-weight:600}.ampm,.time-select{appearance:none;background-color:var(--datetime-bg);background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M8 9l4 -4l4 4\" /><path d=\"M16 15l-4 4l-4 -4\" /></svg>');background-position:right var(--datetime-gap) center;background-repeat:no-repeat;background-size:1em;color:var(--datetime-text);cursor:pointer;font-weight:500;min-width:4em;padding:var(--datetime-gap) 1.75em var(--datetime-gap) var(--datetime-space-lg)}.ampm:focus,.time-select:focus{border-color:var(--datetime-accent);box-shadow:0 0 0 3px var(--datetime-focus-shadow);outline:none}.quick-dates{display:flex;flex-wrap:wrap;gap:.375em;padding:var(--datetime-space-lg) 0}.preset{border-radius:var(--datetime-radius-xl);color:var(--datetime-muted);padding:.375em var(--datetime-space-lg)}.actions{display:flex;gap:var(--datetime-gap);justify-content:space-between;padding-top:var(--datetime-space-lg)}.btn{background:var(--datetime-hover);color:var(--datetime-text);min-height:var(--datetime-cell-size);padding:.625em 1em}.btn.primary{background:var(--datetime-accent);border-color:var(--datetime-accent);color:var(--datetime-bg)}.range-info{background:var(--datetime-hover);color:var(--datetime-muted);margin-bottom:var(--datetime-space-lg);padding:var(--datetime-gap) var(--datetime-gap);text-align:center}";
+var css_248z = "[hidden]{display:none!important}:host{--datetime-text:currentColor;--datetime-muted:rgba(0,0,0,.5);--datetime-accent:#3b82f6;--datetime-hover:rgba(0,0,0,.05);--datetime-bg:#fff;--datetime-border:rgba(0,0,0,.1);--datetime-shadow-color:rgba(0,0,0,.12);--datetime-focus-shadow:rgba(59,130,246,.1);--datetime-btn-hover-bg:rgba(0,0,0,.05);--datetime-placeholder-opacity:0.6;--datetime-icon-opacity:0.7;--datetime-disabled-opacity:0.3;--datetime-padding-x:0.75em;--datetime-padding-y:0.375em;--datetime-space-xs:0.125em;--datetime-space-sm:0.25em;--datetime-space-md:0.5em;--datetime-space-lg:0.75em;--datetime-gap:0.5em;--datetime-radius:0.25em;--datetime-radius-lg:0.5em;--datetime-radius-xl:1em;--datetime-border-width:1px;--datetime-focus-ring-width:2px;--datetime-today-border-width:2px;--datetime-shadow:0 4px 6px rgba(0,0,0,.12);--datetime-transition:0.15s ease;--datetime-animation-duration:0.5s;--datetime-cell-size:2.5em;--datetime-font-sm:0.75em;--datetime-font-md:0.875em;--datetime-panel-padding:var(--datetime-space-lg);--datetime-panel-min-width:20em;--datetime-action-btn-radius:var(--datetime-radius);--datetime-action-btn-padding:0.625em 1em;--datetime-action-btn-font-size:var(--datetime-font-md);--datetime-action-btn-font-weight:inherit;--datetime-action-btn-text-transform:none;--datetime-action-btn-letter-spacing:normal;--datetime-action-btn-min-height:var(--datetime-cell-size);box-sizing:border-box;display:inline-block;position:relative}@media (prefers-color-scheme:dark){:host{--datetime-muted:hsla(0,0%,100%,.5);--datetime-hover:hsla(0,0%,100%,.1)}}.ampm,.btn,.panel,.preset,.time-select{border:var(--datetime-border-width) solid var(--datetime-border)}.actions,.grid-container,.quick-dates,.time{border-top:var(--datetime-border-width) solid var(--datetime-border)}.ampm,.btn,.day,.month,.month-year,.nav button,.time-select,.year{border-radius:var(--datetime-radius)}.btn,.calendar-btn,.day,.month,.month-year,.nav button,.time,.year{align-items:center;display:flex;justify-content:center}@media (prefers-reduced-motion:no-preference){.ampm,.btn,.day,.month,.nav button,.panel,.time-select,.year{transition:all var(--datetime-transition)}}.ampm,.btn,.day,.month,.month-year,.time-select,.year{font-size:var(--datetime-font-md)}.preset,.range-info{font-size:.8em}.day.disabled,.month.disabled,.year.disabled,button:disabled{background:transparent;cursor:not-allowed;opacity:var(--datetime-disabled-opacity);pointer-events:none;user-select:none;-webkit-user-select:none}@media (hover:hover){.calendar-btn:hover,.month-year:hover,.nav button:hover{background:var(--datetime-hover);color:var(--datetime-accent)}.day:not(.disabled):hover,.month:not(.disabled):hover,.year:not(.disabled):hover{background:var(--datetime-hover)}.ampm:hover,.time-select:hover{background-color:var(--datetime-hover);border-color:var(--datetime-accent)}.preset:hover{background:var(--datetime-accent);color:var(--datetime-bg)}.btn:hover,.preset:hover{border-color:var(--datetime-accent)}.btn:hover{background:var(--datetime-btn-hover-bg)}.btn.primary:hover{opacity:.9}}.field{align-items:stretch;bottom:0;box-sizing:border-box;font:inherit;left:0;position:absolute;right:0;top:0}.field,.input{border-radius:inherit;display:flex;overflow:hidden}.input{align-items:center;color:var(--datetime-text);flex:1;min-width:0;padding:var(--datetime-padding-y) var(--datetime-padding-x);text-overflow:ellipsis;transition:box-shadow var(--datetime-transition);white-space:nowrap}.input:first-of-type:not(:only-of-type){border-bottom-right-radius:0;border-top-right-radius:0}.input:nth-of-type(2){border-bottom-left-radius:0;border-left:var(--datetime-border-width) solid var(--datetime-border);border-top-left-radius:0}.input.is-focused{box-shadow:inset 0 0 0 var(--datetime-focus-ring-width) var(--datetime-accent)}.input[data-placeholder]:empty:before{color:var(--datetime-muted);content:attr(data-placeholder);opacity:var(--datetime-placeholder-opacity)}.btn,.calendar-btn,.day,.month,.month-year,.nav button,.preset,.year{background:none;border:none;color:inherit;cursor:pointer;font-family:inherit;font-weight:inherit}.calendar-btn{opacity:var(--datetime-icon-opacity);padding:0 var(--datetime-padding-x)}.panel{background:var(--datetime-bg);border-radius:var(--datetime-radius-lg);box-shadow:var(--datetime-shadow);left:0;margin-top:var(--datetime-gap);min-width:var(--datetime-panel-min-width);opacity:0;padding:var(--datetime-panel-padding);pointer-events:none;position:absolute;top:100%;transform:translateY(-.5em);z-index:10}.panel.panel--above{bottom:100%;margin-bottom:var(--datetime-gap);margin-top:0;top:auto;transform:translateY(.5em)}.panel.panel--above.open{transform:translateY(0)}.panel.panel--align-right{left:auto;right:0}.panel.open{opacity:1;pointer-events:all;transform:translateY(0)}.nav{align-items:center;display:flex;justify-content:space-between;margin:0;padding-bottom:var(--datetime-space-lg)}.nav button{padding:var(--datetime-gap)}.month-year,.nav button{color:var(--datetime-text)}.month-year{font-weight:600;gap:var(--datetime-space-sm);padding:var(--datetime-space-sm) var(--datetime-gap);transition:background-color var(--datetime-transition)}.month-year:active{background:var(--datetime-hover);opacity:.8}.month-year svg{margin-left:var(--datetime-space-xs);opacity:var(--datetime-placeholder-opacity)}.grid-container{overflow:hidden;padding-top:var(--datetime-space-lg);position:relative}.grid{align-content:start;display:grid;gap:var(--datetime-space-xs);grid-template-columns:repeat(7,1fr);grid-template-rows:2em repeat(6,var(--datetime-cell-size));justify-items:center}.grid.month-view,.grid.year-view{gap:var(--datetime-gap);grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,var(--datetime-cell-size))}.grid--animating{left:0;position:absolute;right:0;top:var(--datetime-space-lg)}.grid.animating{transition:transform var(--datetime-animation-duration) cubic-bezier(.5,0,0,1)}.grid--prev.grid--out{transform:translateX(100%)}.grid--next.grid--out,.grid--prev.grid--in{transform:translateX(-100%)}.grid--next.grid--in{transform:translateX(100%)}.grid:not(.grid--in):not(.grid--out){transform:translateX(0)}@media (prefers-reduced-motion:reduce){.grid{transform:none!important;transition:opacity var(--datetime-transition)}}.wd{font-size:var(--datetime-font-sm);font-weight:600;opacity:var(--datetime-placeholder-opacity);padding:var(--datetime-gap) 0;text-transform:uppercase}.day,.month,.year{height:var(--datetime-cell-size);width:100%}.day.today,.month.today,.year.today{border:var(--datetime-today-border-width) solid var(--datetime-accent);position:relative}.day.in-range{background:var(--datetime-accent);color:var(--datetime-bg);opacity:.6}.day.range-end,.day.range-start,.day.selected,.month.selected,.year.selected{background:var(--datetime-accent);color:var(--datetime-bg);opacity:1}.month,.year{height:3em}.time{gap:var(--datetime-gap);padding:var(--datetime-space-lg) 0}.time-separator{color:var(--datetime-muted);font-size:1.25em;font-weight:600}.ampm,.time-select{appearance:none;background-color:var(--datetime-bg);background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M8 9l4 -4l4 4\" /><path d=\"M16 15l-4 4l-4 -4\" /></svg>');background-position:right var(--datetime-gap) center;background-repeat:no-repeat;background-size:1em;color:var(--datetime-text);cursor:pointer;font-weight:500;min-width:4em;padding:var(--datetime-gap) 1.75em var(--datetime-gap) var(--datetime-space-lg)}.ampm:focus,.time-select:focus{border-color:var(--datetime-accent);box-shadow:0 0 0 3px var(--datetime-focus-shadow);outline:none}.quick-dates{display:flex;flex-wrap:wrap;gap:.375em;padding:var(--datetime-space-lg) 0}.preset{border-radius:var(--datetime-radius-xl);color:var(--datetime-muted);padding:.375em var(--datetime-space-lg)}.actions{display:flex;gap:var(--datetime-gap);justify-content:space-between;padding-top:var(--datetime-space-lg)}.btn{background:var(--datetime-hover);border-radius:var(--datetime-action-btn-radius);color:var(--datetime-text);font-size:var(--datetime-action-btn-font-size);font-weight:var(--datetime-action-btn-font-weight);letter-spacing:var(--datetime-action-btn-letter-spacing);min-height:var(--datetime-action-btn-min-height);padding:var(--datetime-action-btn-padding);text-transform:var(--datetime-action-btn-text-transform)}.btn.primary{background:var(--datetime-accent);border-color:var(--datetime-accent);color:var(--datetime-bg)}.range-info{background:var(--datetime-hover);color:var(--datetime-muted);margin-bottom:var(--datetime-space-lg);padding:var(--datetime-gap) var(--datetime-gap);text-align:center}";
 
 /**
  * PDatetime - Enhanced Datetime Picker Web Component
@@ -34,6 +34,10 @@ var css_248z = ":root{--surface-control-radius:0.25em;--surface-control-border-w
  * - from-label: string - Label for start date input (default: "From")
  * - to-label: string - Label for end date input (default: "To")
  * - range-to-value: ISO date string - End date value in range mode
+ * - min: ISO date or yyyy-mm-dd - Earliest selectable date; days before are disabled
+ * - max: ISO date or yyyy-mm-dd - Latest selectable date; days after are disabled
+ * - min-from-field: string - Name of another field whose current value supplies the effective min (more restrictive of the two wins)
+ * - max-from-field: string - Name of another field whose current value supplies the effective max
  *
  * @events
  * - change: Fired when value changes, detail contains {value: isoString}
@@ -176,6 +180,7 @@ class PDatetime extends HTMLElement {
 
   connectedCallback() {
     this._bindEvents();
+    this._bindLinkedFieldEvents();
     this._render();
     if (this.name) this._ensureHidden();
 
@@ -183,6 +188,37 @@ class PDatetime extends HTMLElement {
     requestAnimationFrame(() => {
       this._updateTheme();
     });
+  }
+
+  disconnectedCallback() {
+    if (this._linkedFieldListener) {
+      document.removeEventListener('change', this._linkedFieldListener, true);
+      document.removeEventListener('input', this._linkedFieldListener, true);
+      this._linkedFieldListener = null;
+    }
+    this._unbindReposition();
+  }
+
+  /**
+   * Re-renders the calendar when a field referenced by min-from-field or
+   * max-from-field updates. Uses delegated listeners on document so we
+   * don't need direct refs to siblings that may not exist at connect time.
+   */
+  _bindLinkedFieldEvents() {
+    if (!this.minFromField && !this.maxFromField) return;
+
+    this._linkedFieldListener = (e) => {
+      const target = e.target;
+      if (!target || target === this) return;
+      const targetName = target.getAttribute && target.getAttribute('name');
+      if (!targetName) return;
+      if (targetName === this.minFromField || targetName === this.maxFromField) {
+        this._render();
+      }
+    };
+
+    document.addEventListener('change', this._linkedFieldListener, true);
+    document.addEventListener('input', this._linkedFieldListener, true);
   }
 
   _updateTheme(theme = null) {
@@ -248,6 +284,10 @@ class PDatetime extends HTMLElement {
       'range-to-value',
       'theme',
       'format',
+      'min',
+      'max',
+      'min-from-field',
+      'max-from-field',
     ];
   }
 
@@ -417,12 +457,158 @@ class PDatetime extends HTMLElement {
   set format(v) {
     v ? this.setAttribute('format', v) : this.removeAttribute('format');
   }
+  get min() {
+    return this.getAttribute('min') || '';
+  }
+  set min(v) {
+    v ? this.setAttribute('min', v) : this.removeAttribute('min');
+  }
+  get max() {
+    return this.getAttribute('max') || '';
+  }
+  set max(v) {
+    v ? this.setAttribute('max', v) : this.removeAttribute('max');
+  }
+  get minFromField() {
+    return this.getAttribute('min-from-field') || '';
+  }
+  set minFromField(v) {
+    v ? this.setAttribute('min-from-field', v) : this.removeAttribute('min-from-field');
+  }
+  get maxFromField() {
+    return this.getAttribute('max-from-field') || '';
+  }
+  set maxFromField(v) {
+    v ? this.setAttribute('max-from-field', v) : this.removeAttribute('max-from-field');
+  }
+
+  /**
+   * Parses a boundary string into a local-midnight Date.
+   *
+   * Accepts:
+   * - Plain `yyyy-mm-dd` — interpreted literally as a local date.
+   * - ISO 8601 with time/zone — parsed as an instant; local Y/M/D taken
+   *   from the resulting Date. This matters because a date selected as
+   *   "May 20 local" serialises to e.g. `2026-05-19T14:00:00.000Z` in
+   *   UTC+10. Regexing the yyyy-mm-dd prefix would yield May 19, off by
+   *   a day. Parsing as an instant and reading the local date keeps the
+   *   boundary at May 20 for that user.
+   *
+   * @param {string} s
+   * @returns {Date|null}
+   */
+  _parseBoundary(s) {
+    if (!s) return null;
+    const ymdOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (ymdOnly) return new Date(+ymdOnly[1], +ymdOnly[2] - 1, +ymdOnly[3]);
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  /**
+   * Locates a named form field. Prefers the closest <form> ancestor so
+   * sibling pickers in different forms don't cross-pollute.
+   */
+  _findFieldByName(name) {
+    if (!name) return null;
+    const root = this.closest('form') || document;
+    try {
+      return root.querySelector(`[name="${CSS.escape(name)}"]`);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Reads the current value off a linked field. Handles plain inputs and
+   * sibling <p-datetime> hosts (which carry their ISO value on the host
+   * attribute).
+   */
+  _readFieldValue(el) {
+    if (!el) return '';
+    if (el.tagName && el.tagName.toLowerCase() === 'p-datetime') {
+      return el.getAttribute('value') || '';
+    }
+    return ('value' in el ? el.value : el.getAttribute('value')) || '';
+  }
+
+  /**
+   * Resolves the effective min boundary by taking the more restrictive
+   * (later) of the static `min` attribute and any value supplied via
+   * `min-from-field`.
+   */
+  _effectiveMin() {
+    const candidates = [this._parseBoundary(this.min)];
+    if (this.minFromField) {
+      candidates.push(this._parseBoundary(this._readFieldValue(this._findFieldByName(this.minFromField))));
+    }
+    const valid = candidates.filter(d => d !== null);
+    if (!valid.length) return null;
+    return new Date(Math.max(...valid.map(d => d.getTime())));
+  }
+
+  /**
+   * Resolves the effective max boundary (the earlier of the two, when both
+   * static `max` and `max-from-field` are set).
+   */
+  _effectiveMax() {
+    const candidates = [this._parseBoundary(this.max)];
+    if (this.maxFromField) {
+      candidates.push(this._parseBoundary(this._readFieldValue(this._findFieldByName(this.maxFromField))));
+    }
+    const valid = candidates.filter(d => d !== null);
+    if (!valid.length) return null;
+    return new Date(Math.min(...valid.map(d => d.getTime())));
+  }
+
+  _isDayOutOfRange(dt, min, max) {
+    const d = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+    if (min && d < min.getTime()) return true;
+    if (max && d > max.getTime()) return true;
+    return false;
+  }
 
   open() {
+    /* If we have no value of our own but a linked min/max field has set
+       an effective bound that's outside the currently-viewed month, jump
+       the calendar to a useful month so the user doesn't land on a page
+       full of disabled days. */
+    this._alignViewToBoundary();
+
     this._panel.hidden = false;
     requestAnimationFrame(() => {
+      this._positionPanel();
       this._panel.classList.add('open');
+      this._bindReposition();
     });
+  }
+
+  /**
+   * Picks an opening view based on min/max boundaries when the field is
+   * empty. If a `min-from-field` (or static min) is later than today,
+   * land on the month containing min + 1 day — the earliest selectable
+   * date. Mirror behaviour for max-from-field running in the other
+   * direction. No-op when the field already has a value or no boundary
+   * applies.
+   */
+  _alignViewToBoundary() {
+    if (this.value) return;
+
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const min = this._effectiveMin();
+    const max = this._effectiveMax();
+
+    /* Prefer the more restrictive boundary when both are set. */
+    let target = null;
+    if (min && min.getTime() > todayMidnight.getTime()) {
+      target = new Date(min.getFullYear(), min.getMonth(), min.getDate() + 1);
+    } else if (max && max.getTime() < todayMidnight.getTime()) {
+      target = new Date(max.getFullYear(), max.getMonth(), max.getDate());
+    }
+
+    if (target) this._view = target;
   }
 
   close() {
@@ -430,9 +616,67 @@ class PDatetime extends HTMLElement {
     /* Remove focus ring when panel closes */
     this._input.classList.remove('is-focused');
     this._toInput.classList.remove('is-focused');
+    this._unbindReposition();
     setTimeout(() => {
       this._panel.hidden = true;
+      this._panel.classList.remove('panel--above', 'panel--align-right');
     }, 150);
+  }
+
+  /**
+   * Flips the panel above the host when there isn't enough viewport room
+   * below, and right-aligns it when the left-anchored panel would overflow
+   * the right edge. Re-evaluated on open and on any scroll/resize while
+   * the panel is open.
+   */
+  _positionPanel() {
+    /* Reset any prior flip so measurements reflect the default placement */
+    this._panel.classList.remove('panel--above', 'panel--align-right');
+
+    const hostRect  = this.getBoundingClientRect();
+    const panelRect = this._panel.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    const viewportW = window.innerWidth || document.documentElement.clientWidth;
+
+    const spaceBelow = viewportH - hostRect.bottom;
+    const spaceAbove = hostRect.top;
+
+    if (panelRect.height > spaceBelow && spaceAbove > spaceBelow) {
+      this._panel.classList.add('panel--above');
+    }
+
+    if (hostRect.left + panelRect.width > viewportW) {
+      this._panel.classList.add('panel--align-right');
+    }
+  }
+
+  /**
+   * Listens for scroll (any scrolling ancestor — capture phase) and viewport
+   * resize while the panel is open, re-evaluating placement on each.
+   * rAF-throttled so a fast scroll only triggers one measurement per frame.
+   */
+  _bindReposition() {
+    if (this._repositionHandler) return;
+
+    let pending = false;
+    this._repositionHandler = () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        if (!this._panel.hidden) this._positionPanel();
+      });
+    };
+
+    window.addEventListener('scroll', this._repositionHandler, true);
+    window.addEventListener('resize', this._repositionHandler);
+  }
+
+  _unbindReposition() {
+    if (!this._repositionHandler) return;
+    window.removeEventListener('scroll', this._repositionHandler, true);
+    window.removeEventListener('resize', this._repositionHandler);
+    this._repositionHandler = null;
   }
 
   toggle() {
@@ -498,15 +742,25 @@ class PDatetime extends HTMLElement {
     if (this._navigationDirection && !this._animating) {
       this._animating = true;
 
+      /* Snapshot the direction so cleanup doesn't read a stale value if
+         the user flips direction mid-animation (rapid prev → next). */
+      const animatingDirection = this._navigationDirection;
+
       /* Clone current grid as the old grid */
       const oldGrid = this._grid.cloneNode(true);
-      oldGrid.classList.add('grid--animating', `grid--${this._navigationDirection}`);
+      oldGrid.classList.add('grid--animating', `grid--${animatingDirection}`);
 
       /* Add old grid to container */
       this._gridContainer.appendChild(oldGrid);
 
       /* Prepare new grid with direction and 'in' class BEFORE RAF */
-      this._grid.classList.add(`grid--${this._navigationDirection}`, 'grid--in');
+      this._grid.classList.add(`grid--${animatingDirection}`, 'grid--in');
+
+      /* Force a layout flush so the browser commits the translateX(±100%)
+         start state. Without this, removing `grid--in` in the next rAF
+         can collapse to a no-op transition (start == end), which is what
+         we saw when only one of the two grids appeared to animate. */
+      void this._grid.offsetWidth;
 
       /* Trigger animation in next frame */
       requestAnimationFrame(() => {
@@ -517,13 +771,40 @@ class PDatetime extends HTMLElement {
         this._grid.classList.add('animating');
         this._grid.classList.remove('grid--in');
 
-        /* Clean up after animation */
-        setTimeout(() => {
+        /* Wait for the transition to actually finish before cleaning up.
+           Using transitionend (with a generous safety timeout) avoids the
+           glitch where the fixed timer fired slightly before the CSS
+           transition completed — removing the `animating` class then snaps
+           the grid to its rest state via the `:not(grid--in):not(grid--out)`
+           rule. Rapid navigation made this race more likely. */
+        const finish = () => {
+          if (this._cleanupTimer) {
+            clearTimeout(this._cleanupTimer);
+            this._cleanupTimer = null;
+          }
+          this._grid.removeEventListener('transitionend', onTransitionEnd);
           oldGrid.remove();
-          this._grid.classList.remove('animating', `grid--${this._navigationDirection}`);
+          this._grid.classList.remove(
+            'animating',
+            `grid--${animatingDirection}`,
+            'grid--in',
+            'grid--out'
+          );
           this._animating = false;
           this._navigationDirection = null;
-        }, 500);
+        };
+
+        const onTransitionEnd = (event) => {
+          if (event.target === this._grid && event.propertyName === 'transform') {
+            finish();
+          }
+        };
+
+        this._grid.addEventListener('transitionend', onTransitionEnd);
+        /* Safety net — if transitionend never fires (e.g. reduced motion,
+           interrupted transition), force cleanup after the animation
+           duration plus a small buffer. */
+        this._cleanupTimer = setTimeout(finish, 700);
       });
     }
 
@@ -540,6 +821,8 @@ class PDatetime extends HTMLElement {
     /* Day view (original calendar rendering) */
     const today = new Date();
     const selected = this.value ? new Date(this.value) : null;
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
     this._grid.classList.remove('month-view', 'year-view');
 
@@ -573,6 +856,12 @@ class PDatetime extends HTMLElement {
       btn.textContent = String(day);
 
       if (dt.toDateString() === today.toDateString()) btn.classList.add('today');
+
+      const outOfRange = this._isDayOutOfRange(dt, effMin, effMax);
+      if (outOfRange) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      }
 
       if (this.isRange) {
         // Range selection highlighting
@@ -707,6 +996,8 @@ class PDatetime extends HTMLElement {
     const year = this._view.getFullYear();
     const selected = this.value ? new Date(this.value) : null;
     const today = new Date();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
     this._grid.innerHTML = '';
     this._grid.classList.add('month-view');
@@ -727,6 +1018,13 @@ class PDatetime extends HTMLElement {
         btn.classList.add('selected');
       }
 
+      /* Disable months wholly outside the allowed range */
+      const monthEnd = new Date(year, monthIndex + 1, 0);
+      if ((effMax && monthDate > effMax) || (effMin && monthEnd < effMin)) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => {
         this._view.setMonth(monthIndex);
         this._viewMode = 'day';
@@ -742,6 +1040,10 @@ class PDatetime extends HTMLElement {
     const currentYear = this._view.getFullYear();
     const selected = this.value ? new Date(this.value) : null;
     const today = new Date();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
+    const minYear = effMin ? effMin.getFullYear() : null;
+    const maxYear = effMax ? effMax.getFullYear() : null;
 
     this._grid.innerHTML = '';
     this._grid.classList.add('year-view');
@@ -761,6 +1063,11 @@ class PDatetime extends HTMLElement {
 
       if (selected && year === selected.getFullYear()) {
         btn.classList.add('selected');
+      }
+
+      if ((minYear !== null && year < minYear) || (maxYear !== null && year > maxYear)) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
       }
 
       btn.addEventListener('click', () => {
@@ -899,8 +1206,16 @@ class PDatetime extends HTMLElement {
 
       this._quickDates.innerHTML = '';
 
+      const effMin = this._effectiveMin();
+      const effMax = this._effectiveMax();
+
       dates.forEach(dateKey => {
         if (dateMap[dateKey]) {
+          /* Skip presets that fall outside the allowed range */
+          const preview = new Date();
+          preview.setDate(preview.getDate() + dateMap[dateKey].days);
+          if (this._isDayOutOfRange(preview, effMin, effMax)) return;
+
           const btn = document.createElement('button');
           btn.className = 'preset';
           btn.textContent = dateMap[dateKey].label;
@@ -1085,7 +1400,7 @@ class PDatetime extends HTMLElement {
       ? { value: this.value, toValue: this.rangeToValue, from: this.value, to: this.rangeToValue }
       : { value: this.value };
 
-    this.dispatchEvent(new CustomEvent('change', { detail: eventDetail }));
+    this.dispatchEvent(new CustomEvent('change', { detail: eventDetail, bubbles: true, composed: true }));
   }
 }
 

@@ -34,6 +34,10 @@ import styles from '../styles/framework/components/PDatetime.scss';
  * - from-label: string - Label for start date input (default: "From")
  * - to-label: string - Label for end date input (default: "To")
  * - range-to-value: ISO date string - End date value in range mode
+ * - min: ISO date or yyyy-mm-dd - Earliest selectable date; days before are disabled
+ * - max: ISO date or yyyy-mm-dd - Latest selectable date; days after are disabled
+ * - min-from-field: string - Name of another field whose current value supplies the effective min (more restrictive of the two wins)
+ * - max-from-field: string - Name of another field whose current value supplies the effective max
  *
  * @events
  * - change: Fired when value changes, detail contains {value: isoString}
@@ -176,6 +180,7 @@ export default class PDatetime extends HTMLElement {
 
   connectedCallback() {
     this._bindEvents();
+    this._bindLinkedFieldEvents();
     this._render();
     if (this.name) this._ensureHidden();
 
@@ -183,6 +188,37 @@ export default class PDatetime extends HTMLElement {
     requestAnimationFrame(() => {
       this._updateTheme();
     });
+  }
+
+  disconnectedCallback() {
+    if (this._linkedFieldListener) {
+      document.removeEventListener('change', this._linkedFieldListener, true);
+      document.removeEventListener('input', this._linkedFieldListener, true);
+      this._linkedFieldListener = null;
+    }
+    this._unbindReposition();
+  }
+
+  /**
+   * Re-renders the calendar when a field referenced by min-from-field or
+   * max-from-field updates. Uses delegated listeners on document so we
+   * don't need direct refs to siblings that may not exist at connect time.
+   */
+  _bindLinkedFieldEvents() {
+    if (!this.minFromField && !this.maxFromField) return;
+
+    this._linkedFieldListener = (e) => {
+      const target = e.target;
+      if (!target || target === this) return;
+      const targetName = target.getAttribute && target.getAttribute('name');
+      if (!targetName) return;
+      if (targetName === this.minFromField || targetName === this.maxFromField) {
+        this._render();
+      }
+    };
+
+    document.addEventListener('change', this._linkedFieldListener, true);
+    document.addEventListener('input', this._linkedFieldListener, true);
   }
 
   _updateTheme(theme = null) {
@@ -248,6 +284,10 @@ export default class PDatetime extends HTMLElement {
       'range-to-value',
       'theme',
       'format',
+      'min',
+      'max',
+      'min-from-field',
+      'max-from-field',
     ];
   }
 
@@ -417,12 +457,158 @@ export default class PDatetime extends HTMLElement {
   set format(v) {
     v ? this.setAttribute('format', v) : this.removeAttribute('format');
   }
+  get min() {
+    return this.getAttribute('min') || '';
+  }
+  set min(v) {
+    v ? this.setAttribute('min', v) : this.removeAttribute('min');
+  }
+  get max() {
+    return this.getAttribute('max') || '';
+  }
+  set max(v) {
+    v ? this.setAttribute('max', v) : this.removeAttribute('max');
+  }
+  get minFromField() {
+    return this.getAttribute('min-from-field') || '';
+  }
+  set minFromField(v) {
+    v ? this.setAttribute('min-from-field', v) : this.removeAttribute('min-from-field');
+  }
+  get maxFromField() {
+    return this.getAttribute('max-from-field') || '';
+  }
+  set maxFromField(v) {
+    v ? this.setAttribute('max-from-field', v) : this.removeAttribute('max-from-field');
+  }
+
+  /**
+   * Parses a boundary string into a local-midnight Date.
+   *
+   * Accepts:
+   * - Plain `yyyy-mm-dd` — interpreted literally as a local date.
+   * - ISO 8601 with time/zone — parsed as an instant; local Y/M/D taken
+   *   from the resulting Date. This matters because a date selected as
+   *   "May 20 local" serialises to e.g. `2026-05-19T14:00:00.000Z` in
+   *   UTC+10. Regexing the yyyy-mm-dd prefix would yield May 19, off by
+   *   a day. Parsing as an instant and reading the local date keeps the
+   *   boundary at May 20 for that user.
+   *
+   * @param {string} s
+   * @returns {Date|null}
+   */
+  _parseBoundary(s) {
+    if (!s) return null;
+    const ymdOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (ymdOnly) return new Date(+ymdOnly[1], +ymdOnly[2] - 1, +ymdOnly[3]);
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  /**
+   * Locates a named form field. Prefers the closest <form> ancestor so
+   * sibling pickers in different forms don't cross-pollute.
+   */
+  _findFieldByName(name) {
+    if (!name) return null;
+    const root = this.closest('form') || document;
+    try {
+      return root.querySelector(`[name="${CSS.escape(name)}"]`);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Reads the current value off a linked field. Handles plain inputs and
+   * sibling <p-datetime> hosts (which carry their ISO value on the host
+   * attribute).
+   */
+  _readFieldValue(el) {
+    if (!el) return '';
+    if (el.tagName && el.tagName.toLowerCase() === 'p-datetime') {
+      return el.getAttribute('value') || '';
+    }
+    return ('value' in el ? el.value : el.getAttribute('value')) || '';
+  }
+
+  /**
+   * Resolves the effective min boundary by taking the more restrictive
+   * (later) of the static `min` attribute and any value supplied via
+   * `min-from-field`.
+   */
+  _effectiveMin() {
+    const candidates = [this._parseBoundary(this.min)];
+    if (this.minFromField) {
+      candidates.push(this._parseBoundary(this._readFieldValue(this._findFieldByName(this.minFromField))));
+    }
+    const valid = candidates.filter(d => d !== null);
+    if (!valid.length) return null;
+    return new Date(Math.max(...valid.map(d => d.getTime())));
+  }
+
+  /**
+   * Resolves the effective max boundary (the earlier of the two, when both
+   * static `max` and `max-from-field` are set).
+   */
+  _effectiveMax() {
+    const candidates = [this._parseBoundary(this.max)];
+    if (this.maxFromField) {
+      candidates.push(this._parseBoundary(this._readFieldValue(this._findFieldByName(this.maxFromField))));
+    }
+    const valid = candidates.filter(d => d !== null);
+    if (!valid.length) return null;
+    return new Date(Math.min(...valid.map(d => d.getTime())));
+  }
+
+  _isDayOutOfRange(dt, min, max) {
+    const d = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+    if (min && d < min.getTime()) return true;
+    if (max && d > max.getTime()) return true;
+    return false;
+  }
 
   open() {
+    /* If we have no value of our own but a linked min/max field has set
+       an effective bound that's outside the currently-viewed month, jump
+       the calendar to a useful month so the user doesn't land on a page
+       full of disabled days. */
+    this._alignViewToBoundary();
+
     this._panel.hidden = false;
     requestAnimationFrame(() => {
+      this._positionPanel();
       this._panel.classList.add('open');
+      this._bindReposition();
     });
+  }
+
+  /**
+   * Picks an opening view based on min/max boundaries when the field is
+   * empty. If a `min-from-field` (or static min) is later than today,
+   * land on the month containing min + 1 day — the earliest selectable
+   * date. Mirror behaviour for max-from-field running in the other
+   * direction. No-op when the field already has a value or no boundary
+   * applies.
+   */
+  _alignViewToBoundary() {
+    if (this.value) return;
+
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const min = this._effectiveMin();
+    const max = this._effectiveMax();
+
+    /* Prefer the more restrictive boundary when both are set. */
+    let target = null;
+    if (min && min.getTime() > todayMidnight.getTime()) {
+      target = new Date(min.getFullYear(), min.getMonth(), min.getDate() + 1);
+    } else if (max && max.getTime() < todayMidnight.getTime()) {
+      target = new Date(max.getFullYear(), max.getMonth(), max.getDate());
+    }
+
+    if (target) this._view = target;
   }
 
   close() {
@@ -430,9 +616,67 @@ export default class PDatetime extends HTMLElement {
     /* Remove focus ring when panel closes */
     this._input.classList.remove('is-focused');
     this._toInput.classList.remove('is-focused');
+    this._unbindReposition();
     setTimeout(() => {
       this._panel.hidden = true;
+      this._panel.classList.remove('panel--above', 'panel--align-right');
     }, 150);
+  }
+
+  /**
+   * Flips the panel above the host when there isn't enough viewport room
+   * below, and right-aligns it when the left-anchored panel would overflow
+   * the right edge. Re-evaluated on open and on any scroll/resize while
+   * the panel is open.
+   */
+  _positionPanel() {
+    /* Reset any prior flip so measurements reflect the default placement */
+    this._panel.classList.remove('panel--above', 'panel--align-right');
+
+    const hostRect  = this.getBoundingClientRect();
+    const panelRect = this._panel.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    const viewportW = window.innerWidth || document.documentElement.clientWidth;
+
+    const spaceBelow = viewportH - hostRect.bottom;
+    const spaceAbove = hostRect.top;
+
+    if (panelRect.height > spaceBelow && spaceAbove > spaceBelow) {
+      this._panel.classList.add('panel--above');
+    }
+
+    if (hostRect.left + panelRect.width > viewportW) {
+      this._panel.classList.add('panel--align-right');
+    }
+  }
+
+  /**
+   * Listens for scroll (any scrolling ancestor — capture phase) and viewport
+   * resize while the panel is open, re-evaluating placement on each.
+   * rAF-throttled so a fast scroll only triggers one measurement per frame.
+   */
+  _bindReposition() {
+    if (this._repositionHandler) return;
+
+    let pending = false;
+    this._repositionHandler = () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        if (!this._panel.hidden) this._positionPanel();
+      });
+    };
+
+    window.addEventListener('scroll', this._repositionHandler, true);
+    window.addEventListener('resize', this._repositionHandler);
+  }
+
+  _unbindReposition() {
+    if (!this._repositionHandler) return;
+    window.removeEventListener('scroll', this._repositionHandler, true);
+    window.removeEventListener('resize', this._repositionHandler);
+    this._repositionHandler = null;
   }
 
   toggle() {
@@ -498,15 +742,25 @@ export default class PDatetime extends HTMLElement {
     if (this._navigationDirection && !this._animating) {
       this._animating = true;
 
+      /* Snapshot the direction so cleanup doesn't read a stale value if
+         the user flips direction mid-animation (rapid prev → next). */
+      const animatingDirection = this._navigationDirection;
+
       /* Clone current grid as the old grid */
       const oldGrid = this._grid.cloneNode(true);
-      oldGrid.classList.add('grid--animating', `grid--${this._navigationDirection}`);
+      oldGrid.classList.add('grid--animating', `grid--${animatingDirection}`);
 
       /* Add old grid to container */
       this._gridContainer.appendChild(oldGrid);
 
       /* Prepare new grid with direction and 'in' class BEFORE RAF */
-      this._grid.classList.add(`grid--${this._navigationDirection}`, 'grid--in');
+      this._grid.classList.add(`grid--${animatingDirection}`, 'grid--in');
+
+      /* Force a layout flush so the browser commits the translateX(±100%)
+         start state. Without this, removing `grid--in` in the next rAF
+         can collapse to a no-op transition (start == end), which is what
+         we saw when only one of the two grids appeared to animate. */
+      void this._grid.offsetWidth;
 
       /* Trigger animation in next frame */
       requestAnimationFrame(() => {
@@ -517,13 +771,40 @@ export default class PDatetime extends HTMLElement {
         this._grid.classList.add('animating');
         this._grid.classList.remove('grid--in');
 
-        /* Clean up after animation */
-        setTimeout(() => {
+        /* Wait for the transition to actually finish before cleaning up.
+           Using transitionend (with a generous safety timeout) avoids the
+           glitch where the fixed timer fired slightly before the CSS
+           transition completed — removing the `animating` class then snaps
+           the grid to its rest state via the `:not(grid--in):not(grid--out)`
+           rule. Rapid navigation made this race more likely. */
+        const finish = () => {
+          if (this._cleanupTimer) {
+            clearTimeout(this._cleanupTimer);
+            this._cleanupTimer = null;
+          }
+          this._grid.removeEventListener('transitionend', onTransitionEnd);
           oldGrid.remove();
-          this._grid.classList.remove('animating', `grid--${this._navigationDirection}`);
+          this._grid.classList.remove(
+            'animating',
+            `grid--${animatingDirection}`,
+            'grid--in',
+            'grid--out'
+          );
           this._animating = false;
           this._navigationDirection = null;
-        }, 500);
+        };
+
+        const onTransitionEnd = (event) => {
+          if (event.target === this._grid && event.propertyName === 'transform') {
+            finish();
+          }
+        };
+
+        this._grid.addEventListener('transitionend', onTransitionEnd);
+        /* Safety net — if transitionend never fires (e.g. reduced motion,
+           interrupted transition), force cleanup after the animation
+           duration plus a small buffer. */
+        this._cleanupTimer = setTimeout(finish, 700);
       });
     }
 
@@ -540,6 +821,8 @@ export default class PDatetime extends HTMLElement {
     /* Day view (original calendar rendering) */
     const today = new Date();
     const selected = this.value ? new Date(this.value) : null;
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
     this._grid.classList.remove('month-view', 'year-view');
 
@@ -573,6 +856,12 @@ export default class PDatetime extends HTMLElement {
       btn.textContent = String(day);
 
       if (dt.toDateString() === today.toDateString()) btn.classList.add('today');
+
+      const outOfRange = this._isDayOutOfRange(dt, effMin, effMax);
+      if (outOfRange) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      }
 
       if (this.isRange) {
         // Range selection highlighting
@@ -707,6 +996,8 @@ export default class PDatetime extends HTMLElement {
     const year = this._view.getFullYear();
     const selected = this.value ? new Date(this.value) : null;
     const today = new Date();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
     this._grid.innerHTML = '';
     this._grid.classList.add('month-view');
@@ -727,6 +1018,13 @@ export default class PDatetime extends HTMLElement {
         btn.classList.add('selected');
       }
 
+      /* Disable months wholly outside the allowed range */
+      const monthEnd = new Date(year, monthIndex + 1, 0);
+      if ((effMax && monthDate > effMax) || (effMin && monthEnd < effMin)) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      }
+
       btn.addEventListener('click', () => {
         this._view.setMonth(monthIndex);
         this._viewMode = 'day';
@@ -742,6 +1040,10 @@ export default class PDatetime extends HTMLElement {
     const currentYear = this._view.getFullYear();
     const selected = this.value ? new Date(this.value) : null;
     const today = new Date();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
+    const minYear = effMin ? effMin.getFullYear() : null;
+    const maxYear = effMax ? effMax.getFullYear() : null;
 
     this._grid.innerHTML = '';
     this._grid.classList.add('year-view');
@@ -761,6 +1063,11 @@ export default class PDatetime extends HTMLElement {
 
       if (selected && year === selected.getFullYear()) {
         btn.classList.add('selected');
+      }
+
+      if ((minYear !== null && year < minYear) || (maxYear !== null && year > maxYear)) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
       }
 
       btn.addEventListener('click', () => {
@@ -899,8 +1206,16 @@ export default class PDatetime extends HTMLElement {
 
       this._quickDates.innerHTML = '';
 
+      const effMin = this._effectiveMin();
+      const effMax = this._effectiveMax();
+
       dates.forEach(dateKey => {
         if (dateMap[dateKey]) {
+          /* Skip presets that fall outside the allowed range */
+          const preview = new Date();
+          preview.setDate(preview.getDate() + dateMap[dateKey].days);
+          if (this._isDayOutOfRange(preview, effMin, effMax)) return;
+
           const btn = document.createElement('button');
           btn.className = 'preset';
           btn.textContent = dateMap[dateKey].label;
@@ -1085,7 +1400,7 @@ export default class PDatetime extends HTMLElement {
       ? { value: this.value, toValue: this.rangeToValue, from: this.value, to: this.rangeToValue }
       : { value: this.value };
 
-    this.dispatchEvent(new CustomEvent('change', { detail: eventDetail }));
+    this.dispatchEvent(new CustomEvent('change', { detail: eventDetail, bubbles: true, composed: true }));
   }
 }
 

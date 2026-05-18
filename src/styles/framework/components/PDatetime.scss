@@ -1,5 +1,9 @@
-/* PDatetime Web Component Styles */
-@use '../../design-system' as *;
+/* PDatetime Web Component Styles
+ *
+ * Self-contained — no SCSS or CSS imports. Every token has a concrete
+ * default on `:host` so the component drops in anywhere. Consumers
+ * override behaviour via the `--datetime-*` custom properties, never
+ * by reaching for unrelated design-system tokens. */
 
 /* Global Hidden Rule */
 [hidden] {
@@ -12,21 +16,21 @@
   position: relative;
   box-sizing: border-box;
 
-  /* Colors using surface tokens and design system variables */
-  --datetime-text: var(--surface-control-color-text);
-  --datetime-muted: #{$color-text-muted};
-  --datetime-accent: #{$primary};
-  --datetime-hover: var(--surface-dropdown-item-hover-bg);
-  --datetime-bg: var(--surface-dropdown-color-bg);
-  --datetime-border: var(--surface-control-border-color);
-  --datetime-shadow-color: #{$color-shadow};
-  --datetime-focus-shadow: #{$color-focus-shadow};
-  --datetime-btn-hover-bg: #{$color-bg-hover};
+  /* Colors — concrete defaults; override at the host with --datetime-*. */
+  --datetime-text: currentColor;
+  --datetime-muted: rgba(0, 0, 0, 0.5);
+  --datetime-accent: #3b82f6;
+  --datetime-hover: rgba(0, 0, 0, 0.05);
+  --datetime-bg: #fff;
+  --datetime-border: rgba(0, 0, 0, 0.1);
+  --datetime-shadow-color: rgba(0, 0, 0, 0.12);
+  --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
+  --datetime-btn-hover-bg: rgba(0, 0, 0, 0.05);
 
-  /* Opacity (aligned with design system tokens) */
-  --datetime-placeholder-opacity: #{$opacity-muted};
-  --datetime-icon-opacity: #{$opacity-icon};
-  --datetime-disabled-opacity: #{$opacity-disabled};
+  /* Opacity */
+  --datetime-placeholder-opacity: 0.6;
+  --datetime-icon-opacity: 0.7;
+  --datetime-disabled-opacity: 0.3;
 
   /* Spacing */
   --datetime-padding-x: 0.75em;
@@ -37,18 +41,18 @@
   --datetime-space-lg: 0.75em;
   --datetime-gap: 0.5em;
 
-  /* Border Radius using surface tokens */
-  --datetime-radius: var(--surface-control-radius);
-  --datetime-radius-lg: var(--surface-dropdown-radius);
+  /* Border Radius */
+  --datetime-radius: 0.25em;
+  --datetime-radius-lg: 0.5em;
   --datetime-radius-xl: 1em;
 
-  /* Borders using surface tokens */
-  --datetime-border-width: var(--surface-control-border-width);
+  /* Borders */
+  --datetime-border-width: 1px;
   --datetime-focus-ring-width: 2px;
   --datetime-today-border-width: 2px;
 
-  /* Shadows using surface tokens */
-  --datetime-shadow: var(--surface-dropdown-shadow);
+  /* Shadow */
+  --datetime-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
 
   /* Timing */
   --datetime-transition: 0.15s ease;
@@ -58,12 +62,25 @@
   --datetime-cell-size: 2.5em;
   --datetime-font-sm: 0.75em;
   --datetime-font-md: 0.875em;
+
+  /* Panel overrides */
+  --datetime-panel-padding: var(--datetime-space-lg);
+  --datetime-panel-min-width: 20em;
+
+  /* Action button overrides (Clear / Apply) */
+  --datetime-action-btn-radius: var(--datetime-radius);
+  --datetime-action-btn-padding: 0.625em 1em;
+  --datetime-action-btn-font-size: var(--datetime-font-md);
+  --datetime-action-btn-font-weight: inherit;
+  --datetime-action-btn-text-transform: none;
+  --datetime-action-btn-letter-spacing: normal;
+  --datetime-action-btn-min-height: var(--datetime-cell-size);
 }
 
 @media (prefers-color-scheme: dark) {
   :host {
-    --datetime-muted: #{$color-text-muted-dark};
-    --datetime-hover: #{$color-bg-hover-dark};
+    --datetime-muted: rgba(255, 255, 255, 0.5);
+    --datetime-hover: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -139,6 +156,19 @@
   font-size: 0.8em;
 }
 
+/* Disabled cells (out of min/max range) and any :disabled button */
+.day.disabled,
+.month.disabled,
+.year.disabled,
+button:disabled {
+  opacity: var(--datetime-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* Shared - Hover States (consolidated for performance) */
 @media (hover: hover) {
   .calendar-btn:hover,
@@ -148,9 +178,9 @@
     color: var(--datetime-accent);
   }
 
-  .day:hover,
-  .month:hover,
-  .year:hover {
+  .day:not(.disabled):hover,
+  .month:not(.disabled):hover,
+  .year:not(.disabled):hover {
     background: var(--datetime-hover);
   }
 
@@ -239,6 +269,8 @@
   border: none;
   cursor: pointer;
   color: inherit;
+  font-family: inherit;
+  font-weight: inherit;
 }
 
 .calendar-btn {
@@ -255,12 +287,31 @@
   background: var(--datetime-bg);
   border-radius: var(--datetime-radius-lg);
   box-shadow: var(--datetime-shadow);
-  padding: var(--datetime-space-lg);
-  z-index: #{$z-dropdown};
-  min-width: 20em;
+  padding: var(--datetime-panel-padding);
+  z-index: 10;
+  min-width: var(--datetime-panel-min-width);
   opacity: 0;
   transform: translateY(-0.5em);
   pointer-events: none;
+}
+
+/* Flip up when there isn't enough room below */
+.panel.panel--above {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: var(--datetime-gap);
+  transform: translateY(0.5em);
+}
+
+.panel.panel--above.open {
+  transform: translateY(0);
+}
+
+/* Align to right edge of the host when overflowing the viewport */
+.panel.panel--align-right {
+  left: auto;
+  right: 0;
 }
 
 .panel.open {
@@ -280,7 +331,7 @@
 
 .nav button {
   padding: var(--datetime-gap);
-  color: var(--datetime-muted);
+  color: var(--datetime-text);
 }
 
 .month-year {
@@ -306,7 +357,6 @@
   padding-top: var(--datetime-space-lg);
   position: relative;
   overflow: hidden;
-  height: 18.75em;
 }
 
 .grid {
@@ -316,13 +366,12 @@
   justify-items: center;
   align-content: start;
   grid-template-rows: 2em repeat(6, var(--datetime-cell-size));
-  height: 18em;
 }
 
 .grid.month-view,
 .grid.year-view {
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(4, var(--datetime-cell-size));
   gap: var(--datetime-gap);
 }
 
@@ -408,15 +457,6 @@
   height: 3em;
 }
 
-.day:disabled {
-  opacity: var(--datetime-disabled-opacity);
-  cursor: not-allowed;
-}
-
-.day.range-hover {
-  background: var(--datetime-focus-shadow);
-}
-
 /* Time Picker */
 .time {
   gap: var(--datetime-gap);
@@ -475,8 +515,13 @@
 
 .btn {
   background: var(--datetime-hover);
-  padding: 0.625em 1em;
-  min-height: var(--datetime-cell-size);
+  border-radius: var(--datetime-action-btn-radius);
+  padding: var(--datetime-action-btn-padding);
+  min-height: var(--datetime-action-btn-min-height);
+  font-size: var(--datetime-action-btn-font-size);
+  font-weight: var(--datetime-action-btn-font-weight);
+  text-transform: var(--datetime-action-btn-text-transform);
+  letter-spacing: var(--datetime-action-btn-letter-spacing);
   color: var(--datetime-text);
 }
 
