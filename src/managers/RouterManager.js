@@ -14,6 +14,47 @@ export class RouterManager {
       fragmentSelector: '[data-router-fragment]',
       loadingClass: 'router-loading',
       errorClass: 'router-error',
+      // File extensions that must never be loaded as an HTML fragment.
+      // Links resolving to these are left for the browser to handle natively
+      // (download / open), unless explicitly marked [data-router-enhance].
+      nonRoutableExtensions: [
+        'pdf',
+        'zip',
+        'rar',
+        '7z',
+        'tar',
+        'gz',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'csv',
+        'rtf',
+        'txt',
+        'dmg',
+        'exe',
+        'pkg',
+        'apk',
+        'mp3',
+        'mp4',
+        'wav',
+        'avi',
+        'mov',
+        'mkv',
+        'webm',
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'svg',
+        'webp',
+        'avif',
+        'xml',
+        'rss',
+        'ics',
+      ],
       // Smooth scroll options
       scrollDuration: 800, // 800ms default for snappy feel
       scrollEasing: 'ease-in-out', // CSS easing function
@@ -108,10 +149,21 @@ export class RouterManager {
       return false;
     }
 
+    // Skip explicit downloads and links that open in a new browsing context
+    if (link.hasAttribute('download') || (link.target && link.target !== '_self')) {
+      return false;
+    }
+
     // Skip if different origin (unless explicitly marked for enhancement)
     try {
       const url = new URL(href, location.href);
       if (url.origin !== location.origin && !link.hasAttribute('data-router-enhance')) {
+        return false;
+      }
+
+      // Skip non-HTML assets (PDFs, archives, media, …) so the browser
+      // handles them natively instead of injecting them as a fragment
+      if (this._isNonRoutableAsset(url) && !link.hasAttribute('data-router-enhance')) {
         return false;
       }
     } catch {
@@ -122,12 +174,24 @@ export class RouterManager {
   }
 
   /**
+   * Determine whether a URL points at a static asset that must not be
+   * loaded as an HTML fragment (matched by file extension on the pathname).
+   */
+  _isNonRoutableAsset(url) {
+    const match = url.pathname.match(/\.([a-z0-9]+)$/i);
+    if (!match) {
+      return false;
+    }
+    return this.options.nonRoutableExtensions.includes(match[1].toLowerCase());
+  }
+
+  /**
    * Smooth scroll to element using native browser behavior
    */
   _smoothScrollTo(targetElement) {
     targetElement.scrollIntoView({
       behavior: 'smooth',
-      block: 'start'
+      block: 'start',
     });
   }
 
@@ -312,7 +376,13 @@ export class RouterManager {
    * Navigate to a new URL with enhanced options
    */
   async navigate(url, options = {}) {
-    const { replace = false, trigger = 'programmatic', element = null, force = false, immutableUrl = false } = options;
+    const {
+      replace = false,
+      trigger = 'programmatic',
+      element = null,
+      force = false,
+      immutableUrl = false,
+    } = options;
 
     const targetUrl = typeof url === 'string' ? new URL(url, location.href) : url;
     const targetUrlString = targetUrl.toString();
@@ -349,7 +419,20 @@ export class RouterManager {
     document.body.classList.add(this.options.loadingClass);
 
     try {
-      const { data } = await this.get(targetUrlString);
+      const { response, data } = await this.get(targetUrlString);
+
+      // Safety net: a link slipped through and the server returned a
+      // non-HTML document (e.g. application/pdf). Don't inject it as a
+      // fragment — hand off to the browser for a native full load.
+      const contentType = response.headers.get('content-type') || '';
+      if (typeof data === 'string' && !contentType.includes('text/html')) {
+        this.logger?.warn('Non-HTML response; falling back to full navigation', {
+          url: targetUrlString,
+          contentType,
+        });
+        window.location.assign(targetUrlString);
+        return;
+      }
 
       if (typeof data !== 'string') {
         throw new Error('Expected HTML string response for navigation');
