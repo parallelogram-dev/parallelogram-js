@@ -256,7 +256,7 @@ export class Lightbox extends BaseComponent {
     /* Preload each image in the load set */
     indicesToLoad.forEach((index) => {
       const element = gallery[index];
-      const imageUrl = element.href;
+      const imageData = this._getImageData(element);
 
       /* Find any lazy-loaded images within the trigger element */
       const lazyImages = element.querySelectorAll('[data-lazysrc]');
@@ -274,15 +274,53 @@ export class Lightbox extends BaseComponent {
         lazyImg.dispatchEvent(event);
       });
 
-      /* Also preload the main href image */
-      this._preloadImage(imageUrl);
+      /* Also preload the main image, honouring srcset when provided */
+      this._preloadImage(imageData);
     });
   }
 
-  _preloadImage(url) {
-    /* Simple image preloading */
+  /**
+   * Resolve the lightbox image data for a trigger element.
+   *
+   * The href is the default full-size source. Optional data-lightbox-srcset
+   * and data-lightbox-sizes attributes let a trigger drive a responsive
+   * <img> so the lightbox can serve a viewport-appropriate variant instead
+   * of the full-size href on every device. Triggers without those attributes
+   * keep the original href-only behaviour.
+   */
+  _getImageData(element) {
+    const srcset = element.getAttribute('data-lightbox-srcset') || '';
+
+    return {
+      src: element.getAttribute('href') || '',
+      srcset,
+      sizes: element.getAttribute('data-lightbox-sizes') || (srcset ? '100vw' : ''),
+      alt: element.querySelector('img')?.alt || '',
+    };
+  }
+
+  /**
+   * Apply resolved image data to an <img>, including responsive attributes.
+   */
+  _applyImageData(img, data) {
+    img.alt = data.alt;
+    if (data.srcset) {
+      img.srcset = data.srcset;
+      img.sizes = data.sizes;
+    } else {
+      img.removeAttribute('srcset');
+      img.removeAttribute('sizes');
+    }
+    img.src = data.src;
+  }
+
+  _preloadImage(data) {
     const img = new Image();
-    img.src = url;
+    if (data.srcset) {
+      img.sizes = data.sizes;
+      img.srcset = data.srcset;
+    }
+    img.src = data.src;
   }
 
   _createLightboxElement(triggerElement) {
@@ -357,8 +395,7 @@ export class Lightbox extends BaseComponent {
 
     const config = state.config;
     const element = state.galleryElements[index];
-    const imageUrl = element.href;
-    const imageAlt = element.querySelector('img')?.alt || '';
+    const imageData = this._getImageData(element);
 
     const img = this.lightboxElement.querySelector(`.${config.imageClass.split(' ')[0]}`);
 
@@ -376,8 +413,7 @@ export class Lightbox extends BaseComponent {
         () => {
           const loader = new Image();
           loader.onload = () => {
-            img.src = imageUrl;
-            img.alt = imageAlt;
+            this._applyImageData(img, imageData);
             img.style.transition = 'none';
             img.classList.add(slideInClass);
             img.offsetHeight;
@@ -397,17 +433,19 @@ export class Lightbox extends BaseComponent {
             });
           };
           loader.onerror = () => {
-            img.src = imageUrl;
-            img.alt = imageAlt;
+            this._applyImageData(img, imageData);
             this._setState(triggerElement, 'open');
           };
-          loader.src = imageUrl;
+          if (imageData.srcset) {
+            loader.sizes = imageData.sizes;
+            loader.srcset = imageData.srcset;
+          }
+          loader.src = imageData.src;
         },
         { once: true }
       );
     } else {
-      img.src = imageUrl;
-      img.alt = imageAlt;
+      this._applyImageData(img, imageData);
     }
 
     /* Update counter */
