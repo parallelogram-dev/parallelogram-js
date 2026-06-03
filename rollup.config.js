@@ -15,6 +15,11 @@ const componentFiles = glob.sync('src/components/*.js');
 // Get all core files
 const coreFiles = glob.sync('src/core/*.js');
 
+// Get all adapter files (exclude shared _-prefixed helpers; they inline into adapters)
+const adapterFiles = glob
+  .sync('src/adapters/*.js')
+  .filter(file => !path.basename(file).startsWith('_'));
+
 // Helper to create plugin array for components
 const createComponentPlugins = (isProduction = false) => {
   const plugins = [
@@ -93,6 +98,36 @@ const prodComponentConfigs = componentFiles.map(file => {
     input: file,
     output: {
       file: `dist/components/${name}.js`,
+      format: 'esm',
+      inlineDynamicImports: true,
+    },
+    plugins: createComponentPlugins(true), // Production build - strip logger
+  };
+});
+
+// Create DEVELOPMENT builds for each adapter (dist/dev/adapters/)
+const devAdapterConfigs = adapterFiles.map(file => {
+  const name = path.basename(file, '.js');
+
+  return {
+    input: file,
+    output: {
+      file: `dist/dev/adapters/${name}.js`,
+      format: 'esm',
+      inlineDynamicImports: true,
+    },
+    plugins: createComponentPlugins(false), // Development build - keep logger
+  };
+});
+
+// Create PRODUCTION builds for each adapter (dist/adapters/)
+const prodAdapterConfigs = adapterFiles.map(file => {
+  const name = path.basename(file, '.js');
+
+  return {
+    input: file,
+    output: {
+      file: `dist/adapters/${name}.js`,
       format: 'esm',
       inlineDynamicImports: true,
     },
@@ -204,6 +239,12 @@ export default [
 
   // Individual component builds - DEVELOPMENT
   ...devComponentConfigs,
+
+  // Individual adapter builds - PRODUCTION
+  ...prodAdapterConfigs,
+
+  // Individual adapter builds - DEVELOPMENT
+  ...devAdapterConfigs,
 
   // Individual core utility builds - PRODUCTION
   ...prodCoreConfigs,

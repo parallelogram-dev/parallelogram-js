@@ -1,6 +1,6 @@
 {
   "name": "@parallelogram-js/core",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
   "main": "dist/index.cjs",
@@ -42,6 +42,8 @@
     },
     "./components/*": "./dist/components/*.js",
     "./dev/components/*": "./dist/dev/components/*.js",
+    "./adapters/*": "./dist/adapters/*.js",
+    "./dev/adapters/*": "./dist/dev/adapters/*.js",
     "./core/*": "./dist/core/*.js",
     "./dev/core/*": "./dist/dev/core/*.js",
     "./styles": "./dist/styles/index.min.css"

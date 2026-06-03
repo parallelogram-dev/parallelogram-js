@@ -197,6 +197,17 @@ pageManager.scanAndMount();</code></pre>
         <!-- Toast container -->
         <p-toasts placement="top-right"></p-toasts>
 
+        <!--
+            DeferTracker: inert JSON config blocks. Nothing here loads until the
+            first interaction (or the idle fallback). IDs below are placeholders.
+        -->
+        <script type="application/json" data-defer-tracker="ga4">
+            { "id": "G-DEMO00000" }
+        </script>
+        <script type="application/json" data-defer-tracker="meta-pixel">
+            { "id": "0000000000000000", "events": ["PageView"] }
+        </script>
+
         <!-- Load the framework with demo functionality -->
         <script type="module" src="dist/parallelogram-demo.min.js"></script>
     </body>

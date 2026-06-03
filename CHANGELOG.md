@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-03
+
+### Added
+- **DeferTracker component** (`src/components/DeferTracker.js`) — declarative, deferred third-party trackers driven by inert JSON config blocks (`<script type="application/json" data-defer-tracker="…">`). Trackers boot only after the first user interaction (or an idle fallback), keeping their cost off the cold-load main thread and out of Lighthouse lab traces. Includes a shared page-wide interaction gate, name-based dedup (router/fragment safe), per-node `data-defer-tracker-status`, and `defer-tracker:booted` / `defer-tracker:error` events.
+- Tracker adapter API: `registerTrackerAdapter(name, boot)`, optional eventBus-driven `setTrackerConsent(fn)`, and `configureDeferTracker({ events, idleTimeout })`.
+- 13 tree-shakeable tracker adapters under `src/adapters/`: `ga4`, `meta-pixel`, `gtm`, `clarity`, `tiktok-pixel`, `hotjar`, `linkedin-insight`, `pinterest-tag`, `google-ads`, `bing-uet`, `plausible`, `fathom`, `hubspot`. The Google family shares a single internal `gtag.js` loader so it is injected only once.
+- New package export paths `@parallelogram-js/core/adapters/*` and `@parallelogram-js/core/dev/adapters/*`.
+
+### Changed
+- Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
+
 ## [0.1.2] - 2025-01-19
 
 ### Added

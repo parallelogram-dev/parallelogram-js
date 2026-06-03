@@ -1,7 +1,16 @@
 import { Parallelogram } from '../../src/index.js';
 import { MockXHR } from './MockXHR.js';
+import { registerTrackerAdapter } from '../../src/components/DeferTracker.js';
+import ga4 from '../../src/adapters/ga4.js';
+import metaPixel from '../../src/adapters/meta-pixel.js';
+import clarity from '../../src/adapters/clarity.js';
 
 window.MockXHR = MockXHR;
+
+/* Register only the tracker adapters this site uses; unused ones tree-shake out. */
+registerTrackerAdapter('ga4', ga4);
+registerTrackerAdapter('meta-pixel', metaPixel);
+registerTrackerAdapter('clarity', clarity);
 
 const app = Parallelogram.create({
   mode: 'production',
@@ -94,6 +103,9 @@ app.components
   )
   .add('[data-selectloader]', () =>
     import(/* webpackChunkName: "selectloader" */ '../../src/components/SelectLoader.js')
+  )
+  .add('[data-defer-tracker]', () =>
+    import(/* webpackChunkName: "defer-tracker" */ '../../src/components/DeferTracker.js')
   )
 
   .add('[data-demo="home"]', () =>
