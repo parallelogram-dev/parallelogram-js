@@ -1,0 +1,1 @@
+function t(t,{logger:e}={}){if(!t.site)return void e?.warn("fathom: no site in config");if(window.fathom)return;const i=document.createElement("script");i.defer=!0,i.src=t.src||"https://cdn.usefathom.com/script.js",i.setAttribute("data-site",t.site),document.head.appendChild(i)}export{t as default};
