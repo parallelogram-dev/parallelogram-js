@@ -272,8 +272,15 @@ class Lazysrc extends BaseComponent {
         element.loading = 'lazy';
       }
 
-      // Apply the src immediately for native loading
-      this._applySources(element, state);
+      // Apply the src immediately for native loading. Inside a <picture>, swap
+      // the <source> srcsets too (not just the <img>) — otherwise the sources
+      // keep their data-lazysrc-srcset, stay inert, and the browser falls back
+      // to the <img>'s own srcset, never using the avif/webp sources.
+      if (state.pictureParent) {
+        this._applyPictureSources(state.pictureParent, state);
+      } else {
+        this._applySources(element, state);
+      }
 
       // Listen for load events
       element.addEventListener('load', () => {
