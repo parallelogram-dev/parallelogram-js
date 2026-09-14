@@ -21,3 +21,5 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:browser
       - run: npm run build
+      - run: npm run check:exports
+      - run: npm run check:package

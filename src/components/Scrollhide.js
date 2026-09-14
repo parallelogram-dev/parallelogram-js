@@ -1,4 +1,4 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 /**
  * Scrollhide Component
  *

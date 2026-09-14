@@ -1,4 +1,4 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 
 /**
  * CopyToClipboard Component - Copy text to clipboard

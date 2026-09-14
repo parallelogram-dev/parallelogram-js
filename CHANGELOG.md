@@ -7,11 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `@parallelogram-js/core/managers/*` import paths for AlertManager, EventManager, PageManager, RouterManager and TransitionManager.
+- `@parallelogram-js/core/styles/*.css` for the per-component stylesheets (datatable, lazysrc, lightbox, reveal, tabs, toasts, toggle), which the build now compiles.
+- `@parallelogram-js/core/package.json` is exported.
+- Source maps for production and development bundles.
+
+### Deprecated
+
+- The `@parallelogram-js/core/dev/*` import paths. Use the `development` export condition instead; the `dev/*` paths will be removed in 0.6.0.
+
 ### Removed
 
+- **BREAKING:** The CommonJS build (`dist/index.cjs`) and the `require` export condition. The package is ESM only, and the root entry is now `dist/index.js`.
+- `src/demo` from the published package.
 - Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
 
+### Fixed
+
+- Documented import paths ending in `.js` (for example `@parallelogram-js/core/components/PModal.js`) resolved to `PModal.js.js` and failed. Every subpath now accepts both spellings and honours the `development` condition.
+- The `Modal` bundle silently dropped its `p-modal` dependency, and `PSelect` and `AlertManager` dropped `p-toasts`. `sideEffects` now covers the self-registering `p-*` elements.
+- Development bundles contained production code, because components imported BaseComponent through the package name and Rollup resolved it to the previous build's minified output.
+
 ### Changed
+
+- The library builds as one production and one development Rollup graph. Code shared between entries (BaseComponent, DOM helpers, state helpers) lives once in `dist/shared/` instead of being copied into every component bundle.
 
 - Web component SCSS is now compiled by a local Rollup plugin (`rollup-plugin-scss.js`) using Sass's modern API and cssnano 9, replacing the unmaintained `rollup-plugin-postcss`. Minified CSS now keeps declarations in source order, and inline SVGs keep the `viewBox` from source (cssnano 5 stripped it).
 - Updated dev dependencies and removed unused ones (`@rollup/plugin-replace`, `babel-plugin-transform-remove-console`, `postcss-cli`, `postcss-import`).

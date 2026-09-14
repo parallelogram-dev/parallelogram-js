@@ -1,4 +1,4 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 import { ExtendedStates } from '../core/ComponentStates.js';
 /**
  * Toggle Component

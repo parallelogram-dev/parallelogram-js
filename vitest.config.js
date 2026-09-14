@@ -1,18 +1,9 @@
-import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import scss from './rollup-plugin-scss.js';
 
 export default defineConfig({
   plugins: [scss({ loadPaths: ['src/styles'] })],
-  resolve: {
-    alias: [
-      {
-        find: /^@parallelogram-js\/core$/,
-        replacement: fileURLToPath(new URL('./src/index.js', import.meta.url)),
-      },
-    ],
-  },
   test: {
     restoreMocks: true,
     unstubGlobals: true,

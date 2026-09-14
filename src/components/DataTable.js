@@ -1,4 +1,4 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 import { ComponentStates, ExtendedStates } from '../core/ComponentStates.js';
 import { createElement, generateId, debounce } from '../utils/dom-utils.js';
 
