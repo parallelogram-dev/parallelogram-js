@@ -34,12 +34,13 @@ describe('PageManager', () => {
     document.body.replaceChildren();
   });
 
-  const start = registry => {
+  const start = (registry, eventBus = new EventManager()) => {
     manager = new PageManager({
       containerSelector: '#app',
       registry,
-      eventBus: new EventManager(),
+      eventBus,
     });
+    return manager;
   };
 
   it('mounts critical components before normal ones on the initial pass', () => {
@@ -62,5 +63,21 @@ describe('PageManager', () => {
     document.querySelector('#app').append(hero);
 
     await vi.waitFor(() => expect(mounted).toEqual(['hero']));
+  });
+
+  it('stops handling navigation once destroyed without removing other subscribers', () => {
+    document.body.innerHTML = '<main id="app"></main>';
+    const bus = new EventManager();
+    const otherSubscriber = vi.fn();
+    bus.on('router:navigate-success', otherSubscriber);
+    const destroyed = start([], bus);
+    const replaceFragments = vi.spyOn(destroyed, 'replaceFragments').mockResolvedValue();
+
+    destroyed.destroy();
+    manager = null;
+    bus.emit('router:navigate-success', { html: '<main></main>', url: new URL(location.href) });
+
+    expect(replaceFragments).not.toHaveBeenCalled();
+    expect(otherSubscriber).toHaveBeenCalledOnce();
   });
 });
