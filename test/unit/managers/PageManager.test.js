@@ -26,6 +26,20 @@ const component = (name, priority, mounted) => ({
   loader: () => ({ default: recordingComponent(name, mounted) }),
 });
 
+const emitNavigation = (bus, html, payload = {}) => {
+  let swap;
+  bus.emit('router:navigate-success', {
+    html,
+    url: new URL('/pricing', location.href),
+    trigger: 'link-click',
+    waitUntil: promise => {
+      swap = promise;
+    },
+    ...payload,
+  });
+  return swap;
+};
+
 describe('PageManager', () => {
   let manager;
   let router;
@@ -247,19 +261,6 @@ describe('PageManager', () => {
   });
 
   describe('fragment transitions', () => {
-    const emitNavigation = (bus, html) => {
-      let swap;
-      bus.emit('router:navigate-success', {
-        html,
-        url: new URL('/pricing', location.href),
-        trigger: 'link-click',
-        waitUntil: promise => {
-          swap = promise;
-        },
-      });
-      return swap;
-    };
-
     it('replaces fragments without transitions when the user prefers reduced motion', async () => {
       vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
       document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
@@ -314,6 +315,89 @@ describe('PageManager', () => {
         () => expect(document.querySelector('aside').textContent).toBe('New filters'),
         { timeout: 500 }
       );
+    });
+  });
+
+  describe('fragment matching', () => {
+    it('makes the fragment root attributes match the new page', async () => {
+      document.body.innerHTML =
+        '<main id="app" data-view="main" data-demo="home" aria-label="Home" class="page__content">Home</main>';
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(
+        bus,
+        '<main data-view="main" data-demo="media" class="page__content page__content--media">Media</main>'
+      );
+
+      const main = document.querySelector('main');
+      expect({
+        demo: main.dataset.demo,
+        label: main.getAttribute('aria-label'),
+        className: main.className,
+      }).toEqual({ demo: 'media', label: null, className: 'page__content page__content--media' });
+    });
+
+    it('mounts the page component for the new root instead of the previous one', async () => {
+      document.body.innerHTML = '<main id="app" data-view="main" data-demo="home">Home</main>';
+      const bus = new EventManager();
+      const mounted = [];
+      const page = name => ({
+        name,
+        selector: `[data-demo="${name}"]`,
+        loader: () => ({ default: recordingComponent(name, mounted) }),
+      });
+      start([page('home'), page('media')], bus, { mountDelay: 0 });
+
+      await emitNavigation(bus, '<main data-view="main" data-demo="media">Media</main>');
+
+      expect(mounted).toEqual(['home', 'media']);
+    });
+
+    it('replaces only the main fragment unless target groups say otherwise', async () => {
+      document.body.innerHTML =
+        '<nav data-view="menubar">Old menu</nav><main id="app" data-view="main">Home</main>';
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(
+        bus,
+        '<nav data-view="menubar">New menu</nav><main data-view="main">Media</main>'
+      );
+
+      expect(document.querySelector('nav').textContent).toBe('Old menu');
+    });
+
+    it('leaves the page untouched and rejects when the new page lacks a requested fragment', async () => {
+      document.body.innerHTML =
+        '<nav data-view="navbar">Old menu</nav><main id="app" data-view="main">Home</main>';
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0, targetGroups: { main: ['main', 'navbar'] } });
+
+      const swap = emitNavigation(bus, '<main data-view="main">Media</main>');
+
+      await expect(swap).rejects.toThrow(/navbar/);
+      expect(document.querySelector('main').textContent).toBe('Home');
+    });
+
+    it('matches fragments only by data-view unless fallbacks are turned on', async () => {
+      document.body.innerHTML = '<main id="app">Home</main>';
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      const swap = emitNavigation(bus, '<main>Media</main>');
+
+      await expect(swap).rejects.toThrow(/main/);
+    });
+
+    it('guesses the main fragment from common selectors when fallbacks are turned on', async () => {
+      document.body.innerHTML = '<main id="app">Home</main>';
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0, fragmentFallbacks: true });
+
+      await emitNavigation(bus, '<main>Media</main>');
+
+      expect(document.querySelector('main').textContent).toBe('Media');
     });
   });
 });

@@ -34,12 +34,8 @@ export class PageManager {
       // Debug
       trackPerformance: false,
       // Fragment target groups - define which fragments update together
-      targetGroups: {
-        main: ['main', 'menubar', 'breadcrumb'], // When 'main' is requested, also update nav and breadcrumbs
-        panel: ['panel'], // When 'panel' is requested, only update that
-        sidebar: ['sidebar', 'toolbar'], // Sidebar updates might also update related toolbar
-        modal: ['modal'], // Modal content standalone
-      },
+      targetGroups: {},
+      fragmentFallbacks: false,
       ...options,
     };
 
@@ -206,12 +202,22 @@ export class PageManager {
       const storedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const fragmentOptions = { ...options, storedScroll };
+      const fragments = viewTargets.map(viewTarget => ({
+        viewTarget,
+        ...this._extractTargetFragmentFromDoc(doc, viewTarget),
+      }));
+
+      /* A page with a different layout is not replaced piecemeal; the router loads it normally */
+      const missing = fragments.filter(
+        fragment => !fragment.sourceFragment || !fragment.targetFragment
+      );
+      if (missing.length > 0) {
+        throw this._fragmentMismatchError(missing);
+      }
 
       /* Fragments are replaced independently, so a slow or failing one cannot hold up the others */
       const outcomes = await Promise.allSettled(
-        viewTargets.map(viewTarget =>
-          this._processSingleFragment(doc, viewTarget, html, fragmentOptions)
-        )
+        fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
       );
 
       const replacementResults = outcomes.map((outcome, index) => {
@@ -264,20 +270,11 @@ export class PageManager {
   /**
    * Process a single fragment replacement with transitions
    */
-  async _processSingleFragment(doc, viewTarget, originalHtml, options) {
-    // Extract target fragment from parsed HTML and find matching fragment in current document
-    const { sourceFragment, targetFragment } = this._extractTargetFragmentFromDoc(doc, viewTarget);
-
-    if (!sourceFragment) {
-      throw new Error(`Source fragment with data-view="${viewTarget}" not found in fetched HTML`);
-    }
-
-    if (!targetFragment) {
-      throw new Error(
-        `Target fragment with data-view="${viewTarget}" not found in current document`
-      );
-    }
-
+  async _processSingleFragment(
+    { viewTarget, sourceFragment, targetFragment },
+    originalHtml,
+    options
+  ) {
     /* Transitions are skipped entirely when the user prefers reduced motion */
     const transitionConfig = prefersReducedMotion()
       ? undefined
@@ -314,7 +311,14 @@ export class PageManager {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
-      this._swapFragment(sourceFragment, targetFragment, viewTarget, originalHtml, options);
+      this._swapFragment(
+        sourceFragment,
+        targetFragment,
+        viewTarget,
+        originalHtml,
+        options,
+        transitionConfig
+      );
       swapped = true;
 
       this.eventBus.emit('page:fragment-did-replace', {
@@ -353,10 +357,10 @@ export class PageManager {
    * rather than after its in-transition: scroll, head and focus for the main fragment, and component
    * mounting for every fragment
    */
-  _swapFragment(sourceFragment, targetFragment, viewTarget, html, options) {
+  _swapFragment(sourceFragment, targetFragment, viewTarget, html, options, transitionConfig) {
     this.unmountAllWithin(targetFragment);
     targetFragment.innerHTML = sourceFragment.innerHTML;
-    this._copyFragmentAttributes(sourceFragment, targetFragment);
+    this._syncFragmentRoot(sourceFragment, targetFragment, transitionConfig);
 
     if (viewTarget === 'main') {
       this._handleScrollRestoration(options.storedScroll, options);
@@ -518,71 +522,47 @@ export class PageManager {
   }
 
   /**
-   * Extract target fragment from already parsed document
+   * The fragment named `viewTarget` in the fetched document and in the current page
    */
   _extractTargetFragmentFromDoc(doc, viewTarget) {
-    let targetFragment;
+    return {
+      sourceFragment: this._findFragment(doc, viewTarget),
+      targetFragment: this._findFragment(document, viewTarget),
+    };
+  }
 
-    // Find the source fragment in the parsed document
-    let sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
-
-    // If not found, try some fallback strategies
-    if (!sourceFragment) {
-      this.logger?.warn(`Fragment data-view="${viewTarget}" not found, trying fallbacks`);
-
-      // Fallback 1: Try to find by ID (common pattern)
-      sourceFragment = doc.querySelector(`#${viewTarget}`);
-
-      // Fallback 2: If viewTarget is 'main', try common main selectors
-      if (!sourceFragment && viewTarget === 'main') {
-        sourceFragment =
-          doc.querySelector('main') ||
-          doc.querySelector('[role="main"]') ||
-          doc.querySelector('#app') ||
-          doc.querySelector('.main-content');
-      }
-
-      // Fallback 3: For other targets, try class-based selector
-      if (!sourceFragment) {
-        sourceFragment = doc.querySelector(`.${viewTarget}`);
-      }
+  /**
+   * Find a fragment by its [data-view] name
+   *
+   * With the `fragmentFallbacks` option, a fragment without [data-view] is also looked up by id, by
+   * common main-content selectors for 'main', and by class.
+   */
+  _findFragment(root, viewTarget) {
+    const name = CSS.escape(viewTarget);
+    const fragment = root.querySelector(`[data-view="${name}"]`);
+    if (fragment || !this.options.fragmentFallbacks) {
+      return fragment;
     }
 
-    // Find the target fragment in the current document
-    targetFragment = document.querySelector(`[data-view="${viewTarget}"]`);
+    const mainSelectors =
+      viewTarget === 'main' ? ['main', '[role="main"]', '#app', '.main-content'] : [];
+    return (
+      [`#${name}`, ...mainSelectors, `.${name}`]
+        .map(selector => root.querySelector(selector))
+        .find(Boolean) ?? null
+    );
+  }
 
-    // Apply same fallback strategies for target
-    if (!targetFragment) {
-      this.logger?.warn(
-        `Target fragment data-view="${viewTarget}" not found in current document, trying fallbacks`
-      );
-
-      targetFragment = document.querySelector(`#${viewTarget}`);
-
-      if (!targetFragment && viewTarget === 'main') {
-        targetFragment =
-          document.querySelector('main') ||
-          document.querySelector('[role="main"]') ||
-          document.querySelector('#app') ||
-          document.querySelector('.main-content');
-      }
-
-      if (!targetFragment) {
-        targetFragment = document.querySelector(`.${viewTarget}`);
-      }
-    }
-
-    this.logger?.info('Fragment extraction result', {
-      viewTarget,
-      sourceFound: !!sourceFragment,
-      targetFound: !!targetFragment,
-      sourceSelector:
-        sourceFragment?.tagName + (sourceFragment?.className ? '.' + sourceFragment.className : ''),
-      targetSelector:
-        targetFragment?.tagName + (targetFragment?.className ? '.' + targetFragment.className : ''),
-    });
-
-    return { sourceFragment, targetFragment };
+  _fragmentMismatchError(missing) {
+    const details = missing.map(({ viewTarget, sourceFragment }) =>
+      sourceFragment
+        ? `${viewTarget} (not on the current page)`
+        : `${viewTarget} (not in the new page)`
+    );
+    const error = new Error(`Fragments not found: ${details.join(', ')}`);
+    error.name = 'FragmentMismatchError';
+    error.viewTargets = missing.map(({ viewTarget }) => viewTarget);
+    return error;
   }
 
   /**
@@ -792,38 +772,32 @@ export class PageManager {
   }
 
   /**
-   * Copy relevant attributes from source fragment to target fragment
+   * Make the fragment root's attributes match the new page's, so selectors on the root (such as a
+   * page component's data attribute) describe the new content
+   *
+   * `data-view` is left alone. Classes starting with `component-`, `router-` or `page-` are kept, as
+   * is the out-transition class while an in-transition is about to take over from it.
    */
-  _copyFragmentAttributes(sourceFragment, targetFragment) {
-    // Attributes to copy (excluding core structural ones)
-    const attributesToCopy = [
-      'data-state',
-      'data-loading',
-      'data-error',
-      'data-version',
-      'aria-live',
-      'aria-label',
-      'aria-describedby',
-    ];
+  _syncFragmentRoot(sourceFragment, targetFragment, transitionConfig) {
+    const keptClasses = [...targetFragment.classList].filter(
+      name =>
+        /^(component|router|page)-/.test(name) ||
+        (transitionConfig?.in && name === transitionConfig.out)
+    );
 
-    attributesToCopy.forEach(attr => {
-      if (sourceFragment.hasAttribute(attr)) {
-        targetFragment.setAttribute(attr, sourceFragment.getAttribute(attr));
-      } else {
-        targetFragment.removeAttribute(attr);
+    for (const { name } of [...targetFragment.attributes]) {
+      if (name !== 'data-view' && !sourceFragment.hasAttribute(name)) {
+        targetFragment.removeAttribute(name);
       }
-    });
-
-    // Copy CSS classes if source has any (but preserve existing target classes that might be needed)
-    if (sourceFragment.className) {
-      // Keep important target classes like component mount states
-      const preserveClasses = Array.from(targetFragment.classList).filter(
-        cls => cls.startsWith('component-') || cls.startsWith('router-') || cls.startsWith('page-')
-      );
-
-      targetFragment.className = sourceFragment.className;
-      preserveClasses.forEach(cls => targetFragment.classList.add(cls));
     }
+
+    for (const { name, value } of sourceFragment.attributes) {
+      if (name !== 'data-view' && targetFragment.getAttribute(name) !== value) {
+        targetFragment.setAttribute(name, value);
+      }
+    }
+
+    targetFragment.classList.add(...keptClasses);
   }
 
   /**
