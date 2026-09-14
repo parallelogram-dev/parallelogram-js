@@ -13,9 +13,11 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * The component mounts one instance per `[data-defer-tracker]` node, parses its
  * JSON config, and defers booting the named adapter until the first genuine user
- * interaction (or an idle fallback). Lighthouse never synthesises interaction, so
- * tracker cost stays out of cold lab traces (TBT in particular) and off the
- * main thread for real users until they engage.
+ * interaction. Without interaction, trackers boot after a fallback: once the page
+ * has loaded, then `idleTimeout` milliseconds (5 seconds by default), then the
+ * browser's next idle period where `requestIdleCallback` is supported. Tracker
+ * cost therefore stays off the main thread during page load, and out of cold lab
+ * traces such as Lighthouse's, which never interact with the page.
  *
  * Adapters are registered up front and only the ones a site imports are bundled:
  *
@@ -44,6 +46,9 @@ const DEFAULT_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'mousemove', 'sc
  */
 const LISTENER_OPTS = { capture: true, passive: true };
 
+/** Longest wait, in milliseconds, for an idle period once the fallback delay has passed. */
+const IDLE_DEADLINE = 2000;
+
 /**
  * Page-wide gate that runs queued callbacks on first interaction or an idle
  * fallback. Private to this module; a single shared instance backs every
@@ -58,14 +63,18 @@ class InteractionGate {
     this._queue = [];
     this._fired = false;
     this._armed = false;
+    this._timer = null;
     this._idleHandle = null;
-    this._usedIdleCallback = false;
+    this._loadListener = null;
     this._fire = this._fire.bind(this);
   }
 
   /**
    * Override the gate's interaction events and idle fallback. Only effective
    * before the gate arms (i.e. before the first `until()` call).
+   *
+   * `idleTimeout` is the minimum delay after the page's load event before
+   * trackers boot without interaction; `null` or `0` disables the fallback.
    *
    * @param {{ events?: string[], idleTimeout?: number|null }} [options]
    */
@@ -107,15 +116,32 @@ class InteractionGate {
     this._events.forEach(type => window.addEventListener(type, this._fire, LISTENER_OPTS));
 
     if (this._idleTimeout) {
-      if ('requestIdleCallback' in window) {
-        this._usedIdleCallback = true;
-        this._idleHandle = window.requestIdleCallback(this._fire, {
-          timeout: this._idleTimeout,
-        });
-      } else {
-        this._idleHandle = window.setTimeout(this._fire, this._idleTimeout);
-      }
+      this._afterLoad(() => {
+        this._timer = window.setTimeout(() => {
+          this._timer = null;
+          if (typeof window.requestIdleCallback === 'function') {
+            this._idleHandle = window.requestIdleCallback(this._fire, { timeout: IDLE_DEADLINE });
+          } else {
+            this._fire();
+          }
+        }, this._idleTimeout);
+      });
     }
+  }
+
+  /**
+   * Run the callback once the page's load event has fired.
+   *
+   * @param {() => void} callback
+   */
+  _afterLoad(callback) {
+    if (document.readyState === 'complete') {
+      callback();
+      return;
+    }
+
+    this._loadListener = new AbortController();
+    window.addEventListener('load', callback, { once: true, signal: this._loadListener.signal });
   }
 
   _fire() {
@@ -139,9 +165,12 @@ class InteractionGate {
   _teardown() {
     if (typeof window === 'undefined') return;
     this._events.forEach(type => window.removeEventListener(type, this._fire, LISTENER_OPTS));
+    this._loadListener?.abort();
+    this._loadListener = null;
+    window.clearTimeout(this._timer);
+    this._timer = null;
     if (this._idleHandle != null) {
-      if (this._usedIdleCallback) window.cancelIdleCallback(this._idleHandle);
-      else window.clearTimeout(this._idleHandle);
+      window.cancelIdleCallback?.(this._idleHandle);
       this._idleHandle = null;
     }
   }
