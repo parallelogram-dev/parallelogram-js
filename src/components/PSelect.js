@@ -418,7 +418,9 @@ export default class PSelect extends HTMLElement {
     this._els.control.setAttribute('aria-expanded', 'false');
 
     this.tm.exit(this._els.menu).then(() => {
-      this._els.menu.hidden = true;
+      if (!this.state.open) {
+        this._els.menu.hidden = true;
+      }
     });
 
     this.dispatchEvent(new CustomEvent('p-select:close', { bubbles: true }));

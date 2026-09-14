@@ -1,5 +1,6 @@
 import { ComponentHost } from '../core/ComponentHost.js';
 import { announce } from '../utils/announce.js';
+import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 
 const NATIVELY_FOCUSABLE =
   'a[href], area[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, iframe, [tabindex], [contenteditable]:not([contenteditable="false"])';
@@ -202,84 +203,28 @@ export class PageManager {
     });
 
     try {
-      // Store current scroll position if needed for preservation
-      let scrollPosition = null;
-      if (preserveScroll) {
-        scrollPosition = {
-          x: window.scrollX,
-          y: window.scrollY,
-        };
-      }
+      const storedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const fragmentOptions = { ...options, storedScroll };
 
-      // Parse the incoming HTML once
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
+      /* Fragments are replaced independently, so a slow or failing one cannot hold up the others */
+      const outcomes = await Promise.allSettled(
+        viewTargets.map(viewTarget =>
+          this._processSingleFragment(doc, viewTarget, html, fragmentOptions)
+        )
+      );
 
-      const replacementResults = [];
-      let hasMainContentUpdate = false;
-
-      // Process each target fragment
-      for (const viewTarget of viewTargets) {
-        try {
-          const result = await this._processSingleFragment(doc, viewTarget, html, options);
-          replacementResults.push(result);
-
-          if (viewTarget === 'main') {
-            hasMainContentUpdate = true;
-          }
-        } catch (error) {
-          this.logger?.error(`Failed to replace fragment ${viewTarget}`, { error });
-          replacementResults.push({
-            viewTarget,
-            success: false,
-            error: error.message,
-          });
+      const replacementResults = outcomes.map((outcome, index) => {
+        if (outcome.status === 'fulfilled') {
+          return outcome.value;
         }
-      }
 
-      // Handle scroll restoration and head updates only if main content changed
-      if (hasMainContentUpdate) {
-        this._handleScrollRestoration(scrollPosition, options);
-        this._updateDocumentHead(html);
-      }
-
-      // Mount components for all successfully updated fragments
-      const successfulTargets = replacementResults.filter(r => r.success);
-
-      for (const result of successfulTargets) {
-        // Mount components within the updated fragment
-        this.mountAllWithin(result.targetFragment, {
-          priority: 'critical',
-          fragmentTarget: result.viewTarget,
+        this.logger?.error(`Failed to replace fragment ${viewTargets[index]}`, {
+          error: outcome.reason,
         });
-
-        // Emit dom:content-loaded for router link enhancement
-        this.eventBus.emit('dom:content-loaded', {
-          fragment: result.targetFragment,
-          viewTarget: result.viewTarget,
-          trigger: 'fragment-replacement',
-        });
-
-        // Schedule non-critical component mounting
-        if (this.options.mountDelay > 0) {
-          setTimeout(() => {
-            this.mountAllWithin(result.targetFragment, {
-              priority: 'normal',
-              fragmentTarget: result.viewTarget,
-            });
-          }, this.options.mountDelay);
-        } else {
-          this.mountAllWithin(result.targetFragment, {
-            priority: 'normal',
-            fragmentTarget: result.viewTarget,
-          });
-        }
-      }
-
-      const main = successfulTargets.find(result => result.viewTarget === 'main');
-      if (fromNavigation && main) {
-        this._completeNavigation(main.targetFragment, url);
-      }
+        return { viewTarget: viewTargets[index], success: false, error: outcome.reason?.message };
+      });
+      const successfulTargets = replacementResults.filter(result => result.success);
 
       // Update performance metrics
       if (this.options.trackPerformance) {
@@ -333,8 +278,10 @@ export class PageManager {
       );
     }
 
-    // Get transition configuration for this target
-    const transitionConfig = this.options.targetGroupTransitions?.[viewTarget];
+    /* Transitions are skipped entirely when the user prefers reduced motion */
+    const transitionConfig = prefersReducedMotion()
+      ? undefined
+      : this.options.targetGroupTransitions?.[viewTarget];
 
     // Emit pre-unmount event
     this.eventBus.emit('page:fragment-will-replace', {
@@ -346,16 +293,16 @@ export class PageManager {
       transitionConfig,
     });
 
+    let swapped = false;
+
     try {
-      // 1. OUT transition (if configured)
       if (transitionConfig?.out) {
         await this._performFragmentTransition(targetFragment, 'out', transitionConfig);
       }
 
-      // 2. Scroll to top immediately after out transition (before content swap)
-      // This creates a smoother experience - content fades out, then scroll snaps, then new content fades in
-      // Use 'instant' behavior to override any CSS scroll-behavior: smooth on the document
-      // Only scroll for the 'main' fragment to avoid scrolling when other fragments (navbar, etc.) are processed
+      /* The main fragment scrolls to the top between the out transition and the swap, so old
+         content fades out, the page snaps up and the new content fades in. 'instant' overrides any
+         CSS scroll-behavior: smooth on the document. */
       if (
         viewTarget === 'main' &&
         !options.preserveScroll &&
@@ -367,26 +314,19 @@ export class PageManager {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
-      // 3. Unmount components only within the target fragment
-      this.unmountAllWithin(targetFragment);
+      this._swapFragment(sourceFragment, targetFragment, viewTarget, originalHtml, options);
+      swapped = true;
 
-      // 3 & 4. Replace content and prepare for IN transition in same frame
-      if (transitionConfig?.in) {
-        // Set initial state for in-transition before replacing content
-        await this._replaceContentWithTransition(targetFragment, sourceFragment, transitionConfig);
-      } else {
-        // No transition - just replace
-        targetFragment.innerHTML = sourceFragment.innerHTML;
-        this._copyFragmentAttributes(sourceFragment, targetFragment);
-      }
-
-      // Emit post-mount event
       this.eventBus.emit('page:fragment-did-replace', {
         targetFragment,
         viewTarget,
         options,
         transitionConfig,
       });
+
+      if (transitionConfig?.in) {
+        await this._performFragmentTransition(targetFragment, 'in', transitionConfig);
+      }
     } catch (transitionError) {
       this.logger?.error(`Fragment transition failed for ${viewTarget}`, {
         error: transitionError,
@@ -394,10 +334,9 @@ export class PageManager {
         transitionConfig,
       });
 
-      // Continue with replacement even if transition fails
-      this.unmountAllWithin(targetFragment);
-      targetFragment.innerHTML = sourceFragment.innerHTML;
-      this._copyFragmentAttributes(sourceFragment, targetFragment);
+      if (!swapped) {
+        this._swapFragment(sourceFragment, targetFragment, viewTarget, originalHtml, options);
+      }
     }
 
     return {
@@ -410,23 +349,39 @@ export class PageManager {
   }
 
   /**
-   * Replace content and start IN transition in same frame to prevent flash
-   * @private
-   * @param {HTMLElement} targetFragment - Target fragment element
-   * @param {HTMLElement} sourceFragment - Source fragment element
-   * @param {Object} config - Transition configuration
+   * Replace a fragment's content and run everything that depends on the new content straight away,
+   * rather than after its in-transition: scroll, head and focus for the main fragment, and component
+   * mounting for every fragment
    */
-  async _replaceContentWithTransition(targetFragment, sourceFragment, config) {
-    return new Promise(resolve => {
-      requestAnimationFrame(() => {
-        /* Replace content and copy attributes */
-        targetFragment.innerHTML = sourceFragment.innerHTML;
-        this._copyFragmentAttributes(sourceFragment, targetFragment);
+  _swapFragment(sourceFragment, targetFragment, viewTarget, html, options) {
+    this.unmountAllWithin(targetFragment);
+    targetFragment.innerHTML = sourceFragment.innerHTML;
+    this._copyFragmentAttributes(sourceFragment, targetFragment);
 
-        /* Trigger IN transition in same frame */
-        this._performFragmentTransition(targetFragment, 'in', config).then(resolve);
-      });
+    if (viewTarget === 'main') {
+      this._handleScrollRestoration(options.storedScroll, options);
+      this._updateDocumentHead(html);
+    }
+
+    this.mountAllWithin(targetFragment, { priority: 'critical', fragmentTarget: viewTarget });
+
+    this.eventBus.emit('dom:content-loaded', {
+      fragment: targetFragment,
+      viewTarget,
+      trigger: 'fragment-replacement',
     });
+
+    const mountNormal = () =>
+      this.mountAllWithin(targetFragment, { priority: 'normal', fragmentTarget: viewTarget });
+    if (this.options.mountDelay > 0) {
+      setTimeout(mountNormal, this.options.mountDelay);
+    } else {
+      mountNormal();
+    }
+
+    if (viewTarget === 'main' && options.fromNavigation) {
+      this._completeNavigation(targetFragment, options.url);
+    }
   }
 
   /**
@@ -502,7 +457,13 @@ export class PageManager {
           });
         }
 
-        await this._whenAnimationsFinish(fragment, duration);
+        if (fragment.getAnimations?.().length === 0) {
+          this.logger?.debug(`Transition class "${className}" did not start an animation`, {
+            fragment,
+          });
+        }
+
+        await whenAnimationsFinish(fragment, { fallback: duration + 250 });
 
         if (direction === 'in') {
           fragment.classList.remove(className);
@@ -511,33 +472,6 @@ export class PageManager {
         resolve();
       });
     });
-  }
-
-  /**
-   * Resolve once the element's own CSS animations and transitions have finished
-   *
-   * Resolves straight away when nothing animates (the class defines no animation, or the element
-   * is hidden) and otherwise no later than shortly after the longest animation should end, so an
-   * animation that never finishes cannot stall navigation.
-   */
-  _whenAnimationsFinish(element, duration) {
-    const animations = element.getAnimations?.() ?? [];
-    if (animations.length === 0) {
-      return Promise.resolve();
-    }
-
-    const endTimes = animations
-      .map(animation => animation.effect?.getComputedTiming().endTime)
-      .filter(Number.isFinite);
-    const timeout = Math.max(duration, ...endTimes) + 250;
-
-    let timer;
-    return Promise.race([
-      Promise.allSettled(animations.map(animation => animation.finished)),
-      new Promise(resolve => {
-        timer = setTimeout(resolve, timeout);
-      }),
-    ]).then(() => clearTimeout(timer));
   }
 
   /**
@@ -927,7 +861,7 @@ export class PageManager {
         if (this.options.scrollElement) {
           const element = document.querySelector(this.options.scrollElement);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
+            element.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
           }
         }
         break;

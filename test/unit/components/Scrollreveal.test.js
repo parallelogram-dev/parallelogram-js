@@ -36,4 +36,12 @@ describe('Scrollreveal', () => {
   it('reads delay and stagger as numbers', () => {
     expect(mountReveal({ delay: '120', stagger: '40' })).toMatchObject({ delay: 120, stagger: 40 });
   });
+
+  it('leaves content visible when the user prefers reduced motion', () => {
+    vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
+
+    mountReveal();
+
+    expect(document.querySelector('[data-reveal]').style.opacity).toBe('');
+  });
 });
