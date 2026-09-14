@@ -104,7 +104,7 @@
   margin-left: auto;
 }
 
-.control[aria-expanded='true'] .arrow {
+.control[data-open] .arrow {
   transform: rotate(180deg);
 }
 
@@ -142,8 +142,31 @@
   font-weight: 500;
 }
 
-.option[aria-current='true'] {
+.option[data-active] {
   background: var(--select-current-bg);
+}
+
+.group-label {
+  padding: 0.45rem 0.6rem 0.2rem;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.group .option {
+  padding-left: 1rem;
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .option[aria-disabled='true'] {
@@ -167,7 +190,7 @@
     color: HighlightText;
   }
 
-  .option[aria-current='true'] {
+  .option[data-active] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
