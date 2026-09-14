@@ -20,6 +20,8 @@
  *
  * Settings belong on <p-modal>. A trigger only overrides the ones it sets itself
  * (data-modal-size, data-modal-closable, data-modal-backdrop-close, data-modal-keyboard).
+ * Opening a modal closes the others unless the trigger sets data-modal-multiple, and focus returns
+ * to the trigger on close unless it sets data-modal-focus="false".
  *
  * JavaScript (standalone):
  * import Modal from '@parallelogram-js/core/components/Modal';
@@ -148,22 +150,8 @@ export default class Modal extends BaseComponent {
       this._closeOtherModals(state.modalElement);
     }
 
-    // Store the trigger element for focus restoration
-    state.modalElement._triggerElement = triggerElement;
-
-    // Open the modal - wait for custom element to be defined if needed
-    if (typeof state.modalElement.open === 'function') {
-      state.modalElement.open();
-    } else {
-      // Fallback: wait for custom element to be fully defined
-      customElements.whenDefined('p-modal').then(() => {
-        if (typeof state.modalElement.open === 'function') {
-          state.modalElement.open();
-        } else {
-          this.logger?.error('PModal open method not available', state.modalElement);
-        }
-      });
-    }
+    // p-modal returns focus to the trigger when it closes, unless data-modal-focus="false"
+    state.modalElement.open({ returnFocus: state.focus ? triggerElement : null });
   }
 
   /**
@@ -283,14 +271,6 @@ export default class Modal extends BaseComponent {
     // Update ARIA attributes
     triggerElement.setAttribute('aria-expanded', 'false');
 
-    // Restore focus to trigger
-    const state = this.getState(triggerElement);
-    if (state?.focus && event.detail.modal._triggerElement) {
-      requestAnimationFrame(() => {
-        event.detail.modal._triggerElement.focus();
-      });
-    }
-
     // Dispatch enhancement event
     this._dispatch(triggerElement, 'modal:closed', {
       trigger: triggerElement,
@@ -307,14 +287,14 @@ export default class Modal extends BaseComponent {
   }
 
   /**
-   * Close other open modals
+   * Close other open modals, leaving any that cannot be closed
    * @private
    * @param {PModal} currentModal - Current modal to keep open
    */
   _closeOtherModals(currentModal) {
     const openModals = document.querySelectorAll('p-modal[open]');
     openModals.forEach(modal => {
-      if (modal !== currentModal) {
+      if (modal !== currentModal && modal.getAttribute('data-modal-closable') !== 'false') {
         modal.close();
       }
     });

@@ -6,9 +6,9 @@
   display: none !important;
 }
 
-/* Host & Core Properties */
+/* Host & Core Properties. The dialog renders in the top layer, so the host itself takes no space. */
 :host {
-  display: none;
+  display: contents;
   box-sizing: border-box;
 
   /* Colors using surface-dialog tokens and design system variables */
@@ -81,86 +81,33 @@
   --modal-btn-min-height: 3.125em; /* 50px */
 }
 
-/* Shared - Border Properties */
+/* Block: Modal panel, the <dialog> */
 .modal__panel {
-  border: var(--modal-border-width) solid var(--modal-panel-border);
-}
-
-/* Shared - Border Radius */
-.modal__panel,
-.modal__close,
-::slotted(.btn) {
-  border-radius: var(--modal-radius-lg);
-}
-
-/* Shared - Flex Center Layout */
-.modal__close,
-.modal__header,
-.modal__footer {
-  display: flex;
-  align-items: center;
-}
-
-/* Shared - Transitions (only for users who prefer motion) */
-@media (prefers-reduced-motion: no-preference) {
-  .modal__backdrop {
-    transition: opacity var(--modal-transition);
-  }
-
-  .modal__panel {
-    transition:
-      opacity var(--modal-transition),
-      transform var(--modal-transition);
-  }
-
-  .modal__close {
-    transition: background-color var(--modal-transition);
-  }
-
-  ::slotted(.btn) {
-    transition:
-      background-color var(--modal-transition),
-      color var(--modal-transition),
-      transform var(--modal-transition);
-  }
-}
-
-/* Host states */
-:host {
-  display: none;
-}
-
-:host([open]) {
-  display: block;
-  position: fixed;
-  inset: 0;
-  z-index: #{$z-modal};
-  animation: modal-fade-in var(--modal-animation-duration) var(--modal-animation-easing);
-}
-
-/* Block: Modal backdrop */
-.modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: var(--modal-backdrop-bg);
-  animation: modal-backdrop-in var(--modal-animation-duration) var(--modal-animation-easing);
-}
-
-/* Block: Modal panel */
-.modal__panel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
+  box-sizing: border-box;
   flex-direction: column;
   min-width: min(var(--modal-max-width), var(--modal-size-md));
   max-width: var(--modal-max-width);
   max-height: var(--modal-max-height);
+  margin: auto;
+  padding: 0;
+  border: var(--modal-border-width) solid var(--modal-panel-border);
+  border-radius: var(--modal-radius-lg);
   background: var(--modal-panel-bg);
   color: var(--modal-panel-color);
   box-shadow: var(--modal-shadow);
-  animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
+  overflow: hidden;
+}
+
+.modal__panel[open] {
+  display: flex;
+}
+
+.modal__panel:focus-visible {
+  outline: none;
+}
+
+.modal__panel::backdrop {
+  background: var(--modal-backdrop-bg, rgba(15, 23, 42, 0.5));
 }
 
 /* Panel size modifiers */
@@ -186,9 +133,20 @@
   max-width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
   max-height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
   border-radius: var(--modal-radius-xl);
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
+}
+
+/* Shared - Border Radius */
+.modal__close,
+::slotted(.btn) {
+  border-radius: var(--modal-radius-lg);
+}
+
+/* Shared - Flex Center Layout */
+.modal__close,
+.modal__header,
+.modal__footer {
+  display: flex;
+  align-items: center;
 }
 
 /* Element: Modal header */
@@ -198,7 +156,10 @@
   padding: var(--modal-padding-y) var(--modal-padding-x);
   background: var(--modal-header-bg);
   border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
-  border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+}
+
+.modal__title {
+  min-width: 0;
 }
 
 .modal__header h2 {
@@ -253,7 +214,6 @@
   justify-content: flex-end;
   background: var(--modal-footer-bg);
   border-top: var(--modal-border-width) solid var(--modal-panel-border);
-  border-radius: 0 0 var(--modal-radius) var(--modal-radius);
 }
 
 /* Slotted button styles (BEM classes) */
@@ -268,7 +228,6 @@
   font-size: var(--modal-font-sm);
   font-weight: 500;
   min-height: var(--modal-btn-min-height);
-  transition: all var(--modal-transition);
 }
 
 ::slotted(.btn:hover) {
@@ -299,7 +258,37 @@
   cursor: not-allowed;
 }
 
-/* Animations */
+/* Motion, only for users who have not asked for less */
+@media (prefers-reduced-motion: no-preference) {
+  .modal__panel[open] {
+    animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
+  }
+
+  .modal__panel[open]::backdrop {
+    animation: modal-fade-in var(--modal-animation-duration) var(--modal-animation-easing);
+  }
+
+  :host([data-modal-state='closing']) .modal__panel[open] {
+    animation: modal-panel-out var(--modal-animation-duration) var(--modal-animation-easing)
+      forwards;
+  }
+
+  :host([data-modal-state='closing']) .modal__panel[open]::backdrop {
+    animation: modal-fade-out var(--modal-animation-duration) var(--modal-animation-easing) forwards;
+  }
+
+  .modal__close {
+    transition: background-color var(--modal-transition);
+  }
+
+  ::slotted(.btn) {
+    transition:
+      background-color var(--modal-transition),
+      color var(--modal-transition),
+      transform var(--modal-transition);
+  }
+}
+
 @keyframes modal-fade-in {
   from {
     opacity: 0;
@@ -309,34 +298,33 @@
   }
 }
 
-@keyframes modal-backdrop-in {
+@keyframes modal-fade-out {
   from {
-    opacity: 0;
+    opacity: 1;
   }
   to {
-    opacity: 1;
+    opacity: 0;
   }
 }
 
 @keyframes modal-panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  :host([open]),
-  .modal__backdrop,
-  .modal__panel,
-  .modal__close,
-  ::slotted(.btn) {
-    animation: none;
-    transition: none;
+@keyframes modal-panel-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
   }
 }
