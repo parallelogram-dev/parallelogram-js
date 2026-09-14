@@ -3,3 +3,6 @@ node_modules/
 *.log
 .env
 coverage/__screenshots__/
+dist/
+demo/dist/
+.claude/settings.local.json
