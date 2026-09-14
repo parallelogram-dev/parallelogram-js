@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@parallelogram-js/core/package.json` is exported.
 - Source maps for production and development bundles.
 - MIT `LICENSE` file, which `package.json` referenced but the package never shipped.
+- `BaseComponent#trackedElements()` lists the elements a component is mounted on, including ones whose asynchronous `_init` is still running.
 - `EventManager#on()` and `EventManager#once()` accept `{ signal }` and remove the listener when the signal aborts; `EventManager#listenerCount()` reports how many listeners an event has; listener errors go to the logger passed to the constructor.
 - `BaseComponent#getBoolAttr()` and `BaseComponent#getNumberAttr()` for reading typed component attributes. `_getConfigFromAttrs()` now converts values to the type of each entry in `static defaults`.
 
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `PageManager#destroy()` and `RouterManager#destroy()` left their event bus, window and link listeners attached, because `EventManager#off(event)` without a callback did nothing. Managers now remove only their own listeners through an abort signal, and `off(event)` without a callback removes every listener for that event. SelectLoader no longer adds a permanent `router:navigate-success` listener each time it mounts, and DeferTracker's pending consent listener is removed on unmount.
+- BaseComponent leaked when `_init` threw or returned a Promise, or when a state's `cleanup()` threw: the element stayed tracked and its abort signal was never aborted. `mount()` now untracks and aborts on failure, `unmount()` always aborts the signal, an asynchronous `_init` is supported and is cleaned up if the element is unmounted first, and mounted elements live in one `Map` instead of a WeakMap plus a separate Set.
 - **Behaviour change:** boolean attributes set to `"false"` (or `"0"`) now turn options off. Previously every component read them as the truthy string `"false"`, so opt-outs such as `data-toggle-close-navigation="false"`, `data-tabs-keyboard="false"`, `data-reveal-once="false"`, `data-videoplay-autopause="false"`, `data-lightbox-close-escape="false"` and `data-datatable-sortable="false"` did nothing, and `data-toggle-manual="false"` or `data-tabs-autofocus="false"` switched the option on. Empty attributes (`data-toggle-capture`) now count as true. Affects Toggle, Tabs, Modal, Lightbox, DataTable, FormEnhancer, Scrollreveal, Scrollhide, Videoplay, Toast, CopyToClipboard and SelectLoader.
 - Components can be constructed without options (`new Toggle()`, `Tabs.enhanceAll()`); the BaseComponent constructor used to throw when called with no argument.
 - Components registered with `priority: 'critical'` never mounted on the initial page load or when matching elements were added later; they only mounted after a router fragment swap. Critical components now mount first on every pass, followed by the rest.

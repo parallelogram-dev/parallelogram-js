@@ -800,7 +800,7 @@ export default class Lazysrc extends BaseComponent {
    * @param {HTMLElement} [container] - Container to search within
    */
   async loadAll(container = document) {
-    const elements = [...this._elementsKeys()].filter(element => container.contains(element));
+    const elements = this.trackedElements().filter(element => container.contains(element));
     await Promise.allSettled(elements.map(element => this.loadElement(element)));
   }
 
@@ -848,7 +848,9 @@ export default class Lazysrc extends BaseComponent {
    * @returns {Object} Component status
    */
   getStatus() {
-    const states = [...this._elementsKeys()].map(element => this.getState(element)).filter(Boolean);
+    const states = this.trackedElements()
+      .map(element => this.getState(element))
+      .filter(Boolean);
 
     return {
       totalElements: states.length,
