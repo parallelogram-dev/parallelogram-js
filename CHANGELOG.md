@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Component contracts: every component has a `<Name>.contract.js` module beside it describing its attributes (with types, defaults and allowed values), events, properties, methods, slots, shadow parts, CSS custom properties and examples, in the shape defined by `src/contract.js`. Components never import their contracts, so bundles don't grow. A drift test checks each contract against its component: the attributes it reads or observes, the events it dispatches, its parts and slots, the CSS properties its styles use, and its `static defaults`. The documentation site, `custom-elements.json` and TypeScript declarations are generated from them.
 - `@parallelogram-js/core/managers/*` import paths for AlertManager, EventManager, PageManager, RouterManager and TransitionManager.
 - `@parallelogram-js/core/styles/*.css` for the per-component stylesheets (datatable, lazysrc, lightbox, reveal, tabs, toasts, toggle), which the build now compiles.
 - `@parallelogram-js/core/package.json` is exported.
