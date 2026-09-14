@@ -12,12 +12,15 @@ BaseComponent provides a set of helper methods to simplify state management and 
 
 ## Core Concept
 
-Each component has a unique data attribute prefix derived from its class name:
+Each component declares its data attribute with `static selector`, and the helper methods use it as a prefix:
 
-- `Toggle` → `data-toggle`
-- `Lightbox` → `data-lightbox`
-- `DataTable` → `data-data-table`
-- `PModal` → `data-p-modal`
+```javascript
+class Toggle extends BaseComponent {
+  static selector = 'data-toggle';
+}
+```
+
+The attribute is declared rather than taken from the class name because minifiers rename classes. A component without `static selector` falls back to its class name (`DataTable` → `data-data-table`) and logs a warning.
 
 The helper methods automatically apply this prefix, so you write less code and maintain consistency.
 
@@ -209,40 +212,11 @@ if (!this.hasAttr(element, 'initialized')) {
 
 ### `_getSelector()`
 
-Automatically extracts the component's data attribute selector from the class name.
+Returns the component's data attribute, such as `data-toggle`, from `static selector`, which can be written as `'data-toggle'`, `'toggle'` or `'[data-toggle]'`.
 
-**Returns:** `string` - Data attribute selector (e.g., `data-toggle`)
+**Returns:** `string`
 
-**How it works:**
-
-```javascript
-class Toggle extends BaseComponent {}
-// _getSelector() returns "data-toggle"
-
-class DataTable extends BaseComponent {}
-// _getSelector() returns "data-data-table"
-
-class PModal extends BaseComponent {}
-// _getSelector() returns "data-p-modal"
-```
-
-**Conversion Rules:**
-
-- PascalCase → kebab-case
-- `Toggle` → `toggle`
-- `DataTable` → `data-table`
-- `PModal` → `p-modal`
-- Prefix with `data-`
-
-**Override if needed:**
-
-```javascript
-class CustomComponent extends BaseComponent {
-  _getSelector() {
-    return 'data-custom'; // Override default behavior
-  }
-}
-```
+Without `static selector` the attribute is derived from the class name (`Toggle` → `data-toggle`) and a warning is logged once, because minified builds change class names.
 
 ---
 
@@ -685,7 +659,7 @@ Web Components use standard `getAttribute()` methods as per Web Component standa
 
 The BaseComponent API provides:
 
-- ✅ **Automatic attribute naming** based on class name
+- ✅ **Automatic attribute naming** from each component's `static selector`
 - ✅ **Reduced boilerplate** (shorter, cleaner code)
 - ✅ **Type safety** (prevents typos)
 - ✅ **Consistency** (same pattern across all components)

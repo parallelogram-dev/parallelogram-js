@@ -198,12 +198,24 @@ export class BaseComponent {
     return { cleanup: () => controller.abort(), controller };
   }
 
-  // Helper method for getting state
+  /**
+   * The component's JavaScript state for a mounted element: the object `_init` returned, with its
+   * controller and cleanup
+   *
+   * This is not the `data-<component>-state` attribute; read that with getElementState() and write it
+   * with setState().
+   *
+   * @param {HTMLElement} element
+   * @returns {Object|undefined}
+   */
   getState(element) {
     return this.elements.get(element);
   }
 
-  /* Wrapper methods that delegate to shared utilities */
+  /**
+   * @deprecated 0.5.0 Reads an unprefixed `data-<attr>` and guesses its type. Use getAttr(),
+   * getBoolAttr() or getNumberAttr(), which read `data-<component>-<attr>`. Removed in 0.6.0.
+   */
   _getDataAttr(element, attr, defaultValue) {
     return getDataAttr(element, attr, defaultValue);
   }

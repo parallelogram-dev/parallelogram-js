@@ -472,6 +472,9 @@ export default class Lazysrc extends BaseComponent {
   /**
    * Mount any lazy elements in a container that aren't mounted yet
    *
+   * Called with an element that is already mounted, as mount() does, it mounts any lazy elements
+   * inside that element.
+   *
    * @param {ParentNode} [container]
    */
   update(container = document) {
