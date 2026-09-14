@@ -78,12 +78,12 @@ export default class Scrollhide extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const scrollThreshold = this.getAttr(
+    const scrollThreshold = this.getNumberAttr(
       element,
       'scroll-threshold',
       Scrollhide.defaults.scrollThreshold
     );
-    const overlayThreshold = this.getAttr(
+    const overlayThreshold = this.getNumberAttr(
       element,
       'overlay-threshold',
       Scrollhide.defaults.overlayThreshold
@@ -94,13 +94,13 @@ export default class Scrollhide extends BaseComponent {
       Scrollhide.defaults.scrolledClass
     );
     const overlayClass = this.getAttr(element, 'overlay-class', Scrollhide.defaults.overlayClass);
-    const debounce = this.getAttr(element, 'debounce', Scrollhide.defaults.debounce);
+    const debounce = this.getNumberAttr(element, 'debounce', Scrollhide.defaults.debounce);
 
     // Store state
     state.target = target;
     state.targetSelector = targetSelector;
-    state.scrollThreshold = parseInt(scrollThreshold, 10);
-    state.overlayThreshold = parseInt(overlayThreshold, 10);
+    state.scrollThreshold = scrollThreshold;
+    state.overlayThreshold = overlayThreshold;
     state.scrolledClass = scrolledClass;
     state.overlayClass = overlayClass;
     state.currentY = 0;

@@ -84,12 +84,22 @@ export class DataTable extends BaseComponent {
   }
 
   _getConfiguration(element) {
+    /* data-datatable-paginate accepts a page size ("10") or a flag ("true") */
+    const paginatePageSize = Number.parseInt(this.getAttr(element, 'paginate'), 10);
+    const hasPaginatePageSize = Number.isInteger(paginatePageSize);
+
     return {
-      sortable: this.getAttr(element, 'sortable', DataTable.defaults.sortable),
-      filterable: this.getAttr(element, 'filterable', DataTable.defaults.filterable),
-      paginate: parseInt(this.getAttr(element, 'paginate', DataTable.defaults.paginate)) || false,
-      pageSize: parseInt(this.getAttr(element, 'page-size', DataTable.defaults.pageSize)),
-      searchDelay: parseInt(this.getAttr(element, 'search-delay', DataTable.defaults.searchDelay)),
+      sortable: this.getBoolAttr(element, 'sortable', DataTable.defaults.sortable),
+      filterable: this.getBoolAttr(element, 'filterable', DataTable.defaults.filterable),
+      paginate: hasPaginatePageSize
+        ? paginatePageSize > 0
+        : this.getBoolAttr(element, 'paginate', DataTable.defaults.paginate),
+      pageSize: this.getNumberAttr(
+        element,
+        'page-size',
+        paginatePageSize > 0 ? paginatePageSize : DataTable.defaults.pageSize
+      ),
+      searchDelay: this.getNumberAttr(element, 'search-delay', DataTable.defaults.searchDelay),
     };
   }
 

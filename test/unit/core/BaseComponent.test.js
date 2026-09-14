@@ -1,0 +1,77 @@
+import { describe, expect, it } from 'vitest';
+import { BaseComponent } from '../../../src/core/BaseComponent.js';
+
+class Widget extends BaseComponent {
+  static get defaults() {
+    return { enabled: true, delay: 200, label: 'Widget' };
+  }
+
+  _getSelector() {
+    return 'data-widget';
+  }
+
+  _init(element) {
+    const state = super._init(element);
+    state.config = this._getConfigFromAttrs(element, {
+      enabled: 'enabled',
+      delay: 'delay',
+      label: 'label',
+    });
+    return state;
+  }
+}
+
+const widgetElement = (attributes = {}) => {
+  const element = document.createElement('div');
+  element.setAttribute('data-widget', '');
+  for (const [name, value] of Object.entries(attributes)) {
+    element.setAttribute(`data-widget-${name}`, value);
+  }
+  return element;
+};
+
+describe('BaseComponent', () => {
+  it('can be constructed without any options', () => {
+    expect(() => new Widget()).not.toThrow();
+  });
+
+  it.each([
+    ['is missing', undefined, true, true],
+    ['is missing and the default is false', undefined, false, false],
+    ['is empty', '', false, true],
+    ['is "true"', 'true', false, true],
+    ['is "false"', 'false', true, false],
+    ['is "FALSE"', 'FALSE', true, false],
+    ['is "0"', '0', true, false],
+    ['repeats its own name', 'enabled', false, true],
+  ])('reads a boolean attribute that %s', (_case, value, fallback, expected) => {
+    const element = widgetElement(value === undefined ? {} : { enabled: value });
+
+    expect(new Widget().getBoolAttr(element, 'enabled', fallback)).toBe(expected);
+  });
+
+  it.each([
+    ['is missing', undefined, 200],
+    ['is an integer', '350', 350],
+    ['is a decimal', '0.25', 0.25],
+    ['is empty', '', 200],
+    ['is not a number', 'fast', 200],
+  ])('reads a numeric attribute that %s', (_case, value, expected) => {
+    const element = widgetElement(value === undefined ? {} : { delay: value });
+
+    expect(new Widget().getNumberAttr(element, 'delay', 200)).toBe(expected);
+  });
+
+  it('converts configuration attributes to the type of their defaults', () => {
+    const widget = new Widget();
+    const element = widgetElement({ enabled: 'false', delay: '50', label: 'Custom' });
+
+    widget.mount(element);
+
+    expect(widget.getState(element).config).toEqual({
+      enabled: false,
+      delay: 50,
+      label: 'Custom',
+    });
+  });
+});

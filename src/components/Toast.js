@@ -60,9 +60,9 @@ export default class Toast extends BaseComponent {
 
     const message = this.getAttr(element, 'message');
     const type = this.getAttr(element, 'trigger', Toast.defaults.defaultType);
-    const duration = parseInt(this.getAttr(element, 'duration', Toast.defaults.defaultDuration));
+    const duration = this.getNumberAttr(element, 'duration', Toast.defaults.defaultDuration);
     const title = this.getAttr(element, 'title');
-    const dismissible = this.getAttr(element, 'dismissible', 'true') !== 'false';
+    const dismissible = this.getBoolAttr(element, 'dismissible', true);
 
     if (!element.hasAttribute('data-toast-trigger')) {
       this.logger?.warn(

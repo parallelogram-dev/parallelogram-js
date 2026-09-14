@@ -141,26 +141,34 @@ export default class Videoplay extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const playThreshold = this.getAttr(element, 'threshold', Videoplay.defaults.playThreshold);
-    const pauseThreshold = this.getAttr(
+    const playThreshold = this.getNumberAttr(
+      element,
+      'threshold',
+      Videoplay.defaults.playThreshold
+    );
+    const pauseThreshold = this.getNumberAttr(
       element,
       'pause-threshold',
       Videoplay.defaults.pauseThreshold
     );
-    const pauseOnExit = this.getAttr(element, 'autopause', Videoplay.defaults.pauseOnExit);
-    const muteWhenPlaying = this.getAttr(element, 'automute', Videoplay.defaults.muteWhenPlaying);
-    const restoreVolumeOnPause = this.getAttr(
+    const pauseOnExit = this.getBoolAttr(element, 'autopause', Videoplay.defaults.pauseOnExit);
+    const muteWhenPlaying = this.getBoolAttr(
+      element,
+      'automute',
+      Videoplay.defaults.muteWhenPlaying
+    );
+    const restoreVolumeOnPause = this.getBoolAttr(
       element,
       'restore-volume',
       Videoplay.defaults.restoreVolumeOnPause
     );
-    const enableInBackground = this.getAttr(
+    const enableInBackground = this.getBoolAttr(
       element,
       'background',
       Videoplay.defaults.enableInBackground
     );
-    const preloadOnMount = this.getAttr(element, 'preload', Videoplay.defaults.preloadOnMount);
-    const requireUserInteraction = this.getAttr(
+    const preloadOnMount = this.getBoolAttr(element, 'preload', Videoplay.defaults.preloadOnMount);
+    const requireUserInteraction = this.getBoolAttr(
       element,
       'require-interaction',
       Videoplay.defaults.requireUserInteraction
@@ -172,14 +180,14 @@ export default class Videoplay extends BaseComponent {
     // Store state
     state.video = video;
     state.videoSelector = videoSelector;
-    state.playThreshold = parseFloat(playThreshold);
-    state.pauseThreshold = parseFloat(pauseThreshold);
-    state.pauseOnExit = Boolean(pauseOnExit);
-    state.muteWhenPlaying = muteWhenPlaying === null ? null : Boolean(muteWhenPlaying);
-    state.restoreVolumeOnPause = Boolean(restoreVolumeOnPause);
-    state.enableInBackground = Boolean(enableInBackground);
-    state.preloadOnMount = Boolean(preloadOnMount);
-    state.requireUserInteraction = Boolean(requireUserInteraction);
+    state.playThreshold = playThreshold;
+    state.pauseThreshold = pauseThreshold;
+    state.pauseOnExit = pauseOnExit;
+    state.muteWhenPlaying = muteWhenPlaying;
+    state.restoreVolumeOnPause = restoreVolumeOnPause;
+    state.enableInBackground = enableInBackground;
+    state.preloadOnMount = preloadOnMount;
+    state.requireUserInteraction = requireUserInteraction;
     state.hasAutoplay = hasAutoplay;
     state.isPlaying = false;
     state.isIntersecting = false;

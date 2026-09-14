@@ -99,13 +99,13 @@ export default class Toggle extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const capture = this.getAttr(element, 'capture', Toggle.defaults.capture);
+    const capture = this.getBoolAttr(element, 'capture', Toggle.defaults.capture);
     const manual =
       target.hasAttribute('data-toggle-manual') ||
-      this.getAttr(element, 'manual', Toggle.defaults.manual);
-    const multiple = this.getAttr(element, 'multiple', Toggle.defaults.multiple);
-    const animateToggle = this.getAttr(element, 'animate', Toggle.defaults.animateToggle);
-    const closeOnNavigation = this.getAttr(
+      this.getBoolAttr(element, 'manual', Toggle.defaults.manual);
+    const multiple = this.getBoolAttr(element, 'multiple', Toggle.defaults.multiple);
+    const animateToggle = this.getBoolAttr(element, 'animate', Toggle.defaults.animateToggle);
+    const closeOnNavigation = this.getBoolAttr(
       element,
       'close-navigation',
       Toggle.defaults.closeOnNavigation
