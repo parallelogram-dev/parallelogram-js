@@ -12,7 +12,10 @@
   position: relative;
 
   /* Use surface-card tokens for nested items within panels */
-  border-radius: var(--surface-card-radius);
+  border-radius: var(--uploader-file-radius-start, var(--surface-card-radius))
+    var(--uploader-file-radius-start, var(--surface-card-radius))
+    var(--uploader-file-radius-end, var(--surface-card-radius))
+    var(--uploader-file-radius-end, var(--surface-card-radius));
   border-width: var(--surface-card-border-width);
   border-style: solid;
   border-color: var(--surface-card-border-color);
@@ -302,36 +305,6 @@ input {
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 0 1 auto;
-
-    &--editable {
-      cursor: pointer;
-
-      &:hover {
-        opacity: 1;
-        text-decoration: underline;
-      }
-    }
-  }
-
-  &__edit {
-    width: $size-icon-sm;
-    height: $size-icon-sm;
-    border: none;
-    background-size: contain;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: white;
-    background-repeat: no-repeat;
-    background-position: center;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity $duration-fast;
-    pointer-events: auto;
-    padding: 0;
-    flex-shrink: 0;
-
-    &:hover {
-      opacity: 1;
-    }
   }
 }
 
@@ -344,4 +317,85 @@ input {
 
 slot {
   display: none;
+}
+
+.uploader__fields--editable .uploader__filename {
+  padding-right: 8rem;
+}
+
+.uploader__edit {
+  position: absolute;
+  top: 0;
+  right: calc(#{$size-icon-md} + #{$space-sm});
+  height: $size-icon-md;
+  padding: 0;
+  font: inherit;
+  font-size: $font-sm;
+  color: inherit;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.uploader__dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: $space-lg;
+  border: $border-width solid $color-border-hover;
+  color: inherit;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .uploader__heading {
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  .uploader__actions {
+    padding-left: 0;
+  }
+}
+
+.uploader__form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.uploader__dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+
+  .field__label {
+    flex: none;
+    opacity: 1;
+  }
+
+  .uploader__input,
+  .uploader__textarea {
+    flex: none;
+    height: auto;
+  }
+}
+
+.uploader__dialog-message {
+  margin: 0;
+  color: $error-dark;
+  font-size: $font-sm;
+
+  &:empty {
+    display: none;
+  }
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
 }
