@@ -591,6 +591,12 @@ button:disabled {
   outline-offset: calc(var(--datetime-focus-ring-width) * -1);
 }
 
+/* Arrow keys move focus between days from script, which Safari doesn't count as keyboard focus */
+.day:focus {
+  outline: var(--datetime-focus-ring-width) solid var(--datetime-accent);
+  outline-offset: 2px;
+}
+
 /* Forced colours drop cell backgrounds, so mark selected and in-range dates with system colours */
 @media (forced-colors: active) {
   .day.selected,

@@ -49,6 +49,25 @@ describe('Videoplay', () => {
     expect(play).toHaveBeenCalledTimes(1);
   });
 
+  it('treats a play interrupted by a pause as expected, without a warning or play-error', async () => {
+    play.mockImplementation(() =>
+      Promise.reject(new DOMException('The operation was aborted.', 'AbortError'))
+    );
+    const logger = { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+    const errors = [];
+    const listening = new AbortController();
+    document.addEventListener('videoplay:play-error', event => errors.push(event), {
+      signal: listening.signal,
+    });
+
+    mountVideo('autoplay muted loop', { logger });
+    await vi.waitFor(() => expect(play).toHaveBeenCalled(), WAIT);
+    await pause(50);
+    listening.abort();
+
+    expect([logger.warn.mock.calls.length, errors.length]).toEqual([0, 0]);
+  });
+
   it('does not count the autoplay start as a user interaction', () => {
     const video = mountVideo('autoplay muted loop data-videoplay-require-interaction');
 

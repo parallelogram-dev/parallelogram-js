@@ -47,7 +47,8 @@ For new dropdowns consider \`<button popovertarget>\` with \`popover\`, and for 
       type: 'boolean',
       default: true,
       option: 'closeOnEscape',
-      description: 'Close with Escape while focus is in the trigger or target',
+      description:
+        'Close with Escape while focus is in the trigger or target, or rests on the page',
     },
     {
       name: 'data-toggle-manual',
