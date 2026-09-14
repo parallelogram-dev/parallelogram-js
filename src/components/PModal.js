@@ -72,8 +72,8 @@ export default class PModal extends HTMLElement {
     this._upgradeProperty('open');
 
     // Custom element constructors may not add attributes, so the initial state is set here
-    if (!this.hasAttribute('data-modal')) {
-      this.setAttribute('data-modal', ExtendedStates.CLOSED);
+    if (!this.hasAttribute('data-modal-state')) {
+      this._setModalState(this.getAttribute('data-modal') || ExtendedStates.CLOSED);
     }
 
     this._listeners = new AbortController();
@@ -133,16 +133,27 @@ export default class PModal extends HTMLElement {
   }
 
   /**
+   * Record the modal's state in `data-modal-state`
+   *
+   * The value is also copied to `data-modal`, which is deprecated and stops in 0.6.0 because it
+   * matches the `[data-modal]` trigger selector.
+   */
+  _setModalState(value) {
+    this.setAttribute('data-modal-state', value);
+    this.setAttribute('data-modal', value);
+  }
+
+  /**
    * Open the modal with state management
    */
   open() {
     /* Set opening state */
-    this.setAttribute('data-modal', ExtendedStates.OPENING);
+    this._setModalState(ExtendedStates.OPENING);
     this.setAttribute('open', '');
 
     /* Transition to fully open after animation starts */
     requestAnimationFrame(() => {
-      this.setAttribute('data-modal', ExtendedStates.OPEN);
+      this._setModalState(ExtendedStates.OPEN);
     });
   }
 
@@ -151,7 +162,7 @@ export default class PModal extends HTMLElement {
    */
   close() {
     /* Set closing state */
-    this.setAttribute('data-modal', ExtendedStates.CLOSING);
+    this._setModalState(ExtendedStates.CLOSING);
 
     /* Wait for closing animation before removing open attribute */
     const duration =
@@ -160,7 +171,7 @@ export default class PModal extends HTMLElement {
 
     setTimeout(() => {
       this.removeAttribute('open');
-      this.setAttribute('data-modal', ExtendedStates.CLOSED);
+      this._setModalState(ExtendedStates.CLOSED);
     }, duration);
   }
 

@@ -23,14 +23,7 @@ import { createElement, generateId, debounce } from '../utils/dom-utils.js';
  * </table>
  */
 export class DataTable extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-datatable';
-  }
+  static selector = 'data-datatable';
 
   static get defaults() {
     return {

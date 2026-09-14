@@ -21,14 +21,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *   .forEach(trigger => toasts.mount(trigger));
  */
 export default class Toast extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-toast';
-  }
+  static selector = 'data-toast';
 
   /**
    * Default configuration for toast component

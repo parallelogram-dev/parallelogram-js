@@ -65,14 +65,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *      alt="Description">
  */
 export default class Lazysrc extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-lazysrc';
-  }
+  static selector = 'data-lazysrc';
 
   static get defaults() {
     return {

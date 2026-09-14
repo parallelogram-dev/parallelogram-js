@@ -24,14 +24,7 @@ import { whenAnimationsFinish } from '../utils/motion.js';
  * </a>
  */
 export class Lightbox extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-lightbox';
-  }
+  static selector = 'data-lightbox';
 
   static get defaults() {
     return {
@@ -69,6 +62,22 @@ export class Lightbox extends BaseComponent {
     super(options);
     this.lightboxElement = null;
     this.keyHandler = null;
+  }
+
+  /**
+   * Mount on a gallery link, ignoring the lightbox's own overlay
+   *
+   * The overlay carries the deprecated `data-lightbox` state copy, so a page observer watching for
+   * `[data-lightbox]` would otherwise mount it as another gallery link.
+   */
+  mount(element) {
+    if (
+      element === this.lightboxElement ||
+      element.classList.contains(Lightbox.defaults.overlayClass)
+    ) {
+      return undefined;
+    }
+    return super.mount(element);
   }
 
   _init(element) {

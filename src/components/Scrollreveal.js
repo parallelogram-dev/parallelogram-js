@@ -7,14 +7,7 @@ import { prefersReducedMotion } from '../utils/motion.js';
  * Elements are revealed in the order they enter the viewport with simple staggering
  */
 export default class Scrollreveal extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-reveal';
-  }
+  static selector = 'data-reveal';
 
   static get defaults() {
     return {

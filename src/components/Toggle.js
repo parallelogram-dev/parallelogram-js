@@ -50,14 +50,7 @@ import { ExtendedStates } from '../core/ComponentStates.js';
  *   .forEach(trigger => toggles.mount(trigger));
  */
 export default class Toggle extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-toggle';
-  }
+  static selector = 'data-toggle';
 
   /**
    * Default configuration for toggle component
@@ -124,7 +117,7 @@ export default class Toggle extends BaseComponent {
 
     // Set initial state attribute on target
     const initialState = state.isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED;
-    this.setAttr(target, 'target', initialState);
+    this._setTargetState(target, initialState);
 
     // Set up click handler
     const clickHandler = e => this._handleClick(e, element, state);
@@ -229,7 +222,7 @@ export default class Toggle extends BaseComponent {
     if (!state) return;
 
     // Check current state to prevent transitions during animation
-    const currentState = this.getAttr(state.target, 'target');
+    const currentState = this._getTargetState(state.target);
     if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
       return;
     }
@@ -257,17 +250,17 @@ export default class Toggle extends BaseComponent {
     // Handle state transitions with animation
     if (state.animateToggle) {
       // Set opening state
-      this.setAttr(state.target, 'target', ExtendedStates.OPENING);
+      this._setTargetState(state.target, ExtendedStates.OPENING);
       state.target.classList.add(Toggle.defaults.openClass);
 
       // Transition to fully open after animation
       state.transitionTimer = setTimeout(() => {
-        this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+        this._setTargetState(state.target, ExtendedStates.OPEN);
         state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
     } else {
       // No animation - set open state immediately
-      this.setAttr(state.target, 'target', ExtendedStates.OPEN);
+      this._setTargetState(state.target, ExtendedStates.OPEN);
       state.target.classList.add(Toggle.defaults.openClass);
     }
 
@@ -295,7 +288,7 @@ export default class Toggle extends BaseComponent {
     if (!state) return;
 
     // Check current state to prevent transitions during animation
-    const currentState = this.getAttr(state.target, 'target');
+    const currentState = this._getTargetState(state.target);
     if (currentState === ExtendedStates.CLOSING || currentState === ExtendedStates.CLOSED) {
       return;
     }
@@ -319,16 +312,16 @@ export default class Toggle extends BaseComponent {
     // Handle state transitions with animation
     if (state.animateToggle) {
       // Set closing state
-      this.setAttr(state.target, 'target', ExtendedStates.CLOSING);
+      this._setTargetState(state.target, ExtendedStates.CLOSING);
 
       // Wait for animation before setting closed state
       state.transitionTimer = setTimeout(() => {
-        this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
+        this._setTargetState(state.target, ExtendedStates.CLOSED);
         state.transitionTimer = null;
       }, Toggle.defaults.transitionDuration);
     } else {
       // No animation - set closed state immediately
-      this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
+      this._setTargetState(state.target, ExtendedStates.CLOSED);
     }
 
     // Dispatch events
@@ -369,6 +362,23 @@ export default class Toggle extends BaseComponent {
   isOpen(element) {
     const state = this.getState(element);
     return state ? state.isOpen : false;
+  }
+
+  /**
+   * Record a target's open state in `data-toggle-state`
+   *
+   * A target that is not a toggle itself also gets the deprecated copy in `data-toggle-target`, which
+   * stops in 0.6.0. On a toggle that attribute holds its own target selector, so it is left alone.
+   */
+  _setTargetState(target, value) {
+    this.setAttr(target, 'state', value);
+    if (!target.hasAttribute(this._getSelector())) {
+      this.setAttr(target, 'target', value);
+    }
+  }
+
+  _getTargetState(target) {
+    return this.getAttr(target, 'state') ?? this.getAttr(target, 'target');
   }
 
   /**
