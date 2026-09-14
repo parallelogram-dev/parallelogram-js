@@ -400,4 +400,84 @@ describe('PageManager', () => {
       expect(document.querySelector('main').textContent).toBe('Media');
     });
   });
+
+  describe('page head', () => {
+    const page = (head, htmlAttributes = '') =>
+      `<!doctype html><html ${htmlAttributes}><head>${head}</head><body><main data-view="main">Pricing</main></body></html>`;
+
+    beforeEach(() => {
+      document.head.innerHTML =
+        '<title>Home</title><meta name="robots" content="noindex"><meta name="description" content="Home page">';
+      document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
+    });
+
+    afterEach(() => {
+      document.head.replaceChildren();
+      document.documentElement.removeAttribute('lang');
+      document.documentElement.removeAttribute('dir');
+    });
+
+    it('removes metadata that the new page does not have', async () => {
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(
+        bus,
+        page('<title>Pricing</title><meta name="description" content="Plans and prices">')
+      );
+
+      expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
+    });
+
+    it('keeps every repeated tag from the new page', async () => {
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(
+        bus,
+        page(
+          '<title>Pricing</title><meta property="og:image" content="/plans.png"><meta property="og:image" content="/team.png">'
+        )
+      );
+
+      const images = [...document.head.querySelectorAll('meta[property="og:image"]')];
+      expect(images.map(meta => meta.content)).toEqual(['/plans.png', '/team.png']);
+    });
+
+    it('keeps language alternates alongside a feed link', async () => {
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(
+        bus,
+        page(
+          '<title>Pricing</title><link rel="alternate" hreflang="fr" href="/fr/tarifs"><link rel="alternate" type="application/rss+xml" href="/feed.xml">'
+        )
+      );
+
+      const alternates = [...document.head.querySelectorAll('link[rel="alternate"]')];
+      expect(alternates.map(link => link.getAttribute('href'))).toEqual([
+        '/fr/tarifs',
+        '/feed.xml',
+      ]);
+    });
+
+    it('updates the language and direction of the page', async () => {
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(bus, page('<title>الأسعار</title>', 'lang="ar" dir="rtl"'));
+
+      expect([document.documentElement.lang, document.documentElement.dir]).toEqual(['ar', 'rtl']);
+    });
+
+    it('leaves the head alone when the response has no head content', async () => {
+      const bus = new EventManager();
+      start([], bus, { mountDelay: 0 });
+
+      await emitNavigation(bus, '<main data-view="main">Pricing</main>');
+
+      expect(document.head.querySelectorAll('meta')).toHaveLength(2);
+    });
+  });
 });

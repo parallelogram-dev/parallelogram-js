@@ -2,6 +2,19 @@ import { ComponentHost } from '../core/ComponentHost.js';
 import { announce } from '../utils/announce.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 
+const MANAGED_HEAD_SELECTORS = [
+  'meta[name="description"]',
+  'meta[name="keywords"]',
+  'meta[name="robots"]',
+  'meta[name="author"]',
+  'meta[name="theme-color"]',
+  'meta[name^="twitter:"]',
+  'meta[property^="og:"]',
+  'meta[property^="article:"]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+];
+
 const NATIVELY_FOCUSABLE =
   'a[href], area[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, iframe, [tabindex], [contenteditable]:not([contenteditable="false"])';
 
@@ -201,7 +214,7 @@ export class PageManager {
     try {
       const storedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const fragmentOptions = { ...options, storedScroll };
+      const fragmentOptions = { ...options, storedScroll, doc };
       const fragments = viewTargets.map(viewTarget => ({
         viewTarget,
         ...this._extractTargetFragmentFromDoc(doc, viewTarget),
@@ -311,14 +324,7 @@ export class PageManager {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
-      this._swapFragment(
-        sourceFragment,
-        targetFragment,
-        viewTarget,
-        originalHtml,
-        options,
-        transitionConfig
-      );
+      this._swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig);
       swapped = true;
 
       this.eventBus.emit('page:fragment-did-replace', {
@@ -339,7 +345,7 @@ export class PageManager {
       });
 
       if (!swapped) {
-        this._swapFragment(sourceFragment, targetFragment, viewTarget, originalHtml, options);
+        this._swapFragment(sourceFragment, targetFragment, viewTarget, options);
       }
     }
 
@@ -357,14 +363,14 @@ export class PageManager {
    * rather than after its in-transition: scroll, head and focus for the main fragment, and component
    * mounting for every fragment
    */
-  _swapFragment(sourceFragment, targetFragment, viewTarget, html, options, transitionConfig) {
+  _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig) {
     this.unmountAllWithin(targetFragment);
     targetFragment.innerHTML = sourceFragment.innerHTML;
     this._syncFragmentRoot(sourceFragment, targetFragment, transitionConfig);
 
     if (viewTarget === 'main') {
       this._handleScrollRestoration(options.storedScroll, options);
-      this._updateDocumentHead(html);
+      this._updateDocumentHead(options.doc);
     }
 
     this.mountAllWithin(targetFragment, { priority: 'critical', fragmentTarget: viewTarget });
@@ -590,185 +596,46 @@ export class PageManager {
   }
 
   /**
-   * Update document head metadata when replacing main content
+   * Bring the page's title, language and metadata in line with the fetched document
+   *
+   * Only a full document is reconciled; a response without head content leaves the head alone. Each
+   * kind of managed tag is replaced as a set, so tags the new page lacks are removed and repeated tags
+   * such as several og:image entries are all kept.
    */
-  _updateDocumentHead(html) {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const sourceHead = doc.querySelector('head');
-
-      if (!sourceHead) {
-        this.logger?.warn('No head element found in source HTML');
-        return;
-      }
-
-      this.logger?.group('Updating document head metadata');
-
-      // Define which head elements should be updated
-      const updateableSelectors = [
-        'title',
-        'meta[name="description"]',
-        'meta[name="keywords"]',
-        'meta[name="robots"]',
-        'meta[name="author"]',
-        'meta[property^="og:"]', // Open Graph tags
-        'meta[name^="twitter:"]', // Twitter Card tags
-        'meta[property^="article:"]', // Article-specific OG tags
-        'link[rel="canonical"]',
-        'link[rel="alternate"]',
-        'meta[name="theme-color"]',
-      ];
-
-      let updatedCount = 0;
-
-      for (const selector of updateableSelectors) {
-        const sourceElements = sourceHead.querySelectorAll(selector);
-
-        if (sourceElements.length === 0) continue;
-
-        // Handle title specially (only one allowed)
-        if (selector === 'title') {
-          const sourceTitle = sourceElements[0];
-          if (sourceTitle && sourceTitle.textContent.trim()) {
-            document.title = sourceTitle.textContent.trim();
-            updatedCount++;
-            this.logger?.info('Updated document title', {
-              newTitle: document.title,
-            });
-          }
-          continue;
-        }
-
-        // Handle canonical link specially (only one should exist)
-        if (selector === 'link[rel="canonical"]') {
-          // Remove existing canonical links
-          document.querySelectorAll('link[rel="canonical"]').forEach(el => el.remove());
-
-          const sourceCanonical = sourceElements[0];
-          if (sourceCanonical && sourceCanonical.href) {
-            const newCanonical = document.createElement('link');
-            newCanonical.rel = 'canonical';
-            newCanonical.href = sourceCanonical.href;
-            document.head.appendChild(newCanonical);
-            updatedCount++;
-            this.logger?.info('Updated canonical URL', {
-              canonicalUrl: sourceCanonical.href,
-            });
-          }
-          continue;
-        }
-
-        // Handle meta tags
-        for (const sourceElement of sourceElements) {
-          if (sourceElement.tagName.toLowerCase() === 'meta') {
-            this._updateMetaTag(sourceElement);
-            updatedCount++;
-          } else if (sourceElement.tagName.toLowerCase() === 'link') {
-            this._updateLinkTag(sourceElement);
-            updatedCount++;
-          }
-        }
-      }
-
-      // Emit head update event
-      this.eventBus.emit('page:head-updated', {
-        updatedElements: updatedCount,
-        newTitle: document.title,
-      });
-
-      this.logger?.info(`Updated ${updatedCount} head elements`);
-    } catch (error) {
-      this.logger?.error('Failed to update document head', { error });
-      this.eventBus.emit('page:head-update-error', { error });
-    } finally {
-      this.logger?.groupEnd();
-    }
-  }
-
-  /**
-   * Update or create a meta tag
-   */
-  _updateMetaTag(sourceMetaTag) {
-    const name = sourceMetaTag.getAttribute('name');
-    const property = sourceMetaTag.getAttribute('property');
-    const content = sourceMetaTag.getAttribute('content');
-
-    if (!content) return; // Skip empty content
-
-    let selector;
-    if (name) {
-      selector = `meta[name="${name}"]`;
-    } else if (property) {
-      selector = `meta[property="${property}"]`;
-    } else {
-      return; // Can't identify the meta tag
-    }
-
-    // Remove existing meta tag(s) with same name/property
-    document.querySelectorAll(selector).forEach(el => el.remove());
-
-    // Create new meta tag
-    const newMeta = document.createElement('meta');
-    if (name) newMeta.setAttribute('name', name);
-    if (property) newMeta.setAttribute('property', property);
-    newMeta.setAttribute('content', content);
-
-    // Copy other relevant attributes
-    ['charset', 'http-equiv', 'scheme'].forEach(attr => {
-      if (sourceMetaTag.hasAttribute(attr)) {
-        newMeta.setAttribute(attr, sourceMetaTag.getAttribute(attr));
-      }
-    });
-
-    document.head.appendChild(newMeta);
-
-    this.logger?.debug('Updated meta tag', {
-      selector,
-      content: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-    });
-  }
-
-  /**
-   * Update or create a link tag
-   */
-  _updateLinkTag(sourceLinkTag) {
-    const rel = sourceLinkTag.getAttribute('rel');
-    const href = sourceLinkTag.getAttribute('href');
-
-    if (!rel || !href) return;
-
-    // Don't update critical link tags
-    const criticalRels = ['stylesheet', 'icon', 'manifest', 'preload', 'prefetch'];
-    if (criticalRels.includes(rel)) {
-      this.logger?.debug('Skipping critical link tag', { rel, href });
+  _updateDocumentHead(doc) {
+    if (!doc?.head || doc.head.childElementCount === 0) {
       return;
     }
 
-    const selector = `link[rel="${rel}"]`;
-
-    // For alternate links, also match hreflang if present
-    const hreflang = sourceLinkTag.getAttribute('hreflang');
-    const fullSelector = hreflang ? `link[rel="${rel}"][hreflang="${hreflang}"]` : selector;
-
-    // Remove existing link(s)
-    document.querySelectorAll(fullSelector).forEach(el => el.remove());
-
-    // Create new link tag
-    const newLink = document.createElement('link');
-    newLink.setAttribute('rel', rel);
-    newLink.setAttribute('href', href);
-
-    // Copy other relevant attributes
-    ['hreflang', 'type', 'media', 'sizes'].forEach(attr => {
-      if (sourceLinkTag.hasAttribute(attr)) {
-        newLink.setAttribute(attr, sourceLinkTag.getAttribute(attr));
+    try {
+      const title = doc.querySelector('title')?.textContent.trim();
+      if (title) {
+        document.title = title;
       }
-    });
 
-    document.head.appendChild(newLink);
+      for (const attribute of ['lang', 'dir']) {
+        const value = doc.documentElement.getAttribute(attribute);
+        if (value === null) {
+          document.documentElement.removeAttribute(attribute);
+        } else {
+          document.documentElement.setAttribute(attribute, value);
+        }
+      }
 
-    this.logger?.debug('Updated link tag', { rel, href });
+      let updatedElements = 0;
+      for (const selector of MANAGED_HEAD_SELECTORS) {
+        document.head.querySelectorAll(selector).forEach(element => element.remove());
+        for (const element of doc.head.querySelectorAll(selector)) {
+          document.head.append(document.importNode(element, true));
+          updatedElements++;
+        }
+      }
+
+      this.eventBus.emit('page:head-updated', { updatedElements, newTitle: document.title });
+    } catch (error) {
+      this.logger?.error('Failed to update document head', { error });
+      this.eventBus.emit('page:head-update-error', { error });
+    }
   }
 
   /**
