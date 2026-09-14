@@ -144,7 +144,7 @@ export default class Lazysrc extends BaseComponent {
     }
 
     // Listen for force load events (e.g., from Lightbox component)
-    const forceLoadHandler = async (event) => {
+    const forceLoadHandler = async event => {
       const statePromise = this.getState(element);
       const state = statePromise instanceof Promise ? await statePromise : statePromise;
 
@@ -741,7 +741,7 @@ export default class Lazysrc extends BaseComponent {
     });
 
     this.logger?.debug('Element loaded successfully', { element, loadTime });
-    
+
     // Auto-detach after successful load if configured
     if (state.config.autoDetach !== false) {
       setTimeout(() => {
@@ -930,19 +930,19 @@ export default class Lazysrc extends BaseComponent {
   _detachElement(element, state) {
     // Only detach if already loaded
     if (!state.isLoaded) return;
-    
+
     // Clean up state
     if (state.customObserver) {
       state.customObserver.disconnect();
       state.customObserver = null;
     }
-    
+
     // Emit detached event via custom event
     this._dispatch(element, 'lazysrc:detached', {
       element,
       timestamp: performance.now(),
     });
-    
+
     this.logger?.debug('Element detached after loading', { element });
   }
 

@@ -62,6 +62,7 @@ stateDiagram-v2
 #### 1. **Proper State Tracking**
 
 **Before:**
+
 ```javascript
 // Instance-level state (problematic with multiple lightboxes)
 this.isOpen = false;
@@ -71,9 +72,10 @@ this.isTransitioning = false;
 ```
 
 **After:**
+
 ```javascript
 // State stored per element via BaseComponent
-state.lightboxState = 'closed';  // 'closed' | 'opening' | 'open' | 'transitioning' | 'closing'
+state.lightboxState = 'closed'; // 'closed' | 'opening' | 'open' | 'transitioning' | 'closing'
 state.currentIndex = 0;
 state.galleryElements = [];
 ```
@@ -81,12 +83,14 @@ state.galleryElements = [];
 #### 2. **State-Based Attributes (Not Classes)**
 
 **Before:**
+
 ```javascript
 // Manual class management
 this.lightboxElement.classList.add('show');
 ```
 
 **After:**
+
 ```javascript
 // Automatic state-based data attribute
 // State exposed via [data-lightbox="state"] attribute
@@ -97,12 +101,14 @@ this._setState(element, 'open');
 ### 4. **Configuration Stored in State**
 
 **Before:**
+
 ```javascript
 // Configuration stored separately
 this.currentConfig = config;
 ```
 
 **After:**
+
 ```javascript
 // Configuration stored in element state
 state.config = this._getConfiguration(element);
@@ -111,6 +117,7 @@ state.config = this._getConfiguration(element);
 ### 5. **Proper Public API**
 
 **Before:**
+
 ```javascript
 // Public methods use dummy config or missing state
 next() {
@@ -120,6 +127,7 @@ next() {
 ```
 
 **After:**
+
 ```javascript
 // Public methods require element reference
 next(triggerElement) {
@@ -148,6 +156,7 @@ this.eventBus?.emit('lightbox:stateChange', {
 ### 7. **Multiple Instance Support**
 
 **Before:**
+
 ```javascript
 // Single instance state causes conflicts
 const lightbox1 = new Lightbox();
@@ -156,6 +165,7 @@ const lightbox2 = new Lightbox();
 ```
 
 **After:**
+
 ```javascript
 // Each element has its own state
 const lightbox = new Lightbox();
@@ -177,34 +187,36 @@ The lightbox uses `data-lightbox` attribute for state-based styling:
 }
 
 /* State-based CSS using data-lightbox attribute */
-[data-lightbox="closed"] {
+[data-lightbox='closed'] {
   display: none;
   opacity: 0;
 }
 
-[data-lightbox="opening"] {
+[data-lightbox='opening'] {
   display: flex;
   opacity: 0;
   will-change: opacity;
-  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing)
+    forwards;
 }
 
-[data-lightbox="open"] {
+[data-lightbox='open'] {
   display: flex;
   opacity: 1;
 }
 
-[data-lightbox="transitioning"] {
+[data-lightbox='transitioning'] {
   display: flex;
   opacity: 1;
   will-change: opacity;
   /* During image transitions */
 }
 
-[data-lightbox="closing"] {
+[data-lightbox='closing'] {
   display: flex;
   opacity: 1;
-  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing)
+    forwards;
   pointer-events: none; /* Prevent interaction during close */
 }
 
@@ -238,18 +250,18 @@ The lightbox uses `data-lightbox` attribute for state-based styling:
     transition: none !important;
   }
 
-  [data-lightbox="opening"],
-  [data-lightbox="closing"] {
+  [data-lightbox='opening'],
+  [data-lightbox='closing'] {
     will-change: auto;
   }
 
   /* Instant state changes */
-  [data-lightbox="opening"] {
+  [data-lightbox='opening'] {
     opacity: 1;
     transform: none;
   }
 
-  [data-lightbox="closing"] {
+  [data-lightbox='closing'] {
     opacity: 0;
     transform: none;
   }
@@ -273,16 +285,16 @@ You can customize transitions globally:
 
 ```html
 <a data-lightbox="gallery" href="image1.jpg">
-  <img src="thumb1.jpg" alt="Image 1">
+  <img src="thumb1.jpg" alt="Image 1" />
 </a>
 <a data-lightbox="gallery" href="image2.jpg">
-  <img src="thumb2.jpg" alt="Image 2">
+  <img src="thumb2.jpg" alt="Image 2" />
 </a>
 
 <script type="module">
-import { Lightbox } from '@parallelogram-js/core';
+  import { Lightbox } from '@parallelogram-js/core';
 
-const lightbox = Lightbox.enhanceAll();
+  const lightbox = Lightbox.enhanceAll();
 </script>
 ```
 
@@ -319,22 +331,24 @@ lightbox.close(trigger);
 ### Custom State Classes
 
 ```html
-<a data-lightbox="custom"
-   data-lightbox-state-open-class="custom-is-open"
-   data-lightbox-state-closing-class="custom-is-closing"
-   href="image.jpg">
-  <img src="thumb.jpg" alt="Custom">
+<a
+  data-lightbox="custom"
+  data-lightbox-state-open-class="custom-is-open"
+  data-lightbox-state-closing-class="custom-is-closing"
+  href="image.jpg"
+>
+  <img src="thumb.jpg" alt="Custom" />
 </a>
 ```
 
 ### Event Listening
 
 ```javascript
-lightbox.eventBus.on('lightbox:stateChange', (data) => {
+lightbox.eventBus.on('lightbox:stateChange', data => {
   console.log(`State changed from ${data.oldState} to ${data.newState}`);
 });
 
-lightbox.eventBus.on('lightbox:opened', (data) => {
+lightbox.eventBus.on('lightbox:opened', data => {
   console.log(`Opened gallery: ${data.gallery}, showing ${data.index + 1} of ${data.total}`);
 });
 
@@ -348,30 +362,32 @@ lightbox.eventBus.on('lightbox:closed', () => {
 ### From Old Lightbox to New Lightbox
 
 **Old Code:**
+
 ```javascript
 const lightbox = new Lightbox();
-lightbox.open(trigger);  // Works by coincidence
-lightbox.next();         // Uses wrong config
+lightbox.open(trigger); // Works by coincidence
+lightbox.next(); // Uses wrong config
 ```
 
 **New Code:**
+
 ```javascript
 const lightbox = new Lightbox();
 lightbox.mount(trigger);
-lightbox.open(trigger);  // Explicitly pass element
-lightbox.next(trigger);  // Uses element's state
+lightbox.open(trigger); // Explicitly pass element
+lightbox.next(trigger); // Uses element's state
 ```
 
 ### Public API Changes
 
-| Old Method | New Method | Notes |
-|------------|------------|-------|
-| `open(trigger)` | `open(trigger)` | No change (but now uses state) |
-| `close()` | `close(trigger)` | Now requires element reference |
-| `next()` | `next(trigger)` | Now requires element reference |
-| `previous()` | `previous(trigger)` | Now requires element reference |
-| `goTo(index)` | `goTo(trigger, index)` | Now requires element reference |
-| `getStatus()` | `getStatus(trigger)` | Now requires element reference, returns more info |
+| Old Method      | New Method             | Notes                                             |
+| --------------- | ---------------------- | ------------------------------------------------- |
+| `open(trigger)` | `open(trigger)`        | No change (but now uses state)                    |
+| `close()`       | `close(trigger)`       | Now requires element reference                    |
+| `next()`        | `next(trigger)`        | Now requires element reference                    |
+| `previous()`    | `previous(trigger)`    | Now requires element reference                    |
+| `goTo(index)`   | `goTo(trigger, index)` | Now requires element reference                    |
+| `getStatus()`   | `getStatus(trigger)`   | Now requires element reference, returns more info |
 
 ## Benefits
 

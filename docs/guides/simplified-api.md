@@ -23,6 +23,7 @@ app.run(); // Smart initialization - works with async/defer scripts
 **Note:** Use `app.run()` instead of `app.init()` to handle async/defer scripts automatically. The `run()` method checks if the DOM is ready and initializes immediately, or waits for `DOMContentLoaded` if needed.
 
 That's it! The framework will:
+
 - ✅ Create event bus, logger, and page manager with sane defaults
 - ✅ Lazy-load web components when they appear in the DOM
 - ✅ Lazy-load enhancement components when matching elements are found
@@ -52,6 +53,7 @@ app.components
 ```
 
 **Detection Logic:**
+
 - Contains `[`, `.`, `#`, `:`, or space → Enhancement component (uses selector)
 - Simple tag name → Web component (uses tag name)
 
@@ -66,12 +68,14 @@ app.components
 ```
 
 **Behavior:**
+
 - Loads when `<p-modal>` or `<p-select>` tags appear in DOM
 - Auto-registers via `customElements.define()`
 - Uses MutationObserver to detect dynamically added elements
 - Works with standard Web Component lifecycle
 
 **HTML Usage:**
+
 ```html
 <p-modal id="confirm-dialog" data-modal-closable="true">
   <h2 slot="title">Confirm Action</h2>
@@ -90,14 +94,16 @@ app.components
 ```
 
 **Behavior:**
+
 - Loads when elements matching selector appear in DOM
 - Framework mounts component class to elements
 - Uses BaseComponent lifecycle (mount, unmount, update)
 - PageManager handles scanning and mounting
 
 **HTML Usage:**
+
 ```html
-<img data-lazysrc="/images/hero.jpg" alt="Hero image">
+<img data-lazysrc="/images/hero.jpg" alt="Hero image" />
 <button data-toggle data-toggle-target="#menu">Toggle Menu</button>
 ```
 
@@ -110,11 +116,11 @@ app.components
   .add('[data-critical]', {
     loader: () => import('./components/Critical'),
     priority: 'critical',
-    dependsOn: ['base-utils']
+    dependsOn: ['base-utils'],
   })
   .add('[data-analytics]', {
     loader: () => import('./components/Analytics'),
-    priority: 'low'
+    priority: 'low',
   });
 ```
 
@@ -130,6 +136,7 @@ app.init();
 ```
 
 **Defaults:**
+
 - `mode: 'production'` - No debug logging
 - `debug: false` - Minimal console output
 - Router: Disabled (no client-side navigation)
@@ -143,7 +150,7 @@ Enable detailed logging:
 ```javascript
 const app = Parallelogram.create({
   mode: 'development',
-  debug: true
+  debug: true,
 });
 ```
 
@@ -156,8 +163,8 @@ const app = Parallelogram.create({
   router: {
     timeout: 10000,
     loadingClass: 'router-loading',
-    errorClass: 'router-error'
-  }
+    errorClass: 'router-error',
+  },
 });
 ```
 
@@ -175,22 +182,22 @@ const app = Parallelogram.create({
 
     // Define target groups for fragment updates
     targetGroups: {
-      'main': ['navbar', 'main', 'breadcrumb'],
-      'gallery': ['header-filter', 'header-nav', 'gallery']
+      main: ['navbar', 'main', 'breadcrumb'],
+      gallery: ['header-filter', 'header-nav', 'gallery'],
     },
 
     // Transition animations per group
     targetGroupTransitions: {
-      'main': {
+      main: {
         out: 'reveal--down',
-        in: 'reveal--up'
-      }
+        in: 'reveal--up',
+      },
     },
 
     // Scroll behavior
     scrollRestoration: true,
-    scrollPosition: 'top' // 'top', 'preserve', 'element'
-  }
+    scrollPosition: 'top', // 'top', 'preserve', 'element'
+  },
 });
 ```
 
@@ -207,15 +214,15 @@ const app = Parallelogram.create({
 
   router: {
     timeout: 10000,
-    loadingClass: 'router-loading'
+    loadingClass: 'router-loading',
   },
 
   pageManager: {
     containerSelector: '[data-view="main"]',
     targetGroups: {
-      'main': ['navbar', 'main']
-    }
-  }
+      main: ['navbar', 'main'],
+    },
+  },
 });
 
 // Register components
@@ -247,7 +254,13 @@ app.init();
 ### Before (Verbose)
 
 ```javascript
-import {ComponentRegistry, DevLogger, EventManager, PageManager, RouterManager} from '@parallelogram-js/core';
+import {
+  ComponentRegistry,
+  DevLogger,
+  EventManager,
+  PageManager,
+  RouterManager,
+} from '@parallelogram-js/core';
 import '@parallelogram-js/core/components/PUploader';
 import '@parallelogram-js/core/components/PDatetime';
 
@@ -257,10 +270,10 @@ async function initFramework() {
 
   const componentRegistry = registry
     .component('lazysrc', '[data-lazysrc]', {
-      loader: () => import('@parallelogram-js/core/components/Lazysrc')
+      loader: () => import('@parallelogram-js/core/components/Lazysrc'),
     })
     .component('toggle', '[data-toggle]', {
-      loader: () => import('@parallelogram-js/core/components/Toggle')
+      loader: () => import('@parallelogram-js/core/components/Toggle'),
     })
     .build();
 
@@ -272,7 +285,7 @@ async function initFramework() {
     eventBus,
     logger,
     router,
-    options: {}
+    options: {},
   });
 
   pageManager.mountAllWithin(document.body, { trigger: 'initial-global' });
@@ -289,8 +302,8 @@ import { Parallelogram } from '@parallelogram-js/core';
 const app = Parallelogram.create({
   debug: true,
   pageManager: {
-    containerSelector: '[data-view="main"]'
-  }
+    containerSelector: '[data-view="main"]',
+  },
 });
 
 app.components
@@ -303,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => app.init());
 ```
 
 **Benefits:**
+
 - 📉 70% less boilerplate
 - 🎯 Single, unified API for all components
 - 🔄 Automatic lazy-loading for web components
@@ -319,7 +333,7 @@ For advanced use cases, you can access managers after initialization:
 app.init();
 
 // Access event bus
-app.eventBus.on('custom-event', (data) => {
+app.eventBus.on('custom-event', data => {
   console.log('Event received:', data);
 });
 
@@ -409,11 +423,13 @@ Help identify chunks in webpack:
 
 ```javascript
 app.components
-  .add('p-modal', () =>
-    import(/* webpackChunkName: "p-modal" */ '@parallelogram-js/core/components/PModal')
+  .add(
+    'p-modal',
+    () => import(/* webpackChunkName: "p-modal" */ '@parallelogram-js/core/components/PModal')
   )
-  .add('[data-toggle]', () =>
-    import(/* webpackChunkName: "toggle" */ '@parallelogram-js/core/components/Toggle')
+  .add(
+    '[data-toggle]',
+    () => import(/* webpackChunkName: "toggle" */ '@parallelogram-js/core/components/Toggle')
   );
 ```
 
@@ -459,6 +475,7 @@ app.init(); // May run before DOM is ready!
 ```
 
 **Why `run()` is better:**
+
 - Checks `document.readyState` - runs immediately if DOM is ready
 - Waits for `DOMContentLoaded` if DOM is not ready
 - Works correctly with `<script async>` and `<script defer>`

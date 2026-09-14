@@ -30,12 +30,12 @@ This document defines the coding standards and conventions for the Parallelogram
 ```html
 <!-- CORRECT: HTML with 4-space indentation -->
 <div class="modal">
-    <div class="modal__header">
-        <h2 class="modal__title">Title</h2>
-        <button class="modal__close">
-            <span>Close</span>
-        </button>
-    </div>
+  <div class="modal__header">
+    <h2 class="modal__title">Title</h2>
+    <button class="modal__close">
+      <span>Close</span>
+    </button>
+  </div>
 </div>
 ```
 
@@ -120,22 +120,22 @@ Always start with semantic, accessible HTML that works without JavaScript:
 ```html
 <!-- CORRECT: Semantic foundation -->
 <nav class="navbar">
-    <ul class="navbar__list">
-        <li class="navbar__item">
-            <a href="/" class="navbar__link">Home</a>
-        </li>
-        <li class="navbar__item">
-            <a href="/about" class="navbar__link">About</a>
-        </li>
-    </ul>
+  <ul class="navbar__list">
+    <li class="navbar__item">
+      <a href="/" class="navbar__link">Home</a>
+    </li>
+    <li class="navbar__item">
+      <a href="/about" class="navbar__link">About</a>
+    </li>
+  </ul>
 </nav>
 
 <!-- INCORRECT: Non-semantic divs -->
 <div class="navbar">
-    <div class="navbar__list">
-        <div class="navbar__item">Home</div>
-        <div class="navbar__item">About</div>
-    </div>
+  <div class="navbar__list">
+    <div class="navbar__item">Home</div>
+    <div class="navbar__item">About</div>
+  </div>
 </div>
 ```
 
@@ -146,16 +146,16 @@ Use `data-*` attributes for JavaScript enhancement, never `class` or `id`:
 ```html
 <!-- CORRECT: Data attributes for enhancement -->
 <button class="btn btn--primary" data-modal data-modal-target="#contact-form" data-modal-size="lg">
-    Open Contact Form
+  Open Contact Form
 </button>
 
 <div
-    id="contact-form"
-    class="modal modal--lg"
-    data-modal-closable="true"
-    data-modal-backdrop-close="true"
+  id="contact-form"
+  class="modal modal--lg"
+  data-modal-closable="true"
+  data-modal-backdrop-close="true"
 >
-    <!-- Modal content -->
+  <!-- Modal content -->
 </div>
 
 <!-- INCORRECT: Using classes for JavaScript hooks -->
@@ -169,14 +169,14 @@ Always include proper ARIA attributes and semantic roles:
 ```html
 <!-- CORRECT: Complete accessibility -->
 <div class="carousel" data-carousel role="region" aria-label="Featured products">
-    <div class="carousel__track" role="group" aria-live="polite">
-        <div class="carousel__slide" role="tabpanel" aria-label="Slide 1 of 3" tabindex="0">
-            <img src="product1.jpg" alt="Premium Widget - $29.99" />
-        </div>
+  <div class="carousel__track" role="group" aria-live="polite">
+    <div class="carousel__slide" role="tabpanel" aria-label="Slide 1 of 3" tabindex="0">
+      <img src="product1.jpg" alt="Premium Widget - $29.99" />
     </div>
+  </div>
 
-    <button class="carousel__arrow carousel__arrow--prev" aria-label="Previous slide">‹</button>
-    <button class="carousel__arrow carousel__arrow--next" aria-label="Next slide">›</button>
+  <button class="carousel__arrow carousel__arrow--prev" aria-label="Previous slide">‹</button>
+  <button class="carousel__arrow carousel__arrow--next" aria-label="Next slide">›</button>
 </div>
 ```
 
@@ -364,25 +364,25 @@ Data attributes follow a hierarchical naming pattern:
 <!-- Component class: Datatable, Data attribute: data-datatable -->
 <!-- Component identification -->
 <div data-carousel>
-    <!-- Component configuration -->
-    <div
-        data-carousel
-        data-carousel-autoplay="true"
-        data-carousel-duration="5000"
-        data-carousel-transition="slide"
-    >
-        <!-- Sub-element identification -->
-        <button data-carousel-control="prev">Previous</button>
-        <button data-carousel-control="next">Next</button>
+  <!-- Component configuration -->
+  <div
+    data-carousel
+    data-carousel-autoplay="true"
+    data-carousel-duration="5000"
+    data-carousel-transition="slide"
+  >
+    <!-- Sub-element identification -->
+    <button data-carousel-control="prev">Previous</button>
+    <button data-carousel-control="next">Next</button>
 
-        <!-- Boolean attributes -->
-        <div
-            data-modal
-            data-modal-closable="true"
-            data-modal-backdrop-close="false"
-            data-modal-keyboard="true"
-        ></div>
-    </div>
+    <!-- Boolean attributes -->
+    <div
+      data-modal
+      data-modal-closable="true"
+      data-modal-backdrop-close="false"
+      data-modal-keyboard="true"
+    ></div>
+  </div>
 </div>
 ```
 
@@ -413,6 +413,7 @@ Use consistent data types and formatting:
 Components support two targeting approaches for consistency with the framework:
 
 #### Option 1: CSS Selector (Traditional)
+
 Use `data-*-target` with a CSS selector:
 
 ```html
@@ -427,6 +428,7 @@ Use `data-*-target` with a CSS selector:
 ```
 
 #### Option 2: data-view Reference (Recommended)
+
 Use `data-*-target-view` to reference elements by their `data-view` attribute. This is more consistent with the framework's PageManager fragment system:
 
 ```html
@@ -446,6 +448,7 @@ Use `data-*-target-view` to reference elements by their `data-view` attribute. T
 ```
 
 **Benefits of data-view approach:**
+
 - Consistent with PageManager's fragment targeting system
 - No need for unique IDs when not semantically necessary
 - Clearer semantic intent (view vs generic element)
@@ -456,16 +459,16 @@ Use `data-*-target-view` to reference elements by their `data-view` attribute. T
 ```html
 <!-- Parent → Child relationship -->
 <div data-tabs>
-    <button data-tab="panel-1" aria-selected="true">Tab 1</button>
-    <button data-tab="panel-2">Tab 2</button>
-    <div id="panel-1" data-tab-panel>Panel 1 content</div>
-    <div id="panel-2" data-tab-panel>Panel 2 content</div>
+  <button data-tab="panel-1" aria-selected="true">Tab 1</button>
+  <button data-tab="panel-2">Tab 2</button>
+  <div id="panel-1" data-tab-panel>Panel 1 content</div>
+  <div id="panel-2" data-tab-panel>Panel 2 content</div>
 </div>
 
 <!-- Collection relationship -->
 <div data-lightbox-gallery="products">
-    <img data-lightbox-item src="product1.jpg" alt="Product 1" />
-    <img data-lightbox-item src="product2.jpg" alt="Product 2" />
+  <img data-lightbox-item src="product1.jpg" alt="Product 1" />
+  <img data-lightbox-item src="product2.jpg" alt="Product 2" />
 </div>
 ```
 
@@ -484,24 +487,24 @@ Strictly follow BEM naming for all CSS classes:
 
 <!-- Block with Element: modal__header -->
 <div class="modal modal--lg">
-    <header class="modal__header">
-        <h2 class="modal__title">Modal Title</h2>
-        <button class="modal__close">×</button>
-    </header>
-    <div class="modal__body">
-        <p class="modal__text">Modal content</p>
-    </div>
-    <footer class="modal__footer">
-        <button class="btn btn--secondary modal__button">Cancel</button>
-        <button class="btn btn--primary modal__button">Confirm</button>
-    </footer>
+  <header class="modal__header">
+    <h2 class="modal__title">Modal Title</h2>
+    <button class="modal__close">×</button>
+  </header>
+  <div class="modal__body">
+    <p class="modal__text">Modal content</p>
+  </div>
+  <footer class="modal__footer">
+    <button class="btn btn--secondary modal__button">Cancel</button>
+    <button class="btn btn--primary modal__button">Confirm</button>
+  </footer>
 </div>
 
 <!-- INCORRECT: Mixed naming conventions -->
 <div class="modal large-modal">
-    <div class="modalHeader">
-        <h2 class="modal-title">Title</h2>
-    </div>
+  <div class="modalHeader">
+    <h2 class="modal-title">Title</h2>
+  </div>
 </div>
 ```
 
@@ -755,27 +758,27 @@ Every component MUST include:
 ```html
 <!-- CORRECT: Complete accessibility -->
 <div class="carousel" data-carousel role="region" aria-label="Product showcase">
-    <!-- Keyboard navigation support -->
-    <button class="carousel__arrow carousel__arrow--prev" aria-label="Previous product" tabindex="0">
-        ‹
-    </button>
+  <!-- Keyboard navigation support -->
+  <button class="carousel__arrow carousel__arrow--prev" aria-label="Previous product" tabindex="0">
+    ‹
+  </button>
 
-    <!-- Screen reader announcements -->
-    <div class="carousel__track" aria-live="polite" aria-atomic="false">
-        <div class="carousel__slide" role="tabpanel" aria-label="Product 1 of 5" tabindex="0">
-            <img src="product.jpg" alt="Wireless headphones - $99.99" />
-        </div>
+  <!-- Screen reader announcements -->
+  <div class="carousel__track" aria-live="polite" aria-atomic="false">
+    <div class="carousel__slide" role="tabpanel" aria-label="Product 1 of 5" tabindex="0">
+      <img src="product.jpg" alt="Wireless headphones - $99.99" />
     </div>
+  </div>
 
-    <!-- Meaningful indicators -->
-    <div class="carousel__indicators" role="tablist">
-        <button
-            role="tab"
-            aria-selected="true"
-            aria-label="View product 1"
-            class="carousel__dot carousel__dot--active"
-        ></button>
-    </div>
+  <!-- Meaningful indicators -->
+  <div class="carousel__indicators" role="tablist">
+    <button
+      role="tab"
+      aria-selected="true"
+      aria-label="View product 1"
+      class="carousel__dot carousel__dot--active"
+    ></button>
+  </div>
 </div>
 ```
 

@@ -13,6 +13,7 @@ BaseComponent provides a set of helper methods to simplify state management and 
 ## Core Concept
 
 Each component has a unique data attribute prefix derived from its class name:
+
 - `Toggle` → `data-toggle`
 - `Lightbox` → `data-lightbox`
 - `DataTable` → `data-data-table`
@@ -31,10 +32,12 @@ The helper methods automatically apply this prefix, so you write less code and m
 Set component state using the component's data attribute.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 - `state` (string) - State value
 
 **Example:**
+
 ```javascript
 // In Toggle component
 this.setState(targetElement, ExtendedStates.OPEN);
@@ -46,11 +49,13 @@ this.setState(overlayElement, 'opening');
 ```
 
 **Before (manual):**
+
 ```javascript
 element.setAttribute('data-toggle-target', 'open');
 ```
 
 **After (with API):**
+
 ```javascript
 this.setState(element, 'open');
 ```
@@ -62,11 +67,13 @@ this.setState(element, 'open');
 Get current component state from the element's data attribute.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 
 **Returns:** `string|null` - Current state value or null
 
 **Example:**
+
 ```javascript
 const currentState = this.getElementState(targetElement);
 if (currentState === ExtendedStates.OPENING) {
@@ -83,11 +90,13 @@ if (currentState === ExtendedStates.OPENING) {
 Set a component-specific attribute.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 - `attr` (string) - Attribute name (without `data-` prefix)
 - `value` (string|number|boolean) - Attribute value
 
 **Example:**
+
 ```javascript
 // In Toggle component
 this.setAttr(targetElement, 'target', ExtendedStates.OPEN);
@@ -98,12 +107,14 @@ this.setAttr(targetElement, 'duration', 300);
 ```
 
 **Before (manual):**
+
 ```javascript
 element.setAttribute('data-toggle-target', 'open');
 element.setAttribute('data-toggle-duration', '300');
 ```
 
 **After (with API):**
+
 ```javascript
 this.setAttr(element, 'target', 'open');
 this.setAttr(element, 'duration', 300);
@@ -116,6 +127,7 @@ this.setAttr(element, 'duration', 300);
 Get a component-specific attribute value.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 - `attr` (string) - Attribute name (without `data-` prefix)
 - `defaultValue` (*) - Default value if attribute doesn't exist (optional)
@@ -123,6 +135,7 @@ Get a component-specific attribute value.
 **Returns:** `string|null` - Attribute value or default value
 
 **Example:**
+
 ```javascript
 const duration = this.getAttr(element, 'duration', '300');
 const target = this.getAttr(element, 'target');
@@ -133,12 +146,14 @@ if (target === ExtendedStates.OPEN) {
 ```
 
 **Before (manual):**
+
 ```javascript
 const duration = element.getAttribute('data-toggle-duration') || '300';
 const target = element.getAttribute('data-toggle-target');
 ```
 
 **After (with API):**
+
 ```javascript
 const duration = this.getAttr(element, 'duration', '300');
 const target = this.getAttr(element, 'target');
@@ -151,10 +166,12 @@ const target = this.getAttr(element, 'target');
 Remove a component-specific attribute.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 - `attr` (string) - Attribute name (without `data-` prefix)
 
 **Example:**
+
 ```javascript
 this.removeAttr(element, 'disabled');
 // Removes: data-toggle-disabled
@@ -167,12 +184,14 @@ this.removeAttr(element, 'disabled');
 Check if a component-specific attribute exists.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Target element
 - `attr` (string) - Attribute name (without `data-` prefix)
 
 **Returns:** `boolean` - True if attribute exists
 
 **Example:**
+
 ```javascript
 if (this.hasAttr(element, 'disabled')) {
   return; // Skip if disabled
@@ -195,6 +214,7 @@ Automatically extracts the component's data attribute selector from the class na
 **Returns:** `string` - Data attribute selector (e.g., `data-toggle`)
 
 **How it works:**
+
 ```javascript
 class Toggle extends BaseComponent {}
 // _getSelector() returns "data-toggle"
@@ -207,6 +227,7 @@ class PModal extends BaseComponent {}
 ```
 
 **Conversion Rules:**
+
 - PascalCase → kebab-case
 - `Toggle` → `toggle`
 - `DataTable` → `data-table`
@@ -214,6 +235,7 @@ class PModal extends BaseComponent {}
 - Prefix with `data-`
 
 **Override if needed:**
+
 ```javascript
 class CustomComponent extends BaseComponent {
   _getSelector() {
@@ -229,6 +251,7 @@ class CustomComponent extends BaseComponent {
 ### Toggle Component
 
 **Before:**
+
 ```javascript
 // Setting state manually
 target.setAttribute('data-toggle-target', ExtendedStates.OPEN);
@@ -241,6 +264,7 @@ if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.O
 ```
 
 **After:**
+
 ```javascript
 // Setting state with API
 this.setAttr(target, 'target', ExtendedStates.OPEN);
@@ -257,6 +281,7 @@ if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.O
 ### Lightbox Component
 
 **Before:**
+
 ```javascript
 // Setting state manually
 this.lightboxElement.setAttribute('data-lightbox', 'opening');
@@ -268,6 +293,7 @@ if (state.lightboxState === 'closed') {
 ```
 
 **After:**
+
 ```javascript
 // Setting state with API
 this.setState(this.lightboxElement, 'opening');
@@ -318,38 +344,37 @@ class Accordion extends BaseComponent {
     // Expand with animation
     this.setState(panel, 'opening');
 
-    setTimeout(() => {
-      this.setState(panel, 'open');
-    }, this.getAttr(element, 'duration', 300));
+    setTimeout(
+      () => {
+        this.setState(panel, 'open');
+      },
+      this.getAttr(element, 'duration', 300)
+    );
   }
 }
 ```
 
 **HTML:**
-```html
-<button data-accordion
-        data-accordion-panel="panel-1"
-        data-accordion-duration="500">
-  Panel 1
-</button>
 
-<div id="panel-1" data-accordion="closed">
-  Panel content
-</div>
+```html
+<button data-accordion data-accordion-panel="panel-1" data-accordion-duration="500">Panel 1</button>
+
+<div id="panel-1" data-accordion="closed">Panel content</div>
 ```
 
 **CSS:**
+
 ```css
-[data-accordion="closed"] {
+[data-accordion='closed'] {
   display: none;
 }
 
-[data-accordion="opening"] {
+[data-accordion='opening'] {
   display: block;
   animation: slideDown 0.5s ease-out;
 }
 
-[data-accordion="open"] {
+[data-accordion='open'] {
   display: block;
 }
 ```
@@ -359,6 +384,7 @@ class Accordion extends BaseComponent {
 ## Benefits
 
 ### 1. Less Boilerplate
+
 ```javascript
 // Before: 48 characters
 element.setAttribute('data-toggle-target', 'open');
@@ -368,6 +394,7 @@ this.setAttr(element, 'target', 'open');
 ```
 
 ### 2. Prevents Typos
+
 ```javascript
 // Before: Easy to make mistakes
 element.setAttribute('data-togle-target', 'open'); // ❌ typo: "togle"
@@ -378,7 +405,9 @@ this.setAttr(element, 'target', 'open'); // ✅ Always correct
 ```
 
 ### 3. Consistency
+
 All components use the same pattern:
+
 ```javascript
 this.setState(element, state);
 this.setAttr(element, attr, value);
@@ -388,7 +417,9 @@ this.hasAttr(element, attr);
 ```
 
 ### 4. Refactoring Safety
+
 If you rename a component class, attributes update automatically:
+
 ```javascript
 // Rename: Toggle → Toggler
 class Toggler extends BaseComponent {}
@@ -396,7 +427,9 @@ class Toggler extends BaseComponent {}
 ```
 
 ### 5. Type Safety (Future)
+
 Easy to add TypeScript support:
+
 ```typescript
 setState<T extends string>(element: HTMLElement, state: T): void;
 getElementState(element: HTMLElement): string | null;
@@ -413,28 +446,31 @@ BaseComponent provides additional helper methods that now use the new API intern
 Parse multiple data attributes into a configuration object.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Element with data attributes
 - `mapping` (Object) - Map of config keys to **short** attribute names (without component prefix)
 
 **Returns:** `Object` - Configuration object
 
 **Example:**
+
 ```javascript
 // In SelectLoader component:
 const config = this._getConfigFromAttrs(element, {
-  target: 'target',               // ✅ Short name - reads data-selectloader-target
-  loadingClass: 'loading-class',  // ✅ Short name - reads data-selectloader-loading-class
-  transition: 'transition'        // ✅ Short name - reads data-selectloader-transition
+  target: 'target', // ✅ Short name - reads data-selectloader-target
+  loadingClass: 'loading-class', // ✅ Short name - reads data-selectloader-loading-class
+  transition: 'transition', // ✅ Short name - reads data-selectloader-transition
 });
 
 // ❌ INCORRECT - Don't use full names anymore
 const config = this._getConfigFromAttrs(element, {
-  target: 'selectloader-target',         // ❌ Old style - will fail
-  loadingClass: 'selectloader-loading-class' // ❌ Old style - will fail
+  target: 'selectloader-target', // ❌ Old style - will fail
+  loadingClass: 'selectloader-loading-class', // ❌ Old style - will fail
 });
 ```
 
 **Before (used `_getDataAttr` internally):**
+
 ```javascript
 _getConfigFromAttrs(element, mapping) {
   const config = {};
@@ -446,6 +482,7 @@ _getConfigFromAttrs(element, mapping) {
 ```
 
 **After (uses `getAttr` internally):**
+
 ```javascript
 _getConfigFromAttrs(element, mapping) {
   const config = {};
@@ -463,6 +500,7 @@ _getConfigFromAttrs(element, mapping) {
 Get target element from data attribute with validation. Supports both CSS selectors and data-view lookups.
 
 **Parameters:**
+
 - `element` (HTMLElement) - Element containing the data attribute
 - `dataAttr` (string) - **Short** attribute name (without `data-` and component prefix)
 - `options` (Object) - Options object
@@ -471,6 +509,7 @@ Get target element from data attribute with validation. Supports both CSS select
 **Returns:** `HTMLElement|null` - Target element or null
 
 **Example:**
+
 ```javascript
 // In SelectLoader component:
 const target = this._getTargetElement(element, 'target', { required: true });
@@ -484,18 +523,25 @@ const target = this._getTargetElement(element, 'selectloader-target', { required
 **Supports two patterns:**
 
 1. **CSS Selector:**
+
 ```html
-<select data-selectloader-target="#content">...</select>
+<select data-selectloader-target="#content">
+  ...
+</select>
 <div id="content">...</div>
 ```
 
 2. **Data-View (preferred):**
+
 ```html
-<select data-selectloader-target-view="main-content">...</select>
+<select data-selectloader-target-view="main-content">
+  ...
+</select>
 <div data-view="main-content">...</div>
 ```
 
 **Before (used `_getDataAttr` internally):**
+
 ```javascript
 _getTargetElement(element, dataAttr, options) {
   const viewAttr = `${dataAttr}-view`;
@@ -506,6 +552,7 @@ _getTargetElement(element, dataAttr, options) {
 ```
 
 **After (uses `getAttr` internally):**
+
 ```javascript
 _getTargetElement(element, dataAttr, options) {
   const viewAttr = `${dataAttr}-view`;
@@ -522,6 +569,7 @@ _getTargetElement(element, dataAttr, options) {
 ### Step 1: Find Manual Attributes
 
 Search for:
+
 ```javascript
 element.setAttribute('data-<component>
 element.getAttribute('data-<component>
@@ -531,18 +579,19 @@ element.hasAttribute('data-<component>
 
 ### Step 2: Replace with API
 
-| Before | After |
-|--------|-------|
-| `element.setAttribute('data-toggle', state)` | `this.setState(element, state)` |
-| `element.getAttribute('data-toggle')` | `this.getElementState(element)` |
+| Before                                                | After                                      |
+| ----------------------------------------------------- | ------------------------------------------ |
+| `element.setAttribute('data-toggle', state)`          | `this.setState(element, state)`            |
+| `element.getAttribute('data-toggle')`                 | `this.getElementState(element)`            |
 | `element.setAttribute('data-toggle-duration', value)` | `this.setAttr(element, 'duration', value)` |
-| `element.getAttribute('data-toggle-duration')` | `this.getAttr(element, 'duration')` |
-| `element.removeAttribute('data-toggle-disabled')` | `this.removeAttr(element, 'disabled')` |
-| `element.hasAttribute('data-toggle-disabled')` | `this.hasAttr(element, 'disabled')` |
+| `element.getAttribute('data-toggle-duration')`        | `this.getAttr(element, 'duration')`        |
+| `element.removeAttribute('data-toggle-disabled')`     | `this.removeAttr(element, 'disabled')`     |
+| `element.hasAttribute('data-toggle-disabled')`        | `this.hasAttr(element, 'disabled')`        |
 
 ### Step 3: Test
 
 Build and verify:
+
 ```bash
 npm run build
 npm run demo
@@ -601,6 +650,7 @@ this.removeAttr(element, 'temporary'); // No error if doesn't exist
 ## Component Compatibility
 
 ### ✅ Using New API (Fully Migrated)
+
 All components extending BaseComponent have been migrated to use the new API:
 
 - **Toggle** - 6 `getAttr()` calls
@@ -618,6 +668,7 @@ All components extending BaseComponent have been migrated to use the new API:
 - **Lazysrc** - Migrated
 
 ### ℹ️ Not Applicable (Web Components)
+
 These components extend HTMLElement, not BaseComponent, so they don't use the new API:
 
 - **PModal** - Web Component
@@ -633,6 +684,7 @@ Web Components use standard `getAttribute()` methods as per Web Component standa
 ## Summary
 
 The BaseComponent API provides:
+
 - ✅ **Automatic attribute naming** based on class name
 - ✅ **Reduced boilerplate** (shorter, cleaner code)
 - ✅ **Type safety** (prevents typos)

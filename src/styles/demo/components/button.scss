@@ -28,7 +28,7 @@
   &:hover {
     background: #d97706; /* Fallback for older browsers */
     border-color: #d97706;
-    
+
     /* Modern browsers with color-mix support */
     @supports (background: color-mix(in srgb, red 50%, blue)) {
       background: color-mix(in srgb, var(--brand-warning, #f59e0b) 85%, black);
@@ -38,7 +38,7 @@
 
   &:focus {
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); /* Fallback */
-    
+
     @supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 20%, transparent)) {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-warning, #f59e0b) 20%, transparent);
     }
@@ -47,7 +47,7 @@
   &:active {
     background: #b45309; /* Fallback for older browsers */
     border-color: #b45309;
-    
+
     @supports (background: color-mix(in srgb, red 50%, blue)) {
       background: color-mix(in srgb, var(--brand-warning, #f59e0b) 75%, black);
       border-color: color-mix(in srgb, var(--brand-warning, #f59e0b) 75%, black);

@@ -130,10 +130,7 @@ const devCoreConfigs = coreFiles.map(file => {
       file: `dist/dev/core/${name}.js`,
       format: 'esm',
     },
-    plugins: [
-      resolve({ extensions: ['.js'] }),
-      commonjs(),
-    ],
+    plugins: [resolve({ extensions: ['.js'] }), commonjs()],
   };
 });
 

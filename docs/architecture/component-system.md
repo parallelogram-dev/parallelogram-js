@@ -205,9 +205,7 @@ _setState(element, state, updates) {
 // Event-driven communication between components
 class Modal extends BaseComponent {
   _init(element) {
-    const state = {
-      /* ... */
-    };
+    const state = {/* ... */};
 
     // Listen for events from other components
     this.eventBus.on('form:submitted', data => {
@@ -237,9 +235,7 @@ class Modal extends BaseComponent {
 // Component that depends on other components
 class Carousel extends BaseComponent {
   _init(element) {
-    const state = {
-      /* ... */
-    };
+    const state = {/* ... */};
 
     // Initialize lazy loading for carousel images
     const lazyImages = element.querySelectorAll('[data-lazysrc]');
@@ -307,14 +303,20 @@ class DataTable extends BaseComponent {
 
 ```javascript
 // Debounce example - waits for user to stop typing
-searchInput.addEventListener('input', this._debounce((e) => {
-  this.search(e.target.value);
-}, 300));
+searchInput.addEventListener(
+  'input',
+  this._debounce(e => {
+    this.search(e.target.value);
+  }, 300)
+);
 
 // Throttle example - limits scroll handler execution rate
-window.addEventListener('scroll', this._throttle(() => {
-  this.updateScrollPosition();
-}, 100));
+window.addEventListener(
+  'scroll',
+  this._throttle(() => {
+    this.updateScrollPosition();
+  }, 100)
+);
 ```
 
 ## State Storage Patterns
@@ -380,9 +382,7 @@ _init(element) {
 ```javascript
 class ComponentWithSharedState extends BaseComponent {
   _init(element) {
-    const state = {
-      /* ... */
-    };
+    const state = {/* ... */};
 
     // Subscribe to shared state changes
     this.eventBus.on('sharedState:updated', data => {
@@ -418,18 +418,22 @@ class MyComponent extends BaseComponent {
     const config = this._getConfigFromAttrs(element, {
       threshold: 'component-threshold',
       duration: 'component-duration',
-      autoplay: 'component-autoplay'
+      autoplay: 'component-autoplay',
     });
 
     // Generate unique IDs
     const id = element.id || this._generateId('my-component');
 
     // Create DOM elements
-    const button = this._createElement('button', {
-      className: 'component__button',
-      'aria-label': 'Close',
-      dataset: { action: 'close' }
-    }, 'Close');
+    const button = this._createElement(
+      'button',
+      {
+        className: 'component__button',
+        'aria-label': 'Close',
+        dataset: { action: 'close' },
+      },
+      'Close'
+    );
 
     return { target, config, id, button };
   }
@@ -487,12 +491,12 @@ class SearchComponent extends BaseComponent {
     const searchInput = element.querySelector('[data-search]');
 
     // Debounce search - waits until user stops typing
-    const debouncedSearch = this._debounce((e) => {
+    const debouncedSearch = this._debounce(e => {
       this.performSearch(e.target.value);
     }, 300);
 
     searchInput.addEventListener('input', debouncedSearch, {
-      signal: state.controller.signal
+      signal: state.controller.signal,
     });
 
     return state;
@@ -517,7 +521,7 @@ class ScrollComponent extends BaseComponent {
 
     window.addEventListener('scroll', throttledScroll, {
       signal: state.controller.signal,
-      passive: true
+      passive: true,
     });
 
     return state;
@@ -646,11 +650,15 @@ class ModalComponent extends BaseComponent {
     }
 
     // Setup focus trap
-    element.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') {
-        this._trapFocus(element, e);
-      }
-    }, { signal: state.controller.signal });
+    element.addEventListener(
+      'keydown',
+      e => {
+        if (e.key === 'Tab') {
+          this._trapFocus(element, e);
+        }
+      },
+      { signal: state.controller.signal }
+    );
   }
 
   close(element) {

@@ -9,7 +9,7 @@
  * @returns {string} Camel-cased string
  */
 export function camelCase(str) {
-  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+  return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
 }
 
 /**
@@ -99,7 +99,7 @@ export function throttle(func, limit = 100) {
  * @returns {Promise} Promise that resolves after delay
  */
 export function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -109,7 +109,7 @@ export function delay(ms) {
  * @returns {Promise} Promise that resolves when transition ends
  */
 export async function waitForTransition(element, timeout = 2000) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const handleEnd = () => {
       element.removeEventListener('animationend', handleEnd);
       element.removeEventListener('transitionend', handleEnd);
@@ -139,7 +139,7 @@ export async function fadeIn(element, duration = 300) {
   element.offsetHeight; /* Force reflow */
   element.style.opacity = '1';
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(() => {
       element.style.transition = '';
       resolve();
@@ -159,7 +159,7 @@ export async function fadeOut(element, duration = 300) {
   element.offsetHeight; /* Force reflow */
   element.style.opacity = '0';
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(() => {
       element.style.transition = '';
       resolve();
@@ -179,7 +179,7 @@ export function getFocusableElements(container = document) {
     'input:not([disabled])',
     'select:not([disabled])',
     'textarea:not([disabled])',
-    '[tabindex]:not([tabindex="-1"]):not([disabled])'
+    '[tabindex]:not([tabindex="-1"]):not([disabled])',
   ];
   return Array.from(container.querySelectorAll(selectors.join(',')));
 }
@@ -269,7 +269,7 @@ export function getTargetElement(element, dataAttr, options = {}) {
       options.logger.warn(`Target element with data-view="${viewName}" not found`, {
         viewName,
         element,
-        attribute: viewAttr
+        attribute: viewAttr,
       });
     }
     return target;

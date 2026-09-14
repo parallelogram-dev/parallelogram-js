@@ -104,11 +104,7 @@ export default class Toggle extends BaseComponent {
       target.hasAttribute('data-toggle-manual') ||
       this.getAttr(element, 'manual', Toggle.defaults.manual);
     const multiple = this.getAttr(element, 'multiple', Toggle.defaults.multiple);
-    const animateToggle = this.getAttr(
-      element,
-      'animate',
-      Toggle.defaults.animateToggle
-    );
+    const animateToggle = this.getAttr(element, 'animate', Toggle.defaults.animateToggle);
     const closeOnNavigation = this.getAttr(
       element,
       'close-navigation',
@@ -383,9 +379,7 @@ export default class Toggle extends BaseComponent {
    * @param {boolean} isOpen - Whether the toggle is open
    */
   _updateRelatedTriggers(targetSelector, isOpen) {
-    const relatedTriggers = document.querySelectorAll(
-      `[data-toggle-target="${targetSelector}"]`
-    );
+    const relatedTriggers = document.querySelectorAll(`[data-toggle-target="${targetSelector}"]`);
     relatedTriggers.forEach(trigger => {
       trigger.setAttribute('aria-expanded', String(isOpen));
     });
@@ -454,13 +448,15 @@ export default class Toggle extends BaseComponent {
       if (current.tagName === 'A') {
         const href = current.getAttribute('href');
         // Check if it's a navigation link (has href and causes page navigation)
-        if (href &&
-            !href.startsWith('#') &&
-            !href.startsWith('javascript:') &&
-            !href.startsWith('mailto:') &&
-            !href.startsWith('tel:') &&
-            !current.hasAttribute('download') &&
-            current.getAttribute('target') !== '_blank') {
+        if (
+          href &&
+          !href.startsWith('#') &&
+          !href.startsWith('javascript:') &&
+          !href.startsWith('mailto:') &&
+          !href.startsWith('tel:') &&
+          !current.hasAttribute('download') &&
+          current.getAttribute('target') !== '_blank'
+        ) {
           return true;
         }
         break;

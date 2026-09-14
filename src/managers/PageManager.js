@@ -349,7 +349,12 @@ export class PageManager {
       // This creates a smoother experience - content fades out, then scroll snaps, then new content fades in
       // Use 'instant' behavior to override any CSS scroll-behavior: smooth on the document
       // Only scroll for the 'main' fragment to avoid scrolling when other fragments (navbar, etc.) are processed
-      if (viewTarget === 'main' && !options.preserveScroll && this.options.scrollPosition === 'top' && !options.fromPopstate) {
+      if (
+        viewTarget === 'main' &&
+        !options.preserveScroll &&
+        this.options.scrollPosition === 'top' &&
+        !options.fromPopstate
+      ) {
         await new Promise(resolve => requestAnimationFrame(resolve));
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
@@ -360,11 +365,7 @@ export class PageManager {
       // 3 & 4. Replace content and prepare for IN transition in same frame
       if (transitionConfig?.in) {
         // Set initial state for in-transition before replacing content
-        await this._replaceContentWithTransition(
-          targetFragment,
-          sourceFragment,
-          transitionConfig
-        );
+        await this._replaceContentWithTransition(targetFragment, sourceFragment, transitionConfig);
       } else {
         // No transition - just replace
         targetFragment.innerHTML = sourceFragment.innerHTML;
@@ -443,7 +444,13 @@ export class PageManager {
       if (typeof transitionType === 'string' && !transitionType.includes('(')) {
         /* Pass the out class name to the in transition so it can remove it */
         const outClassName = direction === 'in' ? config.out : null;
-        await this._performCSSTransition(fragment, transitionType, duration, direction, outClassName);
+        await this._performCSSTransition(
+          fragment,
+          transitionType,
+          duration,
+          direction,
+          outClassName
+        );
       } else {
         // Use TransitionManager or inline styles
         await this._performJSTransition(fragment, direction, config);
@@ -1063,7 +1070,12 @@ export class PageManager {
       if (addedNodes && addedNodes.length > 0) {
         this.logger?.debug(
           `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
-          { config: config.name, selector: config.selector, addedNodesCount: addedNodes.length, fragmentTarget }
+          {
+            config: config.name,
+            selector: config.selector,
+            addedNodesCount: addedNodes.length,
+            fragmentTarget,
+          }
         );
       }
       return;

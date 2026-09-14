@@ -40,19 +40,19 @@
   --modal-disabled-opacity: #{$opacity-disabled};
 
   /* Spacing (em-based for scalability) */
-  --modal-space-xs: 0.125em;    /* 2px at 16px base */
-  --modal-space-sm: 0.25em;     /* 4px */
-  --modal-space-md: 0.5em;      /* 8px */
-  --modal-space-lg: 0.75em;     /* 12px */
-  --modal-space-xl: 1em;        /* 16px */
-  --modal-padding-x: 0.875em;   /* 14px */
-  --modal-padding-y: 0.75em;    /* 12px */
-  --modal-gap: 0.5em;           /* 8px */
+  --modal-space-xs: 0.125em; /* 2px at 16px base */
+  --modal-space-sm: 0.25em; /* 4px */
+  --modal-space-md: 0.5em; /* 8px */
+  --modal-space-lg: 0.75em; /* 12px */
+  --modal-space-xl: 1em; /* 16px */
+  --modal-padding-x: 0.875em; /* 14px */
+  --modal-padding-y: 0.75em; /* 12px */
+  --modal-gap: 0.5em; /* 8px */
 
   /* Border Radius using surface-dialog tokens */
-  --modal-radius: 0.5em;        /* 8px */
-  --modal-radius-lg: var(--surface-dialog-radius, 0.625em);   /* 10px */
-  --modal-radius-xl: 1em;       /* 16px */
+  --modal-radius: 0.5em; /* 8px */
+  --modal-radius-lg: var(--surface-dialog-radius, 0.625em); /* 10px */
+  --modal-radius-xl: 1em; /* 16px */
 
   /* Borders using surface-dialog tokens */
   --modal-border-width: var(--surface-dialog-border-width, 1px);
@@ -67,17 +67,17 @@
   --modal-animation-easing: ease-out;
 
   /* Sizes */
-  --modal-size-xs: 18.75em;     /* 300px */
-  --modal-size-sm: 25em;        /* 400px */
-  --modal-size-md: 40em;        /* 640px - default */
-  --modal-size-lg: 50em;        /* 800px */
-  --modal-size-xl: 62.5em;      /* 1000px */
+  --modal-size-xs: 18.75em; /* 300px */
+  --modal-size-sm: 25em; /* 400px */
+  --modal-size-md: 40em; /* 640px - default */
+  --modal-size-lg: 50em; /* 800px */
+  --modal-size-xl: 62.5em; /* 1000px */
   --modal-max-width: 92vw;
   --modal-max-height: 86vh;
   --modal-fullscreen-inset: 3em; /* 48px */
-  --modal-close-size: 1.75em;   /* 28px */
-  --modal-font-sm: 0.875em;     /* 14px */
-  --modal-font-md: 1.125em;     /* 18px */
+  --modal-close-size: 1.75em; /* 28px */
+  --modal-font-sm: 0.875em; /* 14px */
+  --modal-font-md: 1.125em; /* 18px */
   --modal-btn-min-height: 3.125em; /* 50px */
 }
 
@@ -108,8 +108,9 @@
   }
 
   .modal__panel {
-    transition: opacity var(--modal-transition),
-                transform var(--modal-transition);
+    transition:
+      opacity var(--modal-transition),
+      transform var(--modal-transition);
   }
 
   .modal__close {
@@ -117,9 +118,10 @@
   }
 
   ::slotted(.btn) {
-    transition: background-color var(--modal-transition),
-                color var(--modal-transition),
-                transform var(--modal-transition);
+    transition:
+      background-color var(--modal-transition),
+      color var(--modal-transition),
+      transform var(--modal-transition);
   }
 }
 
@@ -162,23 +164,23 @@
 }
 
 /* Panel size modifiers */
-:host([data-modal-size="xs"]) .modal__panel {
+:host([data-modal-size='xs']) .modal__panel {
   min-width: min(var(--modal-max-width), var(--modal-size-xs));
 }
 
-:host([data-modal-size="sm"]) .modal__panel {
+:host([data-modal-size='sm']) .modal__panel {
   min-width: min(var(--modal-max-width), var(--modal-size-sm));
 }
 
-:host([data-modal-size="lg"]) .modal__panel {
+:host([data-modal-size='lg']) .modal__panel {
   min-width: min(var(--modal-max-width), var(--modal-size-lg));
 }
 
-:host([data-modal-size="xl"]) .modal__panel {
+:host([data-modal-size='xl']) .modal__panel {
   min-width: min(var(--modal-max-width), var(--modal-size-xl));
 }
 
-:host([data-modal-size="fullscreen"]) .modal__panel {
+:host([data-modal-size='fullscreen']) .modal__panel {
   width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
   height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
   max-width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
@@ -299,13 +301,21 @@
 
 /* Animations */
 @keyframes modal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-panel-in {

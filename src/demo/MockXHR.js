@@ -29,12 +29,12 @@ export class MockXHR {
         this.upload._listeners[event].push(callback);
       },
 
-      dispatchEvent: (event) => {
+      dispatchEvent: event => {
         const listeners = this.upload._listeners[event.type];
         if (listeners) {
           listeners.forEach(callback => callback(event));
         }
-      }
+      },
     };
   }
 
@@ -125,7 +125,7 @@ export class MockXHR {
       const progressEvent = new ProgressEvent('progress', {
         lengthComputable: true,
         loaded: loaded,
-        total: totalSize
+        total: totalSize,
       });
 
       this.upload.dispatchEvent(progressEvent);
@@ -151,7 +151,7 @@ export class MockXHR {
       filename: file.name,
       preview: preview,
       info: this._formatFileSize(file.size) + ' • ' + file.type,
-      type: isImage ? 'image' : 'document'
+      type: isImage ? 'image' : 'document',
     };
 
     // Set response
@@ -191,9 +191,9 @@ export class MockXHR {
   }
 
   _createImagePreview(file) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         resolve(e.target.result);
       };
       reader.onerror = () => {
@@ -208,7 +208,7 @@ export class MockXHR {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
   _delay(ms) {

@@ -16,13 +16,13 @@
 }
 
 /* State: Hidden - element not yet revealed (explicit state, same as default) */
-[data-reveal="hidden"] {
+[data-reveal='hidden'] {
   opacity: 0;
   transform: translateY(var(--reveal-distance));
 }
 
 /* State: Revealing - element is animating in (transition applied here) */
-[data-reveal="revealing"] {
+[data-reveal='revealing'] {
   opacity: 1;
   transform: translateY(0);
   will-change: opacity, transform;
@@ -32,7 +32,7 @@
 }
 
 /* State: Revealed - element fully visible */
-[data-reveal="revealed"] {
+[data-reveal='revealed'] {
   opacity: 1;
   transform: translateY(0);
 }
@@ -45,9 +45,9 @@
     transform: none;
   }
 
-  [data-reveal="hidden"],
-  [data-reveal="revealing"],
-  [data-reveal="revealed"] {
+  [data-reveal='hidden'],
+  [data-reveal='revealing'],
+  [data-reveal='revealed'] {
     opacity: 1;
     transform: none;
   }

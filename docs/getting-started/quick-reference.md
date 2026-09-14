@@ -36,7 +36,7 @@ Parallelogram.create({
   router: {
     timeout: 10000,
     loadingClass: 'router-loading',
-    errorClass: 'router-error'
+    errorClass: 'router-error',
   },
 
   pageManager: {
@@ -46,16 +46,16 @@ Parallelogram.create({
     scrollPosition: 'top' | 'preserve' | 'element',
 
     targetGroups: {
-      'main': ['navbar', 'main', 'breadcrumb']
+      main: ['navbar', 'main', 'breadcrumb'],
     },
 
     targetGroupTransitions: {
-      'main': {
+      main: {
         out: 'reveal--down',
-        in: 'reveal--up'
-      }
-    }
-  }
+        in: 'reveal--up',
+      },
+    },
+  },
 });
 ```
 
@@ -111,7 +111,7 @@ app.components
   .add('[data-toggle]', () => import('./Toggle'))
   .add('[data-analytics]', {
     loader: () => import('./Analytics'),
-    priority: 'low'
+    priority: 'low',
   });
 ```
 
@@ -121,7 +121,7 @@ app.components
 
 ```javascript
 const app = Parallelogram.create({
-  router: { timeout: 10000 }
+  router: { timeout: 10000 },
 });
 ```
 
@@ -130,7 +130,7 @@ const app = Parallelogram.create({
 ```javascript
 const app = Parallelogram.create({
   mode: 'development',
-  debug: true
+  debug: true,
 });
 ```
 
@@ -139,8 +139,8 @@ const app = Parallelogram.create({
 ```javascript
 const app = Parallelogram.create({
   pageManager: {
-    containerSelector: '[data-view="main"]'
-  }
+    containerSelector: '[data-view="main"]',
+  },
 });
 ```
 
@@ -149,7 +149,7 @@ const app = Parallelogram.create({
 ```javascript
 app.init();
 
-app.eventBus.on('custom-event', (data) => {
+app.eventBus.on('custom-event', data => {
   console.log(data);
 });
 
@@ -161,17 +161,14 @@ app.eventBus.emit('custom-event', { foo: 'bar' });
 ```javascript
 // Use magic comments for chunk names
 app.components
-  .add('p-modal', () =>
-    import(/* webpackChunkName: "p-modal" */ './PModal')
-  )
-  .add('[data-toggle]', () =>
-    import(/* webpackChunkName: "toggle" */ './Toggle')
-  );
+  .add('p-modal', () => import(/* webpackChunkName: "p-modal" */ './PModal'))
+  .add('[data-toggle]', () => import(/* webpackChunkName: "toggle" */ './Toggle'));
 ```
 
 ## Migration from Old API
 
 ### Old
+
 ```javascript
 import { ComponentRegistry, EventManager, PageManager } from '@parallelogram-js/core';
 
@@ -184,11 +181,12 @@ const eventBus = new EventManager();
 const pageManager = new PageManager({
   containerSelector: 'body',
   registry: componentRegistry,
-  eventBus
+  eventBus,
 });
 ```
 
 ### New
+
 ```javascript
 import { Parallelogram } from '@parallelogram-js/core';
 

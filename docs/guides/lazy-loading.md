@@ -14,10 +14,7 @@ The package is configured with proper `sideEffects` to prevent tree-shaking:
 
 ```json
 {
-  "sideEffects": [
-    "./dist/components/*.js",
-    "*.css"
-  ]
+  "sideEffects": ["./dist/components/*.js", "*.css"]
 }
 ```
 
@@ -83,7 +80,7 @@ const loader = new WebComponentLoader(
     rootElement: document.body,
 
     // Callback when component loads
-    onLoad: (tagName) => {
+    onLoad: tagName => {
       console.log(`Component ${tagName} loaded`);
     },
 
@@ -130,9 +127,7 @@ const loader = new WebComponentLoader();
 loader.init();
 
 // Later, register a new component
-loader.register('p-uploader', () =>
-  import('@parallelogram-js/core/components/PUploader')
-);
+loader.register('p-uploader', () => import('@parallelogram-js/core/components/PUploader'));
 
 // Manually trigger load
 loader.loadComponent('p-uploader');
@@ -222,7 +217,7 @@ export const componentLoader = new WebComponentLoader(
   },
   {
     observeDOM: true,
-    onLoad: (tagName) => console.log(`[Components] Loaded ${tagName}`),
+    onLoad: tagName => console.log(`[Components] Loaded ${tagName}`),
   }
 );
 

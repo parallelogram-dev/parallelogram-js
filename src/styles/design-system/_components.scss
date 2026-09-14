@@ -433,14 +433,14 @@
   }
 
   &.selected,
-  &[aria-selected="true"] {
+  &[aria-selected='true'] {
     background: var(--item-selected-bg, #{$primary});
     color: var(--item-selected-color, white);
   }
 
   &:disabled,
   &[disabled],
-  &[aria-disabled="true"] {
+  &[aria-disabled='true'] {
     opacity: #{$opacity-disabled};
     cursor: not-allowed;
     pointer-events: none;

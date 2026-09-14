@@ -93,11 +93,7 @@ export default class Scrollhide extends BaseComponent {
       'scrolled-class',
       Scrollhide.defaults.scrolledClass
     );
-    const overlayClass = this.getAttr(
-      element,
-      'overlay-class',
-      Scrollhide.defaults.overlayClass
-    );
+    const overlayClass = this.getAttr(element, 'overlay-class', Scrollhide.defaults.overlayClass);
     const debounce = this.getAttr(element, 'debounce', Scrollhide.defaults.debounce);
 
     // Store state

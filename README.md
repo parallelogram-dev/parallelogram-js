@@ -32,13 +32,13 @@ import '@parallelogram-js/core/components/PSelect.js';
 /* Register regular enhancement components */
 const registry = ComponentRegistry.create()
   .component('lazysrc', '[data-lazysrc]', {
-    loader: () => import('@parallelogram-js/core/components/Lazysrc.js')
+    loader: () => import('@parallelogram-js/core/components/Lazysrc.js'),
   })
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('@parallelogram-js/core/components/Modal.js')
+    loader: () => import('@parallelogram-js/core/components/Modal.js'),
   })
   .component('tabs', '[data-tabs]', {
-    loader: () => import('@parallelogram-js/core/components/Tabs.js')
+    loader: () => import('@parallelogram-js/core/components/Tabs.js'),
   })
   .build();
 
@@ -47,11 +47,12 @@ const eventBus = new EventManager();
 const pageManager = new PageManager({
   containerSelector: '[data-view="main"]',
   registry,
-  eventBus
+  eventBus,
 });
 ```
 
 **HTML:**
+
 ```html
 <!-- Web Components: Use as custom HTML elements -->
 <p-modal id="example-modal" data-modal-size="md">
@@ -62,7 +63,7 @@ const pageManager = new PageManager({
 <p-datetime name="eventDate" mode="date"></p-datetime>
 
 <!-- Regular Components: Use data attributes on standard elements -->
-<img data-lazysrc="/path/to/image.jpg" alt="Lazy loaded image">
+<img data-lazysrc="/path/to/image.jpg" alt="Lazy loaded image" />
 <button data-modal data-modal-target="#example-modal">Open Modal</button>
 <div data-tabs>...</div>
 ```
@@ -81,10 +82,9 @@ import '@parallelogram-js/core/components/PSelect.js';
 ```
 
 **HTML:**
+
 ```html
-<button onclick="document.getElementById('my-modal').open()">
-  Open Modal
-</button>
+<button onclick="document.getElementById('my-modal').open()">Open Modal</button>
 
 <p-modal id="my-modal">
   <h2 slot="title">Simple Modal</h2>
@@ -120,14 +120,18 @@ Lazysrc.enhanceAll('[data-lazysrc]');
 Parallelogram-JS has **two types of components**:
 
 ### 1. Regular Components (Enhancement)
+
 Progressive enhancement components that enhance existing HTML:
+
 - **Lazysrc**, **Toggle**, **Carousel**, **Tabs**, **Scrollreveal**
 - **Modal**, **Toast**, **DataTable**, **Lightbox**, **FormEnhancer**
 
 **Pattern:** Import → Register in ComponentRegistry → Use data attributes
 
 ### 2. Web Components (Custom Elements)
+
 Self-contained custom HTML elements that work standalone:
+
 - **PModal**, **PDatetime**, **PSelect**, **PToasts**, **PUploader**
 
 **Pattern:** Import → Use as HTML tags (no registration needed)
@@ -137,28 +141,30 @@ Self-contained custom HTML elements that work standalone:
 ## Available Components
 
 ### Web Components
-| Component | Tag | Purpose |
-|-----------|-----|---------|
-| PModal | `<p-modal>` | Modal dialogs with slots |
+
+| Component | Tag            | Purpose                      |
+| --------- | -------------- | ---------------------------- |
+| PModal    | `<p-modal>`    | Modal dialogs with slots     |
 | PDatetime | `<p-datetime>` | Date/time picker with ranges |
-| PSelect | `<p-select>` | Enhanced select dropdown |
-| PToasts | `<p-toasts>` | Toast notification container |
-| PUploader | `<p-uploader>` | File upload with drag-drop |
+| PSelect   | `<p-select>`   | Enhanced select dropdown     |
+| PToasts   | `<p-toasts>`   | Toast notification container |
+| PUploader | `<p-uploader>` | File upload with drag-drop   |
 
 ### Regular Components
-| Component | Selector | Purpose |
-|-----------|----------|---------|
-| Lazysrc | `[data-lazysrc]` | Lazy load images/media |
-| Modal | `[data-modal]` | Modal trigger enhancement |
-| Toast | `[data-toast-trigger]` | Toast notifications |
-| Tabs | `[data-tabs]` | Tab navigation |
-| Toggle | `[data-toggle]` | Toggle visibility |
-| Carousel | `[data-carousel]` | Image carousel |
-| Scrollreveal | `[data-scrollreveal]` | Scroll animations |
-| Scrollhide | `[data-scrollhide]` | Hide on scroll |
-| DataTable | `[data-datatable]` | Sortable/filterable tables |
-| Lightbox | `[data-lightbox]` | Image lightbox |
-| FormEnhancer | `[data-form-validator]` | Form validation |
+
+| Component    | Selector                | Purpose                    |
+| ------------ | ----------------------- | -------------------------- |
+| Lazysrc      | `[data-lazysrc]`        | Lazy load images/media     |
+| Modal        | `[data-modal]`          | Modal trigger enhancement  |
+| Toast        | `[data-toast-trigger]`  | Toast notifications        |
+| Tabs         | `[data-tabs]`           | Tab navigation             |
+| Toggle       | `[data-toggle]`         | Toggle visibility          |
+| Carousel     | `[data-carousel]`       | Image carousel             |
+| Scrollreveal | `[data-scrollreveal]`   | Scroll animations          |
+| Scrollhide   | `[data-scrollhide]`     | Hide on scroll             |
+| DataTable    | `[data-datatable]`      | Sortable/filterable tables |
+| Lightbox     | `[data-lightbox]`       | Image lightbox             |
+| FormEnhancer | `[data-form-validator]` | Form validation            |
 
 ## Documentation
 

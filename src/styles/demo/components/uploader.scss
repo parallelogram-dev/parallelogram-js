@@ -34,22 +34,34 @@
   opacity: 0;
   overflow: hidden;
   position: relative;
-  -webkit-transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s;
-  transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s;
+  -webkit-transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s;
+  transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s;
 
   &--show {
     height: 9rem;
     opacity: 1;
-    -webkit-transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
-    transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+    -webkit-transition:
+      opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s,
+      height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+    transition:
+      opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s,
+      height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
   }
 
   /* Legacy support for .show class */
   &.show {
     height: 9rem;
     opacity: 1;
-    -webkit-transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
-    transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s, height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+    -webkit-transition:
+      opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s,
+      height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+    transition:
+      opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0.2s,
+      height 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
   }
 }
 
@@ -144,8 +156,12 @@
   -ms-flex-pack: center;
   background-color: hsla(0, 0%, 80%, 0);
   justify-content: center;
-  -webkit-transition: opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1), background-color 0.4s cubic-bezier(0.77, 0, 0.175, 1);
-  transition: opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1), background-color 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+  -webkit-transition:
+    opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1),
+    background-color 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+  transition:
+    opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1),
+    background-color 0.4s cubic-bezier(0.77, 0, 0.175, 1);
 
   @media (pointer: fine) {
     &.hover,
@@ -162,16 +178,18 @@
   -webkit-transition: -webkit-transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
   transition: -webkit-transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
   transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
-  transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1), -webkit-transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+  transition:
+    transform 0.4s cubic-bezier(0.77, 0, 0.175, 1),
+    -webkit-transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
 
-  &[data-panel="delete"],
-  &[data-panel="rename"] {
+  &[data-panel='delete'],
+  &[data-panel='rename'] {
     -webkit-transform: translate3d(0, 100%, 0);
     transform: translate3d(0, 100%, 0);
   }
 
-  &[data-panel="delete"],
-  &[data-panel="error"] {
+  &[data-panel='delete'],
+  &[data-panel='error'] {
     color: #c00;
   }
 
@@ -210,10 +228,19 @@
   top: 0.5rem;
   -webkit-transform: translate3d(50%, 0, 0);
   transform: translate3d(50%, 0, 0);
-  -webkit-transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
-  transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
-  transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
-  transition: opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s, -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+  -webkit-transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+  transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+  transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
+  transition:
+    opacity 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s,
+    -webkit-transform 0.2s cubic-bezier(0.77, 0, 0.175, 1) 0s;
   width: 12rem;
   z-index: 3;
 
@@ -291,7 +318,7 @@
   order: 1;
 
   &:empty:before {
-    content: "-";
+    content: '-';
   }
 }
 

@@ -26,7 +26,7 @@
 }
 
 /* State: Closed - toggle is fully closed */
-[data-toggle-target="closed"] {
+[data-toggle-target='closed'] {
   display: none;
   opacity: 0;
   max-height: 0;
@@ -34,7 +34,7 @@
 }
 
 /* State: Opening - toggle is animating to open */
-[data-toggle-target="opening"] {
+[data-toggle-target='opening'] {
   display: block;
   opacity: 0;
   max-height: 0;
@@ -44,7 +44,7 @@
 }
 
 /* State: Open - toggle is fully open */
-[data-toggle-target="open"] {
+[data-toggle-target='open'] {
   display: block;
   opacity: 1;
   max-height: none;
@@ -52,7 +52,7 @@
 }
 
 /* State: Closing - toggle is animating to closed */
-[data-toggle-target="closing"] {
+[data-toggle-target='closing'] {
   display: block;
   opacity: 1;
   visibility: visible;
@@ -99,19 +99,19 @@
     animation: none !important;
   }
 
-  [data-toggle-target="opening"],
-  [data-toggle-target="closing"] {
+  [data-toggle-target='opening'],
+  [data-toggle-target='closing'] {
     will-change: auto;
   }
 
   /* Instant state changes for reduced motion */
-  [data-toggle-target="opening"] {
+  [data-toggle-target='opening'] {
     opacity: 1;
     max-height: none;
     transform: none;
   }
 
-  [data-toggle-target="closing"] {
+  [data-toggle-target='closing'] {
     opacity: 0;
     max-height: 0;
     transform: none;

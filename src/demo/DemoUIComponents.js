@@ -7,41 +7,53 @@ export class DemoUIComponents extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
-    
+
     console.log('DemoUIComponents component initializing for element:', element);
-    
+
     this.element = element;
     this.setupEventListeners(state);
     this.setupButtonHandlers(state);
     this.notifyPageLoaded();
-    
+
     if (this.eventBus) {
       this.eventBus.emit('demo-ui-components:mounted', { element });
     }
-    
+
     return state;
   }
 
   setupEventListeners(state) {
     const { controller } = state;
-    
+
     // Listen for UI component events
-    document.addEventListener('p-select:change', e => {
-      this.addEventToLog('p-select:change', e.detail);
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'p-select:change',
+      e => {
+        this.addEventToLog('p-select:change', e.detail);
+      },
+      { signal: controller.signal }
+    );
 
-    document.addEventListener('modal:open', e => {
-      this.addEventToLog('modal:open', { modalId: e.target.id });
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'modal:open',
+      e => {
+        this.addEventToLog('modal:open', { modalId: e.target.id });
+      },
+      { signal: controller.signal }
+    );
 
-    document.addEventListener('modal:close', e => {
-      this.addEventToLog('modal:close', { modalId: e.target.id });
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'modal:close',
+      e => {
+        this.addEventToLog('modal:close', { modalId: e.target.id });
+      },
+      { signal: controller.signal }
+    );
   }
 
   setupButtonHandlers(state) {
     const { controller } = state;
-    
+
     // Handle all buttons with onclick handlers
     const onclickButtons = this.element.querySelectorAll('[data-btn-action]');
 
@@ -50,26 +62,40 @@ export class DemoUIComponents extends BaseComponent {
       button.removeAttribute('onclick');
 
       if (method.includes('handleFormSubmit')) {
-        button.addEventListener('click', event => this.handleFormSubmit(event), { signal: controller.signal });
+        button.addEventListener('click', event => this.handleFormSubmit(event), {
+          signal: controller.signal,
+        });
       } else if (method.includes('clearEventLog')) {
         button.addEventListener('click', () => this.clearEventLog(), { signal: controller.signal });
       } else if (method.includes('exportEventLog')) {
-        button.addEventListener('click', () => this.exportEventLog(), { signal: controller.signal });
+        button.addEventListener('click', () => this.exportEventLog(), {
+          signal: controller.signal,
+        });
       } else if (method.includes('handleDatetimeDemo')) {
-        button.addEventListener('click', () => this.handleDatetimeDemo(), { signal: controller.signal });
+        button.addEventListener('click', () => this.handleDatetimeDemo(), {
+          signal: controller.signal,
+        });
       } else if (method.includes('performance')) {
-        button.addEventListener('click', () => {
-          window.location.href = '/performance';
-        }, { signal: controller.signal });
+        button.addEventListener(
+          'click',
+          () => {
+            window.location.href = '/performance';
+          },
+          { signal: controller.signal }
+        );
       } else {
         // Handle modal action buttons
-        button.addEventListener('click', event => {
-          // Only prevent default for actions that shouldn't trigger default behavior
-          if (button.type !== 'submit') {
-            event.preventDefault();
-          }
-          this.handleModalAction(method, button);
-        }, { signal: controller.signal });
+        button.addEventListener(
+          'click',
+          event => {
+            // Only prevent default for actions that shouldn't trigger default behavior
+            if (button.type !== 'submit') {
+              event.preventDefault();
+            }
+            this.handleModalAction(method, button);
+          },
+          { signal: controller.signal }
+        );
       }
     });
   }
@@ -103,7 +129,7 @@ export class DemoUIComponents extends BaseComponent {
   handleOpenFormModal() {
     this.addEventToLog('modal:action', { action: 'open-form-modal', timestamp: Date.now() });
 
-      // Dispatch custom event for other components to listen to
+    // Dispatch custom event for other components to listen to
     if (this.eventBus) {
       this.eventBus.emit('demo:form-modal-open', { modalType: 'form' });
     }
@@ -149,7 +175,11 @@ export class DemoUIComponents extends BaseComponent {
       button.style.background = '';
     }, 2000);
 
-    this.addEventToLog('modal:action', { action: 'add-to-collection', item: 'gallery-item', timestamp: Date.now() });
+    this.addEventToLog('modal:action', {
+      action: 'add-to-collection',
+      item: 'gallery-item',
+      timestamp: Date.now(),
+    });
   }
 
   handleCloseLargeModal() {
@@ -170,7 +200,7 @@ export class DemoUIComponents extends BaseComponent {
         loadTime: '1.2s',
         components: 15,
         events: 47,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       setTimeout(() => {

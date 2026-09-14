@@ -71,18 +71,26 @@ export class DemoPerformance extends BaseComponent {
 
     // Listen for component lifecycle events
     document.addEventListener('component:mount', this.handleComponentEvent.bind(this), { signal });
-    document.addEventListener('component:unmount', this.handleComponentEvent.bind(this), { signal });
+    document.addEventListener('component:unmount', this.handleComponentEvent.bind(this), {
+      signal,
+    });
     document.addEventListener('router:navigate', this.handleRouterEvent.bind(this), { signal });
-    document.addEventListener('performance:metric', this.handlePerformanceEvent.bind(this), { signal });
+    document.addEventListener('performance:metric', this.handlePerformanceEvent.bind(this), {
+      signal,
+    });
 
     // Monitor page visibility for performance tracking
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.logEvent('performance', 'page:hidden', { timestamp: performance.now() });
-      } else {
-        this.logEvent('performance', 'page:visible', { timestamp: performance.now() });
-      }
-    }, { signal });
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (document.hidden) {
+          this.logEvent('performance', 'page:hidden', { timestamp: performance.now() });
+        } else {
+          this.logEvent('performance', 'page:visible', { timestamp: performance.now() });
+        }
+      },
+      { signal }
+    );
 
     // Add click handlers for buttons
     this.setupButtonHandlers(element, signal);
@@ -294,11 +302,34 @@ export class DemoPerformance extends BaseComponent {
 
   generateDemoEvent() {
     const eventTypes = [
-      { category: 'component', type: 'mount', data: { component: 'PModal', time: Math.random() * 50 } },
-      { category: 'router', type: 'navigate', data: { from: '/', to: '/performance', duration: Math.random() * 100 } },
-      { category: 'performance', type: 'metric', data: { memory: Math.round(Math.random() * 50) + 20, fps: Math.round(Math.random() * 60) + 30 } },
-      { category: 'framework', type: 'component:update', data: { instances: Math.round(Math.random() * 10) + 5 } },
-      { category: 'user', type: 'interaction', data: { event: 'click', target: 'button', timestamp: Date.now() } }
+      {
+        category: 'component',
+        type: 'mount',
+        data: { component: 'PModal', time: Math.random() * 50 },
+      },
+      {
+        category: 'router',
+        type: 'navigate',
+        data: { from: '/', to: '/performance', duration: Math.random() * 100 },
+      },
+      {
+        category: 'performance',
+        type: 'metric',
+        data: {
+          memory: Math.round(Math.random() * 50) + 20,
+          fps: Math.round(Math.random() * 60) + 30,
+        },
+      },
+      {
+        category: 'framework',
+        type: 'component:update',
+        data: { instances: Math.round(Math.random() * 10) + 5 },
+      },
+      {
+        category: 'user',
+        type: 'interaction',
+        data: { event: 'click', target: 'button', timestamp: Date.now() },
+      },
     ];
 
     const randomEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
@@ -319,9 +350,15 @@ export class DemoPerformance extends BaseComponent {
   updatePerformanceMetrics() {
     // Update component registry with session tracking
     if (window.pageManager) {
-      const registry = window.pageManager.getComponentRegistry ? window.pageManager.getComponentRegistry() : [];
-      const states = window.pageManager.getComponentStates ? window.pageManager.getComponentStates() : {};
-      const sessionTracking = window.pageManager.getSessionTracking ? window.pageManager.getSessionTracking() : {};
+      const registry = window.pageManager.getComponentRegistry
+        ? window.pageManager.getComponentRegistry()
+        : [];
+      const states = window.pageManager.getComponentStates
+        ? window.pageManager.getComponentStates()
+        : {};
+      const sessionTracking = window.pageManager.getSessionTracking
+        ? window.pageManager.getSessionTracking()
+        : {};
 
       // Update total registered components
       const totalComponents = this.element.querySelector('#total-components');
@@ -345,7 +382,10 @@ export class DemoPerformance extends BaseComponent {
       // Update load history count
       const totalLoads = this.element.querySelector('#total-component-loads');
       if (totalLoads) {
-        const totalLoadCount = Object.values(sessionTracking.mountCounts || {}).reduce((sum, count) => sum + count, 0);
+        const totalLoadCount = Object.values(sessionTracking.mountCounts || {}).reduce(
+          (sum, count) => sum + count,
+          0
+        );
         totalLoads.textContent = totalLoadCount || '0';
       }
 
@@ -386,7 +426,7 @@ export class DemoPerformance extends BaseComponent {
       } else {
         // Fallback: estimate based on DOM size and objects
         const domNodes = document.querySelectorAll('*').length;
-        const estimatedMB = Math.round((domNodes * 0.5 + Math.random() * 5 + 10));
+        const estimatedMB = Math.round(domNodes * 0.5 + Math.random() * 5 + 10);
         memoryEl.textContent = estimatedMB + 'MB (est)';
       }
     }
@@ -482,7 +522,9 @@ export class DemoPerformance extends BaseComponent {
       .map(comp => {
         const state = states[comp.name] || { status: 'not-loaded' };
         const loadCount = sessionTracking.mountCounts?.[comp.name] || 0;
-        const wasLoadedThisSession = sessionTracking.componentsLoadedThisSession?.includes(comp.name);
+        const wasLoadedThisSession = sessionTracking.componentsLoadedThisSession?.includes(
+          comp.name
+        );
         const sessionIndicator = wasLoadedThisSession ? ' 📋' : '';
 
         let statusDisplay = state.status;

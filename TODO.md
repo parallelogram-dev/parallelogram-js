@@ -7,6 +7,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## High Priority
 
 ### State Management System Completion
+
 **Status**: 3 of 8 phases complete (Phases 1-3 done, 4-8 remaining)
 **Last Updated**: 2025-11-19
 **Plan Document**: `docs/guides/state-management-completion-plan.md`
@@ -58,6 +59,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - [ ] Visual debugging interface
 
 ### Testing & Quality
+
 - [ ] Unit tests for core classes (BaseComponent, ComponentRegistry, ComponentStates)
 - [ ] Integration tests for multi-component scenarios
 - [ ] E2E tests for common user flows
@@ -66,6 +68,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] Test coverage reporting (target: 80%+)
 
 ### Documentation
+
 - [ ] Interactive component playground/sandbox
 - [ ] Video tutorials for common patterns
 - [ ] Migration guide from jQuery/vanilla JS
@@ -81,6 +84,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ### New Components
 
 #### Data & Forms
+
 - [ ] **Autocomplete/Typeahead** - Search suggestions with keyboard navigation
   - Debounced input, remote/local data sources, customizable templates
   - `data-autocomplete`, `data-autocomplete-source`, `data-autocomplete-min-chars`
@@ -98,6 +102,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - `data-daterange`, `data-daterange-format`, `data-daterange-presets`
 
 #### Navigation & Layout
+
 - [ ] **Sticky Header** - Smart header that shows/hides on scroll
   - Configurable offset, shadow on scroll, smooth transitions
   - `data-sticky-header`, `data-sticky-offset`, `data-sticky-shadow`
@@ -115,6 +120,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - `data-masonry`, `data-masonry-columns`, `data-masonry-gutter`
 
 #### Media & Content
+
 - [ ] **Image Comparison Slider** - Before/after image comparison
   - Draggable divider, touch support, vertical/horizontal
   - `data-image-compare`, `data-compare-before`, `data-compare-after`
@@ -129,6 +135,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - `data-audio-player`, `data-audio-playlist`, `data-audio-autoplay`
 
 #### Feedback & Interaction
+
 - [ ] **Tooltip** - Contextual help tooltips
   - Positioning (top/bottom/left/right), delay, trigger events
   - `data-tooltip`, `data-tooltip-position`, `data-tooltip-delay`
@@ -146,6 +153,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - `data-notification`, `data-notification-expires`, `data-notification-id`
 
 #### Utility Components
+
 - [ ] **Countdown Timer** - Event countdown
   - Days/hours/minutes/seconds, completion callback
   - `data-countdown`, `data-countdown-to`, `data-countdown-format`
@@ -162,6 +170,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ### Component Improvements
 
 #### Existing Components
+
 - [ ] **Lazysrc** - Enhanced visibility detection (CSS visibility, occlusion when supported)
 - [ ] **Modal** - Stack management for nested modals
 - [ ] **Modal** - Focus trap improvements
@@ -179,6 +188,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ### Framework Core
 
 #### Architecture
+
 - [ ] **Plugin System** - Allow third-party plugins
   - Plugin registration, lifecycle hooks, dependency management
 - [ ] **Lazy Loading Strategies** - More granular control
@@ -191,6 +201,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
   - Hydration strategy, critical CSS extraction
 
 #### Developer Experience
+
 - [ ] **CLI Tool** - Scaffold projects and components
   - `npx create-parallelogram-app`, component generators
 - [ ] **DevTools Browser Extension** - Component inspector
@@ -202,6 +213,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] **Debug Mode** - Verbose logging, state transitions, performance metrics
 
 #### Performance
+
 - [ ] **Tree Shaking** - Better dead code elimination
 - [ ] **Code Splitting** - Automatic route-based splitting
 - [ ] **Preloading Strategies** - Prefetch likely-needed components
@@ -215,6 +227,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## Low Priority / Nice to Have
 
 ### Advanced Features
+
 - [ ] **Animation Library Integration** - GSAP/anime.js adapters
 - [ ] **Drag & Drop Framework** - Generic drag/drop utilities
 - [ ] **Gesture Recognition** - Touch gestures (swipe, pinch, rotate)
@@ -226,6 +239,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] **Accessibility Auditor** - Runtime a11y checks
 
 ### Developer Tools
+
 - [ ] **Component Storybook** - Visual component library
 - [ ] **Performance Budgets** - Warn when bundle exceeds limits
 - [ ] **Automated Lighthouse Audits** - CI/CD integration
@@ -233,6 +247,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] **Code Generation** - Component boilerplate generator
 
 ### Documentation & Community
+
 - [ ] **CodePen/CodeSandbox Templates** - Quick start templates
 - [ ] **Video Tutorial Series** - YouTube channel
 - [ ] **Community Showcase** - Sites built with Parallelogram-JS
@@ -242,6 +257,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] **Contributor Guide** - How to contribute components
 
 ### Integration & Ecosystem
+
 - [ ] **WordPress Plugin** - Easy WP integration
 - [ ] **Shopify Theme Kit** - E-commerce support
 - [ ] **React/Vue/Svelte Wrappers** - Framework adapters
@@ -254,6 +270,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## Maintenance & Housekeeping
 
 ### Code Quality
+
 - [x] Migrate WIP.js components to proper files (COMPLETE - WIP.js deleted)
 - [x] Remove deprecated/unused code (COMPLETE - Carousel, Uploader removed)
 - [ ] Consistent error handling across all components
@@ -263,6 +280,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] Security audit (npm audit fix, dependency updates)
 
 ### Build & Deploy
+
 - [ ] Automated releases (semantic-release)
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] Automated changelog generation
@@ -272,6 +290,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] Performance regression tests
 
 ### Documentation Maintenance
+
 - [ ] Keep all examples up to date
 - [ ] Verify all links work
 - [ ] Update screenshots/GIFs
@@ -284,6 +303,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## Research & Exploration
 
 ### Experimental Ideas
+
 - [ ] **AI-Powered Accessibility** - Auto-generate ARIA labels
 - [ ] **Progressive Enhancement Analytics** - Track enhancement adoption
 - [ ] **WebAssembly Modules** - Performance-critical operations
@@ -294,6 +314,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 - [ ] **Speculation Rules API** - Prerendering optimization
 
 ### Framework Comparisons
+
 - [ ] Benchmark against Alpine.js, Stimulus, Hotwire
 - [ ] Feature parity analysis with competitors
 - [ ] Migration guides from other frameworks
@@ -304,6 +325,7 @@ Roadmap and improvement ideas for the Parallelogram-JS framework.
 ## Contributing
 
 Want to tackle one of these? Check out:
+
 - `docs/guides/creating-components.md` - How to build components
 - `docs/guides/coding-standards.md` - Code style guidelines
 - `test/TEST-CHECKLIST.md` - Testing procedures
