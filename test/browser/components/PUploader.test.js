@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../../src/components/PUploader.js';
 
 const PAYLOAD = '<img src="data:," onerror="window.__puploaderInjected = true">';
@@ -13,7 +13,11 @@ const element = (tag, attributes = {}, text) => {
 };
 
 async function mountUploader({ caption = 'A caption', attributes = {} } = {}) {
-  const uploader = element('p-uploader', { 'update-action': '/api/update', ...attributes });
+  const uploader = element('p-uploader', {
+    'upload-action': '/api/upload',
+    'update-action': '/api/update',
+    ...attributes,
+  });
   const fields = element('p-uploader-fields', { slot: 'field-definitions' });
   fields.append(
     element('p-uploader-field', { key: 'caption', label: 'Caption', type: 'textarea' })
@@ -128,5 +132,260 @@ describe('p-uploader', () => {
     expect(failed().getAttribute('error')).toBe(expected);
     expect(failed().shadowRoot.querySelector('.error-message').textContent).toBe(expected);
     expect(window.__puploaderInjected).toBeUndefined();
+  });
+});
+
+class RecordingUpload {
+  static instances = [];
+  static status = 200;
+  static body = '{"id":"server-1"}';
+  static hold = false;
+  upload = new EventTarget();
+  #events = new EventTarget();
+  headers = {};
+  status = 0;
+  responseText = '';
+  aborted = false;
+
+  constructor() {
+    RecordingUpload.instances.push(this);
+  }
+
+  addEventListener(type, listener) {
+    this.#events.addEventListener(type, listener);
+  }
+
+  open(method, url) {
+    this.url = url;
+  }
+
+  setRequestHeader(name, value) {
+    this.headers[name] = value;
+  }
+
+  send(body) {
+    this.body = body;
+    if (RecordingUpload.hold) return;
+    this.status = RecordingUpload.status;
+    this.responseText = RecordingUpload.body;
+    queueMicrotask(() => this.#events.dispatchEvent(new Event('load')));
+  }
+
+  abort() {
+    this.aborted = true;
+  }
+}
+
+const addFiles = (uploader, files) => {
+  const transfer = new DataTransfer();
+  files.forEach(file => transfer.items.add(file));
+  const input = uploader.shadowRoot.querySelector('input[type="file"]');
+  input.files = transfer.files;
+  input.dispatchEvent(new Event('change'));
+};
+
+const fileIds = uploader =>
+  [...uploader.querySelectorAll('p-uploader-file')].map(file => file.getAttribute('file-id'));
+
+const drag = (type, target, dataTransfer) =>
+  target.dispatchEvent(
+    new DragEvent(type, { bubbles: true, composed: true, cancelable: true, dataTransfer })
+  );
+
+describe('p-uploader host', () => {
+  beforeEach(() => {
+    RecordingUpload.instances = [];
+    RecordingUpload.status = 200;
+    RecordingUpload.body = '{"id":"server-1"}';
+    RecordingUpload.hold = false;
+  });
+
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const renderUploader = async (attributes = {}, ids = []) => {
+    const uploader = element('p-uploader', attributes);
+    ids.forEach(id =>
+      uploader.append(element('p-uploader-file', { 'file-id': id, filename: `${id}.jpg` }))
+    );
+    document.body.append(uploader);
+    await nextTask();
+    uploader.setXHR(RecordingUpload);
+    return uploader;
+  };
+
+  const reorder = uploader => {
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    const transfer = new DataTransfer();
+    drag('dragstart', first, transfer);
+    drag('dragenter', second, transfer);
+    drag('drop', second, transfer);
+    drag('dragend', first, transfer);
+  };
+
+  it('opens the file picker from a button keyboard users can reach', async () => {
+    const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+    const input = uploader.shadowRoot.querySelector('input[type="file"]');
+    const pick = vi.spyOn(input, 'click').mockImplementation(() => {});
+    const button = uploader.shadowRoot.querySelector('button[part~="add-button"]');
+
+    button?.click();
+
+    expect([button?.tabIndex, pick.mock.calls.length]).toEqual([0, 1]);
+  });
+
+  it('marks itself full and hides the drop zone once max-files is reached', async () => {
+    const uploader = await renderUploader({ 'max-files': '1', 'upload-action': '/api/upload' }, [
+      'photo',
+    ]);
+
+    const selector = uploader.shadowRoot.querySelector('[part~="selector"]');
+    expect([uploader.hasAttribute('full'), getComputedStyle(selector).display]).toEqual([
+      true,
+      'none',
+    ]);
+  });
+
+  it('reports files beyond max-files inline and through an event instead of alert()', async () => {
+    const alerts = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const uploader = await renderUploader({ 'max-files': '1', 'upload-action': '/api/upload' }, [
+      'photo',
+    ]);
+    const limits = [];
+    uploader.addEventListener('p-uploader:limit', event => limits.push(event.detail.maxFiles));
+
+    addFiles(uploader, [new File(['x'], 'second.txt', { type: 'text/plain' })]);
+
+    expect({
+      limits,
+      alerts: alerts.mock.calls.length,
+      message: uploader.shadowRoot.querySelector('[part~="message"]')?.textContent,
+    }).toEqual({ limits: [1], alerts: 0, message: 'You can add up to 1 file.' });
+  });
+
+  it('rejects files that are too large or not an accepted type', async () => {
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'accept-types': 'image/*',
+      'max-file-size': '1024',
+    });
+    const rejected = [];
+    uploader.addEventListener('p-uploader:reject', event =>
+      rejected.push([event.detail.file.name, event.detail.reason])
+    );
+
+    addFiles(uploader, [
+      new File(['text'], 'notes.txt', { type: 'text/plain' }),
+      new File([new Uint8Array(2048)], 'huge.jpg', { type: 'image/jpeg' }),
+    ]);
+
+    expect({ rejected, cards: uploader.querySelectorAll('p-uploader-file').length }).toEqual({
+      rejected: [
+        ['notes.txt', 'type'],
+        ['huge.jpg', 'size'],
+      ],
+      cards: 0,
+    });
+  });
+
+  it('sends each file under its input-name and treats any 2xx response as success', async () => {
+    RecordingUpload.status = 201;
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'input-name': 'images',
+    });
+
+    addFiles(uploader, [new File(['x'], 'notes.txt', { type: 'text/plain' })]);
+
+    await vi.waitFor(() =>
+      expect(uploader.querySelector('p-uploader-file')?.getAttribute('state')).toBe('uploaded')
+    );
+    expect(RecordingUpload.instances[0].body.has('images')).toBe(true);
+  });
+
+  it('adds the page’s CSRF token to uploads', async () => {
+    const meta = element('meta', { name: 'csrf-token', content: 'token-123' });
+    document.head.append(meta);
+
+    try {
+      const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+      addFiles(uploader, [new File(['x'], 'notes.txt', { type: 'text/plain' })]);
+
+      await vi.waitFor(() => expect(RecordingUpload.instances).toHaveLength(1));
+      expect(RecordingUpload.instances[0].headers).toEqual({ 'X-CSRF-Token': 'token-123' });
+    } finally {
+      meta.remove();
+    }
+  });
+
+  it('sends requestHeaders with a new order', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    uploader.requestHeaders = { 'X-CSRF-Token': 'from-property' };
+
+    reorder(uploader);
+
+    await vi.waitFor(() => expect(save).toHaveBeenCalled());
+    expect(new Headers(save.mock.calls[0][1].headers).get('X-CSRF-Token')).toBe('from-property');
+  });
+
+  it('restores the original order when saving a new order fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('nope', { status: 500 }))
+    );
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+
+    reorder(uploader);
+
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
+    await vi.waitFor(() => expect(fileIds(uploader)).toEqual(['first', 'second']));
+  });
+
+  it('restores the original order when a drag is abandoned', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    const transfer = new DataTransfer();
+
+    drag('dragstart', first, transfer);
+    drag('dragenter', second, transfer);
+    drag('dragend', first, transfer);
+    await nextTask();
+
+    expect([fileIds(uploader), save.mock.calls.length]).toEqual([['first', 'second'], 0]);
+  });
+
+  it('offers no delete button or reordering without the matching actions', async () => {
+    const uploader = await renderUploader({}, ['first', 'second']);
+    const [first] = uploader.querySelectorAll('p-uploader-file');
+
+    expect({
+      deleteButton: first.shadowRoot.querySelector('[data-action="show-delete"]') !== null,
+      draggable: first.hasAttribute('draggable'),
+    }).toEqual({ deleteButton: false, draggable: false });
+  });
+
+  it('stops uploads in progress when removed from the page', async () => {
+    RecordingUpload.hold = true;
+    const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+    addFiles(uploader, [new File(['x'], 'notes.txt', { type: 'text/plain' })]);
+    await vi.waitFor(() => expect(RecordingUpload.instances).toHaveLength(1));
+
+    uploader.remove();
+
+    expect(RecordingUpload.instances[0].aborted).toBe(true);
   });
 });

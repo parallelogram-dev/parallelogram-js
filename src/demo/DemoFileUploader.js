@@ -78,6 +78,10 @@ export class DemoFileUploader extends BaseComponent {
       this.logger.debug('Setting up MockXHR injection');
     }
 
+    customElements.whenDefined('p-uploader').then(() => {
+      document.querySelectorAll('p-uploader').forEach(uploader => uploader.setXHR(window.MockXHR));
+    });
+
     /* Wait a tick for components to mount, then inject MockXHR */
     setTimeout(() => {
       const uploaders = document.querySelectorAll('[data-uploader]');
