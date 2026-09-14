@@ -29,10 +29,20 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *   app.components.add('[data-defer-tracker]', () =>
  *     import('@parallelogram-js/core/components/DeferTracker'));
  *
- * The interaction gate is page-wide and shared across every mounted instance, so
- * one set of listeners serves the whole document. Booting is deduplicated by
- * adapter name, which makes it safe for router-injected fragments and repeat
- * mounts.
+ * Register adapters from the same module specifier the component is loaded from,
+ * because the registry lives in that module. Blocks must sit inside the element the
+ * framework observes (the body by default), not in `<head>`.
+ *
+ * A tracker is identified by its adapter name and its config's `id` (or `site`,
+ * `domain` or `scriptId`), so two properties of the same kind both boot, and a
+ * second identical block on the same page is marked `duplicate`. An adapter loads
+ * once per page session. When the router shows a new page, or a block for a
+ * tracker that has already loaded mounts on a later page, the adapter's optional
+ * `page` step runs instead, for page views and conversions that the vendor script
+ * doesn't record itself.
+ *
+ * `data-defer-tracker-status` moves through pending, awaiting-consent, loading,
+ * booted, duplicate and error.
  *
  * @module @parallelogram-js/core/components/DeferTracker
  */
@@ -52,9 +62,7 @@ const IDLE_DEADLINE = 2000;
 /**
  * Page-wide gate that runs queued callbacks on first interaction or an idle
  * fallback. Private to this module; a single shared instance backs every
- * DeferTracker instance. Refined from the standalone DeferManager draft — kept
- * internal so the component stays self-contained, but structured so it could be
- * promoted to a real manager later without changing callers.
+ * DeferTracker instance.
  */
 class InteractionGate {
   constructor() {
@@ -96,7 +104,7 @@ class InteractionGate {
     if (typeof callback !== 'function') return () => {};
 
     if (this._fired) {
-      Promise.resolve().then(() => this._run(callback));
+      Promise.resolve().then(callback);
       return () => {};
     }
 
@@ -151,15 +159,7 @@ class InteractionGate {
 
     const queue = this._queue.slice();
     this._queue.length = 0;
-    queue.forEach(cb => this._run(cb));
-  }
-
-  _run(callback) {
-    try {
-      callback();
-    } catch {
-      /* one failed task must never break the rest; per-task errors surface in _boot */
-    }
+    queue.forEach(callback => callback());
   }
 
   _teardown() {
@@ -176,24 +176,33 @@ class InteractionGate {
   }
 }
 
-/** Shared adapter registry: adapter name -> boot fn. */
+/** Shared adapter registry: adapter name -> boot fn, which may carry a `page` step. */
 const adapters = new Map();
 
-/** Adapter names already booted this page session (dedup across instances). */
-const booted = new Set();
+/** Trackers that have started loading this page session, keyed by name and id. */
+const trackers = new Map();
 
 /** Single page-wide interaction gate shared by all instances. */
 const gate = new InteractionGate();
 
-/** Optional consent resolver; trackers carrying a `consent` category honour it. */
+/** Trackers waiting for consent, each with a function that tries again. */
+const waitingForConsent = new Set();
+
 let consentResolver = null;
+let requireConsentCategory = false;
+let trackerNonce;
 
 /**
  * Register a tracker adapter under a name matching the `data-defer-tracker`
  * value used in markup. Call before `app.run()`.
  *
+ * The adapter loads the vendor script and runs the first page's tracking. It can
+ * return a Promise that settles when the script loads, so the tracker reports
+ * `loading` until then and `error` if it fails. An optional `boot.page(config, ctx,
+ * { url })` step runs for later pages.
+ *
  * @param {string} name
- * @param {(config: object, ctx: { logger?: object, eventBus?: object }) => void} boot
+ * @param {(config: object, ctx: { logger?: object, eventBus?: object, nonce?: string }) => void|Promise<unknown>} boot
  */
 export function registerTrackerAdapter(name, boot) {
   if (typeof name === 'string' && typeof boot === 'function') {
@@ -202,35 +211,60 @@ export function registerTrackerAdapter(name, boot) {
 }
 
 /**
- * Supply a consent resolver. When set, any tracker whose config carries a
- * `consent` category stays un-booted until the resolver returns true for that
- * category; it retries on the `consent:granted` eventBus event. When unset
- * (the default), the `consent` field is ignored entirely.
+ * Supply a consent resolver. Trackers whose config carries a `consent` category
+ * stay un-booted until the resolver returns true for it, and try again on the
+ * `consent:granted` event bus event or `reevaluateTrackerConsent()`. With
+ * `requireCategory`, trackers without a category wait too, so a missing or
+ * misspelt `consent` field fails closed.
  *
  * @param {((category: string) => boolean)|null} fn
+ * @param {{ requireCategory?: boolean }} [options]
  */
-export function setTrackerConsent(fn) {
+export function setTrackerConsent(fn, { requireCategory = false } = {}) {
   consentResolver = typeof fn === 'function' ? fn : null;
+  requireConsentCategory = Boolean(consentResolver && requireCategory);
 }
 
 /**
- * Override the interaction gate's events and idle fallback. Must be called
- * before the first tracker mounts.
- *
- * @param {{ events?: string[], idleTimeout?: number|null }} [options]
+ * Check consent again for every tracker that is waiting for it, for example after a
+ * consent banner closes. Works with or without an event bus.
  */
-export function configureDeferTracker(options) {
+export function reevaluateTrackerConsent() {
+  for (const entry of [...waitingForConsent]) {
+    waitingForConsent.delete(entry);
+    entry.retry();
+  }
+}
+
+/**
+ * Override the interaction gate's events and idle fallback, and set the CSP nonce
+ * adapters give the scripts they add. Call before the first tracker mounts.
+ *
+ * @param {{ events?: string[], idleTimeout?: number|null, nonce?: string }} [options]
+ */
+export function configureDeferTracker({ nonce, ...options } = {}) {
   gate.configure(options);
+  if (nonce !== undefined) {
+    trackerNonce = nonce;
+  }
 }
 
 /**
  * Test seam — clears booted state and the registry. Not part of the public API.
  */
 export function _resetTrackers() {
-  booted.clear();
+  trackers.clear();
   adapters.clear();
+  waitingForConsent.clear();
   consentResolver = null;
+  requireConsentCategory = false;
+  trackerNonce = undefined;
 }
+
+const trackerKey = (name, config) => {
+  const id = config.id ?? config.site ?? config.domain ?? config.scriptId;
+  return id === undefined ? name : `${name}:${id}`;
+};
 
 export default class DeferTracker extends BaseComponent {
   static selector = 'data-defer-tracker';
@@ -249,16 +283,21 @@ export default class DeferTracker extends BaseComponent {
     }
 
     state.config = config;
+    state.key = trackerKey(name, config);
     this.setAttr(element, 'status', 'pending');
 
-    state.cancel = gate.until(() => this._boot(element, name, config));
+    state.cancel = gate.until(() => this._activate(element, state));
+    this._listenForNavigation();
 
     state.cleanup = () => {
       state.cancel?.();
+      if (state.consentEntry) {
+        waitingForConsent.delete(state.consentEntry);
+      }
+      trackers.get(state.key)?.elements.delete(element);
       baseCleanup();
     };
 
-    this.logger?.info('DeferTracker armed', { name });
     return state;
   }
 
@@ -281,45 +320,188 @@ export default class DeferTracker extends BaseComponent {
     }
   }
 
-  /**
-   * Boot a single tracker. One-shot per adapter name across the page; a tracker
-   * denied by consent stays un-booted so a later `consent:granted` retries it.
-   *
-   * @param {HTMLElement} element
-   * @param {string} name
-   * @param {object} config
-   */
-  _boot(element, name, config) {
-    if (booted.has(name)) return;
+  _listenForNavigation() {
+    if (this._navigation || !this.eventBus) return;
 
-    const adapter = adapters.get(name);
-    if (!adapter) {
+    this._navigation = new AbortController();
+    this.eventBus.on(
+      'router:navigate-success',
+      () => {
+        /* Let blocks in the new page mount first, so their own page step isn't repeated */
+        setTimeout(() => this._onNavigate());
+      },
+      { signal: this._navigation.signal }
+    );
+  }
+
+  /**
+   * Run the page step of every loaded tracker still on the page that hasn't seen this URL
+   */
+  _onNavigate() {
+    const url = location.href;
+
+    for (const tracker of trackers.values()) {
+      if (tracker.status === 'error' || tracker.pageUrl === url) continue;
+
+      const element = [...tracker.elements].find(candidate => candidate.isConnected);
+      if (element) {
+        this._runPage(tracker, element, url);
+      }
+    }
+  }
+
+  /**
+   * Boot a tracker, or run its page step if it already loaded on an earlier page
+   */
+  _activate(element, state) {
+    if (!this.getState(element)) return;
+
+    const { name, config, key } = state;
+    if (!adapters.has(name)) {
       this.logger?.warn('No tracker adapter registered', { name });
       this.setAttr(element, 'status', 'error');
       return;
     }
 
-    if (config.consent && consentResolver && !consentResolver(config.consent)) {
-      this.logger?.info('Tracker awaiting consent', { name, consent: config.consent });
-      this.setAttr(element, 'status', 'awaiting-consent');
-      this.eventBus?.once('consent:granted', () => this._boot(element, name, config), {
-        signal: this.getState(element)?.controller.signal,
-      });
+    if (!this._consentGranted(name, config)) {
+      this._waitForConsent(element, state);
       return;
     }
 
-    booted.add(name);
-    try {
-      adapter(config, { logger: this.logger, eventBus: this.eventBus });
-      this.setAttr(element, 'status', 'booted');
-      this._dispatch(element, 'defer-tracker:booted', { name });
-      this.logger?.info('Tracker booted', { name });
-    } catch (error) {
-      booted.delete(name);
-      this.setAttr(element, 'status', 'error');
-      this._dispatch(element, 'defer-tracker:error', { name, error });
-      this.logger?.error('Tracker boot failed', { name, error });
+    const tracker = trackers.get(key);
+    const url = location.href;
+
+    if (!tracker) {
+      this._boot(element, state, url);
+      return;
     }
+
+    if (tracker.pageUrl === url) {
+      const duplicate = [...tracker.elements].some(other => other !== element && other.isConnected);
+      if (duplicate) {
+        this.logger?.warn('Duplicate tracker block ignored', { name, key });
+        this.setAttr(element, 'status', 'duplicate');
+        return;
+      }
+    } else {
+      this._runPage(tracker, element, url);
+    }
+
+    tracker.elements.add(element);
+    this.setAttr(element, 'status', tracker.status);
+  }
+
+  _consentGranted(name, config) {
+    if (!consentResolver) return true;
+    if (!config.consent) return !requireConsentCategory;
+
+    try {
+      return Boolean(consentResolver(config.consent));
+    } catch (error) {
+      this.logger?.warn('Tracker consent check failed, waiting for consent', { name, error });
+      return false;
+    }
+  }
+
+  _waitForConsent(element, state) {
+    this.logger?.info('Tracker awaiting consent', {
+      name: state.name,
+      consent: state.config.consent,
+    });
+    this.setAttr(element, 'status', 'awaiting-consent');
+
+    if (state.consentEntry) {
+      waitingForConsent.delete(state.consentEntry);
+    }
+    const entry = { retry: () => this._activate(element, state) };
+    state.consentEntry = entry;
+    waitingForConsent.add(entry);
+
+    this.eventBus?.once(
+      'consent:granted',
+      () => {
+        if (waitingForConsent.delete(entry)) {
+          entry.retry();
+        }
+      },
+      { signal: state.controller.signal }
+    );
+  }
+
+  _boot(element, state, url) {
+    const { name, config, key } = state;
+    const adapter = adapters.get(name);
+    const tracker = {
+      name,
+      config,
+      key,
+      status: 'loading',
+      pageUrl: url,
+      elements: new Set([element]),
+    };
+    trackers.set(key, tracker);
+    this.setAttr(element, 'status', 'loading');
+
+    let result;
+    try {
+      result = adapter(config, this._context(element));
+    } catch (error) {
+      this._failed(tracker, element, error);
+      return;
+    }
+
+    Promise.resolve(result).then(
+      () => {
+        tracker.status = 'booted';
+        this._showStatus(tracker);
+        this._dispatch(element, 'defer-tracker:booted', { name });
+        this.logger?.info('Tracker booted', { name });
+      },
+      error => this._failed(tracker, element, error)
+    );
+  }
+
+  _runPage(tracker, element, url) {
+    tracker.pageUrl = url;
+    const page = adapters.get(tracker.name)?.page;
+    if (typeof page !== 'function') return;
+
+    const config = this.getState(element)?.config ?? tracker.config;
+    try {
+      page(config, this._context(element), { url });
+    } catch (error) {
+      this.logger?.error('Tracker page step failed', { name: tracker.name, error });
+    }
+  }
+
+  _failed(tracker, element, error) {
+    tracker.status = 'error';
+    trackers.delete(tracker.key);
+    this._showStatus(tracker);
+    this._dispatch(element, 'defer-tracker:error', { name: tracker.name, error });
+    this.logger?.error('Tracker boot failed', { name: tracker.name, error });
+  }
+
+  _showStatus(tracker) {
+    for (const element of tracker.elements) {
+      if (this.getState(element)) {
+        this.setAttr(element, 'status', tracker.status);
+      }
+    }
+  }
+
+  _context(element) {
+    return {
+      logger: this.logger,
+      eventBus: this.eventBus,
+      nonce: trackerNonce ?? (element.nonce || undefined),
+    };
+  }
+
+  destroy() {
+    this._navigation?.abort();
+    this._navigation = null;
+    super.destroy();
   }
 
   /**
