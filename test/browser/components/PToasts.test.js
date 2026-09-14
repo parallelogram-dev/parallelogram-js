@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import PToasts from '../../../src/components/PToasts.js';
 
+const TRANSPARENT = 'rgba(0, 0, 0, 0)';
+
 const mount = () => {
   const host = document.createElement('p-toasts');
   document.body.append(host);
   return host;
 };
+
+const lastToast = host => [...host.shadowRoot.querySelectorAll('.toast')].at(-1);
 
 describe('p-toasts', () => {
   afterEach(() => {
@@ -35,6 +39,25 @@ describe('p-toasts', () => {
 
     const roles = [...host.shadowRoot.querySelectorAll('.toast')].map(t => t.getAttribute('role'));
     expect(roles).toEqual(['status', 'alert']);
+  });
+
+  it('styles and announces "warn" toasts the same way as "warning" toasts', () => {
+    const host = mount();
+
+    host.toast({ message: 'Storage almost full', type: 'warn', timeout: 0 });
+
+    const toast = lastToast(host);
+    expect(toast.classList.contains('warning')).toBe(true);
+    expect(toast.getAttribute('role')).toBe('alert');
+    expect(getComputedStyle(toast).backgroundColor).not.toBe(TRANSPARENT);
+  });
+
+  it('keeps toasts of an unknown type readable', () => {
+    const host = mount();
+
+    host.toast({ message: 'Syncing', type: 'sync', timeout: 0 });
+
+    expect(getComputedStyle(lastToast(host)).backgroundColor).not.toBe(TRANSPARENT);
   });
 
   it('fires toast:close when the dismiss button is pressed', async () => {
