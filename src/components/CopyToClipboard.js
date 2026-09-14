@@ -18,14 +18,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * <pre id="code-block">logger.info('Hello World');</pre>
  */
 export class CopyToClipboard extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-copytoclipboard';
-  }
+  static selector = 'data-copytoclipboard';
 
   static get defaults() {
     return {

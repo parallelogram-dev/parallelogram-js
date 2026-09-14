@@ -31,14 +31,7 @@ import './PModal.js';
 import { generateId, createElement } from '../utils/dom-utils.js';
 
 export default class Modal extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-modal';
-  }
+  static selector = 'data-modal';
 
   /**
    * Default options for modal enhancement

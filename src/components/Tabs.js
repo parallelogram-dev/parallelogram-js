@@ -35,14 +35,7 @@ const FOCUSABLE =
  * Tabs.enhanceAll();
  */
 export default class Tabs extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-tabs';
-  }
+  static selector = 'data-tabs';
 
   /**
    * Default configuration for tabs component

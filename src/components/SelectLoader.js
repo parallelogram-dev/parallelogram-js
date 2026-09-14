@@ -20,14 +20,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * </div>
  */
 export default class SelectLoader extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-selectloader';
-  }
+  static selector = 'data-selectloader';
 
   static get defaults() {
     return {

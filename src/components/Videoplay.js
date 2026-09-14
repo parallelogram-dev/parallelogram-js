@@ -36,14 +36,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * </div>
  */
 export default class Videoplay extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-videoplay';
-  }
+  static selector = 'data-videoplay';
 
   /**
    * Default configuration for videoplay component

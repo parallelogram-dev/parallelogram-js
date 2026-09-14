@@ -1,6 +1,6 @@
 /**
  * Toggle Component Styles
- * State-based styling using data-toggle-target attribute values
+ * State-based styling using data-toggle-state attribute values
  *
  * States: closed → opening → open → closing → closed
  */
@@ -17,7 +17,7 @@
 }
 
 /* Toggle target states */
-[data-toggle-target] {
+[data-toggle-state] {
   transition:
     opacity var(--toggle-transition-duration) var(--toggle-transition-easing),
     max-height var(--toggle-transition-duration) var(--toggle-transition-easing),
@@ -26,7 +26,7 @@
 }
 
 /* State: Closed - toggle is fully closed */
-[data-toggle-target='closed'] {
+[data-toggle-state='closed'] {
   display: none;
   opacity: 0;
   max-height: 0;
@@ -34,7 +34,7 @@
 }
 
 /* State: Opening - toggle is animating to open */
-[data-toggle-target='opening'] {
+[data-toggle-state='opening'] {
   display: block;
   opacity: 0;
   max-height: 0;
@@ -44,7 +44,7 @@
 }
 
 /* State: Open - toggle is fully open */
-[data-toggle-target='open'] {
+[data-toggle-state='open'] {
   display: block;
   opacity: 1;
   max-height: none;
@@ -52,7 +52,7 @@
 }
 
 /* State: Closing - toggle is animating to closed */
-[data-toggle-target='closing'] {
+[data-toggle-state='closing'] {
   display: block;
   opacity: 1;
   visibility: visible;
@@ -94,24 +94,24 @@
     transition: none;
   }
 
-  [data-toggle-target] {
+  [data-toggle-state] {
     transition: none;
     animation: none !important;
   }
 
-  [data-toggle-target='opening'],
-  [data-toggle-target='closing'] {
+  [data-toggle-state='opening'],
+  [data-toggle-state='closing'] {
     will-change: auto;
   }
 
   /* Instant state changes for reduced motion */
-  [data-toggle-target='opening'] {
+  [data-toggle-state='opening'] {
     opacity: 1;
     max-height: none;
     transform: none;
   }
 
-  [data-toggle-target='closing'] {
+  [data-toggle-state='closing'] {
     opacity: 0;
     max-height: 0;
     transform: none;

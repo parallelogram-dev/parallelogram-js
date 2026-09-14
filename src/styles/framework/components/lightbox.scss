@@ -135,13 +135,13 @@
   }
 }
 
-/* State-based CSS using data-lightbox attribute */
-[data-lightbox='closed'] {
+/* State-based CSS using data-lightbox-state attribute */
+[data-lightbox-state='closed'] {
   display: none;
   opacity: 0;
 }
 
-[data-lightbox='opening'] {
+[data-lightbox-state='opening'] {
   display: flex;
   opacity: 0;
   will-change: opacity;
@@ -149,18 +149,18 @@
     forwards;
 }
 
-[data-lightbox='open'] {
+[data-lightbox-state='open'] {
   display: flex;
   opacity: 1;
 }
 
-[data-lightbox='transitioning'] {
+[data-lightbox-state='transitioning'] {
   display: flex;
   opacity: 1;
   will-change: opacity;
 }
 
-[data-lightbox='closing'] {
+[data-lightbox-state='closing'] {
   display: flex;
   opacity: 1;
   animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing)
@@ -222,23 +222,23 @@
 
 /* Accessibility: Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  [data-lightbox] {
+  [data-lightbox-state] {
     animation: none !important;
     transition: none !important;
   }
 
-  [data-lightbox='opening'],
-  [data-lightbox='closing'] {
+  [data-lightbox-state='opening'],
+  [data-lightbox-state='closing'] {
     will-change: auto;
   }
 
   /* Instant state changes for reduced motion */
-  [data-lightbox='opening'] {
+  [data-lightbox-state='opening'] {
     opacity: 1;
     transform: none;
   }
 
-  [data-lightbox='closing'] {
+  [data-lightbox-state='closing'] {
     opacity: 0;
     transform: none;
   }

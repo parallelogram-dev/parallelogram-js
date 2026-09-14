@@ -12,14 +12,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * </form>
  */
 export class FormEnhancer extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-form-enhancer';
-  }
+  static selector = 'data-form-enhancer';
 
   static get defaults() {
     return {
