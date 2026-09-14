@@ -24,7 +24,6 @@
   --datetime-bg: #fff;
   --datetime-border: rgba(0, 0, 0, 0.1);
   --datetime-shadow-color: rgba(0, 0, 0, 0.12);
-  --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
   --datetime-btn-hover-bg: rgba(0, 0, 0, 0.05);
 
   /* Opacity */
@@ -484,11 +483,11 @@ button:disabled {
   min-width: 4em;
 }
 
-.time-select:focus,
-.ampm:focus {
-  outline: none;
+.time-select:focus-visible,
+.ampm:focus-visible {
+  outline: 2px solid var(--datetime-accent);
+  outline-offset: 1px;
   border-color: var(--datetime-accent);
-  box-shadow: 0 0 0 3px var(--datetime-focus-shadow);
 }
 
 /* Quick Dates & Presets */
@@ -584,4 +583,30 @@ button:disabled {
 
 .input:focus-visible {
   outline-offset: calc(var(--datetime-focus-ring-width) * -1);
+}
+
+/* Forced colours drop cell backgrounds, so mark selected and in-range dates with system colours */
+@media (forced-colors: active) {
+  .day.selected,
+  .month.selected,
+  .year.selected,
+  .day.range-start,
+  .day.range-end {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .day.in-range {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+    opacity: 1;
+  }
+
+  .day.today,
+  .month.today,
+  .year.today {
+    border-color: CanvasText;
+  }
 }

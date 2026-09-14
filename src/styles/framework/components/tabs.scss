@@ -82,3 +82,10 @@
     opacity: 0;
   }
 }
+
+/* Forced colours drop the selected tab's background, so keep its underline in a system colour */
+@media (forced-colors: active) {
+  [data-tab][aria-selected='true'] {
+    border-bottom-color: Highlight;
+  }
+}

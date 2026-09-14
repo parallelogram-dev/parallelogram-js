@@ -37,9 +37,12 @@
   --form-control-font-size: var(--form-control-font-size-lg);
 }
 
+/* The transparent outline takes over from the ring when forced colours drop box shadows */
 @mixin form-control-focus {
   border-color: var(--form-control-focus-border-color);
   box-shadow: inset 0 0 0 var(--form-control-focus-ring-width) var(--form-control-focus-ring-color);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
 }
 
 @mixin form-control-hover {
