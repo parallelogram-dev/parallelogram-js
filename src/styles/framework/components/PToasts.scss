@@ -51,7 +51,9 @@
     sans-serif;
   outline: none;
   pointer-events: auto;
-  min-width: 300px;
+  min-width: min(300px, 100%);
+  /* Fallback so a toast with an unrecognised type is never transparent */
+  background: #{$neutral-900};
 }
 
 /* Toast type backgrounds - intentionally opinionated dark colors for visibility */
@@ -100,4 +102,10 @@
 
 .btn.close:hover {
   opacity: 1;
+}
+
+.btn.close:focus-visible {
+  opacity: 1;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }

@@ -1,5 +1,8 @@
 import styles from '../styles/framework/components/PToasts.scss';
 
+/** Alternative type names that share another type's styling and announcement. */
+const TYPE_ALIASES = { warn: 'warning' };
+
 export default class PToasts extends HTMLElement {
   constructor() {
     super();
@@ -18,9 +21,10 @@ export default class PToasts extends HTMLElement {
   toast({ message, type = 'info', timeout = 4000, allowHTML = false }) {
     const id = ++this._idCounter;
 
+    const variant = TYPE_ALIASES[type] ?? type;
     const element = document.createElement('div');
-    element.className = `toast ${type}`;
-    element.setAttribute('role', type === 'warn' || type === 'error' ? 'alert' : 'status');
+    element.className = `toast ${variant}`;
+    element.setAttribute('role', variant === 'warning' || variant === 'error' ? 'alert' : 'status');
 
     const row = document.createElement('div');
     row.className = 'row';
