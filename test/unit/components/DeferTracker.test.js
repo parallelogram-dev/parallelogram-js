@@ -150,7 +150,10 @@ describe('DeferTracker trackers', () => {
     eventBus.emit('router:navigate-success', { url: '/menu' });
     await vi.advanceTimersByTimeAsync(0);
 
-    expect([boot.mock.calls.length, boot.page.mock.calls.length]).toEqual([1, 1]);
+    expect([boot.mock.calls.length, boot.page.mock.calls]).toEqual([
+      1,
+      [[{ id: '123' }, expect.any(Object), { url: location.href, mounted: false }]],
+    ]);
   });
 
   it('runs the page step for a block that mounts on a later page instead of ignoring it', async () => {
@@ -167,9 +170,15 @@ describe('DeferTracker trackers', () => {
     tracker.mount(block('google-ads', { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } }));
     await vi.advanceTimersByTimeAsync(0);
 
-    expect([boot.mock.calls.length, boot.page.mock.calls[0]?.[0]?.conversion]).toEqual([
+    expect([boot.mock.calls.length, boot.page.mock.calls]).toEqual([
       1,
-      { send_to: 'AW-1/abc' },
+      [
+        [
+          { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } },
+          expect.any(Object),
+          { url: location.href, mounted: true },
+        ],
+      ],
     ]);
   });
 
