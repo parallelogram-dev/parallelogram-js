@@ -24,20 +24,26 @@ import styles from '../styles/framework/components/PDatetime.scss';
  *
  * @attributes
  * - mode: "date" | "datetime" | "time" (default: "date") - Controls picker type (date, datetime, or time only)
- * - value: ISO date string - Current selected value (or start date in range mode)
- * - name: string - Form field name, creates hidden input for form submission
+ * - value: string - Current value (or start of the range): `yyyy-mm-dd` in date mode, an ISO
+ *   instant in datetime and time modes. Date-only values are always read as local dates.
+ * - name: string - Form field name. The element is form-associated and submits its own value.
  * - time-format: "12" | "24" (default: "24") - Time display format
  * - show-quick-dates: boolean - Shows quick date preset buttons
  * - quick-dates: string - Comma-separated list of presets (yesterday,today,tomorrow)
  * - range: boolean - Enables date range mode with two date inputs
- * - range-to: string - Name for the end date field (creates second hidden input)
+ * - range-to: string - Form field name for the end of the range
  * - from-label: string - Label for start date input (default: "From")
  * - to-label: string - Label for end date input (default: "To")
- * - range-to-value: ISO date string - End date value in range mode
+ * - range-to-value: string - End of the range, in the same format as value
  * - min: ISO date or yyyy-mm-dd - Earliest selectable date; days before are disabled
  * - max: ISO date or yyyy-mm-dd - Latest selectable date; days after are disabled
  * - min-from-field: string - Name of another field whose current value supplies the effective min (more restrictive of the two wins)
  * - max-from-field: string - Name of another field whose current value supplies the effective max
+ * - format: string - Format of the submitted value: a preset (iso, iso-tz, iso-datetime,
+ *   iso-datetime-tz, us-date, us-datetime, eu-date, eu-datetime, mysql) or tokens
+ *   (yyyy mm dd hh ii ss tz tzz)
+ * - required: boolean - The value (both ends in range mode) must be set for the form to submit
+ * - disabled: boolean - Disables the picker; a disabled fieldset does the same
  *
  * @events
  * - change: Fired when the value changes. Bubbles and is composed. detail is
@@ -67,9 +73,12 @@ import styles from '../styles/framework/components/PDatetime.scss';
  * });
  */
 export default class PDatetime extends HTMLElement {
+  static formAssociated = true;
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._internals = this.attachInternals?.() ?? null;
     this._view = new Date();
     this._step = 15;
     this._weekStart = 1;
@@ -177,14 +186,14 @@ export default class PDatetime extends HTMLElement {
     this._ampm = this.shadowRoot.querySelector('[data-datetime-ampm]');
     this._quickDates = this.shadowRoot.querySelector('[data-datetime-quick-dates]');
     this._rangeInfo = this.shadowRoot.querySelector('[data-datetime-range-info]');
-    this._hidden = null;
-    this._hiddenTo = null;
     this._currentField = 'from';
     this._rangeState = null; // 'selecting-from', 'selecting-to', or null
     this._open = false;
     this._openedWith = null;
     this._hideTimer = null;
     this._connection = null;
+    this._defaults = null;
+    this._formDisabled = false;
 
     /* Listeners on the component's own shadow nodes are added once; document listeners are added
        on connect and removed on disconnect */
@@ -207,7 +216,10 @@ export default class PDatetime extends HTMLElement {
 
     this._bindLinkedFieldEvents(signal);
     this._render();
-    if (this.name) this._ensureHidden();
+    if (!this._defaults) {
+      this._defaults = { value: this.value, toValue: this.rangeToValue };
+    }
+    this._syncFormState();
   }
 
   disconnectedCallback() {
@@ -249,6 +261,7 @@ export default class PDatetime extends HTMLElement {
       'to-label',
       'range-to-value',
       'format',
+      'required',
       'min',
       'max',
       'min-from-field',
@@ -262,6 +275,7 @@ export default class PDatetime extends HTMLElement {
     if (this.isConnected) {
       this._render();
     }
+    this._syncFormState();
   }
 
   _bindEvents() {
@@ -535,7 +549,7 @@ export default class PDatetime extends HTMLElement {
   }
 
   open() {
-    if (this._open) return;
+    if (this._open || this._formDisabled) return;
     this._open = true;
     this._openedWith = { value: this.value, toValue: this.rangeToValue };
     clearTimeout(this._hideTimer);
@@ -833,7 +847,7 @@ export default class PDatetime extends HTMLElement {
 
     /* Day view (original calendar rendering) */
     const today = new Date();
-    const selected = this.value ? new Date(this.value) : null;
+    const selected = this._parseValue(this.value);
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
 
@@ -878,8 +892,8 @@ export default class PDatetime extends HTMLElement {
 
       if (this.isRange) {
         // Range selection highlighting
-        const fromDate = this.value ? new Date(this.value) : null;
-        const toDate = this.rangeToValue ? new Date(this.rangeToValue) : null;
+        const fromDate = this._parseValue(this.value);
+        const toDate = this._parseValue(this.rangeToValue);
 
         if (fromDate && dt.toDateString() === fromDate.toDateString()) {
           btn.classList.add('range-start');
@@ -903,7 +917,7 @@ export default class PDatetime extends HTMLElement {
           // Apply date to the currently focused field
           const newDateISO =
             this.mode === 'date'
-              ? new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).toISOString()
+              ? this._dateString(dt)
               : (() => {
                   const cur = new Date();
                   cur.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
@@ -913,14 +927,14 @@ export default class PDatetime extends HTMLElement {
                   return cur.toISOString();
                 })();
 
-          const picked = new Date(newDateISO);
-          if (this._currentField === 'to' && this.value && picked >= new Date(this.value)) {
+          const picked = this._parseValue(newDateISO);
+          if (this._currentField === 'to' && this.value && picked >= this._parseValue(this.value)) {
             this.rangeToValue = newDateISO;
           } else {
             /* A start date, or an end date before the start, begins the range here. An end that
                still follows it is kept, and the end is chosen next. */
             this.value = newDateISO;
-            if (this.rangeToValue && picked > new Date(this.rangeToValue)) {
+            if (this.rangeToValue && picked > this._parseValue(this.rangeToValue)) {
               this.rangeToValue = '';
             }
             this._currentField = 'to';
@@ -933,11 +947,11 @@ export default class PDatetime extends HTMLElement {
         } else {
           // Single date mode (original logic)
           if (this.mode === 'date') {
-            this.value = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).toISOString();
+            this.value = this._dateString(dt);
             this._emitChange();
             this.close();
           } else {
-            const cur = this.value ? new Date(this.value) : new Date();
+            const cur = this._parseValue(this.value) ?? new Date();
             cur.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
             this.value = cur.toISOString();
             this._emitChange();
@@ -997,7 +1011,7 @@ export default class PDatetime extends HTMLElement {
   /* Month picker view */
   _renderMonthPicker() {
     const year = this._view.getFullYear();
-    const selected = this.value ? new Date(this.value) : null;
+    const selected = this._parseValue(this.value);
     const today = new Date();
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
@@ -1048,7 +1062,7 @@ export default class PDatetime extends HTMLElement {
   /* Year picker view */
   _renderYearPicker() {
     const currentYear = this._view.getFullYear();
-    const selected = this.value ? new Date(this.value) : null;
+    const selected = this._parseValue(this.value);
     const today = new Date();
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
@@ -1140,7 +1154,7 @@ export default class PDatetime extends HTMLElement {
     }
 
     if (valueToUse) {
-      const date = new Date(valueToUse);
+      const date = this._parseValue(valueToUse);
 
       if (is12Hour) {
         let hours = date.getHours();
@@ -1172,7 +1186,7 @@ export default class PDatetime extends HTMLElement {
     if (this.isRange) {
       // Handle range: first input = from, second input = to
       if (this.value) {
-        const fromDate = new Date(this.value);
+        const fromDate = this._parseValue(this.value);
         this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
       } else {
         this._input.textContent = '';
@@ -1186,7 +1200,7 @@ export default class PDatetime extends HTMLElement {
       }
 
       if (this.rangeToValue) {
-        const toDate = new Date(this.rangeToValue);
+        const toDate = this._parseValue(this.rangeToValue);
         this._toInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(toDate);
       } else {
         this._toInput.textContent = '';
@@ -1201,7 +1215,7 @@ export default class PDatetime extends HTMLElement {
     } else {
       // Handle single input
       if (this.value) {
-        const date = new Date(this.value);
+        const date = this._parseValue(this.value);
         this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(date);
       } else {
         this._input.textContent = '';
@@ -1249,11 +1263,7 @@ export default class PDatetime extends HTMLElement {
             date.setDate(date.getDate() + dateMap[dateKey].days);
 
             if (this.mode === 'date') {
-              this.value = new Date(
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate()
-              ).toISOString();
+              this.value = this._dateString(date);
             } else {
               date.setHours(9, 0, 0, 0);
               this.value = date.toISOString();
@@ -1279,9 +1289,9 @@ export default class PDatetime extends HTMLElement {
     /* Determine which field to update based on range mode and current field */
     let d;
     if (this.isRange && this._currentField === 'to') {
-      d = this.rangeToValue ? new Date(this.rangeToValue) : new Date();
+      d = this._parseValue(this.rangeToValue) ?? new Date();
     } else {
-      d = this.value ? new Date(this.value) : new Date();
+      d = this._parseValue(this.value) ?? new Date();
     }
 
     let hours = parseInt(this._hourSelect.value) || 0;
@@ -1316,8 +1326,8 @@ export default class PDatetime extends HTMLElement {
   _formatDate(isoString) {
     if (!isoString || !this.format) return isoString;
 
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return isoString;
+    const date = this._parseValue(isoString);
+    if (!date) return isoString;
 
     /* Check for preset formats */
     const presets = {
@@ -1375,25 +1385,169 @@ export default class PDatetime extends HTMLElement {
       .replace(/tz/g, getTimezoneOffset());
   }
 
-  _ensureHidden() {
-    if (!this._hidden) {
-      this._hidden = document.createElement('input');
-      this._hidden.type = 'hidden';
-      this.appendChild(this._hidden);
-    }
-    this._hidden.name = this.name;
-    this._hidden.value = this.format ? this._formatDate(this.value) : this.value;
+  /**
+   * A Date for a stored value. `yyyy-mm-dd` is read as a local date; anything else goes to Date.
+   *
+   * @param {string} value
+   * @returns {Date|null}
+   */
+  _parseValue(value) {
+    if (!value) return null;
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    const date = dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+      : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
 
-    /* Create second hidden input for range mode */
+  /**
+   * The local calendar date of a Date, as `yyyy-mm-dd`
+   */
+  _dateString(date) {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+  }
+
+  /**
+   * The submitted value for a stored value: formatted when `format` is set, and `yyyy-mm-dd` in
+   * date mode
+   */
+  _formValueFor(value) {
+    if (!value) return '';
+    if (this.format) return this._formatDate(value);
+    if (this.mode !== 'date') return value;
+    const date = this._parseValue(value);
+    return date ? this._dateString(date) : value;
+  }
+
+  /**
+   * Report the current value and its validity to the owning form
+   */
+  _syncFormState() {
+    if (!this._internals) return;
+
+    const state = JSON.stringify({ value: this.value, toValue: this.rangeToValue });
     if (this.isRange && this.rangeTo) {
-      if (!this._hiddenTo) {
-        this._hiddenTo = document.createElement('input');
-        this._hiddenTo.type = 'hidden';
-        this.appendChild(this._hiddenTo);
-      }
-      this._hiddenTo.name = this.rangeTo;
-      this._hiddenTo.value = this.format ? this._formatDate(this.rangeToValue) : this.rangeToValue;
+      const data = new FormData();
+      if (this.name) data.append(this.name, this._formValueFor(this.value));
+      data.append(this.rangeTo, this._formValueFor(this.rangeToValue));
+      this._internals.setFormValue(data, state);
+    } else {
+      this._internals.setFormValue(this._formValueFor(this.value), state);
     }
+
+    const problem = this._validityProblem();
+    if (problem) {
+      this._internals.setValidity(problem.flags, problem.message, this._btn);
+    } else {
+      this._internals.setValidity({});
+    }
+  }
+
+  _validityProblem() {
+    const noun = this.mode === 'time' ? 'time' : 'date';
+    if (this.required && (!this.value || (this.isRange && !this.rangeToValue))) {
+      return {
+        flags: { valueMissing: true },
+        message: this.isRange
+          ? `Please choose a start and end ${noun}.`
+          : `Please choose a ${noun}.`,
+      };
+    }
+    if (this.mode === 'time') return null;
+
+    const min = this._effectiveMin();
+    const max = this._effectiveMax();
+    const dates = [this.value, this.isRange ? this.rangeToValue : '']
+      .map(value => this._parseValue(value))
+      .filter(Boolean);
+    const describe = date =>
+      new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date);
+
+    if (min && dates.some(date => this._isDayOutOfRange(date, min, null))) {
+      return {
+        flags: { rangeUnderflow: true },
+        message: `Please choose a date on or after ${describe(min)}.`,
+      };
+    }
+    if (max && dates.some(date => this._isDayOutOfRange(date, null, max))) {
+      return {
+        flags: { rangeOverflow: true },
+        message: `Please choose a date on or before ${describe(max)}.`,
+      };
+    }
+    return null;
+  }
+
+  formResetCallback() {
+    const { value = '', toValue = '' } = this._defaults ?? {};
+    this.value = value;
+    this.rangeToValue = toValue;
+    this._currentField = 'from';
+    this._rangeState = null;
+  }
+
+  formDisabledCallback(disabled) {
+    this._formDisabled = disabled;
+    this._btn.disabled = disabled;
+    if (disabled) this.close();
+  }
+
+  formStateRestoreCallback(state) {
+    try {
+      const { value = '', toValue = '' } = JSON.parse(state);
+      this.value = value;
+      this.rangeToValue = toValue;
+    } catch {
+      this.value = typeof state === 'string' ? state : '';
+    }
+  }
+
+  get form() {
+    return this._internals?.form ?? null;
+  }
+
+  get labels() {
+    return this._internals?.labels ?? [];
+  }
+
+  get validity() {
+    return this._internals?.validity;
+  }
+
+  get validationMessage() {
+    return this._internals?.validationMessage ?? '';
+  }
+
+  get willValidate() {
+    return this._internals?.willValidate ?? false;
+  }
+
+  checkValidity() {
+    return this._internals?.checkValidity() ?? true;
+  }
+
+  reportValidity() {
+    return this._internals?.reportValidity() ?? true;
+  }
+
+  get required() {
+    return this.hasAttribute('required');
+  }
+
+  set required(v) {
+    this.toggleAttribute('required', Boolean(v));
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(v) {
+    this.toggleAttribute('disabled', Boolean(v));
   }
 
   _updateFocusRing() {
@@ -1414,12 +1568,7 @@ export default class PDatetime extends HTMLElement {
   }
 
   _emitChange() {
-    if (this._hidden) {
-      this._hidden.value = this.format ? this._formatDate(this.value) : this.value;
-    }
-    if (this._hiddenTo) {
-      this._hiddenTo.value = this.format ? this._formatDate(this.rangeToValue) : this.rangeToValue;
-    }
+    this._syncFormState();
 
     const eventDetail = this.isRange
       ? {
