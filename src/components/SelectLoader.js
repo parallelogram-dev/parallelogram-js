@@ -128,12 +128,16 @@ export default class SelectLoader extends BaseComponent {
     }
 
     /* Listen for router navigation events via EventManager */
-    this.eventBus?.on('router:navigate-success', () => {
-      /* Check if target still exists after navigation */
-      if (state.targetElement && !document.contains(state.targetElement)) {
-        this.logger?.warn('SelectLoader: Target removed during navigation');
-      }
-    });
+    this.eventBus?.on(
+      'router:navigate-success',
+      () => {
+        /* Check if target still exists after navigation */
+        if (state.targetElement && !document.contains(state.targetElement)) {
+          this.logger?.warn('SelectLoader: Target removed during navigation');
+        }
+      },
+      { signal: state.controller.signal }
+    );
   }
 
   /**
