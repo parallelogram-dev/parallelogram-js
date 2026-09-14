@@ -3,6 +3,8 @@
  * State-based styling using data-toggle-state attribute values
  *
  * States: closed → opening → open → closing → closed
+ * Toggle waits for the opening and closing animations before recording open or closed, so their
+ * length is set here only.
  */
 
 :root {
@@ -16,104 +18,42 @@
   user-select: none;
 }
 
-/* Toggle target states */
-[data-toggle-state] {
-  transition:
-    opacity var(--toggle-transition-duration) var(--toggle-transition-easing),
-    max-height var(--toggle-transition-duration) var(--toggle-transition-easing),
-    transform var(--toggle-transition-duration) var(--toggle-transition-easing),
-    visibility var(--toggle-transition-duration) var(--toggle-transition-easing);
-}
-
-/* State: Closed - toggle is fully closed */
 [data-toggle-state='closed'] {
   display: none;
-  opacity: 0;
-  max-height: 0;
-  visibility: hidden;
 }
 
-/* State: Opening - toggle is animating to open */
-[data-toggle-state='opening'] {
-  display: block;
-  opacity: 0;
-  max-height: 0;
-  visibility: visible;
-  animation: slideDown var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
-  will-change: opacity, max-height, transform;
-}
-
-/* State: Open - toggle is fully open */
-[data-toggle-state='open'] {
-  display: block;
-  opacity: 1;
-  max-height: none;
-  visibility: visible;
-}
-
-/* State: Closing - toggle is animating to closed */
+[data-toggle-state='opening'],
+[data-toggle-state='open'],
 [data-toggle-state='closing'] {
   display: block;
-  opacity: 1;
-  visibility: visible;
-  animation: slideUp var(--toggle-transition-duration) var(--toggle-transition-easing) forwards;
-  will-change: opacity, max-height, transform;
+}
+
+[data-toggle-state='closing'] {
   pointer-events: none;
 }
 
-/* Animation keyframes */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    max-height: 100vh;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 1;
-    max-height: 100vh;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-10px);
-  }
-}
-
-/* Accessibility: Respect reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  [data-toggle] {
-    transition: none;
-  }
-
-  [data-toggle-state] {
-    transition: none;
-    animation: none !important;
-  }
-
-  [data-toggle-state='opening'],
-  [data-toggle-state='closing'] {
-    will-change: auto;
-  }
-
-  /* Instant state changes for reduced motion */
+/* Opacity and transform only, so tall content is never clipped while it animates */
+@media (prefers-reduced-motion: no-preference) {
   [data-toggle-state='opening'] {
-    opacity: 1;
-    max-height: none;
-    transform: none;
+    animation: toggle-open var(--toggle-transition-duration) var(--toggle-transition-easing);
   }
 
   [data-toggle-state='closing'] {
+    animation: toggle-close var(--toggle-transition-duration) var(--toggle-transition-easing)
+      forwards;
+  }
+}
+
+@keyframes toggle-open {
+  from {
     opacity: 0;
-    max-height: 0;
-    transform: none;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes toggle-close {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
   }
 }
