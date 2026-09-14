@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@parallelogram-js/core/package.json` is exported.
 - Source maps for production and development bundles.
 - MIT `LICENSE` file, which `package.json` referenced but the package never shipped.
+- `ComponentHost` (`@parallelogram-js/core/core/ComponentHost`) loads registry components and mounts them on matching elements, watching its root with a single MutationObserver. `PageManager` delegates to it and exposes it as `pageManager.host`.
+- `app.components.add()` accepts a `name` option, and components added after `run()` are mounted straight away.
 - `BaseComponent#trackedElements()` lists the elements a component is mounted on, including ones whose asynchronous `_init` is still running.
 - `EventManager#on()` and `EventManager#once()` accept `{ signal }` and remove the listener when the signal aborts; `EventManager#listenerCount()` reports how many listeners an event has; listener errors go to the logger passed to the constructor.
 - `BaseComponent#getBoolAttr()` and `BaseComponent#getNumberAttr()` for reading typed component attributes. `_getConfigFromAttrs()` now converts values to the type of each entry in `static defaults`.
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `QueuedComponentProxy` (`@parallelogram-js/core/core/QueuedComponentProxy`), PageManager's internal loading methods (`_ensureInstance`, `_handleAsyncLoading`, `_createInstance`, `unmountRemoved`) and its unused `batchUpdates`, `updateThrottleMs`, `lazyLoadThreshold` and `scrollRestoration` options.
 - **BREAKING:** The CommonJS build (`dist/index.cjs`) and the `require` export condition. The package is ESM only, and the root entry is now `dist/index.js`.
 - `src/demo` from the published package.
 - Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
@@ -34,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **BREAKING:** enhancement components registered with `app.components.add()` are named by their `name` option or, by default, their full selector. Names used to come from the first `data-*` attribute or class in the selector, so `[data-widget="chart"]` and `[data-widget="map"]` shared one instance and mounted the wrong class. `dependsOn` and `pageManager.instances` use the new names, and registering a name twice throws.
+- **BREAKING:** `app.components.add()` only treats valid custom element names (containing a hyphen, such as `p-modal`) as web components. Plain selectors such as `form`, `details` or `ul > li` were sent to the web component loader and never mounted.
+- Parallelogram mounted every component twice on startup (once in PageManager's constructor and again over `document.body`), and components outside a narrower `containerSelector` were never observed. It now mounts and observes the whole document once; a standalone PageManager observes `options.observeRoot`, which defaults to its container.
+- When a component's module failed to load and then loaded on retry, the elements that were waiting were never mounted. Elements removed while their module was loading were still mounted afterwards, `dependsOn` did not wait for dependencies to load, and loaders that return a class directly or a named export (`exportName`) failed to instantiate.
 - `PageManager#destroy()` and `RouterManager#destroy()` left their event bus, window and link listeners attached, because `EventManager#off(event)` without a callback did nothing. Managers now remove only their own listeners through an abort signal, and `off(event)` without a callback removes every listener for that event. SelectLoader no longer adds a permanent `router:navigate-success` listener each time it mounts, and DeferTracker's pending consent listener is removed on unmount.
 - BaseComponent leaked when `_init` threw or returned a Promise, or when a state's `cleanup()` threw: the element stayed tracked and its abort signal was never aborted. `mount()` now untracks and aborts on failure, `unmount()` always aborts the signal, an asynchronous `_init` is supported and is cleaned up if the element is unmounted first, and mounted elements live in one `Map` instead of a WeakMap plus a separate Set.
 - **Behaviour change:** boolean attributes set to `"false"` (or `"0"`) now turn options off. Previously every component read them as the truthy string `"false"`, so opt-outs such as `data-toggle-close-navigation="false"`, `data-tabs-keyboard="false"`, `data-reveal-once="false"`, `data-videoplay-autopause="false"`, `data-lightbox-close-escape="false"` and `data-datatable-sortable="false"` did nothing, and `data-toggle-manual="false"` or `data-tabs-autofocus="false"` switched the option on. Empty attributes (`data-toggle-capture`) now count as true. Affects Toggle, Tabs, Modal, Lightbox, DataTable, FormEnhancer, Scrollreveal, Scrollhide, Videoplay, Toast, CopyToClipboard and SelectLoader.
