@@ -40,7 +40,12 @@ import styles from '../styles/framework/components/PDatetime.scss';
  * - max-from-field: string - Name of another field whose current value supplies the effective max
  *
  * @events
- * - change: Fired when value changes, detail contains {value: isoString}
+ * - change: Fired when the value changes. Bubbles and is composed. detail is
+ *   `{ value, complete }`, or `{ value, toValue, from, to, complete }` in range mode, where
+ *   `complete` is true once both ends of the range are set.
+ * - p-datetime:open: Fired when the panel opens. detail is `{ value }` (plus `toValue` in range mode).
+ * - p-datetime:close: Fired when the panel closes. detail is `{ changed, value }` (plus `toValue`),
+ *   where `changed` says whether the value differs from when the panel opened.
  *
  * @styling
  * CSS custom properties for theming:
@@ -176,26 +181,38 @@ export default class PDatetime extends HTMLElement {
     this._hiddenTo = null;
     this._currentField = 'from';
     this._rangeState = null; // 'selecting-from', 'selecting-to', or null
+    this._open = false;
+    this._openedWith = null;
+    this._hideTimer = null;
+    this._connection = null;
+
+    /* Listeners on the component's own shadow nodes are added once; document listeners are added
+       on connect and removed on disconnect */
+    this._bindEvents();
   }
 
   connectedCallback() {
-    this._bindEvents();
-    this._bindLinkedFieldEvents();
+    this._connection = new AbortController();
+    const { signal } = this._connection;
+
+    document.addEventListener(
+      'click',
+      event => {
+        if (this._open && !event.composedPath().includes(this)) {
+          this.close();
+        }
+      },
+      { signal }
+    );
+
+    this._bindLinkedFieldEvents(signal);
     this._render();
     if (this.name) this._ensureHidden();
-
-    // Update styles based on theme after DOM is ready
-    requestAnimationFrame(() => {
-      this._updateTheme();
-    });
   }
 
   disconnectedCallback() {
-    if (this._linkedFieldListener) {
-      document.removeEventListener('change', this._linkedFieldListener, true);
-      document.removeEventListener('input', this._linkedFieldListener, true);
-      this._linkedFieldListener = null;
-    }
+    this._connection?.abort();
+    this._connection = null;
     this._unbindReposition();
   }
 
@@ -204,69 +221,18 @@ export default class PDatetime extends HTMLElement {
    * max-from-field updates. Uses delegated listeners on document so we
    * don't need direct refs to siblings that may not exist at connect time.
    */
-  _bindLinkedFieldEvents() {
+  _bindLinkedFieldEvents(signal) {
     if (!this.minFromField && !this.maxFromField) return;
 
-    this._linkedFieldListener = e => {
-      const target = e.target;
-      if (!target || target === this) return;
-      const targetName = target.getAttribute && target.getAttribute('name');
-      if (!targetName) return;
-      if (targetName === this.minFromField || targetName === this.maxFromField) {
+    const listener = event => {
+      const name = event.target?.getAttribute?.('name');
+      if (event.target !== this && name && [this.minFromField, this.maxFromField].includes(name)) {
         this._render();
       }
     };
 
-    document.addEventListener('change', this._linkedFieldListener, true);
-    document.addEventListener('input', this._linkedFieldListener, true);
-  }
-
-  _updateTheme(theme = null) {
-    const currentTheme = theme || this.getAttribute('theme');
-
-    // If no theme specified, check if we should inherit from host
-    const shouldInherit = !currentTheme || currentTheme === 'inherit';
-
-    if (shouldInherit) {
-      this._applyInheritTheme();
-    } else {
-      this._applyNamedTheme(currentTheme);
-    }
-  }
-
-  _applyInheritTheme() {
-    // Set theme attribute to inherit if not already set
-    if (!this.hasAttribute('theme')) {
-      this.setAttribute('theme', 'inherit');
-    }
-
-    // Apply computed styles from host to shadow DOM
-    const computedStyles = getComputedStyle(this);
-    const inputs = this.shadowRoot.querySelectorAll('input');
-
-    inputs.forEach(input => {
-      input.style.setProperty('--datetime-input-color', computedStyles.color);
-      input.style.setProperty('--datetime-input-font-size', computedStyles.fontSize);
-      input.style.setProperty('--datetime-input-font-family', computedStyles.fontFamily);
-    });
-
-    // Update the host CSS custom properties
-    this.style.setProperty('--datetime-input-background', computedStyles.backgroundColor);
-    this.style.setProperty('--datetime-input-color', computedStyles.color);
-    this.style.setProperty('--datetime-input-font-size', computedStyles.fontSize);
-    this.style.setProperty('--datetime-input-font-family', computedStyles.fontFamily);
-  }
-
-  _applyNamedTheme(themeName) {
-    // Future: implement named themes like 'dark', 'light', 'material', etc.
-    // For now, remove inherit attribute if it was set
-    if (this.getAttribute('theme') === 'inherit') {
-      this.removeAttribute('theme');
-    }
-
-    if (themeName && themeName !== 'inherit') {
-      this.setAttribute('theme', themeName);
-    }
+    document.addEventListener('change', listener, { capture: true, signal });
+    document.addEventListener('input', listener, { capture: true, signal });
   }
 
   static get observedAttributes() {
@@ -282,7 +248,6 @@ export default class PDatetime extends HTMLElement {
       'from-label',
       'to-label',
       'range-to-value',
-      'theme',
       'format',
       'min',
       'max',
@@ -293,10 +258,6 @@ export default class PDatetime extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue) return;
-
-    if (name === 'theme') {
-      this._updateTheme(newValue);
-    }
 
     if (this.isConnected) {
       this._render();
@@ -365,15 +326,11 @@ export default class PDatetime extends HTMLElement {
       btn.addEventListener('click', () => {
         const action = btn.getAttribute('data-datetime-action');
         if (action === 'clear') {
+          this.value = '';
           if (this.isRange) {
-            // Clear the focused field only
-            if (this._currentField === 'to') {
-              this.rangeToValue = '';
-            } else {
-              this.value = '';
-            }
-          } else {
-            this.value = '';
+            this.rangeToValue = '';
+            this._currentField = 'from';
+            this._rangeState = 'selecting-from';
           }
           this._emitChange();
           this._render();
@@ -387,10 +344,6 @@ export default class PDatetime extends HTMLElement {
     this._hourSelect.addEventListener('change', () => this._syncTime());
     this._minuteSelect.addEventListener('change', () => this._syncTime());
     this._ampm.addEventListener('change', () => this._syncTime());
-
-    document.addEventListener('click', e => {
-      if (!this.contains(e.target)) this.close();
-    });
   }
 
   get mode() {
@@ -582,11 +535,13 @@ export default class PDatetime extends HTMLElement {
   }
 
   open() {
-    /* If we have no value of our own but a linked min/max field has set
-       an effective bound that's outside the currently-viewed month, jump
-       the calendar to a useful month so the user doesn't land on a page
-       full of disabled days. */
-    this._alignViewToBoundary();
+    if (this._open) return;
+    this._open = true;
+    this._openedWith = { value: this.value, toValue: this.rangeToValue };
+    clearTimeout(this._hideTimer);
+
+    this._alignViewToValue();
+    this._render();
 
     this._panel.hidden = false;
     requestAnimationFrame(() => {
@@ -594,6 +549,35 @@ export default class PDatetime extends HTMLElement {
       this._panel.classList.add('open');
       this._bindReposition();
     });
+
+    this.dispatchEvent(
+      new CustomEvent('p-datetime:open', {
+        bubbles: true,
+        composed: true,
+        detail: this._eventValues(),
+      })
+    );
+  }
+
+  /**
+   * Show the month of the value being edited when the panel opens. Without a value, fall back to a
+   * month the min/max boundaries allow.
+   */
+  _alignViewToValue() {
+    const editing =
+      this.isRange && this._currentField === 'to' ? this.rangeToValue || this.value : this.value;
+    const date = this._parseBoundary(editing);
+    if (!date) {
+      this._alignViewToBoundary();
+      return;
+    }
+
+    this._view = new Date(date.getFullYear(), date.getMonth(), 1);
+    this._viewMode = 'day';
+  }
+
+  _eventValues() {
+    return this.isRange ? { value: this.value, toValue: this.rangeToValue } : { value: this.value };
   }
 
   /**
@@ -624,15 +608,30 @@ export default class PDatetime extends HTMLElement {
   }
 
   close() {
+    if (!this._open) return;
+    this._open = false;
+
     this._panel.classList.remove('open');
     /* Remove focus ring when panel closes */
     this._input.classList.remove('is-focused');
     this._toInput.classList.remove('is-focused');
     this._unbindReposition();
-    setTimeout(() => {
+    clearTimeout(this._hideTimer);
+    this._hideTimer = setTimeout(() => {
       this._panel.hidden = true;
       this._panel.classList.remove('panel--above', 'panel--align-right');
     }, 150);
+
+    const opened = this._openedWith ?? {};
+    const changed =
+      this.value !== opened.value || (this.isRange && this.rangeToValue !== opened.toValue);
+    this.dispatchEvent(
+      new CustomEvent('p-datetime:close', {
+        bubbles: true,
+        composed: true,
+        detail: { changed, ...this._eventValues() },
+      })
+    );
   }
 
   /**
@@ -692,7 +691,7 @@ export default class PDatetime extends HTMLElement {
   }
 
   toggle() {
-    this._panel.hidden ? this.open() : this.close();
+    this._open ? this.close() : this.open();
   }
 
   _render() {
@@ -914,28 +913,18 @@ export default class PDatetime extends HTMLElement {
                   return cur.toISOString();
                 })();
 
-          // Apply to the focused field
-          if (this._currentField === 'to') {
+          const picked = new Date(newDateISO);
+          if (this._currentField === 'to' && this.value && picked >= new Date(this.value)) {
             this.rangeToValue = newDateISO;
-            // Validate: if to-date is before from-date, swap them
-            if (this.value && new Date(newDateISO) < new Date(this.value)) {
-              this.rangeToValue = this.value;
-              this.value = newDateISO;
-            }
           } else {
-            // Selecting "from" date
-            const wasEmpty = !this.value && !this.rangeToValue;
+            /* A start date, or an end date before the start, begins the range here. An end that
+               still follows it is kept, and the end is chosen next. */
             this.value = newDateISO;
-            // Validate: if from-date is after to-date, swap them
-            if (this.rangeToValue && new Date(newDateISO) > new Date(this.rangeToValue)) {
-              this.value = this.rangeToValue;
-              this.rangeToValue = newDateISO;
+            if (this.rangeToValue && picked > new Date(this.rangeToValue)) {
+              this.rangeToValue = '';
             }
-            // Auto-focus "to" field after first "from" selection
-            if (wasEmpty) {
-              this._currentField = 'to';
-              this._rangeState = 'selecting-to';
-            }
+            this._currentField = 'to';
+            this._rangeState = 'selecting-to';
           }
 
           this._emitChange();
@@ -1433,8 +1422,14 @@ export default class PDatetime extends HTMLElement {
     }
 
     const eventDetail = this.isRange
-      ? { value: this.value, toValue: this.rangeToValue, from: this.value, to: this.rangeToValue }
-      : { value: this.value };
+      ? {
+          value: this.value,
+          toValue: this.rangeToValue,
+          from: this.value,
+          to: this.rangeToValue,
+          complete: Boolean(this.value && this.rangeToValue),
+        }
+      : { value: this.value, complete: Boolean(this.value) };
 
     this.dispatchEvent(
       new CustomEvent('change', { detail: eventDetail, bubbles: true, composed: true })
@@ -1442,4 +1437,6 @@ export default class PDatetime extends HTMLElement {
   }
 }
 
-customElements.define('p-datetime', PDatetime);
+if (!customElements.get('p-datetime')) {
+  customElements.define('p-datetime', PDatetime);
+}
