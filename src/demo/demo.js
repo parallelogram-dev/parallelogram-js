@@ -105,8 +105,8 @@ app.components
     () => import(/* webpackChunkName: "lightbox" */ '../../src/components/Lightbox.js')
   )
   .add(
-    '[data-form-validator]',
-    () => import(/* webpackChunkName: "form-validator" */ '../../src/components/FormEnhancer.js')
+    '[data-form-enhancer]',
+    () => import(/* webpackChunkName: "form-enhancer" */ '../../src/components/FormEnhancer.js')
   )
   .add(
     '[data-copytoclipboard]',
