@@ -11,7 +11,7 @@
   border-radius: var(--puploader-radius, var(--surface-panel-radius));
   border-width: var(--puploader-border-width, #{$border-width-thick});
   border-style: solid;
-  border-color: var(--puploader-border-color, black);
+  border-color: var(--puploader-border-color, var(--surface-panel-border-color));
   background: var(--puploader-bg, var(--surface-panel-color-bg));
   color: var(--puploader-color, var(--surface-panel-color-text));
   box-shadow: var(--puploader-shadow, var(--surface-panel-shadow));
@@ -62,12 +62,41 @@
   }
 
   &__fileinput {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  &__label {
+  &__add {
+    font: inherit;
     font-size: $font-base;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:focus-visible {
+      outline: 2px solid $primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__hint {
+    margin-left: 0.25em;
+  }
+
+  &__message {
+    margin: $space-sm 0 0;
+    font-size: $font-sm;
+
+    &:empty {
+      display: none;
+    }
   }
 }
 
@@ -76,5 +105,9 @@
 }
 
 ::slotted(p-uploader-fields) {
+  display: none;
+}
+
+:host([full]) .uploader__selector {
   display: none;
 }

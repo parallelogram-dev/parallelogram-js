@@ -64,7 +64,7 @@ export class MockXHR {
     // Get file from FormData for file uploads
     let file = null;
     if (body instanceof FormData) {
-      file = body.get('file');
+      file = [...body.values()].find(value => value instanceof File) ?? null;
     }
 
     if (!file) {
