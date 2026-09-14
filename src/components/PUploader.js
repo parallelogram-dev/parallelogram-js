@@ -77,35 +77,46 @@ const getFileTemplate = () => {
       <style>${fileStyles}</style>
       <slot></slot>
       <div class="uploader__overlay">
-        <progress class="uploader__progress" max="100" value="0"></progress>
+        <progress class="uploader__progress" part="progress" max="100" value="0" aria-label="Upload progress"></progress>
       </div>
       <div class="uploader__container">
-        <picture class="uploader__preview"><img alt=""></picture>
+        <picture class="uploader__preview" part="preview"><img alt=""></picture>
         <div class="uploader__content">
-          <div data-panel="error" class="uploader__panel" role="alert" aria-live="assertive">
+          <div data-panel="error" class="uploader__panel" part="panel" role="alert">
             <div class="uploader__alert">
               <div class="error-message"></div>
-              <div class="uploader__actions"></div>
+              <div class="uploader__actions" part="actions"></div>
             </div>
           </div>
-          <div data-panel="info" class="uploader__panel" role="region">
+          <div data-panel="info" class="uploader__panel" part="panel" role="region">
             <div class="uploader__body">
-              <div class="uploader__fields">
-                <h1 class="uploader__filename"></h1>
+              <div class="uploader__fields" part="fields">
+                <p class="uploader__filename" part="filename"></p>
               </div>
             </div>
           </div>
-          <div data-panel="delete" class="uploader__panel" role="dialog">
+          <div data-panel="delete" class="uploader__panel" part="panel" role="group">
             <div class="uploader__alert">
               <h2 class="uploader__heading">Delete this file?</h2>
-              <div class="uploader__actions">
-                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
-                <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
+              <div class="uploader__actions" part="actions">
+                <button type="button" class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
+                <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <dialog class="uploader__dialog" part="dialog" aria-labelledby="details-heading">
+        <form class="uploader__form" method="dialog">
+          <h2 class="uploader__heading" id="details-heading">Edit details</h2>
+          <div class="uploader__dialog-fields"></div>
+          <p class="uploader__dialog-message" role="alert"></p>
+          <div class="uploader__actions" part="actions">
+            <button type="submit" class="uploader__btn uploader__btn--primary" data-action="save">Save</button>
+            <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+          </div>
+        </form>
+      </dialog>
     `;
   }
   return fileTemplate;
@@ -152,6 +163,7 @@ const getFileTemplate = () => {
  * - allow-edit: `"false"` turns off editing and deleting
  * - allow-sort: `"false"` turns off reordering
  * - full: set by the component while it holds `max-files` files; the drop zone is hidden meanwhile
+ * - stacked: joins the files into one list with no gap, rounding only its outer corners
  *
  * @properties
  * - requestHeaders: headers for every request, as an object or a function returning one. Without it,
@@ -178,6 +190,12 @@ const getFileTemplate = () => {
  * @cssprop --puploader-color - host text colour
  * @cssprop --puploader-shadow - host shadow
  * @cssprop --puploader-padding - host padding
+ * @cssprop --puploader-files-gap - space between files (default the small spacing step)
+ *
+ * Files are `p-uploader-file` elements, which expose the parts `preview`, `progress`, `panel`,
+ * `fields`, `field`, `filename`, `actions`, `edit-button` and `dialog`. Fields are shown only when
+ * `p-uploader-fields` declares them; read-only files hide fields that have no value, and
+ * editable files edit every field in one dialog.
  */
 export default class PUploader extends HTMLElement {
   constructor() {
@@ -335,10 +353,7 @@ export default class PUploader extends HTMLElement {
     const fieldContainer = this.querySelector('p-uploader-fields[slot="field-definitions"]');
 
     if (!fieldContainer) {
-      if (this.logger) {
-        this.logger.warn('PUploader: No field definitions found. Using defaults.');
-      }
-      this.fieldSchema = this._getDefaultFields();
+      this.fieldSchema = new Map();
       return;
     }
 
@@ -439,14 +454,6 @@ export default class PUploader extends HTMLElement {
         fileElement._render();
       }
     });
-  }
-
-  _getDefaultFields() {
-    return new Map([
-      ['title', { key: 'title', label: 'Title', type: 'text', required: false }],
-      ['caption', { key: 'caption', label: 'Caption', type: 'textarea', required: false }],
-      ['link', { key: 'link', label: 'Link', type: 'url', required: false }],
-    ]);
   }
 
   getFieldSchema() {
@@ -1039,16 +1046,13 @@ export class PUploaderFile extends HTMLElement {
     }
 
     const errorPanel = root.querySelector('[data-panel="error"]');
-    errorPanel.classList.toggle(
-      'uploader__panel--show',
-      currentPanel === 'error' || state === 'error'
-    );
     errorPanel.querySelector('.error-message').textContent = error;
     errorPanel.querySelector('.uploader__actions').append(
       state === 'error'
         ? el(
             'button',
             {
+              type: 'button',
               class: 'uploader__btn uploader__btn--delete',
               'data-action': 'confirm-delete',
               'aria-label': 'Remove file',
@@ -1058,6 +1062,7 @@ export class PUploaderFile extends HTMLElement {
         : el(
             'button',
             {
+              type: 'button',
               class: 'uploader__btn uploader__btn--secondary',
               'data-action': 'cancel',
               'aria-label': 'Cancel',
@@ -1067,28 +1072,61 @@ export class PUploaderFile extends HTMLElement {
     );
 
     const infoPanel = root.querySelector('[data-panel="info"]');
-    infoPanel.classList.toggle(
-      'uploader__panel--show',
-      currentPanel === 'info' && state === 'uploaded'
-    );
     infoPanel.setAttribute('aria-label', `File information for ${filename}`);
     root.querySelector('.uploader__filename').textContent = filename;
     this._syncDeleteButton(infoPanel, permissions.remove);
-    if (state === 'uploaded') {
-      root.querySelector('.uploader__fields').append(...this._createFields(permissions.edit));
-    }
 
     const deletePanel = root.querySelector('[data-panel="delete"]');
-    deletePanel.classList.toggle('uploader__panel--show', currentPanel === 'delete');
     this._deleteHeadingId ??= generateId('delete-heading');
     deletePanel.setAttribute('aria-labelledby', this._deleteHeadingId);
     deletePanel.querySelector('.uploader__heading').id = this._deleteHeadingId;
-    if (state === 'uploaded') {
-      deletePanel.before(...this._createEditPanels());
-    }
+
+    this._renderDetails(root, state);
+    this._showPanels(root, currentPanel, state);
 
     this.shadowRoot.replaceChildren(root);
     this._setupFileEventListeners();
+  }
+
+  /**
+   * Show the panel for the current state and make the others inert, so their controls leave the tab
+   * order while they are out of view
+   */
+  _showPanels(root, currentPanel, state) {
+    for (const panel of root.querySelectorAll('.uploader__panel')) {
+      const name = panel.dataset.panel;
+      const show =
+        name === 'info'
+          ? currentPanel === 'info' && state === 'uploaded'
+          : name === currentPanel || (name === 'error' && state === 'error');
+      panel.classList.toggle('uploader__panel--show', show);
+      panel.inert = !show;
+    }
+  }
+
+  /**
+   * Fill the info panel with the file's fields and an Edit details button, and the dialog with a
+   * control for each field
+   */
+  _renderDetails(root, state) {
+    const fields = root.querySelector('.uploader__fields');
+    fields.querySelectorAll('.uploader__field, .uploader__edit').forEach(node => node.remove());
+    if (state !== 'uploaded') return;
+
+    const { edit } = this._permissions();
+    fields.append(...this._createFields(edit));
+    fields.classList.toggle('uploader__fields--editable', edit && Boolean(this._fieldSchema?.size));
+
+    if (edit && this._fieldSchema?.size) {
+      fields.append(
+        el(
+          'button',
+          { type: 'button', class: 'uploader__edit', 'data-action': 'edit', part: 'edit-button' },
+          'Edit details'
+        )
+      );
+      this._fillEditor(root);
+    }
   }
 
   /**
@@ -1133,94 +1171,24 @@ export class PUploaderFile extends HTMLElement {
   }
 
   /**
-   * @returns {HTMLElement[]} One read-only row per field in the schema
+   * One row per field in the schema; when the details can't be edited, fields without a value are left out
+   *
+   * @returns {HTMLElement[]}
    */
-  _createFields(allowEdit) {
-    if (!this._fieldSchema || this._fieldSchema.size === 0) {
+  _createFields(canEdit) {
+    if (!this._fieldSchema?.size) {
       return [];
     }
 
-    return [...this._fieldSchema].map(([key, fieldDef]) => {
-      const field = el('div', { class: 'uploader__field' });
-      const value = el('span', { class: 'field__value' });
-      this._setFieldValue(value, this._fieldData.get(key));
-
-      field.append(el('label', { class: 'field__label' }, fieldDef.label), value);
-
-      if (allowEdit) {
-        value.classList.add('field__value--editable');
-        value.dataset.action = 'edit-field';
-        value.dataset.field = key;
-        field.append(
-          el('button', {
-            class: 'field__edit',
-            'data-action': 'edit-field',
-            'data-field': key,
-            title: `Edit ${fieldDef.label}`,
-          })
-        );
-      }
-
-      return field;
-    });
-  }
-
-  /**
-   * @returns {HTMLElement[]} One edit panel per field in the schema
-   */
-  _createEditPanels() {
-    if (!this._fieldSchema || this._fieldSchema.size === 0) {
-      return [];
-    }
-
-    const currentPanel = this.getAttribute('data-current-panel') || 'info';
-
-    return [...this._fieldSchema].map(([key, fieldDef]) => {
-      const panel = el('div', {
-        'data-panel': `edit-${key}`,
-        class: 'uploader__panel',
-        role: 'dialog',
-        'aria-label': `Edit ${fieldDef.label}`,
+    return [...this._fieldSchema]
+      .filter(([key]) => canEdit || this._fieldData.get(key))
+      .map(([key, fieldDef]) => {
+        const field = el('div', { class: 'uploader__field', part: 'field' });
+        const value = el('span', { class: 'field__value', 'data-field': key });
+        this._setFieldValue(value, this._fieldData.get(key));
+        field.append(el('span', { class: 'field__label' }, fieldDef.label), value);
+        return field;
       });
-      panel.classList.toggle('uploader__panel--show', currentPanel === `edit-${key}`);
-
-      const control =
-        fieldDef.type === 'textarea'
-          ? el('textarea', { class: 'uploader__textarea', rows: '3' })
-          : el('input', { type: fieldDef.type, class: 'uploader__input' });
-      control.name = key;
-      control.placeholder = fieldDef.label;
-      control.setAttribute('aria-label', fieldDef.label);
-      control.value = this._fieldData.get(key) || '';
-
-      const actions = el('div', { class: 'uploader__actions' });
-      actions.append(
-        el(
-          'button',
-          {
-            class: 'uploader__btn uploader__btn--primary',
-            'data-action': 'confirm-edit',
-            'data-field': key,
-            'aria-label': `Save ${fieldDef.label}`,
-          },
-          'Save'
-        ),
-        el(
-          'button',
-          {
-            class: 'uploader__btn uploader__btn--secondary',
-            'data-action': 'cancel',
-            'aria-label': 'Cancel editing',
-          },
-          'Cancel'
-        )
-      );
-
-      const body = el('div', { class: 'uploader__body' });
-      body.append(control, actions);
-      panel.append(body);
-      return panel;
-    });
   }
 
   _setFieldValue(element, value) {
@@ -1228,28 +1196,12 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _updatePanelVisibility(currentPanel) {
-    const panels = this.shadowRoot.querySelectorAll('.uploader__panel');
-    const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
+    this._showPanels(this.shadowRoot, currentPanel, this.getAttribute('state') || 'uploaded');
 
-    panels.forEach(panel => {
-      const panelName = panel.getAttribute('data-panel');
-      if (
-        panelName === currentPanel ||
-        (panelName === 'error' && this.getAttribute('state') === 'error') ||
-        (panelName === 'info' &&
-          currentPanel === 'info' &&
-          this.getAttribute('state') === 'uploaded')
-      ) {
-        panel.classList.add('uploader__panel--show');
-
-        /* Mark info panel as activated when it's first shown */
-        if (panelName === 'info' && infoPanel) {
-          infoPanel.classList.add('uploader__panel--activated');
-        }
-      } else {
-        panel.classList.remove('uploader__panel--show');
-      }
-    });
+    const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
+    if (infoPanel?.classList.contains('uploader__panel--show')) {
+      infoPanel.classList.add('uploader__panel--activated');
+    }
   }
 
   _updateState(newState) {
@@ -1317,137 +1269,71 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _renderInfoPanelFields() {
-    if (!this._fieldSchema || this._fieldSchema.size === 0) {
-      return;
-    }
+    const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
+    if (!infoPanel) return;
 
-    const permissions = this._permissions();
-    const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
-    const fieldsContainer = infoPanel?.querySelector('.uploader__fields');
-    if (infoPanel) {
-      this._syncDeleteButton(infoPanel, permissions.remove);
-    }
-
-    if (!fieldsContainer) {
-      return;
-    }
-
-    /* Find the filename element and insert fields after it */
-    const filenameElement = fieldsContainer.querySelector('.uploader__filename');
-    if (filenameElement) {
-      /* Remove any existing fields */
-      const existingFields = fieldsContainer.querySelectorAll('.uploader__field');
-      existingFields.forEach(field => field.remove());
-
-      /* Insert new fields after filename */
-      filenameElement.after(...this._createFields(permissions.edit));
-    }
-
-    /* Also render the edit panels if they don't exist */
-    this._renderEditPanelsIfNeeded();
-  }
-
-  _renderEditPanelsIfNeeded() {
-    if (!this._fieldSchema || this._fieldSchema.size === 0) {
-      return;
-    }
-
-    /* Check if edit panels already exist */
-    const existingEditPanel = this.shadowRoot.querySelector(
-      '.uploader__panel[data-panel^="edit-"]'
-    );
-    if (existingEditPanel) {
-      return; /* Edit panels already exist */
-    }
-
-    /* Find the delete panel to insert edit panels before it */
-    const deletePanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="delete"]');
-    if (!deletePanel) {
-      return;
-    }
-
-    deletePanel.before(...this._createEditPanels());
+    this._syncDeleteButton(infoPanel, this._permissions().remove);
+    this._renderDetails(this.shadowRoot, this.getAttribute('state') || 'uploaded');
   }
 
   _setupFileEventListeners() {
-    this.shadowRoot.removeEventListener('click', this._clickHandler);
+    this._listeners?.abort();
+    this._listeners = new AbortController();
+    const { signal } = this._listeners;
 
-    /* Remove old keydown listeners if they exist */
-    if (this._escapeKeyHandler) {
-      this.removeEventListener('keydown', this._escapeKeyHandler);
-    }
-    if (this._enterKeyHandler) {
-      this.shadowRoot.removeEventListener('keydown', this._enterKeyHandler);
-    }
+    this.shadowRoot.addEventListener(
+      'click',
+      event => {
+        const button = event.target.closest('[data-action]');
+        if (!button) return;
 
-    this._clickHandler = e => {
-      const action = e.target.dataset.action;
-      if (!action) return;
+        const inDialog = Boolean(button.closest('dialog'));
+        const actions = {
+          edit: () => this._openEditor(),
+          'show-delete': () => this._setPanel('delete'),
+          cancel: () => (inDialog ? this._closeEditor() : this._setPanel('info')),
+          'confirm-delete': () => this._handleConfirmDelete(),
+        };
+        actions[button.dataset.action]?.();
+      },
+      { signal }
+    );
 
-      const actions = {
-        'edit-field': () => this._setPanel(`edit-${e.target.dataset.field}`),
-        'show-delete': () => this._setPanel('delete'),
-        cancel: () => this._setPanel('info'),
-        'confirm-edit': () => this._handleConfirmEdit(e.target.dataset.field),
-        'confirm-delete': () => this._handleConfirmDelete(),
-      };
+    this.shadowRoot.addEventListener(
+      'submit',
+      event => {
+        event.preventDefault();
+        this._saveDetails(event.target);
+      },
+      { signal }
+    );
 
-      actions[action]?.();
-    };
+    this.shadowRoot
+      .querySelector('.uploader__dialog')
+      ?.addEventListener('close', () => this._editorOpener?.focus(), { signal });
 
-    /* Escape key handler on host element (works anywhere) */
-    this._escapeKeyHandler = e => {
-      const currentPanel = this.getAttribute('data-current-panel') || 'info';
-
-      if (e.key === 'Escape') {
-        if (currentPanel !== 'info' && currentPanel !== 'error') {
-          e.preventDefault();
+    this.addEventListener(
+      'keydown',
+      event => {
+        if (event.key === 'Escape' && this.getAttribute('data-current-panel') === 'delete') {
+          event.preventDefault();
           this._setPanel('info');
         }
-      }
-    };
-
-    /* Enter key handler on shadow root (only for inputs) */
-    this._enterKeyHandler = e => {
-      const currentPanel = this.getAttribute('data-current-panel') || 'info';
-
-      if (e.key === 'Enter' && e.target.tagName === 'INPUT' && currentPanel.startsWith('edit-')) {
-        e.preventDefault();
-        const fieldKey = currentPanel.replace('edit-', '');
-        this._handleConfirmEdit(fieldKey);
-      }
-    };
-
-    this.shadowRoot.addEventListener('click', this._clickHandler);
-    this.addEventListener('keydown', this._escapeKeyHandler);
-    this.shadowRoot.addEventListener('keydown', this._enterKeyHandler);
+      },
+      { signal }
+    );
   }
 
   _setPanel(panel) {
+    const focusWasInPanel = Boolean(this.shadowRoot.activeElement?.closest('.uploader__panel'));
+
     this.setAttribute('data-current-panel', panel);
     this._notifyDraggableStateChange();
 
-    /* Make component focusable for keyboard events */
-    if (panel !== 'info' && panel !== 'error') {
-      this.setAttribute('tabindex', '-1');
-      this.focus();
-    } else {
-      this.removeAttribute('tabindex');
-    }
-
-    /* Auto-focus the input field in edit panels */
-    if (panel.startsWith('edit-')) {
-      setTimeout(() => {
-        const fieldKey = panel.replace('edit-', '');
-        const input = this.shadowRoot.querySelector(`[name="${CSS.escape(fieldKey)}"]`);
-        if (input) {
-          input.focus();
-          /* Select all text in input for easy editing */
-          if (input.tagName === 'INPUT') {
-            input.select();
-          }
-        }
-      }, 400); /* Delay to ensure panel animation completes */
+    if (panel === 'delete') {
+      this.shadowRoot.querySelector('[data-panel="delete"] [data-action="cancel"]')?.focus();
+    } else if (focusWasInPanel) {
+      this.shadowRoot.querySelector('[data-action="show-delete"]')?.focus();
     }
   }
 
@@ -1458,83 +1344,119 @@ export class PUploaderFile extends HTMLElement {
     }
   }
 
-  async _handleConfirmEdit(fieldKey) {
-    const input = this.shadowRoot.querySelector(`[name="${CSS.escape(fieldKey)}"]`);
+  /**
+   * Put a control for each field, holding its current value, into the edit dialog
+   */
+  _fillEditor(root) {
+    const dialog = root.querySelector('.uploader__dialog');
+    if (!dialog) return;
 
-    if (input) {
-      const newValue = input.value;
-      const oldValue = this._fieldData.get(fieldKey) || '';
-
-      /* Optimistically update the UI */
-      this._fieldData.set(fieldKey, newValue);
-
-      /* Update the slotted data element */
-      let dataElement = this.querySelector(`p-uploader-data[key="${CSS.escape(fieldKey)}"]`);
-      if (!dataElement) {
-        dataElement = document.createElement('p-uploader-data');
-        dataElement.setAttribute('key', fieldKey);
-        this.appendChild(dataElement);
+    const rows = [...(this._fieldSchema ?? [])].map(([key, fieldDef]) => {
+      const id = generateId('field');
+      const control =
+        fieldDef.type === 'textarea'
+          ? el('textarea', { class: 'uploader__textarea', rows: '3', id })
+          : el('input', { type: fieldDef.type, class: 'uploader__input', id });
+      control.name = key;
+      control.value = this._fieldData.get(key) || '';
+      control.required = Boolean(fieldDef.required);
+      if (fieldDef.maxlength) {
+        control.maxLength = fieldDef.maxlength;
       }
-      const oldElementValue = dataElement.textContent;
-      dataElement.textContent = newValue;
 
-      /* Send update to server */
-      const uploader = this.closest('p-uploader');
-      if (uploader && uploader.config.updateAction) {
-        try {
-          const response = await uploader._postJson(uploader.config.updateAction, {
-            id: this.getAttribute('file-id'),
-            field: fieldKey,
-            value: newValue,
-          });
+      const row = el('div', { class: 'uploader__dialog-field' });
+      row.append(el('label', { class: 'field__label', for: id }, fieldDef.label), control);
+      return row;
+    });
 
-          if (response.ok) {
-            /* Update the field display in the info panel */
-            this._updateFieldDisplay(fieldKey, newValue);
+    dialog.querySelector('.uploader__dialog-fields').replaceChildren(...rows);
+    dialog.querySelector('.uploader__dialog-message').textContent = '';
+  }
 
-            this.dispatchEvent(
-              new CustomEvent('file:update', {
-                detail: {
-                  fileId: this.getAttribute('file-id'),
-                  field: fieldKey,
-                  value: newValue,
-                },
-                bubbles: true,
-                composed: true,
-              })
-            );
-            this.setAttribute('data-current-panel', 'info');
-            this._notifyDraggableStateChange();
-          } else {
-            /* Revert the changes on failure */
-            this._fieldData.set(fieldKey, oldValue);
-            dataElement.textContent = oldElementValue;
+  _openEditor() {
+    const dialog = this.shadowRoot.querySelector('.uploader__dialog');
+    if (!dialog || dialog.open) return;
 
-            const errorText = await response.text();
-            if (uploader.logger) {
-              uploader.logger.error('Failed to update field:', errorText);
-            }
-            this.setAttribute('error', `Update failed: ${errorMessage(errorText, 'Server error')}`);
-            this.setAttribute('data-current-panel', 'error');
-          }
-        } catch (error) {
-          if (error.name === 'AbortError') return;
+    this._fillEditor(this.shadowRoot);
+    this._editorOpener =
+      this.shadowRoot.activeElement ?? this.shadowRoot.querySelector('[data-action="edit"]');
+    dialog.showModal();
+  }
 
-          /* Revert the changes on network error */
-          this._fieldData.set(fieldKey, oldValue);
-          dataElement.textContent = oldElementValue;
-
-          if (uploader.logger) {
-            uploader.logger.error('Failed to update field:', error);
-          }
-          this.setAttribute('error', `Update failed: ${error.message || 'Network error'}`);
-          this.setAttribute('data-current-panel', 'error');
-        }
-      } else {
-        this.setAttribute('data-current-panel', 'info');
-        this._notifyDraggableStateChange();
-      }
+  _closeEditor() {
+    const dialog = this.shadowRoot.querySelector('.uploader__dialog');
+    if (dialog?.open) {
+      dialog.close();
     }
+    this._editorOpener?.focus();
+  }
+
+  /**
+   * Save the fields changed in the edit dialog, one request per field, and close it once they are all
+   * saved. A failure keeps the dialog open with a message.
+   */
+  async _saveDetails(form) {
+    const uploader = this.closest('p-uploader');
+    const changed = [...form.querySelectorAll('[name]')].filter(
+      control => control.value !== (this._fieldData.get(control.name) || '')
+    );
+
+    if (changed.length === 0 || !uploader?.config.updateAction) {
+      this._closeEditor();
+      return;
+    }
+
+    const message = form.querySelector('.uploader__dialog-message');
+    const buttons = [...form.querySelectorAll('button')];
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+    message.textContent = '';
+
+    try {
+      for (const control of changed) {
+        await this._saveField(uploader, control.name, control.value);
+      }
+      this._closeEditor();
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      uploader.logger?.error('Failed to update field:', error);
+      message.textContent = `Changes couldn’t be saved: ${error.message}`;
+    } finally {
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+    }
+  }
+
+  async _saveField(uploader, key, value) {
+    const fileId = this.getAttribute('file-id');
+    const response = await uploader._postJson(uploader.config.updateAction, {
+      id: fileId,
+      field: key,
+      value,
+    });
+    if (!response.ok) {
+      throw new Error(errorMessage(await response.text(), 'Server error'));
+    }
+
+    this._fieldData.set(key, value);
+    let dataElement = this.querySelector(`p-uploader-data[key="${CSS.escape(key)}"]`);
+    if (!dataElement) {
+      dataElement = document.createElement('p-uploader-data');
+      dataElement.setAttribute('key', key);
+      this.appendChild(dataElement);
+    }
+    dataElement.textContent = value;
+    this._updateFieldDisplay(key, value);
+
+    this.dispatchEvent(
+      new CustomEvent('file:update', {
+        detail: { fileId, field: key, value },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   async _handleConfirmDelete() {

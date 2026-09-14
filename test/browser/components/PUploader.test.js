@@ -93,9 +93,9 @@ describe('p-uploader', () => {
     const { file } = await mountUploader();
     const shadow = file.shadowRoot;
 
-    shadow.querySelector('button.field__edit').click();
-    shadow.querySelector('textarea[name="caption"]').value = PAYLOAD;
-    shadow.querySelector('[data-action="confirm-edit"]').click();
+    shadow.querySelector('button[data-action="edit"]').click();
+    shadow.querySelector('dialog [name="caption"]').value = PAYLOAD;
+    shadow.querySelector('dialog [data-action="save"]').click();
 
     await vi.waitFor(() => expect(shadow.querySelector('.field__value').textContent).toBe(PAYLOAD));
     expect(shadow.querySelectorAll('img')).toHaveLength(1);
@@ -387,5 +387,166 @@ describe('p-uploader host', () => {
     uploader.remove();
 
     expect(RecordingUpload.instances[0].aborted).toBe(true);
+  });
+});
+
+describe('p-uploader-file', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const renderCard = async ({ attributes = {}, fields = [], data = {} } = {}) => {
+    const uploader = element('p-uploader', attributes);
+    if (fields.length > 0) {
+      const definitions = element('p-uploader-fields', { slot: 'field-definitions' });
+      fields.forEach(([key, label, type = 'text']) =>
+        definitions.append(element('p-uploader-field', { key, label, type }))
+      );
+      uploader.append(definitions);
+    }
+    const file = element('p-uploader-file', { 'file-id': 'file-1', filename: 'harbour.jpg' });
+    Object.entries(data).forEach(([key, value]) =>
+      file.append(element('p-uploader-data', { key }, value))
+    );
+    uploader.append(file);
+    document.body.append(uploader);
+    await nextTask();
+    return { uploader, file, shadow: file.shadowRoot };
+  };
+
+  it('shows no fields when none are declared', async () => {
+    const { shadow } = await renderCard({ attributes: { 'update-action': '/api/update' } });
+
+    expect(shadow.querySelectorAll('.uploader__field')).toHaveLength(0);
+  });
+
+  it('hides empty fields when the details cannot be edited', async () => {
+    const { shadow } = await renderCard({
+      fields: [
+        ['title', 'Title'],
+        ['caption', 'Caption', 'textarea'],
+      ],
+      data: { title: 'Harbour at dawn' },
+    });
+
+    const labels = [...shadow.querySelectorAll('.uploader__field .field__label')].map(
+      label => label.textContent
+    );
+    expect(labels).toEqual(['Title']);
+  });
+
+  it('edits every field in one dialog and saves only the changed ones', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [
+        ['title', 'Title'],
+        ['caption', 'Caption', 'textarea'],
+      ],
+      data: { title: 'Harbour at dawn', caption: 'Boats' },
+    });
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    const dialog = shadow.querySelector('dialog');
+    const opened = [
+      dialog?.open,
+      [...(dialog?.querySelectorAll('[name]') ?? [])].map(control => control.name),
+    ];
+    dialog.querySelector('[name="caption"]').value = 'Fishing boats';
+    dialog.querySelector('button[data-action="save"]').click();
+
+    await vi.waitFor(() => expect(dialog.open).toBe(false));
+    expect({
+      opened,
+      saves: save.mock.calls.map(([, init]) => JSON.parse(init.body)),
+      shown: [...shadow.querySelectorAll('.field__value')].map(value => value.textContent),
+    }).toEqual({
+      opened: [true, ['title', 'caption']],
+      saves: [{ id: 'file-1', field: 'caption', value: 'Fishing boats' }],
+      shown: ['Harbour at dawn', 'Fishing boats'],
+    });
+  });
+
+  it('returns focus to the edit button when the dialog is cancelled', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+    const edit = shadow.querySelector('button[data-action="edit"]');
+
+    edit.focus();
+    edit.click();
+    shadow.querySelector('dialog button[data-action="cancel"]').click();
+
+    expect([shadow.querySelector('dialog').open, shadow.activeElement === edit]).toEqual([
+      false,
+      true,
+    ]);
+  });
+
+  it('exposes parts for styling and does not render the filename as a heading', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+
+    const parts = ['preview', 'filename', 'fields', 'field', 'actions', 'panel', 'progress'].filter(
+      part => !shadow.querySelector(`[part~="${part}"]`)
+    );
+    expect([parts, shadow.querySelector('[part~="filename"]')?.localName]).toEqual([[], 'p']);
+  });
+
+  it('makes panels that are not showing inert', async () => {
+    const { shadow } = await renderCard({ attributes: { 'delete-action': '/api/delete' } });
+
+    expect([
+      shadow.querySelector('[data-panel="info"]').inert,
+      shadow.querySelector('[data-panel="delete"]').inert,
+    ]).toEqual([false, true]);
+  });
+});
+
+describe('p-uploader layout', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const renderList = async (attributes = {}) => {
+    const uploader = element('p-uploader', attributes);
+    ['first', 'second', 'third'].forEach(id =>
+      uploader.append(element('p-uploader-file', { 'file-id': id, filename: `${id}.jpg` }))
+    );
+    document.body.append(uploader);
+    await nextTask();
+    return uploader;
+  };
+
+  it('spaces files by --puploader-files-gap', async () => {
+    const uploader = await renderList({ style: '--puploader-files-gap: 20px' });
+
+    expect(getComputedStyle(uploader.shadowRoot.querySelector('[part~="files"]')).rowGap).toBe(
+      '20px'
+    );
+  });
+
+  it('joins stacked files into one list with only its outer corners rounded', async () => {
+    const uploader = await renderList({ stacked: '', style: '--surface-card-radius: 12px' });
+    const [first, second, third] = uploader.querySelectorAll('p-uploader-file');
+    const radius = (file, corner) => getComputedStyle(file)[`border${corner}Radius`];
+
+    expect({
+      gap: getComputedStyle(uploader.shadowRoot.querySelector('[part~="files"]')).rowGap,
+      first: [radius(first, 'TopLeft'), radius(first, 'BottomLeft')],
+      second: [radius(second, 'TopLeft'), radius(second, 'BottomLeft')],
+      third: [radius(third, 'TopLeft'), radius(third, 'BottomLeft')],
+    }).toEqual({
+      gap: '0px',
+      first: ['12px', '0px'],
+      second: ['0px', '0px'],
+      third: ['0px', '12px'],
+    });
   });
 });
