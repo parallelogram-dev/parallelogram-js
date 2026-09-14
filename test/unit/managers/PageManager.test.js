@@ -115,6 +115,19 @@ describe('PageManager', () => {
     expect(waitUntil).toHaveBeenCalledWith(expect.any(Promise));
   });
 
+  it('leaves the page alone when it is destroyed before a navigation swaps it', async () => {
+    document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
+    const bus = new EventManager();
+    const destroyed = start([], bus, { mountDelay: 0 });
+
+    const swap = emitNavigation(bus, '<main data-view="main">Pricing</main>');
+    destroyed.destroy();
+    manager = null;
+    await swap;
+
+    expect(document.querySelector('main').textContent).toBe('Home');
+  });
+
   it('requests a history entry once when used with the router', async () => {
     document.body.innerHTML = '<main id="app" data-view="main">Start</main>';
     history.replaceState(null, '', '/start');

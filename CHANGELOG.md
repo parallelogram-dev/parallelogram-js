@@ -100,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Router history entries store `key`, `position`, `viewTarget` and `scroll` in `history.state`, and the router adds a `key` and `position` to entries it did not create (the first page and native hash navigations).
+- Fragment swapping moved out of PageManager into `FragmentSwapper` (`@parallelogram-js/core/core/FragmentSwapper`), which can also be used on its own. PageManager loads it when a router is present or on the first `replaceFragments()` call, so pages without a router no longer download the swapping, head and transition code. A PageManager destroyed while a navigation is under way no longer changes the page afterwards.
 - The library builds as one production and one development Rollup graph. Code shared between entries (BaseComponent, DOM helpers, state helpers) lives once in `dist/shared/` instead of being copied into every component bundle.
 
 - Web component SCSS is now compiled by a local Rollup plugin (`rollup-plugin-scss.js`) using Sass's modern API and cssnano 9, replacing the unmaintained `rollup-plugin-postcss`. Minified CSS now keeps declarations in source order, and inline SVGs keep the `viewBox` from source (cssnano 5 stripped it).
