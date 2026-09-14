@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Parallelogram } from '../../../src/core/Parallelogram.js';
 
 const createRecorder = () => {
@@ -32,6 +32,26 @@ describe('Parallelogram', () => {
     app?.destroy();
     app = null;
     document.body.replaceChildren();
+  });
+
+  it('keeps a repeated start quiet when silent', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    app = Parallelogram.create({ silent: true });
+
+    app.init();
+    app.init();
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('logs under the parallelogram namespace', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    app = Parallelogram.create();
+    app.init();
+
+    app.logger.warn('Check the config');
+
+    expect(warn).toHaveBeenCalledWith('[parallelogram]', 'Check the config');
   });
 
   it('mounts each matching element once when it starts', () => {
