@@ -660,9 +660,9 @@
 
             <section class="demo__section" data-demo-section>
                 <h2>Form Enhancement & Validation</h2>
-                <p>Real-time form validation with custom rules and error messages:</p>
+                <p>Accessible error messages for the browser's own constraint validation:</p>
 
-                <form data-form-validator data-validate-on-input="true" class="form__demo-container">
+                <form data-form-enhancer class="form__demo-container">
                     <div class="form__element">
                         <label class="form__label required" for="user-name">Full Name:</label>
                         <div class="form__field">
@@ -671,10 +671,12 @@
                                 type="text"
                                 id="user-name"
                                 name="name"
-                                data-validate="required|min:2"
-                                data-validate-message="Please enter your full name (at least 2 characters)"
+                                required
+                                minlength="2"
+                                autocomplete="name"
+                                data-form-enhancer-message="Please enter your full name (at least 2 characters)"
                             />
-                            <ul class="form__error" data-error-for="name"></ul>
+                            <p class="form__error" data-error-for="name" hidden></p>
                             <p class="form__help">Enter at least 2 characters</p>
                         </div>
                     </div>
@@ -687,10 +689,11 @@
                                 type="email"
                                 id="user-email"
                                 name="email"
-                                data-validate="required|email"
-                                data-validate-message="Please enter a valid email address"
+                                required
+                                autocomplete="email"
+                                data-form-enhancer-message-type-mismatch="Please enter a valid email address"
                             />
-                            <ul class="form__error" data-error-for="email"></ul>
+                            <p class="form__error" data-error-for="email" hidden></p>
                         </div>
                     </div>
 
@@ -702,11 +705,11 @@
                                 type="number"
                                 id="user-age"
                                 name="age"
-                                data-validate="required|number|minnum:18|maxnum:100"
+                                required
                                 min="18"
                                 max="100"
                             />
-                            <ul class="form__error" data-error-for="age"></ul>
+                            <p class="form__error" data-error-for="age" hidden></p>
                             <p class="form__help">Must be between 18 and 100</p>
                         </div>
                     </div>
@@ -719,11 +722,10 @@
                                 type="url"
                                 id="user-website"
                                 name="website"
-                                data-validate="url"
-                                data-validate-message="Please enter a valid URL (e.g., https://example.com)"
+                                data-form-enhancer-message-type-mismatch="Please enter a valid URL (e.g., https://example.com)"
                                 placeholder="https://example.com"
                             />
-                            <ul class="form__error" data-error-for="website"></ul>
+                            <p class="form__error" data-error-for="website" hidden></p>
                             <p class="form__help">Optional - enter a valid URL starting with https://</p>
                         </div>
                     </div>
@@ -734,10 +736,19 @@
                 <div class="features__details">
                     <h3>Form Enhancement Features</h3>
                     <ul>
-                        <li><strong>Real-time Validation:</strong> Validates as you type with debouncing</li>
-                        <li><strong>Multiple Rules:</strong> Chain validation rules like required|email|min:5</li>
-                        <li><strong>Custom Messages:</strong> Override default error messages per field</li>
-                        <li><strong>Visual Feedback:</strong> Error and success states with CSS classes</li>
+                        <li>
+                            <strong>Native Rules:</strong> required, type, minlength, min and max, so the form still
+                            validates without JavaScript
+                        </li>
+                        <li>
+                            <strong>Accessible Errors:</strong> Linked to fields with aria-describedby and aria-invalid,
+                            and focus moves to the first problem
+                        </li>
+                        <li>
+                            <strong>Custom Messages:</strong> Per field or per constraint, otherwise the browser's own
+                            localised message
+                        </li>
+                        <li><strong>Visual Feedback:</strong> is-invalid and is-valid classes on checked fields</li>
                     </ul>
                 </div>
             </section>

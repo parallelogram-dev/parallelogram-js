@@ -152,19 +152,19 @@ Self-contained custom HTML elements that work standalone:
 
 ### Regular Components
 
-| Component    | Selector                | Purpose                    |
-| ------------ | ----------------------- | -------------------------- |
-| Lazysrc      | `[data-lazysrc]`        | Lazy load images/media     |
-| Modal        | `[data-modal]`          | Modal trigger enhancement  |
-| Toast        | `[data-toast-trigger]`  | Toast notifications        |
-| Tabs         | `[data-tabs]`           | Tab navigation             |
-| Toggle       | `[data-toggle]`         | Toggle visibility          |
-| Carousel     | `[data-carousel]`       | Image carousel             |
-| Scrollreveal | `[data-scrollreveal]`   | Scroll animations          |
-| Scrollhide   | `[data-scrollhide]`     | Hide on scroll             |
-| DataTable    | `[data-datatable]`      | Sortable/filterable tables |
-| Lightbox     | `[data-lightbox]`       | Image lightbox             |
-| FormEnhancer | `[data-form-validator]` | Form validation            |
+| Component    | Selector               | Purpose                    |
+| ------------ | ---------------------- | -------------------------- |
+| Lazysrc      | `[data-lazysrc]`       | Lazy load images/media     |
+| Modal        | `[data-modal]`         | Modal trigger enhancement  |
+| Toast        | `[data-toast-trigger]` | Toast notifications        |
+| Tabs         | `[data-tabs]`          | Tab navigation             |
+| Toggle       | `[data-toggle]`        | Toggle visibility          |
+| Carousel     | `[data-carousel]`      | Image carousel             |
+| Scrollreveal | `[data-scrollreveal]`  | Scroll animations          |
+| Scrollhide   | `[data-scrollhide]`    | Hide on scroll             |
+| DataTable    | `[data-datatable]`     | Sortable/filterable tables |
+| Lightbox     | `[data-lightbox]`      | Image lightbox             |
+| FormEnhancer | `[data-form-enhancer]` | Form validation            |
 
 ## Documentation
 
