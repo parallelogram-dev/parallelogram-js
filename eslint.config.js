@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/', 'demo/dist/', 'coverage/', 'node_modules/'],
+    ignores: ['dist/', 'demo/dist/', 'site/dist/', 'coverage/', 'node_modules/'],
   },
   js.configs.recommended,
   {
@@ -27,7 +27,21 @@ export default [
     },
   },
   {
-    files: ['*.js', 'scripts/**/*.{js,mjs}', 'test/**/*.js'],
+    files: ['site/src/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.browser,
+    },
+  },
+  {
+    files: [
+      '*.js',
+      'scripts/**/*.{js,mjs}',
+      'test/**/*.js',
+      'site/vite.config.js',
+      'site/build/**/*.js',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
