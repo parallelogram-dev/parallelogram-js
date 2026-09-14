@@ -1,67 +1,78 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { generateId } from '../utils/dom-utils.js';
+import { whenAnimationsFinish } from '../utils/motion.js';
 
 const FOCUSABLE =
   'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
+/** Attributes Tabs adds or changes on the list, tabs and panels, put back when it unmounts */
+const MANAGED_ATTRIBUTES = [
+  'id',
+  'role',
+  'type',
+  'tabindex',
+  'hidden',
+  'aria-selected',
+  'aria-controls',
+  'aria-labelledby',
+  'data-tab-panel',
+];
+
 /**
- * Tabs Component
+ * Tabs - tabbed panels built from a list of tab buttons or in-page links
  *
- * Progressive enhancement for tab navigation with accessibility and keyboard support.
- * Works with existing HTML structure and enhances it with tab functionality.
+ * Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them.
+ * While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first
+ * panel, so the page doesn't jump when it does. Once mounted, Tabs follows the WAI-ARIA tabs
+ * pattern: arrow keys, Home and End move focus between tabs, inactive panels get the `hidden`
+ * attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting
+ * puts the markup back as it was.
  *
  * @example
- * HTML:
  * <div data-tabs>
  *   <div data-tabs-list>
- *     <button data-tab="panel-1" aria-selected="true">Tab 1</button>
- *     <button data-tab="panel-2">Tab 2</button>
- *     <button data-tab="panel-3">Tab 3</button>
+ *     <a href="#shipping" data-tab="shipping">Shipping</a>
+ *     <a href="#returns" data-tab="returns">Returns</a>
  *   </div>
  *   <div data-tabs-panels>
- *     <div id="panel-1" data-tab-panel>Panel 1 content</div>
- *     <div id="panel-2" data-tab-panel style="display: none;">Panel 2 content</div>
- *     <div id="panel-3" data-tab-panel style="display: none;">Panel 3 content</div>
+ *     <section id="shipping" data-tab-panel><h3>Shipping</h3>…</section>
+ *     <section id="returns" data-tab-panel><h3>Returns</h3>…</section>
  *   </div>
  * </div>
  *
- * Keyboard support follows the WAI-ARIA tabs pattern: arrow keys, Home and End
- * move focus between tabs. With data-tabs-activation="auto" (the default) the
- * focused tab is selected immediately; with "manual" it is selected on Enter
- * or Space.
+ * @attributes
+ * - data-tabs: on the container; Tabs adds data-tabs-enhanced and the tabs--enhanced class
+ * - data-tabs-list: the element that holds the tabs
+ * - data-tab: on each tab button or link, the id of its panel
+ * - data-tabs-panels: the element that holds the panels
+ * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive
+ * - data-tabs-default-tab: id of the panel to show first when no tab has aria-selected="true"
+ * - data-tabs-keyboard: "false" turns off arrow key, Home and End navigation (default true)
+ * - data-tabs-activation: auto selects a tab when it receives focus, manual selects it on Enter or
+ *   Space (default auto)
  *
- * JavaScript (standalone):
- * import Tabs from '@parallelogram-js/core/components/Tabs';
- * Tabs.enhanceAll();
+ * @events
+ * - tabs:change: with `{ activeTab, previousTab, tab, panel }`
+ *
+ * @cssprop --tabs-transition-duration - length of the panel fade and tab colour changes (default 0.2s)
+ * @cssprop --tabs-color, --tabs-hover-color, --tabs-hover-bg - tab text and hover colours
+ * @cssprop --tabs-selected-color, --tabs-selected-bg - the chosen tab's text, underline and background
+ * @cssprop --tabs-border-color - the line under the tab list
  */
 export default class Tabs extends BaseComponent {
   static selector = 'data-tabs';
 
-  /**
-   * Default configuration for tabs component
-   * @returns {Object} Default config
-   */
   static get defaults() {
     return {
-      activeClass: 'tab--active',
-      panelActiveClass: 'tab-panel--active',
-      defaultTab: null, // If null, uses first tab or aria-selected="true"
+      defaultTab: null,
       keyboardNavigation: true,
-      activation: 'auto', // 'auto' selects a tab when it receives focus, 'manual' on Enter or Space
-      transitionDuration: 200,
-      transitionClass: 'tab-panel--transitioning',
+      activation: 'auto',
     };
   }
 
-  /**
-   * Initialize the tabs functionality on a container element
-   * @param {HTMLElement} element - Container element with data-tabs attribute
-   * @returns {Object} State object for this element
-   */
   _init(element) {
     const state = super._init(element);
 
-    // Find tab elements
     const tabsList = element.querySelector('[data-tabs-list]');
     const tabsContainer = element.querySelector('[data-tabs-panels]');
 
@@ -81,47 +92,58 @@ export default class Tabs extends BaseComponent {
       return state;
     }
 
-    // Get configuration from data attributes
-    const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
-    const keyboardNav = this.getBoolAttr(element, 'keyboard', Tabs.defaults.keyboardNavigation);
-    const activation =
-      this.getAttr(element, 'activation', Tabs.defaults.activation) === 'manual'
-        ? 'manual'
-        : 'auto';
-
-    // Store elements and config in state
     state.tabsList = tabsList;
     state.tabsContainer = tabsContainer;
     state.tabs = tabs;
     state.panels = panels;
     state.activeTab = null;
     state.activePanel = null;
-    state.keyboardNavigation = keyboardNav;
-    state.activation = activation;
+    state.transition = null;
+    state.keyboardNavigation = this.getBoolAttr(
+      element,
+      'keyboard',
+      Tabs.defaults.keyboardNavigation
+    );
+    state.activation =
+      this.getAttr(element, 'activation', Tabs.defaults.activation) === 'manual'
+        ? 'manual'
+        : 'auto';
+    state.original = this._remember([tabsList, ...tabs, ...panels]);
+    state.originalClass = element.getAttribute('class');
 
-    // Setup tabs
-    this._setupTabs(element, state);
+    this._setupTabs(state);
 
-    // Set initial active tab
+    const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
     const initialTab = this._getInitialTab(tabs, defaultTab);
     if (initialTab) {
-      this._activateTab(element, initialTab.dataset.tab, state, false); // false = no animation on init
+      this._activateTab(element, initialTab.dataset.tab, state, false);
     }
 
-    // Setup event listeners
-    this._setupEventListeners(element, state);
+    const { signal } = state.controller;
+    for (const tab of tabs) {
+      tab.addEventListener('click', event => this._handleTabClick(event, element, state), {
+        signal,
+      });
+      if (state.keyboardNavigation) {
+        tab.addEventListener('keydown', event => this._handleKeyDown(event, element, state), {
+          signal,
+        });
+      }
+    }
 
-    // Mark as enhanced
     this.setAttr(element, 'enhanced', 'true');
     element.classList.add('tabs--enhanced');
 
-    // Setup cleanup
-    const originalCleanup = state.cleanup;
+    const baseCleanup = state.cleanup;
     state.cleanup = () => {
-      this._removeEventListeners(element, state);
+      baseCleanup();
+      state.transition = null;
+      this._restore(state.original);
       this.removeAttr(element, 'enhanced');
       element.classList.remove('tabs--enhanced');
-      originalCleanup();
+      if (state.originalClass === null && element.classList.length === 0) {
+        element.removeAttribute('class');
+      }
     };
 
     this.eventBus?.emit('tabs:mount', {
@@ -131,36 +153,50 @@ export default class Tabs extends BaseComponent {
       timestamp: performance.now(),
     });
 
-    this.logger?.info('Tabs initialized', {
-      element,
-      tabCount: tabs.length,
-      panelCount: panels.length,
-    });
-
     return state;
   }
 
   /**
-   * Setup accessibility attributes and IDs for tabs
+   * Record the managed attributes of each element as they were before Tabs changed them
+   *
+   * @returns {Map<Element, Map<string, string|null>>}
    */
-  _setupTabs(element, state) {
+  _remember(elements) {
+    return new Map(
+      elements.map(element => [
+        element,
+        new Map(MANAGED_ATTRIBUTES.map(name => [name, element.getAttribute(name)])),
+      ])
+    );
+  }
+
+  _restore(original) {
+    for (const [element, attributes] of original) {
+      for (const [name, value] of attributes) {
+        if (value === null) {
+          element.removeAttribute(name);
+        } else {
+          element.setAttribute(name, value);
+        }
+      }
+    }
+  }
+
+  /**
+   * Add the tab, tab list and panel roles, and link each tab to its panel
+   */
+  _setupTabs(state) {
     state.tabs.forEach(tab => {
-      // Setup tab attributes
       tab.setAttribute('role', 'tab');
       tab.setAttribute('tabindex', '-1');
       if (tab.tagName === 'BUTTON' && !tab.hasAttribute('type')) {
         tab.type = 'button';
       }
-
-      // Generate IDs if needed
       if (!tab.id) {
         tab.id = generateId('tab');
       }
 
-      // Find corresponding panel
-      const panelId = tab.dataset.tab;
-      const panel = state.panels.find(p => p.id === panelId);
-
+      const panel = state.panels.find(candidate => candidate.id === tab.dataset.tab);
       if (panel) {
         tab.setAttribute('aria-controls', panel.id);
         panel.setAttribute('role', 'tabpanel');
@@ -169,14 +205,9 @@ export default class Tabs extends BaseComponent {
         if (!panel.querySelector(FOCUSABLE)) {
           panel.setAttribute('tabindex', '0');
         }
-        /* Initialize panel with inactive state */
-        if (!panel.getAttribute('data-tab-panel')) {
-          panel.setAttribute('data-tab-panel', 'inactive');
-        }
       }
     });
 
-    // Setup tab list
     state.tabsList.setAttribute('role', 'tablist');
   }
 
@@ -184,75 +215,26 @@ export default class Tabs extends BaseComponent {
    * Determine which tab should be active initially
    */
   _getInitialTab(tabs, defaultTab) {
-    // Check for explicitly selected tab
     const selectedTab = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
     if (selectedTab) return selectedTab;
 
-    // Check for default tab by ID
     if (defaultTab) {
       const defaultTabElement = tabs.find(tab => tab.dataset.tab === defaultTab);
       if (defaultTabElement) return defaultTabElement;
     }
 
-    // Fall back to first tab
     return tabs[0];
   }
 
-  /**
-   * Setup event listeners
-   */
-  _setupEventListeners(element, state) {
-    // Click handlers for tabs
-    state.clickHandlers = new Map();
-    state.keydownHandlers = new Map();
-
-    state.tabs.forEach(tab => {
-      const clickHandler = event => this._handleTabClick(event, element, state);
-      const keydownHandler = event => this._handleKeyDown(event, element, state);
-
-      tab.addEventListener('click', clickHandler);
-      if (state.keyboardNavigation) {
-        tab.addEventListener('keydown', keydownHandler);
-      }
-
-      state.clickHandlers.set(tab, clickHandler);
-      state.keydownHandlers.set(tab, keydownHandler);
-    });
-  }
-
-  /**
-   * Remove event listeners
-   */
-  _removeEventListeners(element, state) {
-    if (state.clickHandlers) {
-      state.clickHandlers.forEach((handler, tab) => {
-        tab.removeEventListener('click', handler);
-      });
-    }
-
-    if (state.keydownHandlers) {
-      state.keydownHandlers.forEach((handler, tab) => {
-        tab.removeEventListener('keydown', handler);
-      });
-    }
-  }
-
-  /**
-   * Handle tab click events
-   */
   _handleTabClick(event, element, state) {
     event.preventDefault();
-    const tab = event.currentTarget;
-    const panelId = tab.dataset.tab;
+    const panelId = event.currentTarget.dataset.tab;
 
     if (panelId && panelId !== state.activeTab) {
       this._activateTab(element, panelId, state, true);
     }
   }
 
-  /**
-   * Handle keyboard navigation
-   */
   _handleKeyDown(event, element, state) {
     const currentIndex = state.tabs.findIndex(tab => tab === event.currentTarget);
     let targetIndex = -1;
@@ -297,9 +279,13 @@ export default class Tabs extends BaseComponent {
   }
 
   /**
-   * Activate a specific tab and show its panel
+   * Select a tab and show its panel
+   *
+   * The selection, ARIA attributes and hidden panels all change straight away, so a quick second
+   * choice always starts from the first. The new panel is marked `entering` while its fade-in runs,
+   * and a later choice stops an earlier panel from being marked active.
    */
-  async _activateTab(element, panelId, state, animate = true) {
+  _activateTab(element, panelId, state, animate = true) {
     const targetTab = state.tabs.find(tab => tab.dataset.tab === panelId);
     const targetPanel = state.panels.find(panel => panel.id === panelId);
 
@@ -310,87 +296,44 @@ export default class Tabs extends BaseComponent {
 
     const previousTab = state.activeTab;
     const previousPanel = state.activePanel;
-
-    /* Update tab states */
-    state.tabs.forEach(tab => {
-      const isActive = tab.dataset.tab === panelId;
-      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      tab.setAttribute('tabindex', isActive ? '0' : '-1');
-    });
-
-    /* Handle panel transition */
-    if (animate && previousPanel && previousPanel !== targetPanel) {
-      await this._transitionPanels(previousPanel, targetPanel);
-    } else {
-      /* Simple show/hide without animation */
-      state.panels.forEach(panel => {
-        const shouldShow = panel.id === panelId;
-        panel.style.display = shouldShow ? '' : 'none';
-        panel.setAttribute('data-tab-panel', shouldShow ? 'active' : 'inactive');
-      });
-    }
-
-    // Update state
     state.activeTab = panelId;
     state.activePanel = targetPanel;
 
-    // Dispatch events
-    this._dispatch(element, 'tabs:change', {
-      activeTab: panelId,
-      previousTab,
-      tab: targetTab,
-      panel: targetPanel,
-    });
+    for (const tab of state.tabs) {
+      const isActive = tab === targetTab;
+      tab.setAttribute('aria-selected', String(isActive));
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+    }
 
-    this.eventBus?.emit('tabs:change', {
-      element,
+    for (const panel of state.panels) {
+      if (panel !== targetPanel) {
+        panel.hidden = true;
+        panel.setAttribute('data-tab-panel', 'inactive');
+      }
+    }
+    targetPanel.hidden = false;
+
+    const transition = {};
+    state.transition = transition;
+
+    if (animate && previousPanel && previousPanel !== targetPanel) {
+      targetPanel.setAttribute('data-tab-panel', 'entering');
+      whenAnimationsFinish(targetPanel).then(() => {
+        if (state.transition === transition) {
+          targetPanel.setAttribute('data-tab-panel', 'active');
+        }
+      });
+    } else {
+      targetPanel.setAttribute('data-tab-panel', 'active');
+    }
+
+    this._dispatch(element, 'tabs:change', {
       activeTab: panelId,
       previousTab,
       tab: targetTab,
       panel: targetPanel,
       timestamp: performance.now(),
     });
-
-    this.logger?.debug('Tab activated', { panelId, previousTab });
-  }
-
-  /**
-   * Transition between panels with animation support
-   */
-  async _transitionPanels(fromPanel, toPanel) {
-    const duration = Tabs.defaults.transitionDuration;
-
-    /* Set transitioning state */
-    fromPanel.setAttribute('data-tab-panel', 'transitioning');
-    toPanel.setAttribute('data-tab-panel', 'transitioning');
-
-    /* Show target panel */
-    toPanel.style.display = '';
-
-    /* Transition out current panel */
-    fromPanel.style.opacity = '0';
-
-    /* Wait for transition */
-    await new Promise(resolve => setTimeout(resolve, duration / 2));
-
-    /* Hide previous panel */
-    fromPanel.style.display = 'none';
-    fromPanel.setAttribute('data-tab-panel', 'inactive');
-    fromPanel.style.opacity = '';
-
-    /* Transition in new panel */
-    toPanel.style.opacity = '0';
-    requestAnimationFrame(() => {
-      toPanel.style.transition = `opacity ${duration}ms ease-in-out`;
-      toPanel.style.opacity = '1';
-    });
-
-    /* Cleanup after transition */
-    setTimeout(() => {
-      toPanel.style.transition = '';
-      toPanel.style.opacity = '';
-      toPanel.setAttribute('data-tab-panel', 'active');
-    }, duration);
   }
 
   /**
@@ -400,7 +343,7 @@ export default class Tabs extends BaseComponent {
    */
   activateTab(element, panelId) {
     const state = this.getState(element);
-    if (state) {
+    if (state?.tabs) {
       this._activateTab(element, panelId, state, true);
     }
   }
@@ -411,52 +354,26 @@ export default class Tabs extends BaseComponent {
    * @returns {string|null} Active panel ID
    */
   getActiveTab(element) {
-    const state = this.getState(element);
-    return state ? state.activeTab : null;
+    return this.getState(element)?.activeTab ?? null;
   }
 
-  /**
-   * Get component status and statistics
-   * @returns {Object} Component status
-   */
   getStatus() {
-    const containers = document.querySelectorAll('[data-tabs]');
-    const enhancedContainers = [];
-    let totalTabs = 0;
-    let totalPanels = 0;
-
-    containers.forEach(container => {
-      const state = this.getState(container);
-      if (state && this.hasAttr(container, 'enhanced')) {
-        enhancedContainers.push(container);
-        totalTabs += state.tabs.length;
-        totalPanels += state.panels.length;
-      }
-    });
+    const states = this.trackedElements()
+      .map(container => this.getState(container))
+      .filter(state => state?.tabs);
 
     return {
-      containers: enhancedContainers.length,
-      totalTabs,
-      totalPanels,
+      containers: states.length,
+      totalTabs: states.reduce((total, state) => total + state.tabs.length, 0),
+      totalPanels: states.reduce((total, state) => total + state.panels.length, 0),
       keyboardNavigationSupported: true,
       defaults: Tabs.defaults,
     };
   }
 
-  /**
-   * Enhance all tabs containers on the page
-   * @param {string} selector - CSS selector for tabs containers
-   * @param {Object} options - Component options
-   * @returns {Tabs} Component instance
-   */
   static enhanceAll(selector = '[data-tabs]', options) {
     const instance = new Tabs(options);
-    const elements = document.querySelectorAll(selector);
-
-    elements.forEach(element => {
-      instance.mount(element);
-    });
-
+    document.querySelectorAll(selector).forEach(element => instance.mount(element));
     return instance;
   }
 }

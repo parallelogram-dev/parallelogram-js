@@ -1,49 +1,84 @@
-/* Tabs Component */
-.tabs {
-  &__list {
-    display: flex;
-    border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 1rem;
-    gap: 0;
+/**
+ * Tabs Component Styles
+ *
+ * Styles the data attributes that Tabs markup already has, and the aria-selected state Tabs sets on
+ * the chosen tab, so no extra classes are needed.
+ */
+
+:root {
+  --tabs-border-color: #e2e8f0;
+  --tabs-color: #6b7280;
+  --tabs-hover-color: #374151;
+  --tabs-hover-bg: #f9fafb;
+  --tabs-selected-color: #0369a1;
+  --tabs-selected-bg: #f0f9ff;
+  --tabs-transition-duration: 0.2s;
+}
+
+[data-tabs-list] {
+  display: flex;
+  border-bottom: 1px solid var(--tabs-border-color);
+  margin-bottom: 1rem;
+}
+
+[data-tab] {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--tabs-color);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--tabs-hover-color);
+    background: var(--tabs-hover-bg);
   }
 
-  &__tab {
-    padding: 1rem 1.5rem;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #6b7280;
-    font-weight: 500;
-
-    &:hover {
-      color: #374151;
-      background: #f9fafb;
-    }
-
-    &[aria-selected='true'] {
-      color: #0ea5e9;
-      border-bottom-color: #0ea5e9;
-      background: #f0f9ff;
-    }
+  &[aria-selected='true'] {
+    color: var(--tabs-selected-color);
+    border-bottom-color: currentColor;
+    background: var(--tabs-selected-bg);
   }
 
-  &__panel {
-    padding: 1rem 0;
+  &:focus-visible {
+    outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+    outline-offset: calc(-1 * var(--framework-focus-width, 2px));
   }
 }
 
-/* State-based panel selectors */
-[data-tab-panel='active'] {
-  display: block;
+[data-tab-panel] {
+  padding: 1rem 0;
 }
 
-[data-tab-panel='inactive'] {
+/* Keeps inactive panels hidden even when page styles give panels a display value */
+[data-tab-panel][hidden] {
   display: none;
 }
 
-[data-tab-panel='transitioning'] {
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
+/* Until Tabs loads, show only the first panel so the page doesn't jump; without scripts all stay visible */
+@media (scripting: enabled) {
+  [data-tabs]:not([data-tabs-enhanced]) [data-tab-panel] ~ [data-tab-panel] {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-tab] {
+    transition:
+      color var(--tabs-transition-duration) ease,
+      background-color var(--tabs-transition-duration) ease,
+      border-color var(--tabs-transition-duration) ease;
+  }
+
+  [data-tab-panel='entering'] {
+    animation: tabs-panel-in var(--tabs-transition-duration) ease-out;
+  }
+}
+
+@keyframes tabs-panel-in {
+  from {
+    opacity: 0;
+  }
 }

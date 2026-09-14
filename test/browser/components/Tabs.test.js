@@ -1,5 +1,29 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import Tabs from '../../../src/components/Tabs.js';
+import { EventManager } from '../../../src/managers/EventManager.js';
+import tabsStyles from '../../../src/styles/framework/components/tabs.scss';
+
+const MARKUP = `
+  <div data-tabs>
+    <div data-tabs-list>
+      <button data-tab="panel-shipping">Shipping</button>
+      <button data-tab="panel-returns">Returns</button>
+      <a href="#panel-contact" data-tab="panel-contact">Contact</a>
+    </div>
+    <div data-tabs-panels>
+      <div id="panel-shipping" data-tab-panel>Orders ship in two days.</div>
+      <div id="panel-returns" data-tab-panel>Return within 30 days.</div>
+      <div id="panel-contact" data-tab-panel><a href="#email">Email us</a></div>
+    </div>
+  </div>
+`;
+
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const shownPanels = container =>
+  [...container.querySelectorAll('[data-tab-panel]')]
+    .filter(panel => getComputedStyle(panel).display !== 'none')
+    .map(panel => panel.id);
 
 const renderTabs = (attributes = {}) => {
   const container = document.createElement('div');
@@ -92,5 +116,95 @@ describe('Tabs', () => {
 
     expect(document.getElementById('panel-shipping').getAttribute('tabindex')).toBe('0');
     expect(document.getElementById('panel-contact').hasAttribute('tabindex')).toBe(false);
+  });
+});
+
+describe('Tabs panels and styles', () => {
+  let style;
+  let eventBus;
+  let tabs;
+
+  const render = () => {
+    style = document.createElement('style');
+    style.textContent = `${tabsStyles}\n:root { --tabs-transition-duration: 60ms; }`;
+    document.head.append(style);
+    document.body.insertAdjacentHTML('beforeend', MARKUP);
+    return document.querySelector('[data-tabs]');
+  };
+
+  const mount = container => {
+    eventBus = new EventManager();
+    tabs = new Tabs({ eventBus });
+    tabs.mount(container);
+    return container;
+  };
+
+  afterEach(() => {
+    tabs?.destroy();
+    tabs = null;
+    style?.remove();
+    document.body.replaceChildren();
+  });
+
+  it('shows only the first panel before Tabs has loaded', () => {
+    const container = render();
+
+    expect(shownPanels(container)).toEqual(['panel-shipping']);
+  });
+
+  it('hides inactive panels with the hidden attribute rather than inline styles', () => {
+    const container = mount(render());
+
+    const panels = [...container.querySelectorAll('[data-tab-panel]')];
+    expect(panels.map(panel => [panel.hidden, panel.style.display])).toEqual([
+      [false, ''],
+      [true, ''],
+      [true, ''],
+    ]);
+  });
+
+  it('shows only the last tab chosen when tabs are chosen in quick succession', async () => {
+    const container = mount(render());
+    const [, returns, contact] = container.querySelectorAll('[data-tab]');
+
+    returns.click();
+    contact.click();
+    await pause(400);
+
+    expect([
+      shownPanels(container),
+      document.getElementById('panel-contact').getAttribute('data-tab-panel'),
+      contact.getAttribute('aria-selected'),
+    ]).toEqual([['panel-contact'], 'active', 'true']);
+  });
+
+  it('uses in-page links as tabs without changing the address', () => {
+    const container = mount(render());
+    const hash = location.hash;
+
+    container.querySelector('a[data-tab]').click();
+
+    expect([location.hash, shownPanels(container)]).toEqual([hash, ['panel-contact']]);
+  });
+
+  it('reports each change to the event bus once', () => {
+    const container = mount(render());
+    const changes = [];
+    eventBus.on('tabs:change', payload => changes.push(payload));
+
+    container.querySelectorAll('[data-tab]')[1].click();
+
+    expect(changes).toHaveLength(1);
+  });
+
+  it('puts the markup back as it was when unmounted', () => {
+    const container = render();
+    const before = container.outerHTML;
+    mount(container);
+    container.querySelectorAll('[data-tab]')[1].click();
+
+    tabs.unmount(container);
+
+    expect(container.outerHTML).toBe(before);
   });
 });
