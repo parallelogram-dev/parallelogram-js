@@ -1,7 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import scss from './rollup-plugin-scss.js';
 
@@ -28,14 +26,5 @@ export default {
     entryFileNames: 'parallelogram-demo.min.js',
     chunkFileNames: '[name]-[hash].js',
   },
-  plugins: [
-    scss({ loadPaths: ['src/styles'] }),
-    resolve({
-      browser: true,
-      extensions: ['.js', '.scss', '.css'],
-    }),
-    commonjs(),
-    terser(), // Minify
-    removeStaleChunks(),
-  ],
+  plugins: [scss({ loadPaths: ['src/styles'] }), terser(), removeStaleChunks()],
 };
