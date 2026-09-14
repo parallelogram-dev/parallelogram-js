@@ -70,7 +70,7 @@ th.sortable:hover {
 }
 
 /* State-based styling */
-[data-datatable='loading'] {
+[data-datatable-state='loading'] {
   pointer-events: none;
   position: relative;
   opacity: 0.6;
@@ -90,7 +90,7 @@ th.sortable:hover {
   }
 }
 
-[data-datatable='error'] {
+[data-datatable-state='error'] {
   border: 2px solid var(--brand-danger, #ef4444);
   background-color: rgba(239, 68, 68, 0.05);
 
@@ -107,7 +107,7 @@ th.sortable:hover {
   }
 }
 
-[data-datatable='empty'] {
+[data-datatable-state='empty'] {
   tbody {
     &::after {
       content: 'No data available';
@@ -120,7 +120,7 @@ th.sortable:hover {
   }
 }
 
-[data-datatable='loaded'],
-[data-datatable='mounted'] {
+[data-datatable-state='loaded'],
+[data-datatable-state='mounted'] {
   /* Normal state - no special styling */
 }

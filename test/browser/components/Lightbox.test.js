@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Lightbox from '../../../src/components/Lightbox.js';
+import { ComponentHost } from '../../../src/core/ComponentHost.js';
+import { EventManager } from '../../../src/managers/EventManager.js';
 import lightboxStyles from '../../../src/styles/framework/components/lightbox.scss';
 
 const IMAGE =
@@ -7,7 +9,7 @@ const IMAGE =
 const WAIT = { timeout: 2500 };
 
 const overlay = () => document.querySelector('.lightbox__overlay');
-const lightboxState = () => overlay()?.getAttribute('data-lightbox');
+const lightboxState = () => overlay()?.getAttribute('data-lightbox-state');
 const counter = () => overlay()?.querySelector('.lightbox__counter')?.textContent;
 const press = key => document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 
@@ -83,5 +85,29 @@ describe('Lightbox', () => {
     lightbox.next(links[0]);
     await vi.waitFor(() => expect([counter(), lightboxState()]).toEqual(['3 / 3', 'open']), WAIT);
     expect(overlay().querySelector('.lightbox__image').className).toBe('lightbox__image');
+  });
+
+  it('does not mount on its own overlay when a page observer mounts components', async () => {
+    const link = document.createElement('a');
+    link.href = IMAGE;
+    link.dataset.lightbox = 'holiday';
+    document.body.append(link);
+    const host = new ComponentHost({
+      eventBus: new EventManager(),
+      registry: [
+        { name: 'lightbox', selector: '[data-lightbox]', loader: () => ({ default: Lightbox }) },
+      ],
+    });
+    host.start(document.body);
+
+    try {
+      link.click();
+      await vi.waitFor(() => expect(overlay()).not.toBeNull(), WAIT);
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(host.getInstance('lightbox').trackedElements()).toEqual([link]);
+    } finally {
+      host.stop();
+    }
   });
 });

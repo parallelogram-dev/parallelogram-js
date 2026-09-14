@@ -37,4 +37,42 @@ describe('Toggle', () => {
 
     expect(state).toMatchObject({ capture: true, multiple: true });
   });
+
+  it('keeps the selector of a target that is also a trigger', () => {
+    document.body.innerHTML = `
+      <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-animate="false">Account</button>
+      <div id="account-menu" data-toggle data-toggle-target="#settings" data-toggle-animate="false">Settings</div>
+      <div id="settings"></div>
+    `;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#account');
+    const menu = document.querySelector('#account-menu');
+    toggle.mount(trigger);
+    toggle.mount(menu);
+
+    toggle.show(trigger);
+
+    expect([
+      menu.getAttribute('data-toggle-target'),
+      menu.getAttribute('data-toggle-state'),
+    ]).toEqual(['#settings', 'open']);
+  });
+
+  it('writes target state to data-toggle-state and the deprecated data-toggle-target', () => {
+    document.body.innerHTML = `
+      <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-animate="false">Account</button>
+      <div id="account-menu">Settings</div>
+    `;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#account');
+    const menu = document.querySelector('#account-menu');
+    toggle.mount(trigger);
+
+    toggle.show(trigger);
+
+    expect([
+      menu.getAttribute('data-toggle-state'),
+      menu.getAttribute('data-toggle-target'),
+    ]).toEqual(['open', 'open']);
+  });
 });

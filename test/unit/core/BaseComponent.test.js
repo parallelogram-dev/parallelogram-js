@@ -181,4 +181,51 @@ describe('BaseComponent', () => {
       });
     });
   });
+
+  describe('element state', () => {
+    it('writes state to its own attribute and to the deprecated selector attribute', () => {
+      const element = widgetElement();
+
+      new Widget().setState(element, 'open');
+
+      expect([
+        element.getAttribute('data-widget-state'),
+        element.getAttribute('data-widget'),
+      ]).toEqual(['open', 'open']);
+    });
+
+    it('reads state from the state attribute before the selector attribute', () => {
+      const element = widgetElement();
+      element.setAttribute('data-widget-state', 'open');
+
+      expect(new Widget().getElementState(element)).toBe('open');
+    });
+  });
+
+  describe('attribute name', () => {
+    it.each([['data-chart'], ['chart'], ['[data-chart]']])(
+      'comes from a static selector written as %s',
+      selector => {
+        class SalesChart extends BaseComponent {
+          static selector = selector;
+        }
+        const canvas = document.createElement('canvas');
+
+        new SalesChart().setAttr(canvas, 'mode', 'bar');
+
+        expect(canvas.getAttribute('data-chart-mode')).toBe('bar');
+      }
+    );
+
+    it('warns once when a component falls back to its class name', () => {
+      const logger = { warn: vi.fn(), info() {}, debug() {}, error() {} };
+      class Gauge extends BaseComponent {}
+      const gauge = new Gauge({ logger });
+
+      gauge.setAttr(document.createElement('div'), 'value', 3);
+      gauge.setAttr(document.createElement('div'), 'value', 4);
+
+      expect(logger.warn).toHaveBeenCalledOnce();
+    });
+  });
 });

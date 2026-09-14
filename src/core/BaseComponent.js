@@ -14,6 +14,8 @@ import {
   createElement,
 } from '../utils/dom-utils.js';
 
+const classesWarnedAboutSelector = new WeakSet();
+
 /**
  * BaseComponent - Production-ready base class with state management
  *
@@ -364,46 +366,62 @@ export class BaseComponent {
   }
 
   /**
-   * Get the component's data attribute selector
-   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
-   * Can be overridden in subclasses if needed
-   * @returns {string} Data attribute selector
-   * @private
+   * The component's data attribute name, such as `data-toggle`
+   *
+   * Read from `static selector` on the component class, written as `'data-toggle'`, `'toggle'` or
+   * `'[data-toggle]'`. Without one the name comes from the class name, which minifiers change, so a
+   * warning is logged once per class.
    */
   _getSelector() {
     if (this._selector) return this._selector;
 
-    // Extract component name from class name and convert to kebab-case
-    const className = this.constructor.name;
-    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
-    const kebab = className.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+    const declared = this.constructor.selector;
+    if (declared) {
+      const name = String(declared).replace(/^\[|\]$/g, '');
+      this._selector = name.startsWith('data-') ? name : `data-${name}`;
+      return this._selector;
+    }
 
+    const className = this.constructor.name;
+    if (!classesWarnedAboutSelector.has(this.constructor)) {
+      classesWarnedAboutSelector.add(this.constructor);
+      this.logger?.warn(
+        `${className || 'A component'} has no static selector, so its data attribute is derived from a class name that minifiers can change. Declare static selector = 'data-…'.`
+      );
+    }
+
+    const kebab = className.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
     this._selector = `data-${kebab}`;
     return this._selector;
   }
 
   /**
-   * Set component state using data attribute (data-<component>="<state>")
-   * @param {HTMLElement} element - Target element
-   * @param {string} state - State value
+   * Set an element's state in `data-<component>-state`
+   *
+   * The value is also copied to the component's own `data-<component>` attribute, as before 0.5.0.
+   * That copy is deprecated and stops in 0.6.0; style and query the `-state` attribute instead.
+   *
+   * @param {HTMLElement} element
+   * @param {string} state
    * @example
-   * // In Toggle component:
-   * this.setState(element, ExtendedStates.OPEN);
-   * // Sets: <div data-toggle="open">
+   * this.setState(element, ExtendedStates.OPEN); // <div data-datatable-state="open">
    */
   setState(element, state) {
-    element.setAttribute(this._getSelector(), state);
+    const attribute = this._getSelector();
+    element.setAttribute(`${attribute}-state`, state);
+    element.setAttribute(attribute, state);
   }
 
   /**
-   * Get component state from data attribute
-   * @param {HTMLElement} element - Target element
-   * @returns {string|null} Current state value
-   * @example
-   * const state = this.getElementState(element); // "open"
+   * An element's state from `data-<component>-state`, or from the deprecated copy in
+   * `data-<component>` when the state attribute is missing
+   *
+   * @param {HTMLElement} element
+   * @returns {string|null}
    */
   getElementState(element) {
-    return element.getAttribute(this._getSelector());
+    const attribute = this._getSelector();
+    return element.getAttribute(`${attribute}-state`) ?? element.getAttribute(attribute);
   }
 
   /**

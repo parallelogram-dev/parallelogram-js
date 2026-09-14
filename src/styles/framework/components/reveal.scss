@@ -1,6 +1,6 @@
 /**
  * Reveal (Scrollreveal) Component Styles
- * State-based styling using data-reveal attribute values
+ * State-based styling using data-reveal-state attribute values
  */
 
 :root {
@@ -16,13 +16,13 @@
 }
 
 /* State: Hidden - element not yet revealed (explicit state, same as default) */
-[data-reveal='hidden'] {
+[data-reveal-state='hidden'] {
   opacity: 0;
   transform: translateY(var(--reveal-distance));
 }
 
 /* State: Revealing - element is animating in (transition applied here) */
-[data-reveal='revealing'] {
+[data-reveal-state='revealing'] {
   opacity: 1;
   transform: translateY(0);
   will-change: opacity, transform;
@@ -31,8 +31,8 @@
     transform var(--reveal-transition-duration) var(--reveal-transition-easing);
 }
 
-/* State: Revealed - element fully visible */
-[data-reveal='revealed'] {
+/* State: Visible - element fully revealed */
+[data-reveal-state='visible'] {
   opacity: 1;
   transform: translateY(0);
 }
@@ -45,9 +45,9 @@
     transform: none;
   }
 
-  [data-reveal='hidden'],
-  [data-reveal='revealing'],
-  [data-reveal='revealed'] {
+  [data-reveal-state='hidden'],
+  [data-reveal-state='revealing'],
+  [data-reveal-state='visible'] {
     opacity: 1;
     transform: none;
   }

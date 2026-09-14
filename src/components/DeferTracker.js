@@ -233,20 +233,13 @@ export function _resetTrackers() {
 }
 
 export default class DeferTracker extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification renaming the data attribute.
-   *
-   * @returns {string}
-   */
-  _getSelector() {
-    return 'data-defer-tracker';
-  }
+  static selector = 'data-defer-tracker';
 
   _init(element) {
     const state = super._init(element);
     const baseCleanup = state.cleanup;
 
-    const name = this.getElementState(element);
+    const name = element.getAttribute(this._getSelector());
     state.name = name;
 
     const config = this._parseConfig(element, name);

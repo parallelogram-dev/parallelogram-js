@@ -33,14 +33,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *   .forEach(element => scrollhide.mount(element));
  */
 export default class Scrollhide extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-scrollhide';
-  }
+  static selector = 'data-scrollhide';
 
   /**
    * Default configuration for scrollhide component
