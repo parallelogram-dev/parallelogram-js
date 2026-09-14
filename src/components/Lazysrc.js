@@ -1,796 +1,468 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 
+const tokens = value =>
+  String(value ?? '')
+    .split(/\s+/)
+    .filter(Boolean);
+
+const cssUrl = url =>
+  `url("${String(url)
+    .replace(/[\\"]/g, '\\$&')
+    .replace(/[\n\r\f]/g, '')}")`;
+
 /**
- * Lazysrc Component - Standalone lazy loading without external dependencies
- * Supports img, picture elements, and background images with automatic parent detection
+ * Lazysrc - lazy image loading built on the browser's own `loading="lazy"`
+ *
+ * The browser decides when images load. Markup that already has a real `src` or `srcset` is never
+ * stripped, so it works without JavaScript; Lazysrc only adds `loading="lazy"` and
+ * `decoding="async"` when they are missing. Sources held in `data-lazysrc-src`,
+ * `data-lazysrc-srcset` and `data-lazysrc-sizes` (on the image, or on the `<source>` elements of its
+ * `<picture>`) are copied onto the elements as soon as the image mounts, with no observer or
+ * preloader. Background images have no native lazy loading, so they load through an
+ * IntersectionObserver shortly before they scroll into view.
+ *
+ * Failed loads are retried with a growing delay. Progress is written to `data-lazysrc-state`, which
+ * the shipped stylesheet uses for the placeholder, the fade and the error outline; the fade is
+ * skipped when the user prefers reduced motion.
+ *
+ * Don't lazy load the largest image above the fold. Give it a plain `src` and
+ * `fetchpriority="high"` instead.
  *
  * @example
- * HTML:
- * <!-- Basic lazy image with semantic markup -->
- * <figure>
- *   <img data-lazysrc data-lazysrc-src="image.jpg" alt="Description">
- *   <figcaption>Image caption</figcaption>
- * </figure>
- *
- * <!-- Responsive lazy image with srcset -->
- * <figure>
- *   <img data-lazysrc
- *        src="placeholder.jpg"
- *        data-lazysrc-src="image.jpg"
- *        data-lazysrc-srcset="image-320.jpg 320w, image-640.jpg 640w, image-1280.jpg 1280w"
- *        data-lazysrc-sizes="(max-width: 320px) 280px, (max-width: 640px) 600px, 1200px"
- *        alt="Description">
- *   <figcaption>Responsive image caption</figcaption>
- * </figure>
- *
- * <!-- Native HTML with progressive enhancement -->
- * <figure>
- *   <img data-lazysrc
- *        src="image.jpg"
- *        srcset="image-320.jpg 320w, image-640.jpg 640w"
- *        sizes="(max-width: 640px) 600px, 1200px"
- *        alt="Description">
- *   <figcaption>Progressive enhancement example</figcaption>
- * </figure>
- *
- * <!-- Picture element with sources (data-lazysrc on img, not picture) -->
- * <picture>
- *   <source data-lazysrc-srcset="image.webp" type="image/webp">
- *   <source data-lazysrc-srcset="image.jpg" type="image/jpeg">
- *   <img data-lazysrc data-lazysrc-src="image.jpg" alt="Description">
- * </picture>
- *
- * <!-- Picture with responsive images (srcset + sizes) -->
- * <picture>
- *   <source
- *     data-lazysrc-srcset="image-320.webp 320w, image-1280.webp 1280w"
- *     data-lazysrc-sizes="(max-width: 640px) 320px, 1280px"
- *     type="image/webp">
- *   <source
- *     data-lazysrc-srcset="image-320.jpg 320w, image-1280.jpg 1280w"
- *     data-lazysrc-sizes="(max-width: 640px) 320px, 1280px"
- *     type="image/jpeg">
- *   <img data-lazysrc data-lazysrc-src="image-1280.jpg" alt="Description">
- * </picture>
- *
- * <!-- Background image -->
- * <div data-lazysrc data-lazysrc-bg="background.jpg"></div>
- *
- * <!-- Custom threshold and classes -->
+ * <!-- Recommended: real sources, which also work without JavaScript -->
  * <img data-lazysrc
- *      data-lazysrc-src="image.jpg"
- *      data-lazysrc-threshold="0.2"
- *      data-lazysrc-loading-class="custom-loading"
- *      data-lazysrc-loaded-class="custom-loaded"
- *      alt="Description">
+ *      src="harbour-640.jpg"
+ *      srcset="harbour-640.jpg 640w, harbour-1280.jpg 1280w"
+ *      sizes="(max-width: 640px) 100vw, 640px"
+ *      width="640" height="480" alt="Harbour at dawn">
+ *
+ * <!-- Sources held in data attributes -->
+ * <picture>
+ *   <source data-lazysrc-srcset="harbour.avif" type="image/avif">
+ *   <img data-lazysrc data-lazysrc-src="harbour.jpg" width="640" height="480" alt="Harbour at dawn">
+ * </picture>
+ *
+ * <!-- Background image; give the element a background colour for when scripts don't run -->
+ * <div class="hero" data-lazysrc data-lazysrc-bg="hero.jpg"></div>
+ *
+ * @attributes
+ * - data-lazysrc-src, data-lazysrc-srcset, data-lazysrc-sizes: sources copied onto the image
+ * - data-lazysrc-bg: background image URL, loaded shortly before the element scrolls into view
+ * - data-lazysrc-fetchpriority: high | low | auto, copied to the image's `fetchpriority`
+ * - data-lazysrc-root-margin: how far outside the viewport background images start loading
+ *   (default "600px 0px")
+ * - data-lazysrc-threshold: visible fraction at which a background image starts loading (default 0)
+ * - data-lazysrc-retry-attempts: retries after a failed load (default 3)
+ * - data-lazysrc-retry-delay: milliseconds before the first retry, multiplied by the attempt
+ *   number for later ones (default 1000)
+ * - data-lazysrc-fade-duration: fade length in milliseconds, set as `--lazy-transition-duration`
+ * - data-lazysrc-loading-class, data-lazysrc-loaded-class, data-lazysrc-error-class: classes added
+ *   in each state (default lazysrc--loading, lazysrc--loaded and lazysrc--error)
+ * - data-lazysrc-state: set by the component to loading, loaded or error
+ *
+ * @events
+ * - lazysrc:mounted: the element is set up, with `{ element, config }`
+ * - lazysrc:loading-start: sources were handed to the browser, or a background image started loading
+ * - lazysrc:loaded: with `{ element, loadTime }`; loadTime is the download time in milliseconds from
+ *   Resource Timing, or null when the browser has no entry for it
+ * - lazysrc:error: every retry failed, with `{ element, error }`
+ * - lazysrc:detached: a loaded element's listeners have been released
+ * - lazysrc:forceLoad: dispatch this on an element to load it straight away
+ *
+ * @cssprop --lazy-transition-duration - length of the fade (default 0.3s)
+ * @cssprop --lazy-loading-opacity - opacity while loading (default 0.7)
+ * @cssprop --lazy-placeholder-bg - background while loading
+ * @cssprop --lazy-error-bg - background after an error
+ * @cssprop --lazy-error-color - outline colour after an error
  */
 export default class Lazysrc extends BaseComponent {
   static selector = 'data-lazysrc';
 
   static get defaults() {
     return {
-      threshold: 0.1,
-      rootMargin: '50px',
-      loadingClass: 'loading',
-      loadedClass: 'loaded',
-      errorClass: 'error',
-      fadeInDuration: 300,
+      rootMargin: '600px 0px',
+      threshold: 0,
+      fetchPriority: '',
       retryAttempts: 3,
       retryDelay: 1000,
-      useNativeLoading: false, // Use native loading="lazy" when available
+      fadeInDuration: 300,
+      loadingClass: 'lazysrc--loading',
+      loadedClass: 'lazysrc--loaded',
+      errorClass: 'lazysrc--error',
     };
   }
 
   constructor(options = {}) {
     super(options);
 
-    // Create intersection observer
-    this._createObserver();
-
-    // Track loading attempts for retry logic
-    this.loadingAttempts = new Map();
-  }
-
-  /**
-   * Create intersection observer for lazy loading
-   * @private
-   */
-  _createObserver() {
-    const observerOptions = {
-      root: null,
-      rootMargin: Lazysrc.defaults.rootMargin,
-      threshold: Lazysrc.defaults.threshold,
-    };
-
-    this.observer = new IntersectionObserver(this._handleIntersection.bind(this), observerOptions);
-
-    this.logger?.info('Lazysrc intersection observer created', observerOptions);
+    /** Background image observers keyed by root margin and threshold, with the elements each watches */
+    this._observers = new Map();
   }
 
   _init(element) {
     const state = super._init(element);
 
-    // Get configuration for this element
-    const config = this._getConfiguration(element);
+    state.config = this._getConfigFromAttrs(element, {
+      rootMargin: 'root-margin',
+      threshold: 'threshold',
+      fetchPriority: 'fetchpriority',
+      retryAttempts: 'retry-attempts',
+      retryDelay: 'retry-delay',
+      fadeInDuration: 'fade-duration',
+      loadingClass: 'loading-class',
+      loadedClass: 'loaded-class',
+      errorClass: 'error-class',
+    });
+    state.status = 'idle';
+    state.attempts = 0;
+    state.retryTimer = null;
+    state.observerKey = null;
+    state.listeners = new AbortController();
+    state.image = this.hasAttr(element, 'bg') ? null : this._imageFor(element);
+    this._resetSettled(state);
 
-    // Store state
-    state.config = config;
-    state.isLoaded = false;
-    state.isLoading = false;
-    state.hasError = false;
-
-    /* Detect if this element is inside a <picture> element */
-    if (this._isImage(element) && element.parentElement?.tagName === 'PICTURE') {
-      state.pictureParent = element.parentElement;
+    if (this.hasAttr(element, 'fade-duration')) {
+      element.style.setProperty('--lazy-transition-duration', `${state.config.fadeInDuration}ms`);
     }
 
-    // Check if we should use native lazy loading
-    if (
-      (config.useNativeLoading || element.hasAttribute('loading')) &&
-      this._supportsNativeLoading() &&
-      this._isImage(element)
-    ) {
-      this._setupNativeLoading(element, state);
-    } else {
-      // Use intersection observer
-      this._setupIntersectionLoading(element, state);
-    }
-
-    // Listen for force load events (e.g., from Lightbox component)
     element.addEventListener('lazysrc:forceLoad', () => this.loadElement(element), {
-      signal: state.controller.signal,
+      signal: state.listeners.signal,
     });
 
-    // Setup cleanup
-    const originalCleanup = state.cleanup;
-    state.retryTimer = null;
+    const baseCleanup = state.cleanup;
     state.cleanup = () => {
-      this.observer?.unobserve(element);
-      state.customObserver?.disconnect();
+      state.listeners.abort();
       clearTimeout(state.retryTimer);
-      this.loadingAttempts.delete(element);
-      originalCleanup();
+      this._unobserve(element, state);
+      state.resolveSettled();
+      baseCleanup();
     };
 
-    // Emit via custom event instead of eventBus
     this._dispatch(element, 'lazysrc:mounted', {
       element,
-      config,
+      config: state.config,
       timestamp: performance.now(),
     });
 
-    this.logger?.info('Lazysrc initialized', {
-      element,
-      threshold: config.threshold,
-      useNative: config.useNativeLoading,
-    });
+    if (this.hasAttr(element, 'bg')) {
+      this._observe(element, state);
+    } else if (state.image) {
+      this._prepareImage(element, state);
+    } else {
+      this.logger?.warn('Lazysrc needs an <img>, a <picture> or data-lazysrc-bg', { element });
+    }
 
     return state;
   }
 
   /**
-   * Get configuration from data attributes
-   * @private
-   * @param {HTMLElement} element - Element to configure
-   * @returns {Object} Configuration object
+   * The image Lazysrc manages for an element: the element itself, or the image in a `<picture>`
+   *
+   * @returns {HTMLImageElement|null}
    */
-  _getConfiguration(element) {
-    const config = { ...Lazysrc.defaults };
-
-    // Threshold
-    const threshold = this.getAttr(element, 'threshold');
-    if (threshold) {
-      config.threshold = parseFloat(threshold);
-    }
-
-    // Root margin
-    const rootMargin = this.getAttr(element, 'root-margin');
-    if (rootMargin) {
-      config.rootMargin = rootMargin;
-    }
-
-    // CSS Classes
-    const loadingClass = this.getAttr(element, 'loading-class');
-    if (loadingClass) {
-      config.loadingClass = loadingClass;
-    }
-    const loadedClass = this.getAttr(element, 'loaded-class');
-    if (loadedClass) {
-      config.loadedClass = loadedClass;
-    }
-    const errorClass = this.getAttr(element, 'error-class');
-    if (errorClass) {
-      config.errorClass = errorClass;
-    }
-
-    // Animation
-    const fadeDuration = this.getAttr(element, 'fade-duration');
-    if (fadeDuration) {
-      config.fadeInDuration = parseInt(fadeDuration, 10);
-    }
-
-    // Retry logic
-    const retryAttempts = this.getAttr(element, 'retry-attempts');
-    if (retryAttempts) {
-      config.retryAttempts = parseInt(retryAttempts, 10);
-    }
-    const retryDelay = this.getAttr(element, 'retry-delay');
-    if (retryDelay) {
-      config.retryDelay = parseInt(retryDelay, 10);
-    }
-
-    // Native loading
-    if (this.hasAttr(element, 'use-native')) {
-      config.useNativeLoading = this.getAttr(element, 'use-native') !== 'false';
-    }
-
-    return config;
+  _imageFor(element) {
+    if (element.localName === 'img') return element;
+    if (element.localName === 'picture') return element.querySelector('img');
+    return null;
   }
 
   /**
-   * Check if browser supports native lazy loading
-   * @private
-   * @returns {boolean}
+   * Make an image lazy, copy its data sources across and listen for it to load
    */
-  _supportsNativeLoading() {
-    return 'loading' in HTMLImageElement.prototype;
-  }
+  _prepareImage(element, state) {
+    const { image, config } = state;
+    const { signal } = state.listeners;
 
-  /**
-   * Check if element is an image
-   * @private
-   * @param {HTMLElement} element
-   * @returns {boolean}
-   */
-  _isImage(element) {
-    return element.tagName === 'IMG';
-  }
+    image.addEventListener('load', () => this._onImageLoad(element, state), { signal });
+    image.addEventListener('error', () => this._onImageError(element, state), { signal });
 
-  /**
-   * Setup native lazy loading
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
-   */
-  _setupNativeLoading(element, state) {
-    if (this._isImage(element)) {
-      // Set up native loading if not already present
-      if (!element.hasAttribute('loading')) {
-        element.loading = 'lazy';
+    /* Set before the sources, or the browser starts loading them straight away */
+    if (!image.hasAttribute('loading')) image.loading = 'lazy';
+    if (!image.hasAttribute('decoding')) image.decoding = 'async';
+    if (config.fetchPriority) image.setAttribute('fetchpriority', config.fetchPriority);
+
+    const applied = this._applySources(image);
+
+    if (!applied && !image.hasAttribute('src') && !image.hasAttribute('srcset')) {
+      this.logger?.warn('Lazysrc image has no sources', { element });
+      return;
+    }
+
+    if (applied || !image.complete) {
+      this._startLoading(element, state);
+      return;
+    }
+
+    image.decode().then(
+      () => this._onImageLoad(element, state),
+      () => {
+        if (state.listeners.signal.aborted) return;
+        this._startLoading(element, state);
+        this._onImageError(element, state);
       }
+    );
+  }
 
-      // Apply the src immediately for native loading. Inside a <picture>, swap
-      // the <source> srcsets too (not just the <img>) — otherwise the sources
-      // keep their data-lazysrc-srcset, stay inert, and the browser falls back
-      // to the <img>'s own srcset, never using the avif/webp sources.
-      if (state.pictureParent) {
-        this._applyPictureSources(state.pictureParent, state);
-      } else {
-        this._applySources(element, state);
+  /**
+   * Copy `data-lazysrc-*` sources onto the image and the `<source>` elements of its picture
+   *
+   * Sizes are copied before source sets, and source sets before `src`, so the browser picks a
+   * candidate from the complete set.
+   *
+   * @returns {boolean} Whether any source changed
+   */
+  _applySources(image) {
+    let applied = false;
+    const copy = (node, name) => {
+      const value = node.getAttribute(`data-lazysrc-${name}`);
+      if (value !== null && node.getAttribute(name) !== value) {
+        node.setAttribute(name, value);
+        applied = true;
       }
+    };
 
-      // Listen for load events
-      element.addEventListener('load', () => this._onElementLoaded(element, state), {
-        signal: state.controller.signal,
-      });
-
-      element.addEventListener('error', () => this._onElementError(element, state), {
-        signal: state.controller.signal,
-      });
+    if (image.parentElement?.localName === 'picture') {
+      for (const source of image.parentElement.querySelectorAll(':scope > source')) {
+        copy(source, 'sizes');
+        copy(source, 'srcset');
+      }
     }
+
+    copy(image, 'sizes');
+    copy(image, 'srcset');
+    copy(image, 'src');
+    return applied;
+  }
+
+  async _onImageLoad(element, state) {
+    if (state.status === 'loaded' || state.listeners.signal.aborted) return;
+
+    await state.image.decode?.().catch(() => {});
+    if (state.status === 'loaded' || state.listeners.signal.aborted) return;
+
+    this._settleLoaded(element, state, state.image.currentSrc);
+  }
+
+  _onImageError(element, state) {
+    if (state.status === 'loaded' || state.listeners.signal.aborted) return;
+
+    this._retryOrFail(element, state, 'Image failed to load', () => this._reloadImage(state.image));
   }
 
   /**
-   * Setup intersection observer loading
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
+   * Ask the browser to fetch an image again by setting its source to the same value
    */
-  _setupIntersectionLoading(element, state) {
-    this.logger?.info('Setting up intersection loading for element', { element, state });
-
-    // Store original sources and clear them to prevent immediate loading
-    this._storeAndClearSources(element, state);
-
-    // Update observer threshold if different from default
-    if (
-      state.config.threshold !== Lazysrc.defaults.threshold ||
-      state.config.rootMargin !== Lazysrc.defaults.rootMargin
-    ) {
-      this.logger?.info('Creating custom observer for element', {
-        threshold: state.config.threshold,
-        rootMargin: state.config.rootMargin,
-      });
-
-      // Create custom observer for this element
-      state.customObserver = new IntersectionObserver(this._handleIntersection.bind(this), {
-        root: null,
-        rootMargin: state.config.rootMargin,
-        threshold: state.config.threshold,
-      });
-      state.customObserver.observe(element);
-      this.logger?.info('Element added to custom observer', { element });
-    } else {
-      this.logger?.info('Adding element to default observer', { element });
-      this.observer.observe(element);
-      this.logger?.info('Element added to default observer', { element });
-    }
+  _reloadImage(image) {
+    const attribute = image.hasAttribute('src') ? 'src' : 'srcset';
+    image.setAttribute(attribute, image.getAttribute(attribute));
   }
 
   /**
-   * Store original sources and clear them to prevent immediate loading
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
+   * Watch a background image element, sharing one observer between elements with the same options
    */
-  _storeAndClearSources(element, state) {
-    if (element.tagName === 'IMG') {
-      /* Check if this img is inside a picture element */
-      const pictureParent = state.pictureParent;
+  _observe(element, state) {
+    const { rootMargin, threshold } = state.config;
+    const key = `${rootMargin}|${threshold}`;
+    let entry = this._observers.get(key);
 
-      if (pictureParent) {
-        /* Handle picture sources when data-lazysrc is on the img */
-        const sources = pictureParent.querySelectorAll('source');
-        state.originalSources = [];
-
-        sources.forEach((source, index) => {
-          if (source.srcset && !source.dataset.lazysrcSrcset) {
-            state.originalSources[index] = {
-              srcset: source.srcset,
-              sizes: source.sizes || null,
-            };
-            source.removeAttribute('srcset');
-          }
+    if (!entry) {
+      try {
+        entry = {
+          targets: new Set(),
+          observer: new IntersectionObserver(entries => this._onIntersect(entries), {
+            rootMargin,
+            threshold,
+          }),
+        };
+      } catch (error) {
+        this.logger?.warn('Invalid Lazysrc root margin or threshold, loading straight away', {
+          element,
+          error,
         });
+        this._loadBackground(element, state);
+        return;
       }
+      this._observers.set(key, entry);
+    }
 
-      /* Store and clear img src/srcset */
-      if (element.src && !this.hasAttr(element, 'src')) {
-        state.originalSrc = element.src;
-        element.removeAttribute('src');
-      }
-      if (element.srcset && !this.hasAttr(element, 'srcset')) {
-        state.originalSrcset = element.srcset;
-        element.removeAttribute('srcset');
-      }
-      if (element.sizes && !this.hasAttr(element, 'sizes')) {
-        state.originalSizes = element.sizes;
-      }
-    } else if (element.tagName === 'PICTURE') {
-      /* Handle picture sources when data-lazysrc is on the picture element */
-      const sources = element.querySelectorAll('source');
-      state.originalSources = [];
+    entry.targets.add(element);
+    entry.observer.observe(element);
+    state.observerKey = key;
+  }
 
-      sources.forEach((source, index) => {
-        if (source.srcset && !source.dataset.lazysrcSrcset) {
-          state.originalSources[index] = {
-            srcset: source.srcset,
-            sizes: source.sizes || null,
-          };
-          source.removeAttribute('srcset');
-        }
-      });
+  _unobserve(element, state) {
+    const key = state.observerKey;
+    const entry = this._observers.get(key);
+    state.observerKey = null;
+    if (!entry) return;
 
-      /* Handle img within picture */
-      const img = element.querySelector('img');
-      if (img) {
-        if (img.src && !img.dataset.lazysrcSrc) {
-          state.originalSrc = img.src;
-          img.removeAttribute('src');
-        }
-        if (img.srcset && !img.dataset.lazysrcSrcset) {
-          state.originalSrcset = img.srcset;
-          img.removeAttribute('srcset');
-        }
-      }
+    entry.observer.unobserve(element);
+    entry.targets.delete(element);
+    if (entry.targets.size === 0) {
+      entry.observer.disconnect();
+      this._observers.delete(key);
+    }
+  }
+
+  _onIntersect(entries) {
+    for (const { target, isIntersecting } of entries) {
+      const state = this.getState(target);
+      if (!isIntersecting || !state?.observerKey) continue;
+
+      this._unobserve(target, state);
+      this._loadBackground(target, state);
     }
   }
 
   /**
-   * Handle intersection observer entries
-   * @private
-   * @param {IntersectionObserverEntry[]} entries
+   * Download and decode a background image, then show it
    */
-  _handleIntersection(entries) {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
+  _loadBackground(element, state) {
+    const url = this.getAttr(element, 'bg');
+    this._startLoading(element, state);
 
-      const element = entry.target;
-      const state = this.getState(element);
-
-      /* Start each load without waiting, so images in view download in parallel */
-      if (state && !state.isLoaded && !state.isLoading) {
-        this.logger?.info('Loading intersecting element', { element });
-        this._loadElement(element, state);
-      }
+    if (!url) {
+      this._fail(element, state, 'No background image URL specified');
+      return;
     }
+
+    const image = new Image();
+    image.onload = async () => {
+      await image.decode?.().catch(() => {});
+      if (state.status === 'loaded' || state.listeners.signal.aborted) return;
+
+      element.style.backgroundImage = cssUrl(url);
+      this._settleLoaded(element, state, url);
+    };
+    image.onerror = () => {
+      if (state.listeners.signal.aborted) return;
+      this._retryOrFail(element, state, 'Background image failed to load', () =>
+        this._loadBackground(element, state)
+      );
+    };
+    image.src = url;
   }
 
-  /**
-   * Load an element
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} componentState
-   */
-  async _loadElement(element, componentState) {
-    // Debug logging to understand the state structure
-    this.logger?.debug('_loadElement called with:', {
-      element,
-      componentState,
-      componentStateKeys: componentState ? Object.keys(componentState) : null,
-      hasConfig: !!(componentState && componentState.config),
-      configKeys: componentState?.config ? Object.keys(componentState.config) : null,
-    });
+  _startLoading(element, state) {
+    if (state.status === 'loading') return;
 
-    if (!componentState) {
-      this.logger?.error('Invalid state for element', { element, componentState });
+    this._setStatus(element, state, 'loading');
+    this._dispatch(element, 'lazysrc:loading-start', { element, timestamp: performance.now() });
+  }
+
+  _retryOrFail(element, state, message, retry) {
+    if (state.attempts >= state.config.retryAttempts) {
+      this._fail(element, state, message);
       return;
     }
 
-    if (!componentState.config) {
-      this.logger?.error('Missing config for element', {
-        element,
-        componentState,
-        componentStateKeys: Object.keys(componentState),
-      });
-      return;
-    }
+    state.attempts += 1;
+    clearTimeout(state.retryTimer);
+    state.retryTimer = setTimeout(retry, state.config.retryDelay * state.attempts);
+    this.logger?.info(
+      `Retrying load for element (attempt ${state.attempts}/${state.config.retryAttempts})`,
+      { element }
+    );
+  }
 
-    if (componentState.isLoading || componentState.isLoaded) return;
-
-    componentState.isLoading = true;
-    componentState.loadStartTime = performance.now(); // Track when loading started
-    element.classList.add(componentState.config.loadingClass);
-
-    // Emit via custom event
-    this._dispatch(element, 'lazysrc:loading-start', {
+  _fail(element, state, message) {
+    this._setStatus(element, state, 'error');
+    this._dispatch(element, 'lazysrc:error', {
       element,
+      error: message,
       timestamp: performance.now(),
     });
-
-    try {
-      // Handle different element types
-      if (this.hasAttr(element, 'bg')) {
-        await this._loadBackgroundImage(element);
-      } else if (element.tagName === 'PICTURE') {
-        await this._loadPictureElement(element, componentState);
-      } else if (this._isImage(element)) {
-        await this._loadImageElement(element, componentState);
-      } else {
-        // Generic element with background image
-        await this._loadBackgroundImage(element);
-      }
-
-      this._onElementLoaded(element, componentState);
-    } catch (error) {
-      this._onElementError(element, componentState, error);
-    }
+    state.resolveSettled();
+    this.logger?.warn('Element failed to load after retries', { element, error: message });
   }
 
-  /**
-   * Load image element
-   * @private
-   * @param {HTMLImageElement} element
-   * @param {Object} state
-   * @returns {Promise}
-   */
-  _loadImageElement(element, state) {
-    return new Promise((resolve, reject) => {
-      /* Check if this image is inside a picture element */
-      if (state.pictureParent) {
-        /*
-         * Handle picture element with race condition prevention
-         *
-         * Apply sources to the actual img element, not a temporary Image object.
-         * This ensures the picture element's source selection works correctly.
-         *
-         * IMPORTANT: Handlers are set up AFTER applying sources to prevent race conditions:
-         * - Prevents infinite loops when images are cached (onload fires immediately)
-         * - Ensures browser doesn't start loading before all source elements are ready
-         * - Maintains correct picture element source selection order
-         */
-        this._applyPictureSources(state.pictureParent, state);
+  _settleLoaded(element, state, url) {
+    clearTimeout(state.retryTimer);
+    state.attempts = 0;
+    this._setStatus(element, state, 'loaded');
 
-        /* Set up handlers AFTER applying sources */
-        element.onload = () => {
-          resolve();
-        };
-
-        element.onerror = () => {
-          reject(new Error('Picture image failed to load'));
-        };
-      } else {
-        /* Standard image loading */
-        // Create new image for preloading
-        const img = new Image();
-
-        // Handle load success
-        img.onload = () => {
-          this._applySources(element, state);
-          resolve();
-        };
-
-        // Handle load error
-        img.onerror = () => {
-          reject(new Error('Image failed to load'));
-        };
-
-        // Get src and srcset
-        const src = this.getAttr(element, 'src') || state.originalSrc;
-        const srcset = this.getAttr(element, 'srcset') || state.originalSrcset;
-        const sizes = this.getAttr(element, 'sizes') || state.originalSizes;
-
-        // Set srcset and sizes first (browser will choose best image)
-        if (srcset) {
-          img.srcset = srcset;
-          if (sizes) {
-            img.sizes = sizes;
-          }
-        }
-
-        // Set src (either as fallback or primary)
-        if (src) {
-          img.src = src;
-        } else if (!srcset) {
-          reject(new Error('No src or srcset specified'));
-          return;
-        }
-      }
-    });
-  }
-
-  /**
-   * Load picture element
-   * @private
-   * @param {HTMLPictureElement} element
-   * @param {Object} state
-   * @returns {Promise}
-   */
-  _loadPictureElement(element, state) {
-    return new Promise((resolve, reject) => {
-      const img = element.querySelector('img');
-      if (!img) {
-        reject(new Error('No img element found in picture'));
-        return;
-      }
-
-      // Apply sources to trigger loading
-      this._applyPictureSources(element, state);
-
-      // Set up handlers AFTER applying sources to avoid infinite loop
-      // (onload can fire immediately if image is cached)
-      img.onload = () => {
-        resolve();
-      };
-
-      img.onerror = () => {
-        reject(new Error('Picture failed to load'));
-      };
-    });
-  }
-
-  /**
-   * Load background image
-   * @private
-   * @param {HTMLElement} element
-   * @returns {Promise}
-   */
-  _loadBackgroundImage(element) {
-    return new Promise((resolve, reject) => {
-      const bgUrl = this.getAttr(element, 'bg');
-      if (!bgUrl) {
-        reject(new Error('No background image URL specified'));
-        return;
-      }
-
-      // Create new image for preloading
-      const img = new Image();
-
-      img.onload = () => {
-        element.style.backgroundImage = `url("${bgUrl}")`;
-        resolve();
-      };
-
-      img.onerror = () => {
-        reject(new Error('Background image failed to load'));
-      };
-
-      img.src = bgUrl;
-    });
-  }
-
-  /**
-   * Apply sources to image element
-   * @private
-   * @param {HTMLImageElement} element
-   * @param {Object} state
-   */
-  _applySources(element, state) {
-    // Apply srcset - prefer data attribute, fall back to stored original
-    const srcset = this.getAttr(element, 'srcset');
-    if (srcset) {
-      element.srcset = srcset;
-    } else if (state.originalSrcset) {
-      element.srcset = state.originalSrcset;
-    }
-
-    // Apply sizes - prefer data attribute, fall back to stored original
-    const sizes = this.getAttr(element, 'sizes');
-    if (sizes) {
-      element.sizes = sizes;
-    } else if (state.originalSizes) {
-      element.sizes = state.originalSizes;
-    }
-
-    // Apply src - prefer data attribute, fall back to stored original
-    const src = this.getAttr(element, 'src');
-    if (src) {
-      element.src = src;
-    } else if (state.originalSrc) {
-      element.src = state.originalSrc;
-    }
-  }
-
-  /**
-   * Apply sources to picture element
-   * @private
-   * @param {HTMLPictureElement} element
-   * @param {Object} state
-   */
-  _applyPictureSources(element, state) {
-    /* Handle source elements */
-    const sources = element.querySelectorAll('source');
-    sources.forEach((source, index) => {
-      if (source.dataset.lazysrcSrcset) {
-        source.srcset = source.dataset.lazysrcSrcset;
-        /* Also apply data-lazysrc-sizes if present */
-        if (source.dataset.lazysrcSizes) {
-          source.sizes = source.dataset.lazysrcSizes;
-        }
-      } else if (state.originalSources && state.originalSources[index]) {
-        source.srcset = state.originalSources[index].srcset;
-        if (state.originalSources[index].sizes) {
-          source.sizes = state.originalSources[index].sizes;
-        }
-      }
-    });
-
-    /* Handle img element */
-    const img = element.querySelector('img');
-    if (img) {
-      this._applySources(img, state);
-    }
-  }
-
-  /**
-   * Handle successful element load
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
-   */
-  _onElementLoaded(element, state) {
-    state.isLoading = false;
-    state.isLoaded = true;
-    state.hasError = false;
-
-    // Calculate load time
-    const loadTime = state.loadStartTime ? performance.now() - state.loadStartTime : 0;
-
-    element.classList.remove(state.config.loadingClass);
-    element.classList.add(state.config.loadedClass);
-
-    // Apply fade-in effect
-    if (state.config.fadeInDuration > 0) {
-      this._applyFadeInEffect(element, state.config.fadeInDuration);
-    }
-
-    // Stop observing this element
-    this.observer.unobserve(element);
-    if (state.customObserver) {
-      state.customObserver.unobserve(element);
-    }
-
-    // Clear retry attempts
-    this.loadingAttempts.delete(element);
-
-    // Emit via custom event
     this._dispatch(element, 'lazysrc:loaded', {
       element,
       timestamp: performance.now(),
-      loadTime: Math.round(loadTime),
+      loadTime: this._loadTime(url),
     });
+    state.resolveSettled();
 
-    this.logger?.debug('Element loaded successfully', { element, loadTime });
+    state.listeners.abort();
+    this._dispatch(element, 'lazysrc:detached', { element, timestamp: performance.now() });
+  }
 
-    // Auto-detach after successful load if configured
-    if (state.config.autoDetach !== false) {
-      setTimeout(() => {
-        this._detachElement(element, state);
-      }, 100);
+  _setStatus(element, state, status) {
+    const { loadingClass, loadedClass, errorClass } = state.config;
+    const classes = { loading: loadingClass, loaded: loadedClass, error: errorClass };
+
+    state.status = status;
+    element.classList.remove(
+      ...tokens(loadingClass),
+      ...tokens(loadedClass),
+      ...tokens(errorClass)
+    );
+    element.classList.add(...tokens(classes[status]));
+    this.setState(element, status);
+  }
+
+  /**
+   * How long the browser took to download a URL, from Resource Timing
+   *
+   * @returns {number|null}
+   */
+  _loadTime(url) {
+    try {
+      const href = new URL(url, document.baseURI).href;
+      const entry = performance.getEntriesByName(href, 'resource').at(-1);
+      return entry ? Math.round(entry.duration) : null;
+    } catch {
+      return null;
     }
   }
 
-  /**
-   * Handle element load error
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
-   * @param {Error} error
-   */
-  _onElementError(element, state, error) {
-    state.isLoading = false;
-    state.hasError = true;
-
-    element.classList.remove(state.config.loadingClass);
-    element.classList.add(state.config.errorClass);
-
-    // Retry logic
-    const attempts = this.loadingAttempts.get(element) || 0;
-    if (attempts < state.config.retryAttempts) {
-      this.loadingAttempts.set(element, attempts + 1);
-
-      state.retryTimer = setTimeout(
-        () => {
-          state.isLoading = false;
-          state.hasError = false;
-          element.classList.remove(state.config.errorClass);
-          this._loadElement(element, state);
-        },
-        state.config.retryDelay * (attempts + 1)
-      ); // Exponential backoff
-
-      this.logger?.info(
-        `Retrying load for element (attempt ${attempts + 1}/${state.config.retryAttempts})`,
-        { element }
-      );
-      return;
-    }
-
-    // Emit via custom event
-    this._dispatch(element, 'lazysrc:error', {
-      element,
-      error: error?.message || 'Load failed',
-      timestamp: performance.now(),
+  _resetSettled(state) {
+    state.settled = new Promise(resolve => {
+      state.resolveSettled = resolve;
     });
-
-    this.logger?.warn('Element failed to load after retries', { element, error });
   }
 
   /**
-   * Apply fade-in effect
-   * @private
+   * Load an element straight away instead of waiting for it to near the viewport, or try again after
+   * an error
+   *
    * @param {HTMLElement} element
-   * @param {number} duration
+   * @returns {Promise<void>} Resolves once the element has loaded, failed or been unmounted
    */
-  _applyFadeInEffect(element, duration) {
-    element.style.opacity = '0';
-    element.style.transition = `opacity ${duration}ms ease-in-out`;
-
-    // Force reflow
-    element.offsetHeight;
-
-    element.style.opacity = '1';
-
-    // Clean up after animation
-    setTimeout(() => {
-      element.style.transition = '';
-    }, duration);
-  }
-
-  /**
-   * Force load a specific element
-   * @param {HTMLElement} element - Element to load
-   */
-  async loadElement(element) {
+  loadElement(element) {
     const state = this.getState(element);
-    if (state && !state.isLoaded && !state.isLoading) {
-      await this._loadElement(element, state);
+    if (!state) return Promise.resolve();
+
+    if (state.status === 'error') {
+      state.attempts = 0;
+      this._resetSettled(state);
+      if (state.image) {
+        this._startLoading(element, state);
+        this._reloadImage(state.image);
+      } else {
+        this._loadBackground(element, state);
+      }
+    } else if (state.status !== 'loaded') {
+      if (state.observerKey) {
+        this._unobserve(element, state);
+        this._loadBackground(element, state);
+      } else if (state.image?.loading === 'lazy') {
+        state.image.loading = 'eager';
+      }
     }
+
+    return state.settled;
   }
 
   /**
-   * Force load all lazy elements in container
-   * @param {HTMLElement} [container] - Container to search within
+   * Load every element in a container straight away
+   *
+   * @param {ParentNode} [container]
    */
   async loadAll(container = document) {
     const elements = this.trackedElements().filter(element => container.contains(element));
@@ -798,8 +470,9 @@ export default class Lazysrc extends BaseComponent {
   }
 
   /**
-   * Update observer for new content
-   * @param {HTMLElement} [container] - Container to search for new elements
+   * Mount any lazy elements in a container that aren't mounted yet
+   *
+   * @param {ParentNode} [container]
    */
   update(container = document) {
     container.querySelectorAll('[data-lazysrc]').forEach(element => {
@@ -809,106 +482,44 @@ export default class Lazysrc extends BaseComponent {
     });
   }
 
-  /**
-   * Check if element is loaded
-   * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether element is loaded
-   */
   isLoaded(element) {
-    return this.getState(element)?.isLoaded ?? false;
+    return this.getState(element)?.status === 'loaded';
   }
 
-  /**
-   * Check if element is loading
-   * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether element is loading
-   */
   isLoading(element) {
-    return this.getState(element)?.isLoading ?? false;
+    return this.getState(element)?.status === 'loading';
   }
 
-  /**
-   * Check if element has error
-   * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether element has error
-   */
   hasError(element) {
-    return this.getState(element)?.hasError ?? false;
+    return this.getState(element)?.status === 'error';
   }
 
-  /**
-   * Get component status
-   * @returns {Object} Component status
-   */
   getStatus() {
     const states = this.trackedElements()
       .map(element => this.getState(element))
       .filter(Boolean);
+    const count = status => states.filter(state => state.status === status).length;
 
     return {
       totalElements: states.length,
-      loadedCount: states.filter(state => state.isLoaded).length,
-      loadingCount: states.filter(state => state.isLoading).length,
-      errorCount: states.filter(state => state.hasError).length,
-      observerActive: !!this.observer,
-      supportsNative: this._supportsNativeLoading(),
+      loadedCount: count('loaded'),
+      loadingCount: count('loading'),
+      errorCount: count('error'),
       defaults: Lazysrc.defaults,
     };
   }
 
-  /**
-   * Detach element from component after loading
-   * @private
-   * @param {HTMLElement} element
-   * @param {Object} state
-   */
-  _detachElement(element, state) {
-    // Only detach if already loaded
-    if (!state.isLoaded) return;
-
-    // Clean up state
-    if (state.customObserver) {
-      state.customObserver.disconnect();
-      state.customObserver = null;
-    }
-
-    // Emit detached event via custom event
-    this._dispatch(element, 'lazysrc:detached', {
-      element,
-      timestamp: performance.now(),
-    });
-
-    this.logger?.debug('Element detached after loading', { element });
-  }
-
-  /**
-   * Destroy the component and clean up
-   */
   destroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-
-    this.loadingAttempts.clear();
     super.destroy();
-    this.logger?.info('Lazysrc destroyed');
+    for (const { observer } of this._observers.values()) {
+      observer.disconnect();
+    }
+    this._observers.clear();
   }
 
-  /**
-   * Enhance all lazy load elements on the page
-   * @param {string} selector - CSS selector for lazy elements
-   * @param {Object} options - Component options
-   * @returns {Lazysrc} Component instance
-   */
   static enhanceAll(selector = '[data-lazysrc]', options) {
     const instance = new Lazysrc(options);
-    const elements = document.querySelectorAll(selector);
-
-    elements.forEach(element => {
-      instance.mount(element);
-    });
-
+    document.querySelectorAll(selector).forEach(element => instance.mount(element));
     return instance;
   }
 }
