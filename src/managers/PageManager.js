@@ -78,40 +78,25 @@ export class PageManager {
     // Router event handlers
     this._subscribe(
       'router:navigate-success',
-      ({ html, url, trigger, viewTarget, viewTargets }) => {
-        // Resolve target groups based on configuration
-        const resolvedTargets = this._resolveTargetGroups(viewTargets || [viewTarget || 'main']);
-
-        this.replaceFragments(html, {
+      ({ html, url, trigger, viewTarget, viewTargets, waitUntil }) => {
+        const fromPopstate = trigger === 'popstate';
+        const swap = this.replaceFragments(html, {
           fromNavigation: true,
+          fromPopstate,
           url,
           trigger,
-          viewTargets: resolvedTargets,
-          preserveScroll: trigger === 'popstate' && this.options.scrollPosition === 'preserve',
+          viewTargets: this._resolveTargetGroups(viewTargets || [viewTarget || 'main']),
+          preserveScroll: fromPopstate && this.options.scrollPosition === 'preserve',
         });
+
+        if (waitUntil) {
+          waitUntil(swap);
+        } else {
+          /* replaceFragments reports its own failures through page:fragments-replace-error */
+          swap.catch(() => {});
+        }
       }
     );
-
-    this._subscribe('router:popstate', async ({ url }) => {
-      try {
-        this.logger?.info('Handling popstate navigation', { url: url.toString() });
-        const { data } = await this.router.get(url.toString());
-
-        if (typeof data === 'string') {
-          const resolvedTargets = this._resolveTargetGroups(['main']);
-
-          this.replaceFragments(data, {
-            fromPopstate: true,
-            url,
-            viewTargets: resolvedTargets,
-            preserveScroll: this.options.scrollPosition === 'preserve',
-          });
-        }
-      } catch (error) {
-        this.logger?.error('Popstate fetch failed', { url: url.toString(), error });
-        this.eventBus.emit('page:popstate-error', { url, error });
-      }
-    });
 
     // Component lifecycle events
     this._subscribe('component:lazy-load', ({ element, componentName }) => {
@@ -494,39 +479,52 @@ export class PageManager {
    */
   _performCSSTransition(fragment, className, duration, direction = 'in', outClassName = null) {
     return new Promise(resolve => {
-      const handleEnd = event => {
-        /* Only handle events from the fragment itself, not bubbled from children */
-        if (event && event.target !== fragment) return;
-
-        fragment.removeEventListener('animationend', handleEnd);
-        fragment.removeEventListener('transitionend', handleEnd);
-
-        /* When 'in' transition finishes, remove the 'in' class */
-        if (direction === 'in') {
-          fragment.classList.remove(className);
-        }
-
-        resolve();
-      };
-
-      /* Set up event listeners */
-      fragment.addEventListener('animationend', handleEnd);
-      fragment.addEventListener('transitionend', handleEnd);
-
-      /* Use requestAnimationFrame to ensure DOM is ready */
-      requestAnimationFrame(() => {
-        /* Add the new transition class */
+      requestAnimationFrame(async () => {
         fragment.classList.add(className);
 
-        /* If this is an 'in' transition, remove the 'out' class in the next frame */
-        /* This prevents flicker by ensuring the 'in' class is applied first */
+        /* Remove the 'out' class a frame later so the 'in' class applies first, avoiding a flicker */
         if (direction === 'in' && outClassName) {
           requestAnimationFrame(() => {
             fragment.classList.remove(outClassName);
           });
         }
+
+        await this._whenAnimationsFinish(fragment, duration);
+
+        if (direction === 'in') {
+          fragment.classList.remove(className);
+        }
+
+        resolve();
       });
     });
+  }
+
+  /**
+   * Resolve once the element's own CSS animations and transitions have finished
+   *
+   * Resolves straight away when nothing animates (the class defines no animation, or the element
+   * is hidden) and otherwise no later than shortly after the longest animation should end, so an
+   * animation that never finishes cannot stall navigation.
+   */
+  _whenAnimationsFinish(element, duration) {
+    const animations = element.getAnimations?.() ?? [];
+    if (animations.length === 0) {
+      return Promise.resolve();
+    }
+
+    const endTimes = animations
+      .map(animation => animation.effect?.getComputedTiming().endTime)
+      .filter(Number.isFinite);
+    const timeout = Math.max(duration, ...endTimes) + 250;
+
+    let timer;
+    return Promise.race([
+      Promise.allSettled(animations.map(animation => animation.finished)),
+      new Promise(resolve => {
+        timer = setTimeout(resolve, timeout);
+      }),
+    ]).then(() => clearTimeout(timer));
   }
 
   /**

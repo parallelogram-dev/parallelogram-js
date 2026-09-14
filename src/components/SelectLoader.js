@@ -78,6 +78,7 @@ export default class SelectLoader extends BaseComponent {
     state.config = { ...SelectLoader.defaults, ...config };
     state.targetElement = targetElement;
     state.isLoading = false;
+    state.request = null;
     state.currentUrl = null;
     state.scrollPosition = 0;
 
@@ -105,6 +106,11 @@ export default class SelectLoader extends BaseComponent {
    * @private
    */
   _setupEventListeners(element, state) {
+    /* Cancel a pending load when the component is unmounted */
+    state.controller.signal.addEventListener('abort', () => state.request?.abort(), {
+      once: true,
+    });
+
     /* Listen for select changes */
     element.addEventListener(
       'change',
@@ -161,6 +167,7 @@ export default class SelectLoader extends BaseComponent {
 
     /* Handle empty selection */
     if (!value || value === '') {
+      state.request?.abort();
       this._showEmptyMessage(state);
       state.currentUrl = null;
 
@@ -175,28 +182,26 @@ export default class SelectLoader extends BaseComponent {
   }
 
   /**
-   * Load HTML fragment using RouterManager
+   * Load an HTML fragment through RouterManager, cancelling any load still in progress
    * @private
    */
   async _loadFragment(element, state, url) {
-    /* Prevent concurrent loads */
-    if (state.isLoading) {
-      this.logger?.warn('SelectLoader: Load already in progress');
-      return;
-    }
-
+    state.request?.abort();
+    const request = new AbortController();
+    state.request = request;
     state.isLoading = true;
     state.currentUrl = url;
+    let loaded = false;
 
     /* Store scroll position if needed */
     if (state.config.retainScroll) {
       state.scrollPosition = state.targetElement.scrollTop;
     }
 
-    /* Apply loading state */
+    /* Apply loading state without disabling the select, so a newer choice can replace this one */
     element.classList.add(state.config.loadingClass);
-    element.disabled = true;
     state.targetElement.classList.add(state.config.loadingClass);
+    state.targetElement.setAttribute('aria-busy', 'true');
 
     /* Emit loading event */
     this._dispatch(element, 'selectloader:loading', {
@@ -210,16 +215,17 @@ export default class SelectLoader extends BaseComponent {
         throw new Error('RouterManager not available');
       }
 
-      const result = await this.router.get(url);
-      const html = result.data;
+      const { data: html } = await this.router.get(url, { signal: request.signal });
 
       /* Transition out old content */
       if (state.config.transition !== 'none') {
         await this._transitionOut(state);
       }
+      request.signal.throwIfAborted();
 
       /* Replace content */
       state.targetElement.innerHTML = html;
+      state.targetElement.classList.remove(state.config.errorClass);
 
       /* Restore scroll position */
       if (state.config.retainScroll) {
@@ -246,7 +252,13 @@ export default class SelectLoader extends BaseComponent {
       });
 
       this.logger?.info('SelectLoader: Fragment loaded', { url });
+      loaded = true;
     } catch (error) {
+      /* A newer choice or unmounting cancelled this load */
+      if (request.signal.aborted) {
+        return;
+      }
+
       this.logger?.error('SelectLoader: Load failed', { url, error });
 
       /* Show error message */
@@ -266,16 +278,17 @@ export default class SelectLoader extends BaseComponent {
         duration: 5000,
       });
     } finally {
-      /* Remove loading state */
-      state.isLoading = false;
-      element.classList.remove(state.config.loadingClass);
-      element.disabled = false;
-      state.targetElement.classList.remove(state.config.loadingClass);
+      if (state.request === request) {
+        state.request = null;
+        state.isLoading = false;
+        element.classList.remove(state.config.loadingClass);
+        state.targetElement.classList.remove(state.config.loadingClass);
+        state.targetElement.removeAttribute('aria-busy');
 
-      this._dispatch(element, 'selectloader:complete', {
-        url,
-        success: !state.targetElement.classList.contains(state.config.errorClass),
-      });
+        if (!request.signal.aborted) {
+          this._dispatch(element, 'selectloader:complete', { url, success: loaded });
+        }
+      }
     }
   }
 
@@ -424,6 +437,7 @@ export default class SelectLoader extends BaseComponent {
     if (!state) return;
 
     element.value = '';
+    state.request?.abort();
     this._showEmptyMessage(state);
     state.currentUrl = null;
   }

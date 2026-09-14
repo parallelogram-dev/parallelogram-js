@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `BaseComponent#trackedElements()` lists the elements a component is mounted on, including ones whose asynchronous `_init` is still running.
 - `EventManager#on()` and `EventManager#once()` accept `{ signal }` and remove the listener when the signal aborts; `EventManager#listenerCount()` reports how many listeners an event has; listener errors go to the logger passed to the constructor.
 - `BaseComponent#getBoolAttr()` and `BaseComponent#getNumberAttr()` for reading typed component attributes. `_getConfigFromAttrs()` now converts values to the type of each entry in `static defaults`.
+- `RouterManager#handlesLink(link)` reports whether the router takes over clicks on a link, and the `router.navigating` getter reports whether a navigation (including its fragment swap) is in progress.
+- `router:navigate-success` carries `waitUntil(promise)`, which keeps the navigation in progress until the page swap settles, plus `requestedUrl`, `redirected` and the navigation's abort `signal`. `router:navigate-end` reports a `status` of `success`, `error`, `aborted` or `full-load`.
+- `RouterManager#get()` accepts `signal` and `timeout` in its second argument, and a `fullLoadOnError` router option (default `true`) controls the full page load fallback.
 
 ### Deprecated
 
@@ -27,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `QueuedComponentProxy` (`@parallelogram-js/core/core/QueuedComponentProxy`), PageManager's internal loading methods (`_ensureInstance`, `_handleAsyncLoading`, `_createInstance`, `unmountRemoved`) and its unused `batchUpdates`, `updateThrottleMs`, `lazyLoadThreshold` and `scrollRestoration` options.
+- RouterManager's per-link listeners and the `data-router-enhanced` attribute, its `router:anchor-scroll` event, the unused `scrollDuration` and `scrollEasing` options, and the `controller`, `boundPopState`, `boundLinkClick` and `boundAnchorClick` properties. PageManager no longer fetches pages on `router:popstate`, and its `page:popstate-error` event is gone; failures are reported through `router:navigate-error`.
 - **BREAKING:** The CommonJS build (`dist/index.cjs`) and the `require` export condition. The package is ESM only, and the root entry is now `dist/index.js`.
 - `src/demo` from the published package.
 - Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
@@ -63,6 +67,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documented import paths ending in `.js` (for example `@parallelogram-js/core/components/PModal.js`) resolved to `PModal.js.js` and failed. Every subpath now accepts both spellings and honours the `development` condition.
 - The `Modal` bundle silently dropped its `p-modal` dependency, and `PSelect` and `AlertManager` dropped `p-toasts`. `sideEffects` now covers the self-registering `p-*` elements.
 - Development bundles contained production code, because components imported BaseComponent through the package name and Rollup resolved it to the previous build's minified output.
+- **Behaviour change:** a link click during a slow navigation used to be swallowed, and a request cancelled by another could leave the newer one impossible to cancel, so fast Back/Forward presses could show an older page. The most recent navigation now wins: earlier requests are aborted, and page swaps run one after another.
+- **Behaviour change:** a navigation that fails (an HTTP error, network failure or timeout), returns something other than HTML, or is redirected to another site now falls back to a normal page load, so the browser shows the server's own error page. Previously the old page stayed on screen, the router refused to retry the same URL, and the link click caused an unhandled promise rejection. With `fullLoadOnError: false`, the `router-error` class now stays on the page until the next navigation starts instead of being removed in the same tick.
+- Fragment transitions set through `targetGroupTransitions` waited for an `animationend` or `transitionend` event that never fired when the class defined no animation or the fragment was hidden, so the swap never finished and the page title, component mounting and later navigations never happened (as in the demo's navbar). Transitions now wait for the fragment's running animations, finish straight away when there are none, and give up shortly after the longest animation should have ended.
+- After a server redirect, the address bar and `router.currentUrl` show the URL the page came from instead of the one that was requested.
+- `router.isNavigating()` threw a TypeError, because a boolean property of the same name hid the method.
+- `router.get()` cancelled any navigation in progress and was cancelled by the next one, so SelectLoader loads and page navigations aborted each other and showed error messages. Requests made with `router.get()` are now independent, and a `signal` passed to it no longer disables the timeout. Timeouts reject with a `TimeoutError` instead of an `AbortError`.
+- **Behaviour change:** the router handles link clicks with one listener on the document, so links added by components or scripts after startup are routed too. It ignores clicks that another handler has cancelled or that use a mouse button other than the main one, respects `data-router-skip` on any ancestor, and leaves `rel="external"` links and cross-origin links to the browser (`data-router-enhance` now only overrides the file extension check).
+- **Behaviour change:** the router no longer intercepts same-page `#hash` links, which scrolled without moving focus, never applied `:target` and ignored reduced motion. Use `scroll-behavior: smooth` inside `@media (prefers-reduced-motion: no-preference)` for smooth scrolling. Back and Forward between entries that differ only by hash no longer re-fetch the page.
+- **Behaviour change:** SelectLoader shows the most recent choice when an earlier one is still loading, instead of ignoring the new choice. It marks the target `aria-busy` instead of disabling the select, clears its error class after a successful load, and cancels a pending load when the choice is cleared or the component is unmounted.
 
 ### Changed
 
