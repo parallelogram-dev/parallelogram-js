@@ -66,45 +66,60 @@ export default class PModal extends HTMLElement {
     // Bind event handlers
     this._onKeydown = this._onKeydown.bind(this);
     this._onFocus = this._onFocus.bind(this);
-
-    // Initialize with closed state
-    this.setAttribute('data-modal', ExtendedStates.CLOSED);
   }
 
   connectedCallback() {
     this._upgradeProperty('open');
 
-    // Set up event listeners
-    this._elements.backdrop.addEventListener('click', () => {
-      if (this._isBackdropClosable()) {
-        this.close();
-      }
-    });
+    // Custom element constructors may not add attributes, so the initial state is set here
+    if (!this.hasAttribute('data-modal')) {
+      this.setAttribute('data-modal', ExtendedStates.CLOSED);
+    }
 
-    this._elements.close.addEventListener('click', () => {
-      if (this._isClosable()) {
-        this.close();
-      }
-    });
+    this._listeners = new AbortController();
+    const { signal } = this._listeners;
 
-    // Global event listeners
-    document.addEventListener('keydown', this._onKeydown);
-    this.addEventListener('focusin', this._onFocus);
+    this._elements.backdrop.addEventListener(
+      'click',
+      () => {
+        if (this._isBackdropClosable()) {
+          this.close();
+        }
+      },
+      { signal }
+    );
+
+    this._elements.close.addEventListener(
+      'click',
+      () => {
+        if (this._isClosable()) {
+          this.close();
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener('keydown', this._onKeydown, { signal });
+    this.addEventListener('focusin', this._onFocus, { signal });
 
     // Handle slotted buttons with data-modal-close attribute
-    this.addEventListener('click', event => {
-      if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
-        this.close();
-      }
-    });
+    this.addEventListener(
+      'click',
+      event => {
+        if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
+          this.close();
+        }
+      },
+      { signal }
+    );
 
     // Set ARIA attributes
     this._elements.panel.setAttribute('aria-labelledby', this._getTitleId());
   }
 
   disconnectedCallback() {
-    document.removeEventListener('keydown', this._onKeydown);
-    this.removeEventListener('focusin', this._onFocus);
+    this._listeners?.abort();
+    this._listeners = null;
   }
 
   attributeChangedCallback(name) {

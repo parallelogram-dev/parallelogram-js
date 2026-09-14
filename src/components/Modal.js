@@ -8,7 +8,7 @@
  * <button data-modal data-modal-target="#example-modal">Open Modal</button>
  *
  * <p-modal id="example-modal"
- *          data-modal-size="large"
+ *          data-modal-size="lg"
  *          data-modal-closable="true">
  *   <h2 slot="title">Modal Title</h2>
  *   <p>Modal content goes here.</p>
@@ -18,11 +18,12 @@
  *   </div>
  * </p-modal>
  *
+ * Settings belong on <p-modal>. A trigger only overrides the ones it sets itself
+ * (data-modal-size, data-modal-closable, data-modal-backdrop-close, data-modal-keyboard).
+ *
  * JavaScript (standalone):
- * import { Modal } from './components/Modal.js';
- * const modals = new Modal();
- * document.querySelectorAll('[data-modal]')
- *   .forEach(trigger => modals.mount(trigger));
+ * import Modal from '@parallelogram-js/core/components/Modal';
+ * Modal.enhanceAll();
  */
 
 import { BaseComponent } from '../core/BaseComponent.js';
@@ -91,13 +92,13 @@ export default class Modal extends BaseComponent {
       return state;
     }
 
-    // Configure modal attributes
-    this._configureModal(modalElement, {
-      size,
-      closable,
-      backdropClose,
-      keyboard,
-    });
+    // Forward only the settings this trigger sets, so <p-modal>'s own attributes win otherwise
+    const overrides = {};
+    if (this.hasAttr(element, 'size')) overrides.size = size;
+    if (this.hasAttr(element, 'closable')) overrides.closable = closable;
+    if (this.hasAttr(element, 'backdrop-close')) overrides.backdropClose = backdropClose;
+    if (this.hasAttr(element, 'keyboard')) overrides.keyboard = keyboard;
+    this._configureModal(modalElement, overrides);
 
     // Store state
     state.target = target;
@@ -127,7 +128,8 @@ export default class Modal extends BaseComponent {
     element.setAttribute('aria-haspopup', 'dialog');
     element.setAttribute('aria-expanded', 'false');
     if (!element.getAttribute('aria-controls')) {
-      element.setAttribute('aria-controls', target.replace('#', ''));
+      modalElement.id ||= generateId('modal');
+      element.setAttribute('aria-controls', modalElement.id);
     }
 
     this.logger?.info('Modal trigger initialized', {
@@ -362,15 +364,20 @@ export default class Modal extends BaseComponent {
 
   /**
    * Static method to create a modal programmatically
+   *
+   * The modal is appended to document.body and returned closed; call open() on it.
+   *
    * @param {Object} config - Modal configuration
    * @param {string} config.title - Modal title
-   * @param {string} config.content - Modal content (HTML)
-   * @param {Array} [config.actions] - Action buttons
-   * @param {string} [config.size] - Modal size
-   * @param {Object} [config.options] - Additional options
+   * @param {string|Node} config.content - Modal content. Strings are inserted as HTML,
+   *   so only pass trusted markup; pass a Node for anything built from user data.
+   * @param {Array<{label: string, type?: string, close?: boolean, onClick?: Function}>} [config.actions]
+   *   Action buttons. Buttons close the modal unless close is false.
+   * @param {string} [config.size='md'] - Modal size: xs, sm, md, lg, xl or fullscreen
+   * @param {Object} [config.options] - Additional data-modal-* attributes
    * @returns {Promise<PModal>} Modal element
    */
-  static async create({ title, content, actions = [], size = 'medium', options = {} }) {
+  static async create({ title, content, actions = [], size = 'md', options = {} }) {
     // Create modal element
     const modal = document.createElement('p-modal');
     modal.id = generateId('modal');
@@ -390,7 +397,11 @@ export default class Modal extends BaseComponent {
     // Create content
     if (content) {
       const contentElement = document.createElement('div');
-      contentElement.innerHTML = content;
+      if (content instanceof Node) {
+        contentElement.append(content);
+      } else {
+        contentElement.innerHTML = content;
+      }
       modal.appendChild(contentElement);
     }
 
@@ -403,8 +414,9 @@ export default class Modal extends BaseComponent {
         const button = createElement(
           'button',
           {
+            type: 'button',
             className: `btn btn--${action.type || 'secondary'}`,
-            'data-modal-close': action.close !== false ? '' : undefined,
+            ...(action.close !== false && { 'data-modal-close': '' }),
           },
           action.label
         );
@@ -421,5 +433,6 @@ export default class Modal extends BaseComponent {
 
     // Append to document
     document.body.appendChild(modal);
+    return modal;
   }
 }
