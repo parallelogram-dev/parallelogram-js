@@ -25,7 +25,6 @@
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
   --select-border: var(--surface-control-border-width, #{$border-width}) solid
     var(--select-border-color);
-  --select-focus-shadow: inset 0 0 0 3px #{rgba($primary, 0.3)};
 
   /* Dropdown menu surface tokens */
   --menu-border-radius: var(--surface-dropdown-radius, #{$radius-sm});
@@ -73,6 +72,12 @@
     box-shadow 0.2s ease;
   box-sizing: border-box;
   padding: inherit;
+}
+
+/* The input hides its own outline, so the whole control shows focus instead */
+.control:focus-within {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 2px;
 }
 
 .input {
@@ -152,4 +157,18 @@
   font-style: italic;
   text-align: center;
   opacity: 0.6;
+}
+
+/* Forced colours drop the option backgrounds, so mark the states with system colours */
+@media (forced-colors: active) {
+  .option[aria-selected='true'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .option[aria-current='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }

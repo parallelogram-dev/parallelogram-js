@@ -1,0 +1,13 @@
+@use 'design-system' as ds;
+
+.ring {
+  @include ds.focus-visible;
+}
+
+.reset {
+  @include ds.button-reset;
+}
+
+.control {
+  @include ds.form-control;
+}

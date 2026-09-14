@@ -15,10 +15,10 @@
 }
 
 /* Focus visible styles (keyboard focus only) */
-@mixin focus-visible($color: $color-focus-shadow) {
+@mixin focus-visible($color: $primary) {
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px $color;
+    outline: 2px solid $color;
+    outline-offset: 2px;
   }
 }
 
@@ -78,8 +78,9 @@
   cursor: pointer;
   appearance: none;
 
-  &:focus {
-    outline: none;
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
   }
 }
 
