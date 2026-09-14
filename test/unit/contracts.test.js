@@ -1,0 +1,172 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import { validateContract } from '../../src/contract.js';
+
+const root = `${process.cwd()}/`;
+const read = file => readFileSync(`${root}${file}`, 'utf8');
+
+const contracts = Object.values(
+  import.meta.glob('../../src/components/*.contract.js', { eager: true, import: 'default' })
+);
+const modules = import.meta.glob([
+  '../../src/components/*.js',
+  '!../../src/components/*.contract.js',
+]);
+
+const styles = readdirSync(`${root}src/styles/framework/components`)
+  .map(file => read(`src/styles/framework/components/${file}`))
+  .join('\n');
+
+const QUOTED_EVENT = /['"`]([a-z][a-z-]*:[a-z][a-z-]*)['"`]/g;
+const HELPER_READ =
+  /\b(?:getAttr|getBoolAttr|getNumberAttr|hasAttr|setAttr|removeAttr)\(\s*[\w.]+,\s*'([a-z-]+)'/g;
+const CONFIG_MAP = /_getConfigFromAttrs\(\s*[\w.]+,\s*\{([^}]*)\}/g;
+const PART = /part="([a-z -]+)"|setAttribute\('part', '([a-z -]+)'\)|\bpart: '([a-z -]+)'/g;
+const SLOT = /<slot(?: name="([a-z-]+)")?/g;
+
+const unique = values => [...new Set(values)].sort();
+
+/** Rename custom element tags so parsing an example never constructs its elements */
+const inertMarkup = markup => markup.replace(/<(\/?)p-/g, '<$1x-inert-p-');
+const inertSelector = selector => selector.replace(/(^|[\s,>+~])p-/g, '$1x-inert-p-');
+const withoutPlaceholder = name => name.replace(/<[a-z-]+>$/, '');
+const itemsOf = contract => [contract, ...(contract.elements ?? [])];
+
+async function componentOf(contract) {
+  const module = await modules[`../../src/${contract.module}.js`]();
+  return module.default ?? module[contract.name];
+}
+
+describe.each(contracts.map(contract => [contract.name, contract]))(
+  '%s contract',
+  (_, contract) => {
+    const source = read(`src/${contract.module}.js`);
+    const attributes = itemsOf(contract).flatMap(item => item.attributes ?? []);
+    const attributeNames = new Set(attributes.map(attribute => attribute.name));
+    const events = itemsOf(contract).flatMap(item => item.events ?? []);
+    const eventNames = new Set(events.map(event => event.name));
+    const own = contract.match ?? contract.tag ?? `[${contract.selector}]`;
+
+    it('is well formed', () => {
+      expect(validateContract(contract)).toEqual([]);
+    });
+
+    it('describes the class its module exports', async () => {
+      const Component = await componentOf(contract);
+
+      if (contract.kind === 'element') {
+        expect(customElements.get(contract.tag)).toBe(Component);
+      } else {
+        const declared = String(Component.selector).replace(/^\[|\]$/g, '');
+        expect(declared.startsWith('data-') ? declared : `data-${declared}`).toBe(
+          contract.selector
+        );
+      }
+    });
+
+    it('names attributes that appear in the source', () => {
+      const missing = [...attributeNames].filter(name => {
+        const bare = withoutPlaceholder(name);
+        if (source.includes(bare)) return false;
+        const prefix = `${contract.selector}-`;
+        return !(
+          contract.selector &&
+          bare.startsWith(prefix) &&
+          source.includes(`'${bare.slice(prefix.length)}'`)
+        );
+      });
+
+      expect(missing).toEqual([]);
+    });
+
+    it('declares every attribute the component reads or observes', async () => {
+      let used;
+      if (contract.kind === 'enhancement') {
+        const suffixes = [
+          ...[...source.matchAll(HELPER_READ)].map(match => match[1]),
+          ...[...source.matchAll(CONFIG_MAP)].flatMap(match =>
+            [...match[1].matchAll(/'([a-z-]+)'/g)].map(value => value[1])
+          ),
+        ];
+        used = suffixes.map(suffix => `${contract.selector}-${suffix}`);
+      } else {
+        await componentOf(contract);
+        used = itemsOf(contract).flatMap(
+          item => customElements.get(item.tag)?.observedAttributes ?? []
+        );
+      }
+
+      expect(unique(used).filter(name => !attributeNames.has(name))).toEqual([]);
+    });
+
+    it('declares every event the source names under its prefixes', () => {
+      const prefixes = new Set([...eventNames].map(name => name.split(':')[0]));
+      itemsOf(contract).forEach(item => item.tag && prefixes.add(item.tag));
+      if (contract.selector) prefixes.add(contract.selector.slice('data-'.length));
+
+      const named = [...source.matchAll(QUOTED_EVENT)]
+        .map(match => match[1])
+        .filter(name => prefixes.has(name.split(':')[0]));
+
+      expect(unique(named).filter(name => !eventNames.has(name))).toEqual([]);
+    });
+
+    it('names events that appear in the source', () => {
+      const missing = [...eventNames].filter(name => {
+        if (source.includes(`'${name}'`) || source.includes(`\`${name}\``)) return false;
+        const [prefix, verb] = name.split(':');
+        return !(verb && source.includes(`\`${prefix}:\${`) && source.includes(`'${verb}'`));
+      });
+
+      expect(missing).toEqual([]);
+    });
+
+    it.runIf(contract.kind === 'element')('declares its shadow parts and slots', () => {
+      const parts = [...source.matchAll(PART)].flatMap(match =>
+        (match[1] ?? match[2] ?? match[3]).split(' ')
+      );
+      const slots = [...source.matchAll(SLOT)].map(match => match[1] ?? '');
+
+      expect({
+        parts: unique(itemsOf(contract).flatMap(item => (item.parts ?? []).map(part => part.name))),
+        slots: unique(itemsOf(contract).flatMap(item => (item.slots ?? []).map(slot => slot.name))),
+      }).toEqual({ parts: unique(parts), slots: unique(slots) });
+    });
+
+    it('names CSS properties its styles or source use', () => {
+      const missing = (contract.cssProperties ?? [])
+        .map(property => property.name)
+        .filter(name => !styles.includes(name) && !source.includes(name));
+
+      expect(missing).toEqual([]);
+    });
+
+    it('gives the defaults the component uses', async () => {
+      const Component = await componentOf(contract);
+      const withOption = attributes.filter(attribute => attribute.option);
+
+      expect(
+        withOption.map(attribute => [attribute.name, Component.defaults?.[attribute.option]])
+      ).toEqual(withOption.map(attribute => [attribute.name, attribute.default]));
+    });
+
+    it('has examples containing the component and the elements their controls change', () => {
+      const problems = [];
+      for (const example of contract.examples) {
+        const inert = document.implementation.createHTMLDocument('');
+        inert.body.innerHTML = inertMarkup(example.markup);
+        if (!inert.body.querySelector(inertSelector(own))) {
+          problems.push(`${example.id} has no ${own}`);
+        }
+        for (const control of example.controls ?? []) {
+          const target = control.target ?? own;
+          if (!inert.body.querySelector(inertSelector(target))) {
+            problems.push(`${example.id} has no ${target} for ${control.attribute}`);
+          }
+        }
+      }
+
+      expect(problems).toEqual([]);
+    });
+  }
+);
