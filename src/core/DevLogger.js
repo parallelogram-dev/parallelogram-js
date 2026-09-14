@@ -1,65 +1,83 @@
+const noop = () => {};
+
+/**
+ * Console logger used across the framework
+ *
+ * Messages are prefixed with the namespace, such as `[parallelogram]`. debug, log, info and group
+ * stay quiet until the logger is enabled, and silent quietens warn and error as well. Each method is
+ * the console's own function bound to the prefix, so developer tools point at the line that logged
+ * the message rather than at this file. Production builds remove the framework's own debug, log,
+ * info and group calls, so those only appear when a bundler resolves the `development` condition.
+ */
 export class DevLogger {
-  constructor(namespace, enabled = false, silent = false) {
-    this.namespace = namespace;
-    this.enabled = enabled;
-    this.silent = silent;
+  /**
+   * @param {string|{ namespace?: string, prefix?: string }} [namespace='parallelogram']
+   * @param {boolean} [enabled=false] - Show debug, log, info and group output
+   * @param {boolean} [silent=false] - Hide all output, including warnings and errors
+   */
+  constructor(namespace = 'parallelogram', enabled = false, silent = false) {
+    this.namespace =
+      typeof namespace === 'string'
+        ? namespace
+        : (namespace?.namespace ?? namespace?.prefix ?? 'parallelogram');
+    this.enabled = Boolean(enabled);
+    this.silent = Boolean(silent);
+    this._children = new Set();
+    this._bind();
   }
 
   setEnabled(enabled) {
     this.enabled = Boolean(enabled);
+    this._bind();
   }
 
   setSilent(silent) {
     this.silent = Boolean(silent);
+    this._bind();
   }
 
-  _getPrefix(level) {
-    return `${new Date().toISOString()} [${this.namespace}] ${level}:`;
-  }
-
-  debug(...args) {
-    if (this.silent || !this.enabled) return;
-    console.debug(this._getPrefix('DEBUG'), ...args);
-  }
-
-  log(...args) {
-    if (this.silent || !this.enabled) return;
-    console.log(this._getPrefix('LOG'), ...args);
-  }
-
-  info(...args) {
-    if (this.silent || !this.enabled) return;
-    console.info(this._getPrefix('INFO'), ...args);
-  }
-
-  warn(...args) {
-    if (this.silent) return;
-    console.warn(this._getPrefix('WARN'), ...args);
-  }
-
-  error(...args) {
-    if (this.silent) return;
-    console.error(this._getPrefix('ERROR'), ...args);
-  }
-
+  /**
+   * A logger for part of an application, with a namespace nested in this one and settings that
+   * follow this logger's
+   *
+   * @param {string} subNamespace
+   * @returns {DevLogger}
+   */
   child(subNamespace) {
-    return new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled, this.silent);
+    const child = new DevLogger(`${this.namespace}:${subNamespace}`, this.enabled, this.silent);
+    this._children.add(child);
+    return child;
   }
 
   group(label, data) {
     if (this.silent || !this.enabled || !console.groupCollapsed) return;
 
-    /* Open the group with just the label */
     console.groupCollapsed(`[${this.namespace}] ${label}`);
-
-    /* Log data separately inside the group if provided */
     if (data && typeof data === 'object') {
       console.log('Details:', data);
     }
   }
+
   groupEnd() {
     if (this.silent || !this.enabled || !console.groupEnd) return;
     console.groupEnd();
+  }
+
+  _bind() {
+    const prefix = `[${this.namespace}]`;
+    const verbose = this.enabled && !this.silent;
+
+    this.debug = verbose ? console.debug.bind(console, prefix) : noop;
+    this.log = verbose ? console.log.bind(console, prefix) : noop;
+    this.info = verbose ? console.info.bind(console, prefix) : noop;
+    this.warn = this.silent ? noop : console.warn.bind(console, prefix);
+    this.error = this.silent ? noop : console.error.bind(console, prefix);
+
+    for (const child of this._children) {
+      child.enabled = this.enabled;
+      child.silent = this.silent;
+      child._bind();
+    }
   }
 }
 

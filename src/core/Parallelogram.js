@@ -44,7 +44,10 @@ export class Parallelogram {
    * Create a new Parallelogram instance
    * @param {Object} config - Configuration options
    * @param {string} [config.mode='production'] - Framework mode ('development' or 'production')
-   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. Default false.
+   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. The package's
+   *   default build leaves out the framework's own debug output, so it only appears when the
+   *   bundler resolves the `development` export condition (Vite does during development; esbuild
+   *   needs `--conditions=development`).
    * @param {boolean} [config.silent=false] - Suppress ALL logger output, including warn and error.
    *   Use in production when console pollution is unacceptable. Overrides `debug`.
    * @param {Object} [config.router] - Router configuration (enables router if provided)
@@ -108,12 +111,12 @@ export class Parallelogram {
    */
   init() {
     if (this._initialized) {
-      console.warn('[Parallelogram] Already initialized');
+      this.logger?.warn('Parallelogram is already initialized');
       return this;
     }
 
     // Create logger
-    this.logger = new DevLogger({}, this.config.debug, this.config.silent);
+    this.logger = new DevLogger('parallelogram', this.config.debug, this.config.silent);
     this.logger?.info('Parallelogram initializing', {
       mode: this.config.mode,
       debug: this.config.debug,
@@ -158,6 +161,7 @@ export class Parallelogram {
 
     this.webComponentLoader = new WebComponentLoader(webComponentMap, {
       observeDOM: true, // Watch for dynamically added web components
+      logger: this.logger,
       onLoad: tagName => {
         this.logger?.info(`Web component loaded: ${tagName}`);
       },
