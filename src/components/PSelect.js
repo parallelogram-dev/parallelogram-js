@@ -86,6 +86,7 @@ export default class PSelect extends HTMLElement {
     this._abortController = null;
     this._searchTimeout = null;
     this._announcementRegion = null;
+    this._defaultValue = '';
 
     this._render();
     this._setupEventListeners();
@@ -114,7 +115,7 @@ export default class PSelect extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['value', 'placeholder', 'disabled', 'name', 'required'];
+    return ['value', 'placeholder', 'disabled', 'required'];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -130,9 +131,6 @@ export default class PSelect extends HTMLElement {
         break;
       case 'disabled':
         this._updateDisabledState(newValue !== null);
-        break;
-      case 'name':
-        this.name = newValue || '';
         break;
       case 'required':
         this._updateRequiredState(newValue !== null);
@@ -213,8 +211,6 @@ export default class PSelect extends HTMLElement {
     this.state.openOnFocus = (d.selectOpenOnFocus ?? 'true') !== 'false';
     this.state.disabled = this.hasAttribute('disabled');
     this.state.required = this.hasAttribute('required');
-
-    this.name = this.getAttribute('name') || '';
   }
 
   _createAnnouncementRegion() {
@@ -238,7 +234,7 @@ export default class PSelect extends HTMLElement {
     optionElements.forEach(option => {
       const disabled = option.hasAttribute('disabled');
       const selected = option.hasAttribute('selected');
-      const value = option.value || option.textContent.trim();
+      const value = option.value;
       const label = option.textContent.trim();
 
       const optionData = {
@@ -252,6 +248,7 @@ export default class PSelect extends HTMLElement {
 
       if (optionData.selected) {
         this.state.value = optionData.value;
+        this._defaultValue = optionData.value;
       }
 
       // Hide the original option
@@ -262,6 +259,7 @@ export default class PSelect extends HTMLElement {
       this.setOptions(options);
       this._updateDisplay();
     }
+    this._syncFormState();
   }
 
   _handleInput(e) {
@@ -371,8 +369,9 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateValue(newValue) {
-    this.state.value = newValue;
+    this.state.value = newValue ?? '';
     this._updateDisplay();
+    this._syncFormState();
   }
 
   _updatePlaceholder() {
@@ -387,6 +386,7 @@ export default class PSelect extends HTMLElement {
   _updateRequiredState(required) {
     this.state.required = required;
     this._els.input.required = required;
+    this._syncFormState();
   }
 
   // Public API
@@ -429,11 +429,11 @@ export default class PSelect extends HTMLElement {
   }
 
   select(value) {
-    const option = this.state.options.find(opt => opt.value == value);
+    const option = this.state.options.find(opt => String(opt.value) === String(value));
     if (!option || option.disabled) return;
 
     this.state.value = option.value;
-    this._setFormValue(option.value, option.label);
+    this._syncFormState();
     this._els.input.value = option.label;
 
     this.dispatchEvent(
@@ -450,6 +450,7 @@ export default class PSelect extends HTMLElement {
     this.state.options = Array.isArray(arr) ? arr.slice() : [];
     this.state.filtered = this.state.options.slice();
     this._renderOptions();
+    this._syncFormState();
   }
 
   getValue() {
@@ -458,7 +459,7 @@ export default class PSelect extends HTMLElement {
 
   clear() {
     this.state.value = '';
-    this._setFormValue('', '');
+    this._syncFormState();
     this._els.input.value = '';
     this._els.input.placeholder = this.state.placeholder;
   }
@@ -486,14 +487,88 @@ export default class PSelect extends HTMLElement {
     };
   }
 
-  _setFormValue(value, label) {
-    if (this._internals?.setFormValue) {
-      const formData = new FormData();
-      if (this.name) {
-        formData.set(this.name, value);
-      }
-      this._internals.setFormValue(formData, label);
+  /**
+   * Submit the current value with the form and report whether it is valid.
+   *
+   * The host element's name attribute provides the field name.
+   */
+  _syncFormState() {
+    const { value, required } = this.state;
+    this._internals.setFormValue(value);
+
+    if (required && value === '') {
+      this._internals.setValidity(
+        { valueMissing: true },
+        'Please select an item in the list.',
+        this._els.input
+      );
+    } else {
+      this._internals.setValidity({});
     }
+  }
+
+  formResetCallback() {
+    this._updateValue(this._defaultValue);
+  }
+
+  formDisabledCallback(disabled) {
+    this._updateDisabledState(disabled);
+  }
+
+  formStateRestoreCallback(state) {
+    this._updateValue(typeof state === 'string' ? state : '');
+  }
+
+  get form() {
+    return this._internals.form;
+  }
+
+  get labels() {
+    return this._internals.labels;
+  }
+
+  get validity() {
+    return this._internals.validity;
+  }
+
+  get validationMessage() {
+    return this._internals.validationMessage;
+  }
+
+  get willValidate() {
+    return this._internals.willValidate;
+  }
+
+  checkValidity() {
+    return this._internals.checkValidity();
+  }
+
+  reportValidity() {
+    return this._internals.reportValidity();
+  }
+
+  get name() {
+    return this.getAttribute('name') ?? '';
+  }
+
+  set name(value) {
+    this.setAttribute('name', value);
+  }
+
+  get required() {
+    return this.hasAttribute('required');
+  }
+
+  set required(value) {
+    this.toggleAttribute('required', Boolean(value));
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(value) {
+    this.toggleAttribute('disabled', Boolean(value));
   }
 
   _renderOptions() {
