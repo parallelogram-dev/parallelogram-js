@@ -113,7 +113,7 @@ document.querySelector('[data-modal-trigger]').addEventListener('click', () => {
   loader.loadComponent('p-modal').then(() => {
     // Component is now loaded and registered
     const modal = document.querySelector('#my-modal');
-    modal.open = true;
+    modal.open();
   });
 });
 ```

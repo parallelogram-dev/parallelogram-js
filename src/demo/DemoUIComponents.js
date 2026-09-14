@@ -35,17 +35,17 @@ export class DemoUIComponents extends BaseComponent {
     );
 
     document.addEventListener(
-      'modal:open',
+      'p-modal:open',
       e => {
-        this.addEventToLog('modal:open', { modalId: e.target.id });
+        this.addEventToLog('p-modal:open', { modalId: e.target.id });
       },
       { signal: controller.signal }
     );
 
     document.addEventListener(
-      'modal:close',
+      'p-modal:close',
       e => {
-        this.addEventToLog('modal:close', { modalId: e.target.id });
+        this.addEventToLog('p-modal:close', { modalId: e.target.id });
       },
       { signal: controller.signal }
     );

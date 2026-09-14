@@ -117,8 +117,9 @@ Standard DOM events for direct interaction:
 
 ```javascript
 element.dispatchEvent(
-  new CustomEvent('modal:open', {
+  new CustomEvent('p-modal:open', {
     bubbles: true,
+    composed: true,
     detail: { modal: this },
   })
 );
