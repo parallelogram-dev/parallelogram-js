@@ -11,10 +11,16 @@
 }
 
 /* Host & Core Properties */
+/* Looks like a form control until page styles size and border the element */
 :host {
   display: inline-block;
   position: relative;
   box-sizing: border-box;
+  min-width: 12rem;
+  min-height: 2.5rem;
+  border: var(--datetime-border-width) solid var(--datetime-border);
+  border-radius: var(--datetime-radius);
+  background: var(--datetime-bg);
 
   /* Colors — concrete defaults; override at the host with --datetime-*. */
   --datetime-text: currentColor;
