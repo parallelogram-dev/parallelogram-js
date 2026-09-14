@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@parallelogram-js/core/styles/*.css` for the per-component stylesheets (datatable, lazysrc, lightbox, reveal, tabs, toasts, toggle), which the build now compiles.
 - `@parallelogram-js/core/package.json` is exported.
 - Source maps for production and development bundles.
+- MIT `LICENSE` file, which `package.json` referenced but the package never shipped.
 
 ### Deprecated
 
