@@ -1,8 +1,9 @@
-import { QueuedComponentProxy } from '../core/QueuedComponentProxy.js';
+import { ComponentHost } from '../core/ComponentHost.js';
 
 /**
  * PageManager - Enhanced page lifecycle and component management
- * Handles fragment replacement, component mounting/unmounting, and DOM observation
+ * Handles fragment replacement and delegates component loading, mounting and DOM
+ * observation to a ComponentHost (available as `pageManager.host`).
  */
 export class PageManager {
   constructor({ containerSelector, registry, eventBus, logger, router, options = {} }) {
@@ -14,19 +15,15 @@ export class PageManager {
 
     // Configuration options
     this.options = {
-      // Delay before mounting components (for performance)
+      // Delay before mounting non-critical components after a fragment swap
       mountDelay: 1200,
-      // Scroll restoration behavior
-      scrollRestoration: true,
       scrollPosition: 'top', // 'top', 'preserve', 'element'
       scrollElement: null,
       // Component loading
-      lazyLoadThreshold: '100px',
       retryFailedLoads: true,
       maxRetryAttempts: 3,
-      // Performance
-      batchUpdates: true,
-      updateThrottleMs: 16,
+      // Element or selector whose subtree components mount in and are observed (defaults to the container)
+      observeRoot: null,
       // Debug
       trackPerformance: false,
       // Fragment target groups - define which fragments update together
@@ -39,11 +36,13 @@ export class PageManager {
       ...options,
     };
 
-    // Instance management
-    this.instances = new Map();
-    this.observer = null;
-    this.loadingPromises = new Map();
-    this.retryCount = new Map();
+    this.host = new ComponentHost({
+      registry: registry ?? [],
+      eventBus,
+      logger,
+      router,
+      maxRetryAttempts: this.options.retryFailedLoads ? this.options.maxRetryAttempts : 0,
+    });
 
     // Performance tracking
     this.performanceMetrics = {
@@ -61,13 +60,6 @@ export class PageManager {
       mountCount: new Map(), // Total mount count per component
       lastMountTime: new Map(), // Last mount time per component
     };
-
-    // Throttled update function for batch operations
-    this.throttledUpdate = this._createThrottledFunction(
-      this._processBatchedUpdates.bind(this),
-      this.options.updateThrottleMs
-    );
-    this.pendingUpdates = [];
 
     this._initialize();
   }
@@ -124,6 +116,15 @@ export class PageManager {
     // Component lifecycle events
     this._subscribe('component:lazy-load', ({ element, componentName }) => {
       this._handleLazyLoad(element, componentName);
+    });
+    this._subscribe('page:component-mounted', () => {
+      this.performanceMetrics.componentMounts++;
+    });
+    this._subscribe('page:component-unmounted', () => {
+      this.performanceMetrics.componentUnmounts++;
+    });
+    this._subscribe('page:component-loaded', ({ componentName }) => {
+      this._trackComponentLoad(componentName);
     });
 
     // Initial component mounting
@@ -915,573 +916,62 @@ export class PageManager {
   }
 
   /**
-   * Start DOM mutation observer with enhanced capabilities
-   */
-  _startObserver(root) {
-    if (!('MutationObserver' in window)) {
-      this.logger?.warn('MutationObserver not available, falling back to manual updates');
-      return;
-    }
-
-    this.observer = new MutationObserver(mutations => {
-      if (this.options.batchUpdates) {
-        // Batch mutations for performance
-        this.pendingUpdates.push(...mutations);
-        this.throttledUpdate();
-      } else {
-        this._processMutations(mutations);
-      }
-    });
-
-    this.observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['data-component', 'data-lazy-component'],
-    });
-
-    this.logger?.info('DOM observer started', { root: this.containerSelector });
-  }
-
-  /**
-   * Process batched DOM updates
-   */
-  _processBatchedUpdates() {
-    if (this.pendingUpdates.length === 0) return;
-
-    const mutations = [...this.pendingUpdates];
-    this.pendingUpdates = [];
-    this._processMutations(mutations);
-  }
-
-  /**
-   * Process DOM mutations
-   */
-  _processMutations(mutations) {
-    const addedElements = new Set();
-    const removedElements = new Set();
-
-    for (const mutation of mutations) {
-      // Handle added nodes
-      if (mutation.addedNodes) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            addedElements.add(node);
-            // Also add descendants that might have components
-            node
-              .querySelectorAll('[data-component], [data-lazy-component]')
-              .forEach(el => addedElements.add(el));
-          }
-        }
-      }
-
-      // Handle removed nodes
-      if (mutation.removedNodes) {
-        for (const node of mutation.removedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            removedElements.add(node);
-          }
-        }
-      }
-    }
-
-    // Mount new components
-    if (addedElements.size > 0) {
-      this.mountAllWithin(this.container, {
-        addedNodes: Array.from(addedElements),
-        trigger: 'mutation',
-      });
-    }
-
-    // Unmount removed components
-    if (removedElements.size > 0) {
-      this.unmountRemoved();
-    }
-  }
-
-  /**
-   * Mount all components within a scope with enhanced options
+   * Mount components within a root
    *
    * @param {Element} root - Scope to search for component selectors
    * @param {Object} [options]
-   * @param {Element[]|null} [options.addedNodes] - Only search these nodes (mutation passes)
+   * @param {Element[]|null} [options.addedNodes] - Only search these nodes
    * @param {'all'|'critical'|'normal'} [options.priority='all'] - Which registry entries to
    *   mount. 'all' mounts critical entries first, then the rest.
-   * @param {string} [options.trigger] - Label for logging
    * @param {string|null} [options.fragmentTarget] - Fragment being mounted, if any
    */
-  mountAllWithin(root, options = {}) {
-    const {
-      addedNodes = null,
-      priority = 'all',
-      trigger = 'initial',
-      fragmentTarget = null, // New option to track which fragment is being mounted
-    } = options;
-
+  mountAllWithin(root, { addedNodes = null, priority = 'all', fragmentTarget = null } = {}) {
     const startTime = this.options.trackPerformance ? performance.now() : 0;
 
-    this.logger?.group('Mounting components', {
-      priority,
-      trigger,
-      fragmentTarget,
-      addedNodesCount: addedNodes?.length || 0,
-      rootSelector:
-        root.tagName +
-        (root.id ? '#' + root.id : '') +
-        (root.className ? '.' + root.className.split(' ')[0] : ''),
-    });
+    this.host.mountWithin(root, { priority, nodes: addedNodes, fragmentTarget });
 
-    try {
-      const isCritical = cfg => cfg.priority === 'critical' || cfg.critical === true;
-      const critical = this.registry.filter(isCritical);
-      const normal = this.registry.filter(cfg => !isCritical(cfg));
-      const componentsToMount =
-        priority === 'critical'
-          ? critical
-          : priority === 'normal'
-            ? normal
-            : [...critical, ...normal];
-
-      for (const config of componentsToMount) {
-        try {
-          this._mountComponentConfig(config, root, addedNodes, fragmentTarget);
-        } catch (error) {
-          this.logger?.error(`Failed to mount component ${config.name}`, { error, config });
-          this.eventBus.emit('page:component-mount-error', {
-            componentName: config.name,
-            error,
-            config,
-            fragmentTarget,
-          });
-        }
-      }
-
-      // Update performance metrics
-      if (this.options.trackPerformance) {
-        const duration = performance.now() - startTime;
-        this.performanceMetrics.totalMountTime += duration;
-        this.performanceMetrics.averageMountTime =
-          this.performanceMetrics.totalMountTime /
-          Math.max(1, this.performanceMetrics.fragmentReplacements);
-      }
-    } finally {
-      this.logger?.groupEnd();
+    if (this.options.trackPerformance) {
+      this.performanceMetrics.totalMountTime += performance.now() - startTime;
+      this.performanceMetrics.averageMountTime =
+        this.performanceMetrics.totalMountTime /
+        Math.max(1, this.performanceMetrics.fragmentReplacements);
     }
   }
 
   /**
-   * Enhanced component mounting with fragment awareness
-   */
-  _mountComponentConfig(config, root, addedNodes, fragmentTarget) {
-    const scope = addedNodes || [root];
-    const elements = scope.flatMap(node => {
-      // Handle both direct matches and descendant matches
-      const matches = [];
-      if (node.matches && node.matches(config.selector)) {
-        matches.push(node);
-      }
-      matches.push(...node.querySelectorAll(config.selector));
-      return matches;
-    });
-
-    if (elements.length === 0) {
-      if (addedNodes && addedNodes.length > 0) {
-        this.logger?.debug(
-          `[PageManager] No elements matched selector "${config.selector}" for component ${config.name} in added nodes`,
-          {
-            config: config.name,
-            selector: config.selector,
-            addedNodesCount: addedNodes.length,
-            fragmentTarget,
-          }
-        );
-      }
-      return;
-    }
-
-    const instance = this._ensureInstance(config);
-    let mountedCount = 0;
-
-    for (const element of elements) {
-      try {
-        if (instance.elements?.has(element)) {
-          this.logger?.debug(
-            `[PageManager] Skipping ${config.name} mount — element already mounted by this component`,
-            { config: config.name, element }
-          );
-          continue;
-        }
-
-        instance.mount(element);
-
-        if (fragmentTarget) {
-          element.setAttribute('data-fragment-target', fragmentTarget);
-        }
-
-        mountedCount++;
-
-        this.eventBus.emit('page:component-mounted', {
-          componentName: config.name,
-          element,
-          instance,
-          fragmentTarget,
-        });
-      } catch (error) {
-        this.logger?.error(`Failed to mount ${config.name} on element`, { error, element });
-      }
-    }
-
-    if (mountedCount > 0) {
-      this.performanceMetrics.componentMounts += mountedCount;
-      this.logger?.info(`Mounted ${mountedCount} instances of ${config.name}`, {
-        fragmentTarget,
-      });
-    }
-  }
-
-  /**
-   * Unmount all components within a root
+   * Unmount every component within a root
    */
   unmountAllWithin(root) {
-    this.logger?.group('Unmounting components within root');
-
-    try {
-      let unmountedCount = 0;
-
-      for (const [componentName, instance] of this.instances) {
-        if (!instance._elementsKeys) continue;
-
-        for (const element of instance._elementsKeys()) {
-          if (root.contains(element)) {
-            try {
-              instance.unmount(element);
-              element.removeAttribute('data-fragment-target');
-              unmountedCount++;
-
-              this.eventBus.emit('page:component-unmounted', {
-                componentName,
-                element,
-                instance,
-              });
-            } catch (error) {
-              this.logger?.error(`Failed to unmount ${componentName}`, { error, element });
-            }
-          }
-        }
-      }
-
-      this.performanceMetrics.componentUnmounts += unmountedCount;
-
-      if (unmountedCount > 0) {
-        this.logger?.info(`Unmounted ${unmountedCount} component instances`);
-      }
-    } finally {
-      this.logger?.groupEnd();
-    }
+    this.host.unmountWithin(root);
   }
 
   /**
-   * Unmount components from removed DOM nodes
-   */
-  unmountRemoved() {
-    let unmountedCount = 0;
-
-    for (const [componentName, instance] of this.instances) {
-      if (!instance._elementsKeys) continue;
-
-      for (const element of instance._elementsKeys()) {
-        // Check if element is no longer in the document
-        if (!document.documentElement.contains(element)) {
-          try {
-            instance.unmount(element);
-            unmountedCount++;
-
-            this.eventBus.emit('page:component-unmounted', {
-              componentName,
-              element,
-              instance,
-              reason: 'removed',
-            });
-          } catch (error) {
-            this.logger?.error(`Failed to unmount removed ${componentName}`, { error, element });
-          }
-        }
-      }
-    }
-
-    if (unmountedCount > 0) {
-      this.logger?.info(`Unmounted ${unmountedCount} components from removed nodes`);
-    }
-  }
-
-  /**
-   * Ensure component instance exists with enhanced loading
-   */
-  _ensureInstance(config) {
-    // Return existing instance
-    const existingInstance = this.instances.get(config.name);
-    if (existingInstance) {
-      return existingInstance;
-    }
-
-    // Handle dependencies
-    if (config.dependsOn?.length) {
-      for (const dependency of config.dependsOn) {
-        const depConfig = this.registry.find(c => c.name === dependency);
-        if (depConfig) {
-          this._ensureInstance(depConfig);
-        } else {
-          this.logger?.warn(`Dependency not found: ${dependency} for ${config.name}`);
-        }
-      }
-    }
-
-    // Try to load component
-    const loaderResult = config.loader();
-
-    // Handle synchronous loading
-    if (!(loaderResult instanceof Promise)) {
-      const instance = this._createInstance(loaderResult.default, config);
-      this.instances.set(config.name, instance);
-      this._trackComponentLoad(config.name);
-      return instance;
-    }
-
-    // Handle asynchronous loading with queueing
-    return this._handleAsyncLoading(config, loaderResult);
-  }
-
-  /**
-   * Handle asynchronous component loading
-   */
-  _handleAsyncLoading(config, loaderPromise) {
-    const queue = [];
-    const placeholder = new QueuedComponentProxy(
-      element => queue.push(['mount', element]),
-      element => queue.push(['unmount', element])
-    );
-
-    this.instances.set(config.name, placeholder);
-
-    // Track loading promise to prevent duplicate loads
-    this.loadingPromises.set(config.name, loaderPromise);
-
-    loaderPromise
-      .then(module => {
-        const realInstance = this._createInstance(module.default, config);
-
-        // Process queued operations
-        for (const [action, element] of queue) {
-          try {
-            realInstance[action](element);
-            if (action === 'mount') {
-              element.classList.remove('component-loading');
-              element.removeAttribute('data-component-state');
-            }
-          } catch (error) {
-            this.logger?.error(`Dequeued ${config.name}.${action} failed`, { error, element });
-            // Add error state for failed mounts
-            if (action === 'mount') {
-              element.classList.remove('component-loading');
-              element.classList.add('component-error');
-              element.setAttribute('data-component-state', 'error');
-            }
-          }
-        }
-
-        this.instances.set(config.name, realInstance);
-        this._trackComponentLoad(config.name);
-        this.loadingPromises.delete(config.name);
-        this.retryCount.delete(config.name);
-
-        this.eventBus.emit('page:component-loaded', {
-          componentName: config.name,
-          instance: realInstance,
-          queueSize: queue.length,
-        });
-
-        this.logger?.info(`Component ${config.name} loaded successfully`, {
-          queuedOperations: queue.length,
-        });
-      })
-      .catch(error => {
-        this.logger?.error(`Failed to load component ${config.name}`, { error });
-
-        // Remove loading state and add error state for all queued elements
-        for (const [action, element] of queue) {
-          if (action === 'mount') {
-            element.classList.remove('component-loading');
-            element.classList.add('component-error');
-            element.setAttribute('data-component-state', 'error');
-          }
-        }
-
-        // Handle retry logic
-        if (this.options.retryFailedLoads) {
-          const currentRetries = this.retryCount.get(config.name) || 0;
-          if (currentRetries < this.options.maxRetryAttempts) {
-            this.retryCount.set(config.name, currentRetries + 1);
-            this.logger?.info(
-              `Retrying component load: ${config.name} (attempt ${currentRetries + 1})`
-            );
-
-            setTimeout(
-              () => {
-                this._handleAsyncLoading(config, config.loader());
-              },
-              Math.pow(2, currentRetries) * 1000
-            ); // Exponential backoff
-            return;
-          }
-        }
-
-        this.instances.delete(config.name);
-        this.loadingPromises.delete(config.name);
-
-        this.eventBus.emit('page:component-load-error', {
-          componentName: config.name,
-          error,
-          retries: this.retryCount.get(config.name) || 0,
-        });
-      });
-
-    return placeholder;
-  }
-
-  /**
-   * Create component instance with dependency injection
-   */
-  _createInstance(moduleOrClass, config) {
-    let ComponentClass;
-
-    // Handle different module export patterns
-    if (typeof moduleOrClass === 'function') {
-      // Direct constructor function
-      ComponentClass = moduleOrClass;
-    } else if (moduleOrClass && typeof moduleOrClass.default === 'function') {
-      // ES6 default export
-      ComponentClass = moduleOrClass.default;
-    } else if (moduleOrClass && typeof moduleOrClass[config.name] === 'function') {
-      // Named export matching component name
-      ComponentClass = moduleOrClass[config.name];
-    } else {
-      // Try to find any function export
-      const exports = Object.values(moduleOrClass || {});
-      ComponentClass = exports.find(exp => typeof exp === 'function');
-
-      if (!ComponentClass) {
-        throw new Error(
-          `No valid constructor found in module for component ${config.name}. Available exports: ${Object.keys(moduleOrClass || {}).join(', ')}`
-        );
-      }
-    }
-
-    this.logger?.info(`Creating instance of ${config.name}`, {
-      ComponentClass: ComponentClass.name,
-      config,
-    });
-
-    try {
-      // Try the standard framework pattern first (with DI)
-      const instance = new ComponentClass({
-        eventBus: this.eventBus,
-        logger: this.logger,
-        router: this.router,
-        config,
-      });
-
-      this.logger?.info(`Created ${config.name} with DI pattern`, { config });
-      return instance;
-    } catch (error) {
-      this.logger?.warn(`DI constructor failed for ${config.name}, trying fallback patterns`, {
-        error,
-      });
-
-      try {
-        // Try no-args constructor (for components that don't use DI)
-        const fallbackInstance = new ComponentClass();
-        this.logger?.info(`Created ${config.name} with no-args constructor`, { config });
-
-        // Try to inject dependencies if methods exist
-        if (typeof fallbackInstance.setEventBus === 'function') {
-          fallbackInstance.setEventBus(this.eventBus);
-        }
-        if (typeof fallbackInstance.setLogger === 'function') {
-          fallbackInstance.setLogger(this.logger);
-        }
-        if (typeof fallbackInstance.setRouter === 'function') {
-          fallbackInstance.setRouter(this.router);
-        }
-
-        return fallbackInstance;
-      } catch (fallbackError) {
-        this.logger?.error(`All constructor patterns failed for ${config.name}`, {
-          originalError: error,
-          fallbackError,
-          ComponentClass: ComponentClass.name,
-        });
-        throw new Error(`Cannot instantiate component ${config.name}: ${error.message}`, {
-          cause: fallbackError,
-        });
-      }
-    }
-  }
-
-  /**
-   * Handle lazy loading of components
+   * Mount a registered component on an element requested through component:lazy-load
    */
   _handleLazyLoad(element, componentName) {
-    const config = this.registry.find(c => c.name === componentName);
-    if (!config) {
+    if (!this.host.mount(componentName, element)) {
       this.logger?.warn(`Lazy load requested for unknown component: ${componentName}`);
-      return;
     }
-
-    this.logger?.info(`Lazy loading component: ${componentName}`, { element });
-
-    const instance = this._ensureInstance(config);
-    instance.mount(element);
   }
 
   /**
-   * Initial component mounting
+   * Mount components in the observed root and start watching it
    */
   _initialMount() {
     try {
-      const container = this.container;
-      this.mountAllWithin(container, { trigger: 'initial' });
-
-      // Start observer after initial mount
-      this._startObserver(container);
+      this.host.start(this._observeRoot());
     } catch (error) {
       this.logger?.error('Initial component mounting failed', { error });
     }
   }
 
-  /**
-   * Create throttled function for performance
-   */
-  _createThrottledFunction(func, delay) {
-    let timeoutId = null;
-    let lastExecTime = 0;
-
-    return function (...args) {
-      const currentTime = Date.now();
-
-      if (currentTime - lastExecTime > delay) {
-        func.apply(this, args);
-        lastExecTime = currentTime;
-      } else {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(
-          () => {
-            func.apply(this, args);
-            lastExecTime = Date.now();
-          },
-          delay - (currentTime - lastExecTime)
-        );
-      }
-    };
+  _observeRoot() {
+    const { observeRoot } = this.options;
+    if (observeRoot instanceof Element) return observeRoot;
+    if (typeof observeRoot === 'string') {
+      return document.querySelector(observeRoot) ?? this.container;
+    }
+    return this.container;
   }
 
   /**
@@ -1495,17 +985,23 @@ export class PageManager {
    * Get component instances
    */
   getInstances() {
-    return new Map(this.instances);
+    return this.host.getInstances();
+  }
+
+  /**
+   * Loaded component instances by name
+   *
+   * @returns {Map<string, Object>}
+   */
+  get instances() {
+    return this.host.getInstances();
   }
 
   /**
    * Get loading status
    */
   getLoadingStatus() {
-    return {
-      loading: Array.from(this.loadingPromises.keys()),
-      retries: Object.fromEntries(this.retryCount),
-    };
+    return this.host.getLoadingStatus();
   }
 
   getComponentRegistry() {
@@ -1602,50 +1098,8 @@ export class PageManager {
   destroy() {
     this.logger?.info('PageManager destroying');
 
-    // Stop observing DOM changes
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-
-    // Stop lazy loading observer
-    if (this._lazyObserver) {
-      this._lazyObserver.disconnect();
-      this._lazyObserver = null;
-    }
-
-    // Clear cleanup interval
-    if (this._cleanupInterval) {
-      clearInterval(this._cleanupInterval);
-      this._cleanupInterval = null;
-    }
-
-    // Unmount all components
-    this.unmountAllWithin(this.container);
-
-    // Clean up component pool
-    if (this._componentPool) {
-      for (const [componentName, pool] of this._componentPool) {
-        for (const instance of pool) {
-          if (typeof instance.destroy === 'function') {
-            try {
-              instance.destroy();
-            } catch (error) {
-              this.logger?.warn(`Error destroying pooled instance of ${componentName}`, { error });
-            }
-          }
-        }
-      }
-      this._componentPool.clear();
-    }
-
-    // Clear all tracking data
-    this.instances.clear();
-    this.loadingPromises.clear();
-    this.retryCount.clear();
-    if (this._mountedElements) this._mountedElements.clear();
-    if (this._errorCounts) this._errorCounts.clear();
-    if (this._circuitBreakers) this._circuitBreakers.clear();
+    // Unmount every component and stop observing the page
+    this.host.stop();
 
     // Remove event bus listeners
     this._listeners?.abort();
