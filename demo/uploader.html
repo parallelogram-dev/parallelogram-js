@@ -27,8 +27,8 @@
             <header class="page__header">
                 <h1>Uploader Component</h1>
                 <p>
-                    Modern file upload component with drag & drop, progress tracking, sortable file management, 
-                    and inline editing. Fully customizable via data attributes with accessibility support.
+                    Modern file upload component with drag & drop, progress tracking, sortable file management, and
+                    inline editing. Fully customizable via data attributes with accessibility support.
                 </p>
             </header>
 
@@ -37,46 +37,74 @@
                 <p>Simple image uploader with drag & drop support and basic file management:</p>
 
                 <div class="demo__container">
-                    <p-uploader max-files="3"
-                                upload-action="/mock/upload"
-                                update-action="/mock/update"
-                                delete-action="/mock/delete"
-                                sequence-action="/mock/sequence"
-                                accept-types="image/*"
-                                max-file-size="5242880"
-                                allow-edit="true"
-                                allow-sort="true"
-                                input-name="images">
-
+                    <p-uploader
+                        max-files="3"
+                        upload-action="/mock/upload"
+                        update-action="/mock/update"
+                        delete-action="/mock/delete"
+                        sequence-action="/mock/sequence"
+                        accept-types="image/*"
+                        max-file-size="5242880"
+                        allow-edit="true"
+                        allow-sort="true"
+                        input-name="images"
+                    >
                         <!-- Field definitions for ALL files -->
                         <p-uploader-fields slot="field-definitions">
-                            <p-uploader-field key="title" label="Title" type="text" required maxlength="100"></p-uploader-field>
-                            <p-uploader-field key="caption" label="Caption" type="textarea" maxlength="500"></p-uploader-field>
+                            <p-uploader-field
+                                key="title"
+                                label="Title"
+                                type="text"
+                                required
+                                maxlength="100"
+                            ></p-uploader-field>
+                            <p-uploader-field
+                                key="caption"
+                                label="Caption"
+                                type="textarea"
+                                maxlength="500"
+                            ></p-uploader-field>
                             <p-uploader-field key="link" label="Link" type="url"></p-uploader-field>
                         </p-uploader-fields>
 
-                        <p-uploader-file file-id="demo1"
-                                        filename="sample1.jpg"
-                                        preview="https://picsum.photos/200/200?random=1"
-                                        state="uploaded">
+                        <p-uploader-file
+                            file-id="demo1"
+                            filename="sample1.jpg"
+                            preview="https://picsum.photos/200/200?random=1"
+                            state="uploaded"
+                        >
                             <p-uploader-data key="title">Beautiful Landscape</p-uploader-data>
-                            <p-uploader-data key="caption">A stunning view captured at sunset during the golden hour, showcasing the magnificent natural beauty of rolling hills and distant mountains bathed in warm amber light, with dramatic cloud formations painting the sky in vibrant hues of orange, pink, and purple as day transitions into night.</p-uploader-data>
+                            <p-uploader-data key="caption"
+                                >A stunning view captured at sunset during the golden hour, showcasing the magnificent
+                                natural beauty of rolling hills and distant mountains bathed in warm amber light, with
+                                dramatic cloud formations painting the sky in vibrant hues of orange, pink, and purple
+                                as day transitions into night.</p-uploader-data
+                            >
                             <p-uploader-data key="link">https://example.com/photo1</p-uploader-data>
                         </p-uploader-file>
 
-                        <p-uploader-file file-id="demo2"
-                                        filename="sample2.jpg"
-                                        preview="https://picsum.photos/200/200?random=2"
-                                        state="uploaded">
+                        <p-uploader-file
+                            file-id="demo2"
+                            filename="sample2.jpg"
+                            preview="https://picsum.photos/200/200?random=2"
+                            state="uploaded"
+                        >
                             <p-uploader-data key="title">Urban Architecture</p-uploader-data>
-                            <p-uploader-data key="caption">Modern building design featuring sleek glass facades, innovative structural elements, and contemporary architectural styling that exemplifies cutting-edge urban development and represents the perfect blend of form, function, and aesthetic excellence in today's metropolitan landscape.</p-uploader-data>
+                            <p-uploader-data key="caption"
+                                >Modern building design featuring sleek glass facades, innovative structural elements,
+                                and contemporary architectural styling that exemplifies cutting-edge urban development
+                                and represents the perfect blend of form, function, and aesthetic excellence in today's
+                                metropolitan landscape.</p-uploader-data
+                            >
                         </p-uploader-file>
 
-                        <p-uploader-file file-id="demo3"
-                                        filename="error-file.jpg"
-                                        preview="https://picsum.photos/200/200?random=3"
-                                        state="error"
-                                        error="Upload failed: File size exceeds 5MB limit">
+                        <p-uploader-file
+                            file-id="demo3"
+                            filename="error-file.jpg"
+                            preview="https://picsum.photos/200/200?random=3"
+                            state="error"
+                            error="Upload failed: File size exceeds 5MB limit"
+                        >
                             <p-uploader-data key="title">Failed Upload</p-uploader-data>
                         </p-uploader-file>
                     </p-uploader>
@@ -329,7 +357,9 @@ Response: 200 OK</pre>
 
             <section class="demo__section" data-demo-section>
                 <h2>Testing Error Handling & Revert</h2>
-                <p>This demo includes mock API endpoints. To test the revert functionality when server operations fail:</p>
+                <p>
+                    This demo includes mock API endpoints. To test the revert functionality when server operations fail:
+                </p>
 
                 <div class="features__details">
                     <h3>Success Mode (Current)</h3>
@@ -411,7 +441,7 @@ Response: 200 OK</pre>
                     }
                     return new Response(JSON.stringify({ success: true }), {
                         status: 200,
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 'Content-Type': 'application/json' },
                     });
                 }
 
@@ -423,7 +453,7 @@ Response: 200 OK</pre>
                     }
                     return new Response(JSON.stringify({ success: true }), {
                         status: 200,
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 'Content-Type': 'application/json' },
                     });
                 }
 
@@ -435,7 +465,7 @@ Response: 200 OK</pre>
                     }
                     return new Response(JSON.stringify({ success: true }), {
                         status: 200,
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 'Content-Type': 'application/json' },
                     });
                 }
 
@@ -445,14 +475,17 @@ Response: 200 OK</pre>
                     if (shouldFail) {
                         return new Response('Upload failed: Invalid file', { status: 400 });
                     }
-                    return new Response(JSON.stringify({
-                        id: 'file_' + Date.now(),
-                        preview: 'https://picsum.photos/200/200?random=' + Date.now(),
-                        success: true
-                    }), {
-                        status: 200,
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+                    return new Response(
+                        JSON.stringify({
+                            id: 'file_' + Date.now(),
+                            preview: 'https://picsum.photos/200/200?random=' + Date.now(),
+                            success: true,
+                        }),
+                        {
+                            status: 200,
+                            headers: { 'Content-Type': 'application/json' },
+                        }
+                    );
                 }
 
                 /* Default: use original fetch */

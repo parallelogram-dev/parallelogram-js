@@ -11,7 +11,7 @@ import {
   EventManager,
   RouterManager,
   DevLogger,
-  BaseComponent
+  BaseComponent,
 } from '@parallelogram-js/core';
 ```
 
@@ -72,6 +72,7 @@ The package uses the following export configuration:
 ```
 
 This allows:
+
 - `@parallelogram-js/core` → Core framework exports
 - `@parallelogram-js/core/components/*` → Individual component files
 - `@parallelogram-js/core/styles` → Minified CSS
@@ -83,13 +84,13 @@ When using dynamic imports in the ComponentRegistry, use the same paths:
 ```javascript
 const registry = ComponentRegistry.create()
   .component('lazysrc', '[data-lazysrc]', {
-    loader: () => import('@parallelogram-js/core/components/Lazysrc.js')
+    loader: () => import('@parallelogram-js/core/components/Lazysrc.js'),
   })
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('@parallelogram-js/core/components/Modal.js')
+    loader: () => import('@parallelogram-js/core/components/Modal.js'),
   })
   .component('tabs', '[data-tabs]', {
-    loader: () => import('@parallelogram-js/core/components/Tabs.js')
+    loader: () => import('@parallelogram-js/core/components/Tabs.js'),
   })
   .build();
 ```
@@ -98,11 +99,7 @@ const registry = ComponentRegistry.create()
 
 ```javascript
 /* Core framework */
-import {
-  ComponentRegistry,
-  PageManager,
-  EventManager
-} from '@parallelogram-js/core';
+import { ComponentRegistry, PageManager, EventManager } from '@parallelogram-js/core';
 
 /* Web Components - auto-register */
 import '@parallelogram-js/core/components/PModal.js';
@@ -115,10 +112,10 @@ import '@parallelogram-js/core/styles';
 /* Initialize framework */
 const registry = ComponentRegistry.create()
   .component('lazysrc', '[data-lazysrc]', {
-    loader: () => import('@parallelogram-js/core/components/Lazysrc.js')
+    loader: () => import('@parallelogram-js/core/components/Lazysrc.js'),
   })
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('@parallelogram-js/core/components/Modal.js')
+    loader: () => import('@parallelogram-js/core/components/Modal.js'),
   })
   .build();
 
@@ -126,7 +123,7 @@ const eventBus = new EventManager();
 const pageManager = new PageManager({
   containerSelector: '[data-view="main"]',
   registry,
-  eventBus
+  eventBus,
 });
 ```
 
@@ -135,11 +132,7 @@ const pageManager = new PageManager({
 If using TypeScript, the same import paths apply:
 
 ```typescript
-import type {
-  ComponentRegistry,
-  PageManager,
-  EventManager
-} from '@parallelogram-js/core';
+import type { ComponentRegistry, PageManager, EventManager } from '@parallelogram-js/core';
 
 import '@parallelogram-js/core/components/PModal.js';
 ```

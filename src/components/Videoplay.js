@@ -141,26 +141,14 @@ export default class Videoplay extends BaseComponent {
     }
 
     // Get configuration from data attributes
-    const playThreshold = this.getAttr(
-      element,
-      'threshold',
-      Videoplay.defaults.playThreshold
-    );
+    const playThreshold = this.getAttr(element, 'threshold', Videoplay.defaults.playThreshold);
     const pauseThreshold = this.getAttr(
       element,
       'pause-threshold',
       Videoplay.defaults.pauseThreshold
     );
-    const pauseOnExit = this.getAttr(
-      element,
-      'autopause',
-      Videoplay.defaults.pauseOnExit
-    );
-    const muteWhenPlaying = this.getAttr(
-      element,
-      'automute',
-      Videoplay.defaults.muteWhenPlaying
-    );
+    const pauseOnExit = this.getAttr(element, 'autopause', Videoplay.defaults.pauseOnExit);
+    const muteWhenPlaying = this.getAttr(element, 'automute', Videoplay.defaults.muteWhenPlaying);
     const restoreVolumeOnPause = this.getAttr(
       element,
       'restore-volume',
@@ -171,11 +159,7 @@ export default class Videoplay extends BaseComponent {
       'background',
       Videoplay.defaults.enableInBackground
     );
-    const preloadOnMount = this.getAttr(
-      element,
-      'preload',
-      Videoplay.defaults.preloadOnMount
-    );
+    const preloadOnMount = this.getAttr(element, 'preload', Videoplay.defaults.preloadOnMount);
     const requireUserInteraction = this.getAttr(
       element,
       'require-interaction',

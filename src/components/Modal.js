@@ -68,11 +68,7 @@ export default class Modal extends BaseComponent {
     const target = this.getAttr(element, 'target');
     const size = this.getAttr(element, 'size', Modal.defaults.size);
     const closable = this.getAttr(element, 'closable', Modal.defaults.closable);
-    const backdropClose = this.getAttr(
-      element,
-      'backdrop-close',
-      Modal.defaults.backdropClose
-    );
+    const backdropClose = this.getAttr(element, 'backdrop-close', Modal.defaults.backdropClose);
     const keyboard = this.getAttr(element, 'keyboard', Modal.defaults.keyboard);
     const focus = this.getAttr(element, 'focus', Modal.defaults.focus);
     const multiple = this.getAttr(element, 'multiple', Modal.defaults.multiple);

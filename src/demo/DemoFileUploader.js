@@ -5,28 +5,27 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * Handles event logging and provides mock API responses for demonstration
  */
 export class DemoFileUploader extends BaseComponent {
-  
   _init(element) {
     const state = super._init(element);
-    
+
     // Store element reference for later use
     this.element = element;
-    
+
     // Set up event listeners for file uploader events
     this._setupEventListeners(element, state.controller.signal);
-    
+
     // Set up mock API endpoints for demo
     this._setupMockAPI();
-    
+
     // Initialize event logging
     this._initEventLogging();
-    
+
     // Notify page loaded
     this.notifyPageLoaded();
-    
+
     return state;
   }
-  
+
   _setupEventListeners(element, signal) {
     // Listen for file uploader events
     const fileUploadEvents = [
@@ -41,23 +40,31 @@ export class DemoFileUploader extends BaseComponent {
       'uploader:drag-enter',
       'uploader:drag-leave',
       'uploader:ui-updated',
-      'uploader:error'
+      'uploader:error',
     ];
-    
+
     fileUploadEvents.forEach(eventType => {
-      document.addEventListener(eventType, (e) => {
-        this.addEventToLog(eventType, e.detail);
-      }, { signal });
+      document.addEventListener(
+        eventType,
+        e => {
+          this.addEventToLog(eventType, e.detail);
+        },
+        { signal }
+      );
     });
-    
+
     // Handle clear event log button
-    element.addEventListener('click', (e) => {
-      if (e.target.matches('[data-btn-action="clearEventLog"]')) {
-        this.clearEventLog();
-      }
-    }, { signal });
+    element.addEventListener(
+      'click',
+      e => {
+        if (e.target.matches('[data-btn-action="clearEventLog"]')) {
+          this.clearEventLog();
+        }
+      },
+      { signal }
+    );
   }
-  
+
   _setupMockAPI() {
     /* Inject MockXHR into all Uploader components on this page */
     if (!window.MockXHR) {
@@ -87,7 +94,7 @@ export class DemoFileUploader extends BaseComponent {
           this.logger.debug(`Uploader ${index}`, {
             element: !!uploaderEl,
             hasInstance: !!instance,
-            hasSetXHR: instance ? !!instance.setXHR : false
+            hasSetXHR: instance ? !!instance.setXHR : false,
           });
         }
 
@@ -99,61 +106,67 @@ export class DemoFileUploader extends BaseComponent {
         } else if (this.logger) {
           this.logger.debug('Uploader not yet mounted - MockXHR will use lazy initialization', {
             index,
-            hasInstance: !!instance
+            hasInstance: !!instance,
           });
         }
       });
     }, 100);
   }
-  
+
   async _handleMockUpload(url, options) {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     const formData = await options.body;
     const action = formData.get('action');
-    
+
     if (action === 'upload') {
       const file = formData.get('file');
-      return new Response(JSON.stringify({
-        id: this._generateId(),
-        title: file.name.split('.')[0],
-        filename: file.name,
-        preview: file.type.startsWith('image/') ? this._generatePreviewURL() : null,
-        info: `${this._formatFileSize(file.size)} • ${this._getFileTypeLabel(file)}`,
-        type: file.type.startsWith('image/') ? 'image' : 'document'
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          id: this._generateId(),
+          title: file.name.split('.')[0],
+          filename: file.name,
+          preview: file.type.startsWith('image/') ? this._generatePreviewURL() : null,
+          info: `${this._formatFileSize(file.size)} • ${this._getFileTypeLabel(file)}`,
+          type: file.type.startsWith('image/') ? 'image' : 'document',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
-    
+
     if (action === 'update') {
-      return new Response(JSON.stringify({
-        id: formData.get('id'),
-        title: formData.get('title'),
-        info: 'Updated via mock API'
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          id: formData.get('id'),
+          title: formData.get('title'),
+          info: 'Updated via mock API',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
-    
+
     if (action === 'delete') {
       return new Response('OK', { status: 200 });
     }
-    
+
     return new Response('Invalid action', { status: 400 });
   }
-  
+
   async _handleMockSequence(url, options) {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 300));
-    
+
     // Just return success - in a real app this would update the database
     return new Response('OK', { status: 200 });
   }
-  
+
   _initEventLogging() {
     // Debug: Check if uploader elements exist
     const uploaderElements = document.querySelectorAll('[data-uploader]');
@@ -178,7 +191,7 @@ export class DemoFileUploader extends BaseComponent {
             const matches = document.querySelectorAll(uploaderComponent.selector);
             this.logger.debug('Selector matches', {
               selector: uploaderComponent.selector,
-              count: matches.length
+              count: matches.length,
             });
           }
         }
@@ -194,7 +207,7 @@ export class DemoFileUploader extends BaseComponent {
     } else if (this.logger) {
       this.logger.warn('No pageManager found');
     }
-    
+
     // Initialize event log
     const eventLogContent = this.element.querySelector('.event__content');
     if (eventLogContent) {
@@ -211,18 +224,18 @@ export class DemoFileUploader extends BaseComponent {
       `;
     }
   }
-  
+
   addEventToLog(eventType, data) {
     const eventLogContent = this.element.querySelector('.event__content');
     if (!eventLogContent) return;
-    
+
     const timestamp = new Date().toLocaleTimeString();
     const eventElement = document.createElement('div');
     eventElement.className = 'event__item';
-    
+
     // Sanitize data for display
     const sanitizedData = this._sanitizeEventData(data);
-    
+
     eventElement.innerHTML = `
       <div class="event__entry">
         <div>
@@ -232,16 +245,16 @@ export class DemoFileUploader extends BaseComponent {
         <small class="event__timestamp" style="color: #999; margin-left: 1rem; white-space: nowrap;">${timestamp}</small>
       </div>
     `;
-    
+
     eventLogContent.insertBefore(eventElement, eventLogContent.firstChild);
-    
+
     // Keep only last 15 events
     const items = eventLogContent.querySelectorAll('.event__item');
     if (items.length > 15) {
       items[items.length - 1].remove();
     }
   }
-  
+
   clearEventLog() {
     const eventLogContent = this.element.querySelector('.event__content');
     if (eventLogContent) {
@@ -257,29 +270,31 @@ export class DemoFileUploader extends BaseComponent {
       `;
     }
   }
-  
+
   _sanitizeEventData(data) {
     if (!data || typeof data !== 'object') {
       return data;
     }
-    
+
     const sanitized = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (key === 'target' || key === 'element') {
         // Show basic element info
-        sanitized[key] = value ? {
-          tagName: value.tagName,
-          id: value.id || undefined,
-          className: value.className || undefined
-        } : null;
+        sanitized[key] = value
+          ? {
+              tagName: value.tagName,
+              id: value.id || undefined,
+              className: value.className || undefined,
+            }
+          : null;
       } else if (key === 'fileData' && value) {
         // Show file info without sensitive data
         sanitized[key] = {
           id: value.id,
           filename: value.filename,
           type: value.type,
-          state: value.state
+          state: value.state,
         };
       } else if (typeof value === 'object' && value !== null) {
         // Limit object depth
@@ -292,31 +307,31 @@ export class DemoFileUploader extends BaseComponent {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
-  
+
   notifyPageLoaded() {
     if (window.eventBus) {
       window.eventBus.emit('page:loaded', {
         page: '/file-uploader',
         components: ['file-uploader'],
         mockAPI: true,
-        timestamp: performance.now()
+        timestamp: performance.now(),
       });
     }
   }
-  
+
   // Utility methods
   _generateId() {
     return `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-  
+
   _generatePreviewURL() {
     const randomId = Math.floor(Math.random() * 1000);
     return `https://picsum.photos/200/200?random=${randomId}`;
   }
-  
+
   _formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -324,16 +339,18 @@ export class DemoFileUploader extends BaseComponent {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
-  
+
   _getFileTypeLabel(file) {
     if (!file?.type) return 'Unknown';
-    
+
     if (file.type.startsWith('image/')) return 'Image';
     if (file.type.includes('pdf')) return 'PDF';
     if (file.type.includes('document') || file.type.includes('word')) return 'Document';
     if (file.type.includes('spreadsheet') || file.type.includes('excel')) return 'Spreadsheet';
-    if (file.type.includes('presentation') || file.type.includes('powerpoint')) return 'Presentation';
-    
+    if (file.type.includes('presentation') || file.type.includes('powerpoint'))
+      return 'Presentation';
+
     return 'File';
   }
-}export default DemoFileUploader;
+}
+export default DemoFileUploader;

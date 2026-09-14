@@ -87,15 +87,9 @@ export class DataTable extends BaseComponent {
     return {
       sortable: this.getAttr(element, 'sortable', DataTable.defaults.sortable),
       filterable: this.getAttr(element, 'filterable', DataTable.defaults.filterable),
-      paginate:
-        parseInt(this.getAttr(element, 'paginate', DataTable.defaults.paginate)) ||
-        false,
-      pageSize: parseInt(
-        this.getAttr(element, 'page-size', DataTable.defaults.pageSize)
-      ),
-      searchDelay: parseInt(
-        this.getAttr(element, 'search-delay', DataTable.defaults.searchDelay)
-      ),
+      paginate: parseInt(this.getAttr(element, 'paginate', DataTable.defaults.paginate)) || false,
+      pageSize: parseInt(this.getAttr(element, 'page-size', DataTable.defaults.pageSize)),
+      searchDelay: parseInt(this.getAttr(element, 'search-delay', DataTable.defaults.searchDelay)),
     };
   }
 
@@ -122,7 +116,11 @@ export class DataTable extends BaseComponent {
   _setupFiltering(element, state) {
     const searchId = generateId('datatable-search');
 
-    const label = createElement('label', { className: 'form__label', htmlFor: searchId }, 'Search:');
+    const label = createElement(
+      'label',
+      { className: 'form__label', htmlFor: searchId },
+      'Search:'
+    );
 
     const searchInput = createElement('input', {
       type: 'text',

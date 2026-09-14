@@ -53,28 +53,12 @@ export class CopyToClipboard extends BaseComponent {
         'success-message',
         CopyToClipboard.defaults.successMessage
       ),
-      errorMessage: this.getAttr(
-        element,
-        'error-message',
-        CopyToClipboard.defaults.errorMessage
-      ),
+      errorMessage: this.getAttr(element, 'error-message', CopyToClipboard.defaults.errorMessage),
       successDuration: parseInt(
-        this.getAttr(
-          element,
-          'success-duration',
-          CopyToClipboard.defaults.successDuration
-        )
+        this.getAttr(element, 'success-duration', CopyToClipboard.defaults.successDuration)
       ),
-      successClass: this.getAttr(
-        element,
-        'success-class',
-        CopyToClipboard.defaults.successClass
-      ),
-      errorClass: this.getAttr(
-        element,
-        'error-class',
-        CopyToClipboard.defaults.errorClass
-      ),
+      successClass: this.getAttr(element, 'success-class', CopyToClipboard.defaults.successClass),
+      errorClass: this.getAttr(element, 'error-class', CopyToClipboard.defaults.errorClass),
     };
   }
 

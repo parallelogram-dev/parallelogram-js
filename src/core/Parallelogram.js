@@ -86,10 +86,7 @@ export class Parallelogram {
    */
   run() {
     // Check if DOM is already ready
-    if (
-      document.readyState === 'complete' ||
-      document.readyState === 'interactive'
-    ) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
       // DOM is ready, initialize immediately
       this.init();
       return Promise.resolve(this);
@@ -128,11 +125,9 @@ export class Parallelogram {
 
     // Create component registry for enhancement components
     const registry = ComponentRegistry.create(this.config.mode);
-    this.components._configs.enhancementComponents.forEach(
-      ({ name, selector, options }) => {
-        registry.component(name, selector, options);
-      }
-    );
+    this.components._configs.enhancementComponents.forEach(({ name, selector, options }) => {
+      registry.component(name, selector, options);
+    });
     this.componentRegistry = registry.build();
 
     // Create router if configured
@@ -274,13 +269,9 @@ class ComponentRegistrationHelper {
     } else {
       // Enhancement component: nameOrSelector is selector
       const loader =
-        typeof loaderOrOptions === 'function'
-          ? loaderOrOptions
-          : loaderOrOptions.loader;
+        typeof loaderOrOptions === 'function' ? loaderOrOptions : loaderOrOptions.loader;
       const componentOptions =
-        typeof loaderOrOptions === 'function'
-          ? options
-          : { ...loaderOrOptions, ...options };
+        typeof loaderOrOptions === 'function' ? options : { ...loaderOrOptions, ...options };
 
       this._configs.enhancementComponents.push({
         name: this._generateComponentName(nameOrSelector),

@@ -60,13 +60,23 @@ export default class PUploader extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['max-files', 'upload-action', 'update-action', 'delete-action', 'sequence-action', 'accept-types', 'max-file-size', 'allow-edit', 'allow-sort'];
+    return [
+      'max-files',
+      'upload-action',
+      'update-action',
+      'delete-action',
+      'sequence-action',
+      'accept-types',
+      'max-file-size',
+      'allow-edit',
+      'allow-sort',
+    ];
   }
 
   get config() {
     const getAttr = (name, defaultValue) => this.getAttribute(name) || defaultValue;
     const getIntAttr = (name, defaultValue) => parseInt(this.getAttribute(name)) || defaultValue;
-    const getBoolAttr = (name) => this.getAttribute(name) !== 'false';
+    const getBoolAttr = name => this.getAttribute(name) !== 'false';
 
     return {
       maxFiles: getIntAttr('max-files', 5),
@@ -78,7 +88,7 @@ export default class PUploader extends HTMLElement {
       acceptTypes: getAttr('accept-types', '*/*'),
       maxFileSize: getIntAttr('max-file-size', 10 * 1024 * 1024),
       allowEdit: getBoolAttr('allow-edit'),
-      allowSort: getBoolAttr('allow-sort')
+      allowSort: getBoolAttr('allow-sort'),
     };
   }
 
@@ -115,7 +125,7 @@ export default class PUploader extends HTMLElement {
     const fieldElements = fieldContainer.querySelectorAll('p-uploader-field');
     this.fieldSchema = new Map();
 
-    fieldElements.forEach((field) => {
+    fieldElements.forEach(field => {
       const key = field.getAttribute('key');
       const label = field.getAttribute('label');
       const type = field.getAttribute('type') || 'text';
@@ -135,7 +145,7 @@ export default class PUploader extends HTMLElement {
         type,
         required,
         maxlength: maxlength ? parseInt(maxlength) : null,
-        element: field
+        element: field,
       });
     });
   }
@@ -143,11 +153,11 @@ export default class PUploader extends HTMLElement {
   _validateFiles() {
     const files = this.querySelectorAll('p-uploader-file');
 
-    files.forEach((fileElement) => {
+    files.forEach(fileElement => {
       const dataElements = fileElement.querySelectorAll('p-uploader-data');
       const fileData = new Map();
 
-      dataElements.forEach((dataEl) => {
+      dataElements.forEach(dataEl => {
         const key = dataEl.getAttribute('key');
         const value = dataEl.textContent.trim();
 
@@ -215,7 +225,7 @@ export default class PUploader extends HTMLElement {
     return new Map([
       ['title', { key: 'title', label: 'Title', type: 'text', required: false }],
       ['caption', { key: 'caption', label: 'Caption', type: 'textarea', required: false }],
-      ['link', { key: 'link', label: 'Link', type: 'url', required: false }]
+      ['link', { key: 'link', label: 'Link', type: 'url', required: false }],
     ]);
   }
 
@@ -251,11 +261,11 @@ export default class PUploader extends HTMLElement {
     const fileInput = this.shadowRoot.querySelector('.uploader__fileinput');
     const selector = this.shadowRoot.querySelector('.uploader__selector');
 
-    fileInput.addEventListener('change', (e) => this._handleFileSelect(e), { signal });
+    fileInput.addEventListener('change', e => this._handleFileSelect(e), { signal });
 
     selector.addEventListener(
       'dragover',
-      (e) => {
+      e => {
         if (this.draggedElement) {
           e.preventDefault();
           e.stopPropagation();
@@ -269,7 +279,7 @@ export default class PUploader extends HTMLElement {
 
     selector.addEventListener(
       'dragleave',
-      (e) => {
+      e => {
         if (this.draggedElement) return;
         e.preventDefault();
         selector.classList.remove('dragover');
@@ -279,7 +289,7 @@ export default class PUploader extends HTMLElement {
 
     selector.addEventListener(
       'drop',
-      (e) => {
+      e => {
         if (this.draggedElement) {
           e.preventDefault();
           e.stopPropagation();
@@ -295,7 +305,7 @@ export default class PUploader extends HTMLElement {
     if (this.config.allowSort) {
       this.addEventListener(
         'dragover',
-        (e) => {
+        e => {
           if (this.draggedElement) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
@@ -304,16 +314,16 @@ export default class PUploader extends HTMLElement {
         { signal }
       );
 
-      this.addEventListener('dragstart', (e) => this._handleDragStart(e), { signal });
-      this.addEventListener('dragend', (e) => this._handleDragEnd(e), { signal });
-      this.addEventListener('dragenter', (e) => this._handleDragEnter(e), { signal });
-      this.addEventListener('dragleave', (e) => this._handleDragLeave(e), { signal });
-      this.addEventListener('drop', (e) => this._handleDrop(e), { signal });
+      this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
+      this.addEventListener('dragend', e => this._handleDragEnd(e), { signal });
+      this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
+      this.addEventListener('dragleave', e => this._handleDragLeave(e), { signal });
+      this.addEventListener('drop', e => this._handleDrop(e), { signal });
     }
 
     this.addEventListener(
       'file:delete',
-      (e) => {
+      e => {
         const fileId = e.detail.fileId;
         if (fileId && this.files.has(fileId)) {
           this.files.delete(fileId);
@@ -332,7 +342,7 @@ export default class PUploader extends HTMLElement {
           id: fileId,
           element: fileElement,
           state: 'uploaded',
-          order: index
+          order: index,
         });
 
         if (this.config.allowSort && existingFiles.length > 1) {
@@ -370,7 +380,7 @@ export default class PUploader extends HTMLElement {
       );
     }
 
-    filesToUpload.forEach((file) => {
+    filesToUpload.forEach(file => {
       this._uploadFile(file);
     });
   }
@@ -381,7 +391,7 @@ export default class PUploader extends HTMLElement {
       id: fileId,
       file: file,
       state: 'uploading',
-      progress: 0
+      progress: 0,
     };
 
     this.files.set(fileId, fileData);
@@ -419,7 +429,7 @@ export default class PUploader extends HTMLElement {
     const XHRConstructor = this._getXHRConstructor();
     const xhr = new XHRConstructor();
 
-    xhr.upload.addEventListener('progress', (e) => {
+    xhr.upload.addEventListener('progress', e => {
       if (e.lengthComputable) {
         const progress = (e.loaded / e.total) * 100;
         fileData.progress = progress;
@@ -466,7 +476,7 @@ export default class PUploader extends HTMLElement {
     this.dispatchEvent(
       new CustomEvent('upload:success', {
         detail: { fileId: fileData.id, response },
-        bubbles: true
+        bubbles: true,
       })
     );
   }
@@ -481,7 +491,7 @@ export default class PUploader extends HTMLElement {
     this.dispatchEvent(
       new CustomEvent('upload:error', {
         detail: { fileId: fileData.id, error },
-        bubbles: true
+        bubbles: true,
       })
     );
   }
@@ -492,7 +502,7 @@ export default class PUploader extends HTMLElement {
     const allFiles = this.querySelectorAll('p-uploader-file');
     const shouldBeDraggable = allFiles.length > 1;
 
-    allFiles.forEach((fileElement) => {
+    allFiles.forEach(fileElement => {
       const currentPanel = fileElement.getAttribute('data-current-panel') || 'info';
       const isPanelActive = currentPanel !== 'info';
 
@@ -535,7 +545,7 @@ export default class PUploader extends HTMLElement {
     this.draggedElement.removeAttribute('dragging');
 
     const allFiles = this.querySelectorAll('p-uploader-file');
-    allFiles.forEach((el) => el.removeAttribute('drag-over'));
+    allFiles.forEach(el => el.removeAttribute('drag-over'));
 
     this.draggedElement = null;
     this.draggedOverElement = null;
@@ -593,17 +603,15 @@ export default class PUploader extends HTMLElement {
   async _updateSequence() {
     /* Get the new order after drag */
     const currentFiles = Array.from(this.querySelectorAll('p-uploader-file'));
-    const fileIds = currentFiles
-      .map((el) => el.getAttribute('file-id'))
-      .filter((id) => id !== null);
+    const fileIds = currentFiles.map(el => el.getAttribute('file-id')).filter(id => id !== null);
 
     try {
       const response = await fetch(this.config.sequenceAction, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sequence: fileIds })
+        body: JSON.stringify({ sequence: fileIds }),
       });
 
       if (response.ok) {
@@ -613,7 +621,7 @@ export default class PUploader extends HTMLElement {
         this.dispatchEvent(
           new CustomEvent('sequence:update', {
             detail: { sequence: fileIds },
-            bubbles: true
+            bubbles: true,
           })
         );
       } else {
@@ -646,7 +654,7 @@ export default class PUploader extends HTMLElement {
     const fragment = document.createDocumentFragment();
 
     /* Remove all file elements and add them to fragment in original order */
-    this.originalFileOrder.forEach((fileElement) => {
+    this.originalFileOrder.forEach(fileElement => {
       if (fileElement.parentNode) {
         fileElement.parentNode.removeChild(fileElement);
       }
@@ -665,7 +673,7 @@ export default class PUploader extends HTMLElement {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = (e) => {
+      reader.onload = e => {
         const img = new Image();
 
         img.onload = () => {
@@ -702,7 +710,15 @@ export class PUploaderFile extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['state', 'progress', 'preview', 'error', 'filename', 'allow-edit', 'data-current-panel'];
+    return [
+      'state',
+      'progress',
+      'preview',
+      'error',
+      'filename',
+      'allow-edit',
+      'data-current-panel',
+    ];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -794,7 +810,7 @@ export class PUploaderFile extends HTMLElement {
 
   _loadFieldData() {
     const dataElements = this.querySelectorAll('p-uploader-data');
-    dataElements.forEach((dataEl) => {
+    dataElements.forEach(dataEl => {
       const key = dataEl.getAttribute('key');
       const value = dataEl.textContent.trim();
       if (key) {
@@ -865,9 +881,11 @@ export class PUploaderFile extends HTMLElement {
     panels.forEach(panel => {
       const panelName = panel.getAttribute('data-panel');
       if (
-        (panelName === currentPanel) ||
+        panelName === currentPanel ||
         (panelName === 'error' && this.getAttribute('state') === 'error') ||
-        (panelName === 'info' && currentPanel === 'info' && this.getAttribute('state') === 'uploaded')
+        (panelName === 'info' &&
+          currentPanel === 'info' &&
+          this.getAttribute('state') === 'uploaded')
       ) {
         panel.classList.add('uploader__panel--show');
 
@@ -980,7 +998,9 @@ export class PUploaderFile extends HTMLElement {
     }
 
     /* Check if edit panels already exist */
-    const existingEditPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel^="edit-"]');
+    const existingEditPanel = this.shadowRoot.querySelector(
+      '.uploader__panel[data-panel^="edit-"]'
+    );
     if (existingEditPanel) {
       return; /* Edit panels already exist */
     }
@@ -1009,23 +1029,23 @@ export class PUploaderFile extends HTMLElement {
       this.shadowRoot.removeEventListener('keydown', this._enterKeyHandler);
     }
 
-    this._clickHandler = (e) => {
+    this._clickHandler = e => {
       const action = e.target.dataset.action;
       if (!action) return;
 
       const actions = {
         'edit-field': () => this._setPanel(`edit-${e.target.dataset.field}`),
         'show-delete': () => this._setPanel('delete'),
-        'cancel': () => this._setPanel('info'),
+        cancel: () => this._setPanel('info'),
         'confirm-edit': () => this._handleConfirmEdit(e.target.dataset.field),
-        'confirm-delete': () => this._handleConfirmDelete()
+        'confirm-delete': () => this._handleConfirmDelete(),
       };
 
       actions[action]?.();
     };
 
     /* Escape key handler on host element (works anywhere) */
-    this._escapeKeyHandler = (e) => {
+    this._escapeKeyHandler = e => {
       const currentPanel = this.getAttribute('data-current-panel') || 'info';
 
       if (e.key === 'Escape') {
@@ -1037,7 +1057,7 @@ export class PUploaderFile extends HTMLElement {
     };
 
     /* Enter key handler on shadow root (only for inputs) */
-    this._enterKeyHandler = (e) => {
+    this._enterKeyHandler = e => {
       const currentPanel = this.getAttribute('data-current-panel') || 'info';
 
       if (e.key === 'Enter' && e.target.tagName === 'INPUT' && currentPanel.startsWith('edit-')) {
@@ -1114,13 +1134,13 @@ export class PUploaderFile extends HTMLElement {
           const response = await fetch(uploader.config.updateAction, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               id: this.getAttribute('file-id'),
               field: fieldKey,
-              value: newValue
-            })
+              value: newValue,
+            }),
           });
 
           if (response.ok) {
@@ -1132,10 +1152,10 @@ export class PUploaderFile extends HTMLElement {
                 detail: {
                   fileId: this.getAttribute('file-id'),
                   field: fieldKey,
-                  value: newValue
+                  value: newValue,
                 },
                 bubbles: true,
-                composed: true
+                composed: true,
               })
             );
             this.setAttribute('data-current-panel', 'info');
@@ -1191,11 +1211,11 @@ export class PUploaderFile extends HTMLElement {
       const response = await fetch(uploader.config.deleteAction, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: fileId
-        })
+          id: fileId,
+        }),
       });
 
       if (response.ok) {
@@ -1206,7 +1226,7 @@ export class PUploaderFile extends HTMLElement {
           new CustomEvent('file:delete', {
             detail: { fileId: fileId },
             bubbles: true,
-            composed: true
+            composed: true,
           })
         );
       } else {

@@ -109,8 +109,7 @@ class Toggle extends BaseComponent {
 
     // Check current state
     const currentState = this.getAttr(state.target, 'target');
-    if (currentState === ExtendedStates.OPENING ||
-        currentState === ExtendedStates.OPEN) {
+    if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
       return; // Already opening or open
     }
 
@@ -126,6 +125,7 @@ class Toggle extends BaseComponent {
 ```
 
 **State Diagram:**
+
 ```mermaid
 stateDiagram-v2
     [*] --> closed
@@ -179,6 +179,7 @@ class DataTable extends BaseComponent {
 ```
 
 **State Diagram:**
+
 ```mermaid
 stateDiagram-v2
     [*] --> mounted
@@ -341,12 +342,14 @@ unmount(element) {
 ### 1. Use Standard State Values
 
 **✅ Good:**
+
 ```javascript
 this.setState(element, ExtendedStates.LOADING);
 this.setState(element, ComponentStates.ERROR);
 ```
 
 **❌ Bad:**
+
 ```javascript
 this.setState(element, 'is-loading'); // Non-standard
 this.setState(element, 'errored'); // Inconsistent
@@ -355,6 +358,7 @@ this.setState(element, 'errored'); // Inconsistent
 ### 2. Use Helper Methods
 
 **✅ Good:**
+
 ```javascript
 this.setState(element, 'open');
 this.setAttr(element, 'duration', 300);
@@ -362,6 +366,7 @@ const value = this.getAttr(element, 'value', 'default');
 ```
 
 **❌ Bad:**
+
 ```javascript
 element.setAttribute('data-toggle', 'open'); // Hardcoded
 element.setAttribute('data-toggle-duration', '300'); // Hardcoded
@@ -371,6 +376,7 @@ const value = element.getAttribute('data-toggle-value') || 'default';
 ### 3. Prevent Concurrent State Changes
 
 **✅ Good:**
+
 ```javascript
 show(element) {
   const currentState = this.getElementState(element);
@@ -382,6 +388,7 @@ show(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 show(element) {
   // No check - could cause race conditions
@@ -392,6 +399,7 @@ show(element) {
 ### 4. Emit Events for State Changes
 
 **✅ Good:**
+
 ```javascript
 activate(element) {
   this.setState(element, 'active');
@@ -403,6 +411,7 @@ activate(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 activate(element) {
   this.setState(element, 'active');
@@ -413,6 +422,7 @@ activate(element) {
 ### 5. Use AbortController for Event Cleanup
 
 **✅ Good:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -426,6 +436,7 @@ _init(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -440,6 +451,7 @@ _init(element) {
 ### 6. Store Configuration in State
 
 **✅ Good:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -455,6 +467,7 @@ _init(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -473,6 +486,7 @@ _init(element) {
 ### Pitfall 1: Not Checking Current State
 
 **Problem:**
+
 ```javascript
 toggle(element) {
   const state = this.getState(element);
@@ -485,6 +499,7 @@ toggle(element) {
 ```
 
 **Solution:**
+
 ```javascript
 toggle(element) {
   const currentState = this.getElementState(element);
@@ -505,6 +520,7 @@ toggle(element) {
 ### Pitfall 2: Memory Leaks from Event Listeners
 
 **Problem:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -519,6 +535,7 @@ _init(element) {
 ```
 
 **Solution:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -536,6 +553,7 @@ _init(element) {
 ### Pitfall 3: State Synchronization Issues
 
 **Problem:**
+
 ```javascript
 // Multiple triggers for same target get out of sync
 show(element) {
@@ -546,6 +564,7 @@ show(element) {
 ```
 
 **Solution:**
+
 ```javascript
 show(element) {
   const state = this.getState(element);
@@ -563,6 +582,7 @@ show(element) {
 ### Pitfall 4: Forgetting to Clean Up Timers
 
 **Problem:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -577,6 +597,7 @@ _init(element) {
 ```
 
 **Solution:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -610,6 +631,7 @@ const state = this.getState(element);
 ```
 
 **Memory Usage:**
+
 - No memory leaks from orphaned state
 - State tied to element lifecycle
 - Automatic cleanup on DOM removal
@@ -619,14 +641,14 @@ const state = this.getState(element);
 **Optimize animations:**
 
 ```scss
-[data-toggle-target="opening"],
-[data-toggle-target="closing"] {
+[data-toggle-target='opening'],
+[data-toggle-target='closing'] {
   /* Only apply will-change during transitions */
   will-change: opacity, transform;
 }
 
-[data-toggle-target="open"],
-[data-toggle-target="closed"] {
+[data-toggle-target='open'],
+[data-toggle-target='closed'] {
   /* Remove will-change when static */
   will-change: auto;
 }
@@ -635,6 +657,7 @@ const state = this.getState(element);
 ### 3. Batch State Updates
 
 **✅ Good:**
+
 ```javascript
 activate(element) {
   const state = this.getState(element);
@@ -649,6 +672,7 @@ activate(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 activate(element) {
   // Each call triggers reflow
@@ -661,6 +685,7 @@ activate(element) {
 ### 4. Minimize State Queries
 
 **✅ Good:**
+
 ```javascript
 _init(element) {
   const state = super._init(element);
@@ -679,6 +704,7 @@ show(element) {
 ```
 
 **❌ Bad:**
+
 ```javascript
 show(element) {
   // Query every time - expensive!
@@ -721,11 +747,11 @@ show(element) {
 
 ```javascript
 // In browser console
-document.addEventListener('toggle:show', (e) => {
+document.addEventListener('toggle:show', e => {
   console.log('Toggle shown:', e.detail);
 });
 
-document.addEventListener('toggle:hide', (e) => {
+document.addEventListener('toggle:hide', e => {
   console.log('Toggle hidden:', e.detail);
 });
 ```

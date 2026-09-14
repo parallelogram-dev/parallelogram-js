@@ -17,10 +17,24 @@
   --toast-padding-y: #{$space-sm};
 }
 
-:host([placement="top-left"]) { top: 0; left: 0; }
-:host([placement="top-right"]) { top: 0; right: 0; left: auto; }
-:host([placement="bottom-right"]) { bottom: 0; right: 0; left: auto; }
-:host([placement="bottom-left"]) { bottom: 0; left: 0; }
+:host([placement='top-left']) {
+  top: 0;
+  left: 0;
+}
+:host([placement='top-right']) {
+  top: 0;
+  right: 0;
+  left: auto;
+}
+:host([placement='bottom-right']) {
+  bottom: 0;
+  right: 0;
+  left: auto;
+}
+:host([placement='bottom-left']) {
+  bottom: 0;
+  left: 0;
+}
 
 .toast {
   padding: var(--toast-padding-y) var(--toast-padding-x);
@@ -31,20 +45,34 @@
   transform: translateY(-6px);
   animation: toast-in $duration-fast ease-out forwards;
   cursor: pointer;
-  font: #{$font-sm}/1.4 system-ui, -apple-system, sans-serif;
+  font:
+    #{$font-sm}/ 1.4 system-ui,
+    -apple-system,
+    sans-serif;
   outline: none;
   pointer-events: auto;
   min-width: 300px;
 }
 
 /* Toast type backgrounds - intentionally opinionated dark colors for visibility */
-.toast.info { background: #{$neutral-900}; }
-.toast.success { background: #{$success-dark}; }
-.toast.warning { background: #{$warning-dark}; }
-.toast.error { background: #{$error-dark}; }
+.toast.info {
+  background: #{$neutral-900};
+}
+.toast.success {
+  background: #{$success-dark};
+}
+.toast.warning {
+  background: #{$warning-dark};
+}
+.toast.error {
+  background: #{$error-dark};
+}
 
 @keyframes toast-in {
-  to { opacity: 1; transform: none; }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .row {

@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Removed
+
 - Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
 
 ### Changed
+
 - Web component SCSS is now compiled by a local Rollup plugin (`rollup-plugin-scss.js`) using Sass's modern API and cssnano 9, replacing the unmaintained `rollup-plugin-postcss`. Minified CSS now keeps declarations in source order, and inline SVGs keep the `viewBox` from source (cssnano 5 stripped it).
 - Updated dev dependencies and removed unused ones (`@rollup/plugin-replace`, `babel-plugin-transform-remove-console`, `postcss-cli`, `postcss-import`).
 - Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
@@ -19,17 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-06-03
 
 ### Added
+
 - **DeferTracker component** (`src/components/DeferTracker.js`) — declarative, deferred third-party trackers driven by inert JSON config blocks (`<script type="application/json" data-defer-tracker="…">`). Trackers boot only after the first user interaction (or an idle fallback), keeping their cost off the cold-load main thread and out of Lighthouse lab traces. Includes a shared page-wide interaction gate, name-based dedup (router/fragment safe), per-node `data-defer-tracker-status`, and `defer-tracker:booted` / `defer-tracker:error` events.
 - Tracker adapter API: `registerTrackerAdapter(name, boot)`, optional eventBus-driven `setTrackerConsent(fn)`, and `configureDeferTracker({ events, idleTimeout })`.
 - 13 tree-shakeable tracker adapters under `src/adapters/`: `ga4`, `meta-pixel`, `gtm`, `clarity`, `tiktok-pixel`, `hotjar`, `linkedin-insight`, `pinterest-tag`, `google-ads`, `bing-uet`, `plausible`, `fathom`, `hubspot`. The Google family shares a single internal `gtag.js` loader so it is injected only once.
 - New package export paths `@parallelogram-js/core/adapters/*` and `@parallelogram-js/core/dev/adapters/*`.
 
 ### Changed
+
 - Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
 
 ## [0.1.2] - 2025-01-19
 
 ### Added
+
 - Component state management system (ComponentStates.js)
 - State-based CSS architecture with attribute selectors
 - Multi-component support - multiple components can now mount on same element
@@ -41,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - toggle.scss - New component stylesheet for Toggle component
 
 ### Changed
+
 - **BREAKING**: Renamed `data-scrollreveal` to `data-reveal` throughout framework
 - Updated Reveal component CSS with optimized transition timing
 - State tracking now uses component-specific attributes instead of generic `data-component-mounted`
@@ -53,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed emojis from all documentation and demo files
 
 ### Fixed
+
 - Critical bug where multiple components couldn't mount on same element
 - Reveal component initial state timing (elements now start hidden immediately)
 - Lazysrc error state styling (changed from border to box-shadow to prevent layout shift)
@@ -60,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation accuracy across all guides and references
 
 ### Performance
+
 - Added `will-change` CSS property to active animation states in:
   - Reveal component (revealing state)
   - Lazysrc component (loading state)
@@ -69,18 +77,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2025-01-19
 
 ### Added
+
 - Simplified API with `createApp()` and `app.run()` methods
 - Web component lazy-loading support via `WebComponentLoader`
 - Documentation for simplified API (simplified-api.md)
 - Documentation for web component lazy-loading (web-component-lazy-loading.md)
 
 ### Changed
+
 - Improved async/defer script handling in initialization
 - Enhanced ComponentRegistry validation and error messaging
 
 ## [0.1.0] - 2025-01-18
 
 ### Changed
+
 - **BREAKING**: Package renamed from `@peptolab/parallelogram` to `@parallelogram-js/core`
 - **BREAKING**: Version reset to 0.1.0 for pre-release status
 - Updated all documentation to reflect new package name
@@ -88,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reorganized under @parallelogram-js organization
 
 ### Added
+
 - Comprehensive Web Components documentation (`docs/08-web-components-guide.md`)
 - Migration guide for existing projects (`docs/09-migration-guide.md`)
 - Quick reference guide for Web Components (`docs/WEB-COMPONENTS-QUICK-REF.md`)
@@ -95,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clear distinction between Regular Components and Web Components in all docs
 
 ### Documentation
+
 - Clarified that Web Components (PModal, PDatetime, PSelect, PToasts, PUploader) should NOT be registered in ComponentRegistry
 - Added troubleshooting section for common Web Component issues
 - Added framework integration examples (React, Vue, Svelte)
@@ -106,12 +119,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 If migrating from the old package:
 
 1. Update package.json:
+
    ```diff
    - "@peptolab/parallelogram": "^1.2.9"
    + "@parallelogram-js/core": "^0.1.0"
    ```
 
 2. Update all imports:
+
    ```diff
    - import { ComponentRegistry } from '@peptolab/parallelogram';
    + import { ComponentRegistry } from '@parallelogram-js/core';
@@ -129,13 +144,16 @@ If migrating from the old package:
 ## Previous Versions (as @peptolab/parallelogram)
 
 ### [1.2.9] - 2025-01-XX
+
 - Improve Lazysrc picture element support
 - Fix page transition flicker in PageManager
 - Various bug fixes
 
 ### [1.2.8] - 2025-01-XX
+
 - Bug fixes and improvements
 
 ### [1.2.7] - 2025-01-XX
+
 - Performance improvements
 - Component enhancements

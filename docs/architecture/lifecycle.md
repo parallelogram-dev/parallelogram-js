@@ -462,17 +462,29 @@ class MyComponent extends BaseComponent {
 
   setupEventListeners(element, signal) {
     // All listeners use the same signal
-    element.addEventListener('click', () => {
-      this.handleClick(element);
-    }, { signal });
+    element.addEventListener(
+      'click',
+      () => {
+        this.handleClick(element);
+      },
+      { signal }
+    );
 
-    document.addEventListener('scroll', () => {
-      this.handleScroll(element);
-    }, { signal });
+    document.addEventListener(
+      'scroll',
+      () => {
+        this.handleScroll(element);
+      },
+      { signal }
+    );
 
-    window.addEventListener('resize', () => {
-      this.handleResize(element);
-    }, { signal });
+    window.addEventListener(
+      'resize',
+      () => {
+        this.handleResize(element);
+      },
+      { signal }
+    );
   }
 
   // Cleanup happens automatically in BaseComponent.unmount()

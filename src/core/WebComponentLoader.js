@@ -114,9 +114,7 @@ export class WebComponentLoader {
 
     // No loader defined for this component
     if (!this.componentMap[tagName]) {
-      console.warn(
-        `[WebComponentLoader] No loader defined for component: ${tagName}`
-      );
+      console.warn(`[WebComponentLoader] No loader defined for component: ${tagName}`);
       return;
     }
 
@@ -136,10 +134,7 @@ export class WebComponentLoader {
         if (this.options.onError) {
           this.options.onError(tagName, error);
         } else {
-          console.error(
-            `[WebComponentLoader] Failed to load component: ${tagName}`,
-            error
-          );
+          console.error(`[WebComponentLoader] Failed to load component: ${tagName}`, error);
         }
       });
 
