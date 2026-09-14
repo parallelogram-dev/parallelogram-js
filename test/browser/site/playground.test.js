@@ -34,6 +34,19 @@ describe('example playground', () => {
     ]).toEqual([false, 'true', '']);
   });
 
+  it('shows the state attributes the component writes as they change', async () => {
+    const { element } = mountExample(Toggle, 'menu');
+
+    stageOf(element).querySelector('#account-menu').setAttribute('data-toggle-state', 'open');
+    await Promise.resolve();
+
+    const panel = element.querySelector('[data-example-state]');
+    expect([
+      panel.hidden,
+      [...panel.querySelectorAll('dt, dd')].map(item => item.textContent),
+    ]).toEqual([false, ['<nav#account-menu> data-toggle-state', 'open']]);
+  });
+
   it('renders the example again with a changed attribute and shows the new markup', () => {
     const { element } = mountExample(Toggle, 'menu');
     const field = control(element, 'data-toggle-close-escape');

@@ -1,6 +1,6 @@
 import { BaseComponent } from '../../../src/core/BaseComponent.js';
 import { MockUpload } from '../mocks.js';
-import { describeDetail, serializeMarkup } from './format.js';
+import { describeDetail, describeElement, serializeMarkup } from './format.js';
 
 const contracts = import.meta.glob('../../../src/components/*.contract.js', {
   eager: true,
@@ -40,12 +40,14 @@ export default class ExamplePlayground extends BaseComponent {
       form: element.querySelector('[data-example-controls]'),
       code: element.querySelector('[data-example-code]'),
       log: element.querySelector('[data-example-log]'),
+      panel: element.querySelector('[data-example-state]'),
       started: performance.now(),
     });
 
     this._prepareStage(state);
     if (state.form) this._connectControls(state);
     if (state.log) this._connectLog(state);
+    if (state.panel) this._connectState(state);
     return state;
   }
 
@@ -195,6 +197,45 @@ export default class ExamplePlayground extends BaseComponent {
         { signal }
       );
     }
+  }
+
+  /**
+   * List the state attributes the component writes in the example, as they change
+   */
+  _connectState(state) {
+    const names = [state.contract, ...(state.contract.elements ?? [])]
+      .flatMap(item => item.attributes ?? [])
+      .filter(attribute => attribute.readonly && !attribute.deprecated)
+      .map(attribute => attribute.name);
+    const list = state.panel.querySelector('[data-example-state-list]');
+
+    const render = () => {
+      const rows = [];
+      for (const name of names) {
+        for (const node of state.stage.querySelectorAll(`[${CSS.escape(name)}]`)) {
+          const term = document.createElement('dt');
+          term.append(`${describeElement(node)} `);
+          const code = document.createElement('code');
+          code.textContent = name;
+          term.append(code);
+          const value = document.createElement('dd');
+          value.textContent = node.getAttribute(name) || '(present)';
+          rows.push(term, value);
+        }
+      }
+      list.replaceChildren(...rows);
+      state.panel.hidden = rows.length === 0;
+    };
+
+    const observer = new MutationObserver(render);
+    observer.observe(state.stage, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: names,
+    });
+    state.controller.signal.addEventListener('abort', () => observer.disconnect());
+    render();
   }
 
   _concernsStage(stage, payload) {

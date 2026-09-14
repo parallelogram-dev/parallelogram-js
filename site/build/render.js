@@ -127,6 +127,9 @@ const attributesOf = contract =>
 export function exampleBlock(contract, example) {
   const id = `${slugFor(contract)}-${example.id}`;
   const attributes = new Map(attributesOf(contract).map(attribute => [attribute.name, attribute]));
+  const writesState = attributesOf(contract).some(
+    attribute => attribute.readonly && !attribute.deprecated
+  );
   const controls = (example.controls ?? [])
     .map(control => controlField(id, control, attributes.get(control.attribute)))
     .join('\n');
@@ -145,6 +148,14 @@ ${
 ${controls}
 <button type="reset" class="tool-button">Reset</button>
 </form>`
+    : ''
+}
+${
+  writesState
+    ? `<section class="example__state" data-example-state hidden aria-labelledby="${id}-state-title">
+  <h3 id="${id}-state-title">State</h3>
+  <dl data-example-state-list></dl>
+</section>`
     : ''
 }
 <div class="example__code">

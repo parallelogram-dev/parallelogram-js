@@ -12,6 +12,12 @@ export function serializeMarkup(fragment) {
   return template.innerHTML.replace(/ ([\w:.-]+)=""(?=[\s/>])/g, ' $1');
 }
 
+/**
+ * An element as `<tag#id>`, for the playground's state panel and event log
+ */
+export const describeElement = element =>
+  `<${element.localName}${element.id ? `#${element.id}` : ''}>`;
+
 const describeValue = value => {
   if (value instanceof Element) {
     return `<${value.localName}${value.id ? `#${value.id}` : ''}>`;
