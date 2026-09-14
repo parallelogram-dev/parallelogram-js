@@ -2,7 +2,7 @@
 import path from 'path';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import postcss from 'rollup-plugin-postcss';
+import scss from './rollup-plugin-scss.js';
 import { babel } from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import stripLogger from './babel-plugin-strip-logger.js';
@@ -22,21 +22,7 @@ const adapterFiles = fs
 // Helper to create plugin array for components
 const createComponentPlugins = (isProduction = false) => {
   const plugins = [
-    postcss({
-      extensions: ['.scss', '.css'],
-      inject: false,
-      extract: false,
-      minimize: true,
-      sourceMap: false,
-      // Note: rollup-plugin-postcss 4.0.2 still uses legacy Sass API
-      // This will show deprecation warnings until the plugin is updated
-      // See: https://github.com/egoist/rollup-plugin-postcss/issues
-      use: [
-        ['sass', {
-          includePaths: ['src/styles']
-        }]
-      ]
-    }),
+    scss({ loadPaths: ['src/styles'] }),
     resolve({
       extensions: ['.js', '.scss', '.css'],
     }),

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+- Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
+
+### Changed
+- Web component SCSS is now compiled by a local Rollup plugin (`rollup-plugin-scss.js`) using Sass's modern API and cssnano 9, replacing the unmaintained `rollup-plugin-postcss`. Minified CSS now keeps declarations in source order, and inline SVGs keep the `viewBox` from source (cssnano 5 stripped it).
+- Updated dev dependencies and removed unused ones (`@rollup/plugin-replace`, `babel-plugin-transform-remove-console`, `postcss-cli`, `postcss-import`).
+- Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
+- The demo build deletes stale hashed chunks from `demo/dist`.
+
 ## [0.4.0] - 2026-06-03
 
 ### Added
