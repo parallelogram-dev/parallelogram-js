@@ -15,7 +15,7 @@ Web Components can now use external SCSS files for their Shadow DOM styles, prov
 
 ## How It Works
 
-The build system uses `rollup-plugin-postcss` to:
+The build uses a small local Rollup plugin (`rollup-plugin-scss.js`) to:
 
 1. Import `.scss` files as JavaScript strings
 2. Compile SCSS to CSS using Dart Sass
@@ -219,7 +219,7 @@ The Rollup configuration handles SCSS compilation automatically:
 **rollup.config.js**:
 
 ```javascript
-import postcss from 'rollup-plugin-postcss';
+import scss from './rollup-plugin-scss.js';
 
 const componentConfigs = componentFiles.map(file => ({
   input: file,
@@ -228,18 +228,7 @@ const componentConfigs = componentFiles.map(file => ({
     format: 'esm',
   },
   plugins: [
-    postcss({
-      extensions: ['.scss', '.css'],
-      inject: false,          // Don't auto-inject (we control it)
-      extract: false,         // Don't extract to separate file
-      minimize: true,         // Minify the CSS
-      sourceMap: false,
-      use: [
-        ['sass', {
-          includePaths: ['src/styles']  // Allow @use from src/styles
-        }]
-      ]
-    }),
+    scss({ loadPaths: ['src/styles'] }),  // Allow @use from src/styles
     resolve({
       extensions: ['.js', '.scss', '.css'],
     }),
@@ -455,17 +444,9 @@ Import the variables file:
 }
 ```
 
-### PostCSS Configuration
+### Minification
 
-The `postcss.config.cjs` file must use CommonJS format (`.cjs` extension) because the project uses ES modules:
-
-```javascript
-module.exports = {
-  plugins: [
-    require('cssnano'),
-  ],
-};
-```
+`rollup-plugin-scss.js` runs cssnano with its default preset. There is no separate PostCSS config file; change the plugin itself if the minification needs adjusting.
 
 ## Performance
 
