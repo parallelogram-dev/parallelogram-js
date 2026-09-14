@@ -144,7 +144,7 @@ export default class Lazysrc extends BaseComponent {
     }
 
     // Listen for force load events (e.g., from Lightbox component)
-    const forceLoadHandler = async event => {
+    const forceLoadHandler = async () => {
       const statePromise = this.getState(element);
       const state = statePromise instanceof Promise ? await statePromise : statePromise;
 
@@ -490,14 +490,14 @@ export default class Lazysrc extends BaseComponent {
     try {
       // Handle different element types
       if (this.hasAttr(element, 'bg')) {
-        await this._loadBackgroundImage(element, componentState);
+        await this._loadBackgroundImage(element);
       } else if (element.tagName === 'PICTURE') {
         await this._loadPictureElement(element, componentState);
       } else if (this._isImage(element)) {
         await this._loadImageElement(element, componentState);
       } else {
         // Generic element with background image
-        await this._loadBackgroundImage(element, componentState);
+        await this._loadBackgroundImage(element);
       }
 
       this._onElementLoaded(element, componentState);
@@ -612,10 +612,9 @@ export default class Lazysrc extends BaseComponent {
    * Load background image
    * @private
    * @param {HTMLElement} element
-   * @param {Object} state
    * @returns {Promise}
    */
-  _loadBackgroundImage(element, state) {
+  _loadBackgroundImage(element) {
     return new Promise((resolve, reject) => {
       const bgUrl = this.getAttr(element, 'bg');
       if (!bgUrl) {

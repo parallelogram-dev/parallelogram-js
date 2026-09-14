@@ -259,7 +259,7 @@ export default class Scrollreveal extends BaseComponent {
       }
 
       // Animate the element
-      await this._revealItems([element], element);
+      await this._revealItems([element]);
 
       // Mark as revealed
       state.hasBeenRevealed = true;
@@ -302,7 +302,7 @@ export default class Scrollreveal extends BaseComponent {
     if (state.once) return;
 
     try {
-      await this._hideItems([element], element);
+      await this._hideItems([element]);
       state.hasBeenRevealed = false;
 
       this.eventBus?.emit('scrollreveal:hide-complete', {
@@ -318,9 +318,8 @@ export default class Scrollreveal extends BaseComponent {
    * Reveal items using CSS class or TransitionManager
    * @private
    * @param {HTMLElement[]} items - Items to reveal
-   * @param {HTMLElement} container - Container element
    */
-  async _revealItems(items, container) {
+  async _revealItems(items) {
     const promises = items.map(async item => {
       this.setAttr(item, 'state', 'revealing');
 
@@ -354,9 +353,8 @@ export default class Scrollreveal extends BaseComponent {
    * Hide items using CSS class or TransitionManager
    * @private
    * @param {HTMLElement[]} items - Items to hide
-   * @param {HTMLElement} container - Container element
    */
-  async _hideItems(items, container) {
+  async _hideItems(items) {
     const promises = items.map(async item => {
       this.setAttr(item, 'state', 'hiding');
 

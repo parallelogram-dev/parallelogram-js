@@ -107,7 +107,7 @@ export default class PModal extends HTMLElement {
     this.removeEventListener('focusin', this._onFocus);
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback(name) {
     if (name === 'open') {
       if (this.hasAttribute('open')) {
         this._onOpen();
@@ -306,7 +306,7 @@ export default class PModal extends HTMLElement {
    * @param {string} prop
    */
   _upgradeProperty(prop) {
-    if (this.hasOwnProperty(prop)) {
+    if (Object.hasOwn(this, prop)) {
       const value = this[prop];
       delete this[prop];
       this[prop] = value;

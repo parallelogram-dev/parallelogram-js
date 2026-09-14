@@ -1,7 +1,6 @@
 import {
   camelCase,
   getDataAttr,
-  getConfigFromAttrs,
   generateId,
   debounce,
   throttle,
@@ -13,7 +12,6 @@ import {
   trapFocus,
   restoreFocus,
   createElement,
-  getTargetElement,
 } from '../utils/dom-utils.js';
 
 /**
@@ -45,7 +43,7 @@ export class BaseComponent {
     this.elements.set(element, state);
   }
 
-  update(element) {
+  update(_element) {
     // Override in subclasses for update logic
   }
 

@@ -293,7 +293,7 @@ class ComponentRegistrationHelper {
   _detectWebComponent(nameOrSelector) {
     // Web components are simple tag names (no special selector characters)
     // Enhancement components have [, ., #, :, or space
-    return !/[\[\.\#\:\s]/.test(nameOrSelector);
+    return !/[[.#:\s]/.test(nameOrSelector);
   }
 
   /**
@@ -305,7 +305,7 @@ class ComponentRegistrationHelper {
     // [data-toggle] -> toggle
     // .lightbox -> lightbox
     // #main-nav -> main-nav
-    const match = selector.match(/data-([a-z-]+)|[\.\#]([a-z-]+)/i);
+    const match = selector.match(/data-([a-z-]+)|[.#]([a-z-]+)/i);
     if (match) {
       return match[1] || match[2];
     }

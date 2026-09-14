@@ -181,9 +181,8 @@ export default class Toggle extends BaseComponent {
    * @private
    * @param {Event} event - Click event
    * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
    */
-  _handleClick(event, element, state) {
+  _handleClick(event, element) {
     event.preventDefault();
     event.stopPropagation();
 

@@ -315,7 +315,7 @@ export default class PUploader extends HTMLElement {
       );
 
       this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
-      this.addEventListener('dragend', e => this._handleDragEnd(e), { signal });
+      this.addEventListener('dragend', () => this._handleDragEnd(), { signal });
       this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
       this.addEventListener('dragleave', e => this._handleDragLeave(e), { signal });
       this.addEventListener('drop', e => this._handleDrop(e), { signal });
@@ -442,7 +442,7 @@ export default class PUploader extends HTMLElement {
         try {
           const response = JSON.parse(xhr.responseText);
           this._handleUploadSuccess(fileData, response);
-        } catch (e) {
+        } catch {
           this._handleUploadError(fileData, 'Invalid server response');
         }
       } else {
@@ -524,13 +524,7 @@ export default class PUploader extends HTMLElement {
     /* Capture the original order before any drag operations */
     this.originalFileOrder = Array.from(this.querySelectorAll('p-uploader-file'));
 
-    try {
-      if (document.selection) {
-        document.selection.empty();
-      } else {
-        window.getSelection().removeAllRanges();
-      }
-    } catch (err) {}
+    window.getSelection()?.removeAllRanges();
 
     setTimeout(() => {
       if (this.draggedElement) {
@@ -539,7 +533,7 @@ export default class PUploader extends HTMLElement {
     }, 0);
   }
 
-  _handleDragEnd(e) {
+  _handleDragEnd() {
     if (!this.draggedElement) return;
 
     this.draggedElement.removeAttribute('dragging');

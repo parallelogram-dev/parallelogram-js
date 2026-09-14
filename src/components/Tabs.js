@@ -1,5 +1,4 @@
 import { BaseComponent } from '@parallelogram-js/core';
-import { ComponentStates } from '../core/ComponentStates.js';
 import { generateId } from '../utils/dom-utils.js';
 /**
  * Tabs Component
@@ -142,7 +141,7 @@ export default class Tabs extends BaseComponent {
    * Setup accessibility attributes and IDs for tabs
    */
   _setupTabs(element, state) {
-    state.tabs.forEach((tab, index) => {
+    state.tabs.forEach(tab => {
       // Setup tab attributes
       tab.setAttribute('role', 'tab');
       tab.setAttribute('tabindex', '-1');
@@ -268,11 +267,12 @@ export default class Tabs extends BaseComponent {
         targetIndex = state.tabs.length - 1;
         break;
       case 'Enter':
-      case ' ':
+      case ' ': {
         event.preventDefault();
         const panelId = event.currentTarget.dataset.tab;
         this._activateTab(element, panelId, state, true);
         return;
+      }
     }
 
     if (targetIndex >= 0) {
@@ -308,7 +308,7 @@ export default class Tabs extends BaseComponent {
 
     /* Handle panel transition */
     if (animate && previousPanel && previousPanel !== targetPanel) {
-      await this._transitionPanels(previousPanel, targetPanel, state);
+      await this._transitionPanels(previousPanel, targetPanel);
     } else {
       /* Simple show/hide without animation */
       state.panels.forEach(panel => {
@@ -350,7 +350,7 @@ export default class Tabs extends BaseComponent {
   /**
    * Transition between panels with animation support
    */
-  async _transitionPanels(fromPanel, toPanel, state) {
+  async _transitionPanels(fromPanel, toPanel) {
     const duration = Tabs.defaults.transitionDuration;
 
     /* Set transitioning state */

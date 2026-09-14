@@ -62,7 +62,7 @@ export class DemoMedia extends BaseComponent {
 
     document.addEventListener(
       'lazysrc:loading-start',
-      e => {
+      () => {
         this.updateMetricsDisplay();
       },
       { signal: controller.signal }
@@ -70,7 +70,7 @@ export class DemoMedia extends BaseComponent {
 
     document.addEventListener(
       'lazysrc:detached',
-      e => {
+      () => {
         this.mediaMetrics.componentsCleaned++;
         this.updateMetricsDisplay();
       },
