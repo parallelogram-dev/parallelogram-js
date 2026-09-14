@@ -113,10 +113,11 @@ app.components
     () =>
       import(/* webpackChunkName: "copytoclipboard" */ '../../src/components/CopyToClipboard.js')
   )
-  .add(
-    '[data-selectloader]',
-    () => import(/* webpackChunkName: "selectloader" */ '../../src/components/SelectLoader.js')
-  )
+  .add('[data-selectloader]', {
+    name: 'selectloader',
+    loader: () =>
+      import(/* webpackChunkName: "selectloader" */ '../../src/components/SelectLoader.js'),
+  })
   .add(
     '[data-defer-tracker]',
     () => import(/* webpackChunkName: "defer-tracker" */ '../../src/components/DeferTracker.js')
