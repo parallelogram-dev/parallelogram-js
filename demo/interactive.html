@@ -494,7 +494,12 @@
                 <p>A demonstration navbar that hides when scrolling down and shows when scrolling up:</p>
 
                 <div class="navbar__spacer"></div>
-                <nav data-scrollhide data-scroll-threshold="100" data-overlay-threshold="150" class="navbar--demo">
+                <nav
+                    data-scrollhide
+                    data-scrollhide-scroll-threshold="100"
+                    data-scrollhide-overlay-threshold="150"
+                    class="navbar--demo"
+                >
                     <div>Demo Navigation Bar - Scroll down to hide, scroll up to show</div>
                 </nav>
 
@@ -508,12 +513,21 @@
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0">
                         <h4>Configuration Options:</h4>
                         <ul>
-                            <li><code>data-scroll-threshold="100"</code> - Pixels to scroll before hiding/showing</li>
-                            <li><code>data-overlay-threshold="150"</code> - Pixels to scroll before overlay effect</li>
+                            <li>
+                                <code>data-scrollhide-scroll-threshold="100"</code> - Pixels to scroll before
+                                hiding/showing
+                            </li>
+                            <li>
+                                <code>data-scrollhide-overlay-threshold="150"</code> - Pixels to scroll before overlay
+                                effect
+                            </li>
                             <li>
                                 <code>data-scrollhide-target="#element"</code> - Target different element (optional)
                             </li>
-                            <li><code>data-scrolled-class="custom-hide"</code> - Custom CSS class for hidden state</li>
+                            <li>
+                                <code>data-scrollhide-scrolled-class="custom-hide"</code> - Custom CSS class for hidden
+                                state
+                            </li>
                         </ul>
                     </div>
                 </div>
