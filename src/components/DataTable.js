@@ -20,7 +20,7 @@ const cellsOf = row => childrenNamed(row, 'td', 'th');
  * separators, dates are parsed, text is compared in natural order ("Item 2" before "Item 10"), a
  * cell's `data-sort-value` overrides its text, and blank values always sort last. Filtering keeps
  * the current sort, pagination is a labelled navigation region with a window of page numbers, and a
- * status message announces which rows are showing after each change. The original row elements are
+ * status line below the table shows and announces which rows are showing after each change. The original row elements are
  * moved rather than copied, and unmounting puts the table back as it was.
  *
  * @example

@@ -5,7 +5,8 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * The target gets the scrolled class while hidden, and the overlay class once the page has scrolled
  * past the overlay threshold. Both start from the scroll position the page already has when the
- * component mounts. Movements smaller than the tolerance are ignored, which avoids flicker from
+ * component mounts, and a scroll position the browser restores while the page loads never hides the
+ * target. Movements smaller than the tolerance are ignored, which avoids flicker from
  * elastic scrolling, and a hidden target is shown again when keyboard focus moves into it. One
  * passive scroll listener serves every element and updates once per frame.
  *
@@ -46,6 +47,7 @@ export default class Scrollhide extends BaseComponent {
     super(options);
     this._scrollListener = null;
     this._frame = null;
+    this._settling = false;
   }
 
   _init(element) {
@@ -109,15 +111,38 @@ export default class Scrollhide extends BaseComponent {
     if (this._scrollListener) return;
 
     this._scrollListener = new AbortController();
-    window.addEventListener('scroll', () => this._requestUpdate(), {
-      passive: true,
-      signal: this._scrollListener.signal,
-    });
+    const { signal } = this._scrollListener;
+    window.addEventListener('scroll', () => this._requestUpdate(), { passive: true, signal });
+
+    /* Browsers restore the scroll position while the page loads, which isn't the user scrolling */
+    if (document.readyState !== 'complete') {
+      this._settling = true;
+      window.addEventListener('load', () => requestAnimationFrame(() => this._settle()), {
+        once: true,
+        signal,
+      });
+    }
+  }
+
+  /**
+   * Start every element from the scroll position the page has once it has loaded
+   */
+  _settle() {
+    this._settling = false;
+    const scrollY = window.scrollY;
+    for (const element of this.trackedElements()) {
+      const state = this.getState(element);
+      if (!state?.target) continue;
+      state.currentY = scrollY;
+      state.lastY = scrollY;
+      this._applyOverlay(element, state, { emit: true });
+    }
   }
 
   _stopListening() {
     this._scrollListener?.abort();
     this._scrollListener = null;
+    this._settling = false;
     if (this._frame) {
       cancelAnimationFrame(this._frame);
       this._frame = null;
@@ -148,6 +173,11 @@ export default class Scrollhide extends BaseComponent {
 
     if (scrollY <= 0) {
       this._show(element, state, 'top');
+      state.lastY = scrollY;
+      return;
+    }
+
+    if (this._settling) {
       state.lastY = scrollY;
       return;
     }

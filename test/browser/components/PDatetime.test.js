@@ -309,6 +309,20 @@ describe('p-datetime', () => {
       expect(visited).toEqual(['2023-08-01', '2023-07-01', '2023-06-24', '2023-06-25']);
     });
 
+    it('draws a focus ring on the day the arrow keys move to after a pointer opened the calendar', async () => {
+      const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+      shadow(picker, '[data-datetime-input]').click();
+      await settle();
+
+      press(picker, 'ArrowRight');
+      const day = focused(picker);
+
+      expect({
+        date: day?.dataset.date,
+        ring: getComputedStyle(day).outlineStyle !== 'none',
+      }).toEqual({ date: '2023-07-13', ring: true });
+    });
+
     it('picks the focused day with Enter and returns focus to the field', async () => {
       const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
       const field = shadow(picker, '[data-datetime-input]');
