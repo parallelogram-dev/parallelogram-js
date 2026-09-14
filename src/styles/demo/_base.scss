@@ -121,15 +121,6 @@ body {
       color: white;
     }
 
-    &[data-router-enhanced]::after {
-      content: '⚡';
-      position: absolute;
-      top: -8px;
-      right: -12px;
-      font-size: 10px;
-      opacity: 0.6;
-    }
-
     &[aria-current='page'] {
       color: var(--demo-accent);
       font-weight: var(--demo-font-weight-semibold);

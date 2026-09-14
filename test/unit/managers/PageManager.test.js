@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventManager } from '../../../src/managers/EventManager.js';
 import { PageManager } from '../../../src/managers/PageManager.js';
+import { RouterManager } from '../../../src/managers/RouterManager.js';
 
 const recordingComponent = (name, mounted) =>
   class {
@@ -27,8 +28,11 @@ const component = (name, priority, mounted) => ({
 
 describe('PageManager', () => {
   let manager;
+  let router;
 
   afterEach(() => {
+    router?.destroy();
+    router = null;
     manager?.destroy();
     manager = null;
     document.body.replaceChildren();
@@ -79,5 +83,68 @@ describe('PageManager', () => {
 
     expect(replaceFragments).not.toHaveBeenCalled();
     expect(otherSubscriber).toHaveBeenCalledOnce();
+  });
+
+  it('lets the router wait until the new content is in place', () => {
+    document.body.innerHTML = '<main id="app" data-view="main"></main>';
+    const bus = new EventManager();
+    start([], bus);
+    const waitUntil = vi.fn();
+
+    bus.emit('router:navigate-success', {
+      html: '<main data-view="main">Pricing</main>',
+      url: new URL(location.href),
+      waitUntil,
+    });
+
+    expect(waitUntil).toHaveBeenCalledWith(expect.any(Promise));
+  });
+
+  it('requests a history entry once when used with the router', async () => {
+    document.body.innerHTML = '<main id="app" data-view="main">Start</main>';
+    history.replaceState(null, '', '/start');
+    const fetch = vi.fn(
+      async () =>
+        new Response('<main data-view="main">Previous</main>', {
+          headers: { 'content-type': 'text/html' },
+        })
+    );
+    vi.stubGlobal('fetch', fetch);
+    const bus = new EventManager();
+    router = new RouterManager({ eventBus: bus });
+    manager = new PageManager({ containerSelector: '#app', registry: [], eventBus: bus, router });
+
+    history.pushState(null, '', '/previous');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await vi.waitFor(() => expect(document.querySelector('main').textContent).toBe('Previous'));
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it('finishes replacing a fragment whose transition classes do not animate', async () => {
+    document.body.innerHTML = '<main id="app" data-view="main">Start</main>';
+    const bus = new EventManager();
+    manager = new PageManager({
+      containerSelector: '#app',
+      registry: [],
+      eventBus: bus,
+      options: {
+        mountDelay: 0,
+        targetGroups: { main: ['main'] },
+        targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in', duration: 50 } },
+      },
+    });
+    let swap;
+
+    bus.emit('router:navigate-success', {
+      html: '<main data-view="main">Pricing</main>',
+      url: new URL(location.href),
+      waitUntil: promise => {
+        swap = promise;
+      },
+    });
+    await swap;
+
+    expect(document.querySelector('main').textContent).toBe('Pricing');
   });
 });

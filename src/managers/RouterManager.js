@@ -1,22 +1,25 @@
 /**
- * RouterManager - Enhanced routing component for the Enhancement Framework
- * Handles client-side navigation, history management, and fragment loading
+ * Client-side navigation for server-rendered pages
+ *
+ * Handles same-origin link clicks and history moves by fetching the new page and emitting
+ * `router:navigate-success` for PageManager to swap fragments. The most recent navigation always
+ * wins, and a navigation that cannot be shown in place falls back to a normal page load, so the
+ * router is never worse than a plain link.
  */
 export class RouterManager {
   constructor({ eventBus, logger, options = {} }) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.options = {
-      // Default options
       baseUrl: '',
       timeout: 10000,
       retryAttempts: 0,
       fragmentSelector: '[data-router-fragment]',
       loadingClass: 'router-loading',
       errorClass: 'router-error',
-      // File extensions that must never be loaded as an HTML fragment.
-      // Links resolving to these are left for the browser to handle natively
-      // (download / open), unless explicitly marked [data-router-enhance].
+      fullLoadOnError: true,
+      /* File extensions that are never loaded as an HTML fragment, unless the link is marked
+         [data-router-enhance]. The browser downloads or opens them natively. */
       nonRoutableExtensions: [
         'pdf',
         'zip',
@@ -55,42 +58,31 @@ export class RouterManager {
         'rss',
         'ics',
       ],
-      // Smooth scroll options
-      scrollDuration: 800, // 800ms default for snappy feel
-      scrollEasing: 'ease-in-out', // CSS easing function
       ...options,
     };
 
-    this.controller = null;
     this.currentUrl = new URL(location.href);
-    this.isNavigating = false;
-    this.scrollAnimationFrame = null;
+    this._navigation = null;
+    this._swap = Promise.resolve();
+    this._failedElement = null;
 
-    // Bind event handlers
-    this.boundPopState = this._onPopState.bind(this);
-    this.boundLinkClick = this._onLinkClick.bind(this);
-    this.boundAnchorClick = this._onAnchorClick.bind(this);
-
-    /* Aborted in destroy() to remove every window, link and event bus listener */
+    /* Aborted in destroy() to remove every window and document listener */
     this._listeners = new AbortController();
 
     this._initialize();
   }
 
-  /**
-   * Initialize the router with event listeners
-   */
   _initialize() {
     this.logger?.info('RouterManager initializing');
 
     const { signal } = this._listeners;
 
-    // History events
-    window.addEventListener('popstate', this.boundPopState, { signal });
+    window.addEventListener('popstate', event => this._onPopState(event), { signal });
+    document.addEventListener('click', event => this._onClick(event), { signal });
     window.addEventListener(
       'pageshow',
-      e => {
-        if (e.persisted) {
+      event => {
+        if (event.persisted) {
           this.eventBus.emit('router:bfcache-restore', { url: this.currentUrl });
         }
       },
@@ -104,87 +96,59 @@ export class RouterManager {
       { signal }
     );
 
-    // Enhance existing links
-    this._enhanceLinks();
-
-    // Listen for dynamic content changes
-    this.eventBus.on('dom:content-loaded', () => this._enhanceLinks(), { signal });
-
     this.eventBus.emit('router:initialized', { currentUrl: this.currentUrl });
   }
 
   /**
-   * Enhance links for progressive navigation
+   * Whether a navigation is in progress, including the fragment swap that follows it
    */
-  _enhanceLinks() {
-    const links = document.querySelectorAll('a[href]:not([data-router-enhanced])');
-    links.forEach(link => {
-      if (this._shouldEnhanceLink(link)) {
-        link.addEventListener('click', this.boundLinkClick, { signal: this._listeners.signal });
-        link.setAttribute('data-router-enhanced', 'true');
-        this.logger?.debug('Enhanced link', { href: link.href });
-      } else {
-        // Handle hash-only links for smooth scrolling
-        const href = link.getAttribute('href');
-        if (href && href.startsWith('#')) {
-          link.addEventListener('click', this.boundAnchorClick, {
-            signal: this._listeners.signal,
-          });
-          link.setAttribute('data-router-enhanced', 'anchor');
-          this.logger?.debug('Enhanced anchor link', { href });
-        }
-      }
-    });
+  get navigating() {
+    return this._navigation !== null;
+  }
+
+  isNavigating() {
+    return this.navigating;
   }
 
   /**
-   * Determine if a link should be enhanced for SPA navigation
+   * Whether the router takes over clicks on this link
+   *
+   * Links are left to the browser when their href is missing or only a hash, when they or an
+   * ancestor have [data-router-skip], when they download, open another browsing context, are
+   * rel="external" or leave the site, and when they point at a file type listed in
+   * `nonRoutableExtensions` without [data-router-enhance].
+   *
+   * @param {Element} link An `a` or `area` element
+   * @returns {boolean}
    */
-  _shouldEnhanceLink(link) {
+  handlesLink(link) {
     const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || link.closest('[data-router-skip]')) {
+      return false;
+    }
 
-    // Skip if external, mailto, tel, etc.
+    const target = link.getAttribute('target');
+    const rel = (link.getAttribute('rel') ?? '').toLowerCase().split(/\s+/);
     if (
-      !href ||
-      href.startsWith('mailto:') ||
-      href.startsWith('tel:') ||
-      href.startsWith('javascript:')
+      link.hasAttribute('download') ||
+      rel.includes('external') ||
+      (target && target !== '_self')
     ) {
       return false;
     }
 
-    // Skip hash-only links (in-page anchors)
-    if (href.startsWith('#')) {
-      return false;
-    }
-
-    // Skip if explicitly marked to skip
-    if (link.hasAttribute('data-router-skip')) {
-      return false;
-    }
-
-    // Skip explicit downloads and links that open in a new browsing context
-    if (link.hasAttribute('download') || (link.target && link.target !== '_self')) {
-      return false;
-    }
-
-    // Skip if different origin (unless explicitly marked for enhancement)
+    let url;
     try {
-      const url = new URL(href, location.href);
-      if (url.origin !== location.origin && !link.hasAttribute('data-router-enhance')) {
-        return false;
-      }
-
-      // Skip non-HTML assets (PDFs, archives, media, …) so the browser
-      // handles them natively instead of injecting them as a fragment
-      if (this._isNonRoutableAsset(url) && !link.hasAttribute('data-router-enhance')) {
-        return false;
-      }
+      url = new URL(href, document.baseURI);
     } catch {
       return false;
     }
 
-    return true;
+    if (url.origin !== location.origin) {
+      return false;
+    }
+
+    return !this._isNonRoutableAsset(url) || link.hasAttribute('data-router-enhance');
   }
 
   /**
@@ -199,169 +163,114 @@ export class RouterManager {
     return this.options.nonRoutableExtensions.includes(match[1].toLowerCase());
   }
 
-  /**
-   * Smooth scroll to element using native browser behavior
-   */
-  _smoothScrollTo(targetElement) {
-    targetElement.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+  _onClick(event) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const link = event
+      .composedPath()
+      .find(node => node instanceof Element && node.matches('a[href], area[href]'));
+
+    if (!link || !this.handlesLink(link)) {
+      return;
+    }
+
+    const url = new URL(link.getAttribute('href'), document.baseURI);
+
+    /* Same-page hash links keep native scrolling, focus and :target behaviour */
+    if (url.hash && this._isSameDocument(url, new URL(location.href))) {
+      return;
+    }
+
+    event.preventDefault();
+
+    /* Failures are reported through router:navigate-error */
+    this.navigate(url, {
+      viewTarget: link.getAttribute('data-view-target') || 'main',
+      replace: link.hasAttribute('data-router-replace'),
+      immutableUrl: this._isImmutableUrlLink(link),
+      trigger: 'link-click',
+      element: link,
+    }).catch(() => {});
+  }
+
+  _isImmutableUrlLink(link) {
+    const source = link.closest('[data-router-immutable-url]');
+    return source ? source.getAttribute('data-router-immutable-url') !== 'false' : false;
+  }
+
+  _isSameDocument(a, b) {
+    return a.origin === b.origin && a.pathname === b.pathname && a.search === b.search;
   }
 
   /**
-   * Handle anchor link clicks for smooth scrolling
-   */
-  _onAnchorClick(event) {
-    // Allow default behavior with modifier keys
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-      return;
-    }
-
-    // Allow default for middle mouse button
-    if (event.which === 2) {
-      return;
-    }
-
-    const link = event.currentTarget;
-    const href = link.getAttribute('href');
-
-    if (!href || !href.startsWith('#')) {
-      return;
-    }
-
-    // Get the target element
-    const targetId = href.substring(1);
-    const targetElement = targetId ? document.getElementById(targetId) : null;
-
-    if (targetElement) {
-      event.preventDefault();
-
-      // Use native smooth scrolling
-      this._smoothScrollTo(targetElement);
-
-      // Update URL hash without triggering navigation
-      if (targetId) {
-        history.replaceState(null, '', href);
-      }
-
-      this.eventBus.emit('router:anchor-scroll', {
-        target: targetElement,
-        hash: href,
-        trigger: 'anchor-click',
-        element: link,
-      });
-
-      this.logger?.debug('Scrolled to anchor', { href, targetId });
-    }
-  }
-
-  /**
-   * Handle link clicks for SPA navigation
-   */
-  _onLinkClick(event) {
-    // Allow default behavior with modifier keys
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-      return;
-    }
-
-    // Allow default for middle mouse button
-    if (event.which === 2) {
-      return;
-    }
-
-    const link = event.currentTarget;
-    const href = link.getAttribute('href');
-    const viewTarget = link.getAttribute('data-view-target') || 'main';
-
-    // Check if link OR any parent container has data-router-immutable-url
-    const immutableContainer = link.closest('[data-router-immutable-url]');
-    const immutableUrl = link.hasAttribute('data-router-immutable-url')
-      ? link.getAttribute('data-router-immutable-url') !== 'false'
-      : immutableContainer
-        ? immutableContainer.getAttribute('data-router-immutable-url') !== 'false'
-        : false;
-
-    try {
-      const url = new URL(href, location.href);
-
-      // Same page anchor links - allow default behavior
-      if (url.pathname === location.pathname && url.hash) {
-        return;
-      }
-
-      event.preventDefault();
-      this.navigate(url, {
-        viewTarget,
-        replace: link.hasAttribute('data-router-replace'),
-        immutableUrl,
-        trigger: 'link-click',
-        element: link,
-      });
-    } catch (error) {
-      this.logger?.error('Failed to parse link URL', { href, error });
-    }
-  }
-
-  /**
-   * Handle browser back/forward navigation
+   * Load the page for the history entry the browser moved to
+   *
+   * Moves between entries of the same document (a hash change) are left to the browser.
    */
   _onPopState(event) {
     const url = new URL(location.href);
-    this.currentUrl = url;
+
+    if (this._isSameDocument(url, this.currentUrl)) {
+      this.currentUrl = url;
+      return;
+    }
+
     this.eventBus.emit('router:popstate', {
       url,
       state: event.state,
       trigger: 'popstate',
     });
+
+    this.navigate(url, { trigger: 'popstate', force: true }).catch(() => {});
   }
 
   /**
-   * Perform HTTP GET request with enhanced error handling and logging
+   * Fetch a URL without affecting navigation
+   *
+   * Resolves with the response and its body, parsed as JSON when the response says so.
+   *
+   * @param {string|URL} url
+   * @param {RequestInit & { timeout?: number }} [init] `signal` cancels the request and
+   *   `timeout` overrides the router's timeout in milliseconds
+   * @returns {Promise<{ response: Response, data: string|Object }>}
+   * @throws {Error} An `HttpError` for a non-2xx response, a `TimeoutError` DOMException when the
+   *   timeout elapses, or the abort reason of `init.signal`.
    */
   async get(url, init = {}) {
-    const requestUrl = typeof url === 'string' ? url : url.toString();
-    this.logger?.group(`RouterManager GET ${requestUrl}`);
-
-    // Abort any in-flight request
-    this._abortInFlight();
-
-    // Create new abort controller
-    const controller = new AbortController();
-    this.controller = controller;
-
-    // Set up timeout
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, this.options.timeout);
+    const { signal, timeout = this.options.timeout, headers, ...rest } = init;
+    const requestUrl = String(url);
+    const request = this._requestSignal(signal, timeout);
 
     try {
       const response = await fetch(requestUrl, {
         method: 'GET',
-        signal: controller.signal,
         credentials: 'same-origin',
+        ...rest,
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
           Accept: 'text/html,application/json,*/*',
-          ...init.headers,
+          ...headers,
         },
-        ...init,
+        signal: request.signal,
       });
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw this._createHttpError(response);
       }
 
       const contentType = response.headers.get('content-type') || '';
-      let data;
-
-      if (contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        data = await response.text();
-      }
+      const data = contentType.includes('application/json')
+        ? await response.json()
+        : await response.text();
 
       this.logger?.info('GET successful', {
         url: requestUrl,
@@ -371,23 +280,61 @@ export class RouterManager {
 
       return { response, data };
     } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (error.name === 'AbortError') {
-        this.logger?.warn('GET aborted', { url: requestUrl });
-        throw error;
+      if (error?.name === 'AbortError') {
+        this.logger?.debug('GET aborted', { url: requestUrl });
+      } else {
+        this.logger?.error('GET failed', { url: requestUrl, error });
       }
-
-      this.logger?.error('GET failed', { url: requestUrl, error });
       throw error;
     } finally {
-      this.logger?.groupEnd();
-      this.controller = null;
+      request.dispose();
     }
   }
 
   /**
-   * Navigate to a new URL with enhanced options
+   * A signal that aborts when the caller's signal does or when the timeout elapses
+   */
+  _requestSignal(signal, timeout) {
+    const controller = new AbortController();
+    const abort = () => controller.abort(signal.reason);
+    const timer = setTimeout(() => {
+      controller.abort(new DOMException(`Request timed out after ${timeout}ms`, 'TimeoutError'));
+    }, timeout);
+
+    if (signal?.aborted) {
+      abort();
+    } else {
+      signal?.addEventListener('abort', abort, { once: true });
+    }
+
+    return {
+      signal: controller.signal,
+      dispose: () => {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', abort);
+      },
+    };
+  }
+
+  /**
+   * Navigate to a URL, replacing any navigation still in progress
+   *
+   * `router:navigate-success` listeners that change the page pass the work to `waitUntil()`
+   * synchronously; the navigation stays in progress, and the next one waits, until it settles.
+   * A navigation that fails, or whose response cannot be shown in place, loads the page normally
+   * unless the `fullLoadOnError` option is false.
+   *
+   * @param {string|URL} url
+   * @param {Object} [options]
+   * @param {boolean} [options.replace=false] Replace the current history entry
+   * @param {string} [options.trigger='programmatic']
+   * @param {Element|null} [options.element=null] Element that started the navigation
+   * @param {boolean} [options.force=false] Navigate even when the URL is the current one
+   * @param {boolean} [options.immutableUrl=false] Leave the address bar and history untouched
+   * @param {string} [options.viewTarget] Fragment to replace
+   * @returns {Promise<string|undefined>} The fetched HTML, or undefined when the navigation was
+   *   skipped, replaced by a newer one or handed to the browser
+   * @throws {Error} The fetch or swap error when the navigation fails.
    */
   async navigate(url, options = {}) {
     const {
@@ -396,29 +343,21 @@ export class RouterManager {
       element = null,
       force = false,
       immutableUrl = false,
+      viewTarget,
     } = options;
 
-    const targetUrl = typeof url === 'string' ? new URL(url, location.href) : url;
-    const targetUrlString = targetUrl.toString();
+    const targetUrl = new URL(url, location.href);
 
-    // Prevent navigation to same URL unless forced
-    if (!force && targetUrlString === this.currentUrl.toString()) {
-      this.logger?.debug('Navigation skipped - same URL', { url: targetUrlString });
+    if (!force && targetUrl.href === this.currentUrl.href) {
+      this.logger?.debug('Navigation skipped - same URL', { url: targetUrl.href });
       return;
     }
 
-    // Prevent concurrent navigation
-    if (this.isNavigating) {
-      this.logger?.warn('Navigation in progress, aborting new navigation', {
-        url: targetUrlString,
-      });
-      return;
-    }
+    this._abortInFlight();
+    const navigation = { controller: new AbortController(), element };
+    this._navigation = navigation;
+    this._showLoading(navigation);
 
-    this.isNavigating = true;
-    this.currentUrl = targetUrl;
-
-    // Emit navigation start event
     this.eventBus.emit('router:navigate-start', {
       url: targetUrl,
       trigger,
@@ -426,55 +365,69 @@ export class RouterManager {
       replace,
     });
 
-    // Add loading state
-    if (element) {
-      element.classList.add(this.options.loadingClass);
-    }
-    document.body.classList.add(this.options.loadingClass);
+    const fromHistory = trigger === 'popstate';
+    let historyUpdated = false;
+    let status = 'success';
 
     try {
-      const { response, data } = await this.get(targetUrlString);
-
-      // Safety net: a link slipped through and the server returned a
-      // non-HTML document (e.g. application/pdf). Don't inject it as a
-      // fragment — hand off to the browser for a native full load.
+      const { signal } = navigation.controller;
+      const { response, data } = await this.get(targetUrl, { signal });
+      const finalUrl = this._responseUrl(response, targetUrl);
       const contentType = response.headers.get('content-type') || '';
-      if (typeof data === 'string' && !contentType.includes('text/html')) {
-        this.logger?.warn('Non-HTML response; falling back to full navigation', {
-          url: targetUrlString,
+
+      if (
+        finalUrl.origin !== location.origin ||
+        typeof data !== 'string' ||
+        !contentType.includes('text/html')
+      ) {
+        this.logger?.warn('Response cannot be shown in place; loading the page normally', {
+          url: targetUrl.href,
+          responseUrl: finalUrl.href,
           contentType,
         });
-        window.location.assign(targetUrlString);
+        status = 'full-load';
+        this._fullLoad(targetUrl, fromHistory || replace);
         return;
       }
 
-      if (typeof data !== 'string') {
-        throw new Error('Expected HTML string response for navigation');
-      }
+      await this._swap;
+      signal.throwIfAborted();
 
-      // Update browser history only if URL is not immutable
-      if (!immutableUrl) {
+      if (!immutableUrl && !fromHistory) {
         const historyState = { timestamp: Date.now(), trigger };
         if (replace) {
-          history.replaceState(historyState, '', targetUrlString);
+          history.replaceState(historyState, '', finalUrl.href);
         } else {
-          history.pushState(historyState, '', targetUrlString);
+          history.pushState(historyState, '', finalUrl.href);
         }
+        historyUpdated = true;
       }
 
-      // Emit success event with HTML data
+      this.currentUrl = finalUrl;
+
+      const pending = [];
       this.eventBus.emit('router:navigate-success', {
-        url: targetUrl,
+        url: finalUrl,
+        requestedUrl: targetUrl,
+        redirected: response.redirected,
         html: data,
         trigger,
         element,
         replace,
-        viewTarget: options.viewTarget,
+        viewTarget,
         immutableUrl,
+        signal,
+        waitUntil: promise => pending.push(promise),
       });
 
+      this._swap = Promise.allSettled(pending);
+      const failure = (await this._swap).find(result => result.status === 'rejected');
+      if (failure) {
+        throw failure.reason;
+      }
+
       this.logger?.info('Navigation successful', {
-        url: targetUrlString,
+        url: finalUrl.href,
         trigger,
         replace,
         immutableUrl,
@@ -482,11 +435,14 @@ export class RouterManager {
 
       return data;
     } catch (error) {
-      // Add error state
-      if (element) {
-        element.classList.add(this.options.errorClass);
+      if (navigation.controller.signal.aborted) {
+        status = 'aborted';
+        this.logger?.debug('Navigation replaced by a newer one', { url: targetUrl.href });
+        return;
       }
-      document.body.classList.add(this.options.errorClass);
+
+      status = 'error';
+      this._showError(navigation);
 
       this.eventBus.emit('router:navigate-error', {
         url: targetUrl,
@@ -496,25 +452,74 @@ export class RouterManager {
       });
 
       this.logger?.error('Navigation failed', {
-        url: targetUrlString,
+        url: targetUrl.href,
         error,
         trigger,
       });
 
+      if (this.options.fullLoadOnError) {
+        this._fullLoad(
+          historyUpdated ? this.currentUrl : targetUrl,
+          fromHistory || replace || historyUpdated
+        );
+      }
+
       throw error;
     } finally {
-      // Clean up loading states
-      if (element) {
-        element.classList.remove(this.options.loadingClass, this.options.errorClass);
-      }
-      document.body.classList.remove(this.options.loadingClass, this.options.errorClass);
-
-      this.isNavigating = false;
+      this._finish(navigation);
 
       this.eventBus.emit('router:navigate-end', {
         url: targetUrl,
         trigger,
+        status,
       });
+    }
+  }
+
+  /**
+   * The URL the response came from, keeping the requested hash
+   */
+  _responseUrl(response, requestedUrl) {
+    const url = new URL(response.url || requestedUrl.href);
+    if (!url.hash) {
+      url.hash = requestedUrl.hash;
+    }
+    return url;
+  }
+
+  _fullLoad(url, replaceEntry) {
+    if (replaceEntry) {
+      window.location.replace(url.href);
+    } else {
+      window.location.assign(url.href);
+    }
+  }
+
+  _showLoading({ element }) {
+    const { loadingClass, errorClass } = this.options;
+
+    document.body.classList.remove(errorClass);
+    this._failedElement?.classList.remove(errorClass);
+    this._failedElement = null;
+
+    document.body.classList.add(loadingClass);
+    element?.classList.add(loadingClass);
+  }
+
+  _showError({ element }) {
+    const { errorClass } = this.options;
+
+    document.body.classList.add(errorClass);
+    element?.classList.add(errorClass);
+    this._failedElement = element;
+  }
+
+  _finish(navigation) {
+    navigation.element?.classList.remove(this.options.loadingClass);
+
+    if (this._navigation === navigation) {
+      this._navigation = null;
+      document.body.classList.remove(this.options.loadingClass);
     }
   }
 
@@ -542,20 +547,10 @@ export class RouterManager {
   }
 
   /**
-   * Check if currently navigating
-   */
-  isNavigating() {
-    return this.isNavigating;
-  }
-
-  /**
-   * Abort any in-flight request
+   * Cancel the navigation in progress, if any
    */
   _abortInFlight() {
-    if (this.controller) {
-      this.controller.abort();
-      this.controller = null;
-    }
+    this._navigation?.controller.abort();
   }
 
   /**
@@ -572,24 +567,12 @@ export class RouterManager {
   }
 
   /**
-   * Clean up event listeners and abort any pending requests
+   * Remove listeners and cancel the navigation in progress
    */
   destroy() {
     this.logger?.info('RouterManager destroying');
 
-    // Remove window, link and event bus listeners
     this._listeners.abort();
-    document.querySelectorAll('a[data-router-enhanced]').forEach(link => {
-      link.removeAttribute('data-router-enhanced');
-    });
-
-    // Cancel any ongoing scroll animation
-    if (this.scrollAnimationFrame) {
-      cancelAnimationFrame(this.scrollAnimationFrame);
-      this.scrollAnimationFrame = null;
-    }
-
-    // Abort any pending requests
     this._abortInFlight();
 
     this.eventBus.emit('router:destroyed', {});
