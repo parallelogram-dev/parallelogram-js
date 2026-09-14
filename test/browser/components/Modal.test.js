@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Modal from '../../../src/components/Modal.js';
 import PModal from '../../../src/components/PModal.js';
 
@@ -64,5 +64,59 @@ describe('Modal', () => {
     const [discard, keep] = modal.querySelectorAll('[slot="actions"] button');
     expect(discard.hasAttribute('data-modal-close')).toBe(true);
     expect(keep.hasAttribute('data-modal-close')).toBe(false);
+  });
+
+  it('leaves focus in the new modal when a modal opens another', async () => {
+    document.body.innerHTML = `
+      <button id="open-details" data-modal data-modal-target="#details">Details</button>
+      <p-modal id="details"><h2 slot="title">Details</h2>
+        <button id="open-fullscreen" data-modal data-modal-target="#fullscreen">Fullscreen</button>
+      </p-modal>
+      <p-modal id="fullscreen"><h2 slot="title">Fullscreen</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#open-details'));
+    modals.mount(document.querySelector('#open-fullscreen'));
+    const details = document.querySelector('#details');
+    const fullscreen = document.querySelector('#fullscreen');
+
+    document.querySelector('#open-details').focus();
+    document.querySelector('#open-details').click();
+    document.querySelector('#open-fullscreen').focus();
+    document.querySelector('#open-fullscreen').click();
+    await vi.waitFor(() => expect(details.hasAttribute('open')).toBe(false), { timeout: 2000 });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    let active = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    expect([
+      fullscreen.hasAttribute('open'),
+      fullscreen.contains(active) || fullscreen.shadowRoot.contains(active),
+      document.body.style.overflow,
+    ]).toEqual([true, true, 'hidden']);
+    fullscreen.close();
+  });
+
+  it('returns focus to the page trigger after closing a modal opened from another modal', async () => {
+    document.body.innerHTML = `
+      <button id="open-details" data-modal data-modal-target="#details">Details</button>
+      <p-modal id="details"><h2 slot="title">Details</h2>
+        <button id="open-fullscreen" data-modal data-modal-target="#fullscreen">Fullscreen</button>
+      </p-modal>
+      <p-modal id="fullscreen"><h2 slot="title">Fullscreen</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#open-details'));
+    modals.mount(document.querySelector('#open-fullscreen'));
+    const details = document.querySelector('#details');
+    const fullscreen = document.querySelector('#fullscreen');
+
+    document.querySelector('#open-details').click();
+    document.querySelector('#open-fullscreen').click();
+    await vi.waitFor(() => expect(details.hasAttribute('open')).toBe(false), { timeout: 2000 });
+    fullscreen.close();
+    await vi.waitFor(() => expect(fullscreen.hasAttribute('open')).toBe(false), { timeout: 2000 });
+
+    expect(document.activeElement?.id).toBe('open-details');
   });
 });
