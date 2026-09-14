@@ -1,4 +1,5 @@
 import { BaseComponent } from '../core/BaseComponent.js';
+import { whenAnimationsFinish } from '../utils/motion.js';
 
 /**
  * Lightbox Component - Image/media gallery viewer with proper state management
@@ -200,7 +201,7 @@ export class Lightbox extends BaseComponent {
       requestAnimationFrame(() => {
         if (this.lightboxElement !== overlay) return;
         overlay.classList.add(state.config.showClass);
-        this._whenAnimationsFinish(overlay).then(() => {
+        whenAnimationsFinish(overlay).then(() => {
           if (this.lightboxElement === overlay && state.lightboxState === 'opening') {
             this._setState(triggerElement, 'open');
           }
@@ -331,26 +332,6 @@ export class Lightbox extends BaseComponent {
     });
   }
 
-  /**
-   * Resolve when the element's own running CSS animations and transitions finish.
-   *
-   * Falls back to the timeout so a cancelled animation, or one that never
-   * starts, cannot leave the lightbox stuck in an intermediate state.
-   *
-   * @param {Element} element
-   * @param {number} [timeout=1000] - Milliseconds to wait at most
-   * @returns {Promise<void>}
-   */
-  _whenAnimationsFinish(element, timeout = 1000) {
-    const animations = element.getAnimations();
-    if (animations.length === 0) return Promise.resolve();
-
-    return Promise.race([
-      Promise.allSettled(animations.map(animation => animation.finished)),
-      new Promise(resolve => setTimeout(resolve, timeout)),
-    ]).then(() => {});
-  }
-
   _createLightboxElement(triggerElement) {
     const state = this.getState(triggerElement);
     if (!state) return;
@@ -468,7 +449,7 @@ export class Lightbox extends BaseComponent {
 
     try {
       img.classList.add(slideOutClass);
-      await Promise.all([this._whenAnimationsFinish(img), this._preloadImage(imageData)]);
+      await Promise.all([whenAnimationsFinish(img), this._preloadImage(imageData)]);
       if (this.lightboxElement !== overlay) return;
 
       this._applyImageData(img, imageData);
@@ -480,7 +461,7 @@ export class Lightbox extends BaseComponent {
 
       img.style.transition = '';
       img.classList.remove(slideInClass);
-      await this._whenAnimationsFinish(img);
+      await whenAnimationsFinish(img);
     } finally {
       if (this.lightboxElement === overlay && state.lightboxState === 'transitioning') {
         this._setState(triggerElement, 'open');
@@ -586,7 +567,7 @@ export class Lightbox extends BaseComponent {
       this.eventBus?.emit('lightbox:closed', {});
     };
 
-    this._whenAnimationsFinish(this.lightboxElement).then(cleanup);
+    whenAnimationsFinish(this.lightboxElement).then(cleanup);
   }
 
   /* Public API */

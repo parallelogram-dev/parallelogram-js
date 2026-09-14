@@ -245,4 +245,75 @@ describe('PageManager', () => {
       expect(window.scrollY).toBe(640);
     });
   });
+
+  describe('fragment transitions', () => {
+    const emitNavigation = (bus, html) => {
+      let swap;
+      bus.emit('router:navigate-success', {
+        html,
+        url: new URL('/pricing', location.href),
+        trigger: 'link-click',
+        waitUntil: promise => {
+          swap = promise;
+        },
+      });
+      return swap;
+    };
+
+    it('replaces fragments without transitions when the user prefers reduced motion', async () => {
+      vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
+      document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
+      const bus = new EventManager();
+      start([], bus, {
+        mountDelay: 0,
+        targetGroups: { main: ['main'] },
+        targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in' } },
+      });
+      const addClass = vi.spyOn(Object.getPrototypeOf(document.body.classList), 'add');
+
+      await emitNavigation(bus, '<main data-view="main">Pricing</main>');
+
+      expect(addClass.mock.calls.flat()).not.toContain('fade-out');
+    });
+
+    it('mounts components in new content before its in-transition has finished', async () => {
+      document.body.innerHTML =
+        '<main id="app" data-view="main">Home</main><aside data-view="sidebar"></aside>';
+      const bus = new EventManager();
+      const mounted = [];
+      start([component('widget', 'normal', mounted)], bus, {
+        mountDelay: 0,
+        targetGroups: { main: ['main', 'sidebar'] },
+        targetGroupTransitions: { sidebar: { in: 'fade(1)', duration: 1000 } },
+      });
+
+      emitNavigation(
+        bus,
+        '<main data-view="main">Pricing</main><aside data-view="sidebar"><div data-widget></div></aside>'
+      );
+
+      await vi.waitFor(() => expect(mounted).toEqual(['widget']), { timeout: 500 });
+    });
+
+    it('does not hold up other fragments while one is still transitioning', async () => {
+      document.body.innerHTML =
+        '<main id="app" data-view="main">Home</main><aside data-view="sidebar">Old filters</aside>';
+      const bus = new EventManager();
+      start([], bus, {
+        mountDelay: 0,
+        targetGroups: { main: ['main', 'sidebar'] },
+        targetGroupTransitions: { main: { in: 'fade(1)', duration: 1000 } },
+      });
+
+      emitNavigation(
+        bus,
+        '<main data-view="main">Pricing</main><aside data-view="sidebar">New filters</aside>'
+      );
+
+      await vi.waitFor(
+        () => expect(document.querySelector('aside').textContent).toBe('New filters'),
+        { timeout: 500 }
+      );
+    });
+  });
 });
