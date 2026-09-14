@@ -1,5 +1,9 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { generateId } from '../utils/dom-utils.js';
+
+const FOCUSABLE =
+  'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
 /**
  * Tabs Component
  *
@@ -21,11 +25,14 @@ import { generateId } from '../utils/dom-utils.js';
  *   </div>
  * </div>
  *
+ * Keyboard support follows the WAI-ARIA tabs pattern: arrow keys, Home and End
+ * move focus between tabs. With data-tabs-activation="auto" (the default) the
+ * focused tab is selected immediately; with "manual" it is selected on Enter
+ * or Space.
+ *
  * JavaScript (standalone):
- * import { Tabs } from './components/Tabs.js';
- * const tabs = new Tabs();
- * document.querySelectorAll('[data-tabs]')
- *   .forEach(container => tabs.mount(container));
+ * import Tabs from '@parallelogram-js/core/components/Tabs';
+ * Tabs.enhanceAll();
  */
 export default class Tabs extends BaseComponent {
   /**
@@ -47,7 +54,7 @@ export default class Tabs extends BaseComponent {
       panelActiveClass: 'tab-panel--active',
       defaultTab: null, // If null, uses first tab or aria-selected="true"
       keyboardNavigation: true,
-      autoFocus: false,
+      activation: 'auto', // 'auto' selects a tab when it receives focus, 'manual' on Enter or Space
       transitionDuration: 200,
       transitionClass: 'tab-panel--transitioning',
     };
@@ -84,7 +91,10 @@ export default class Tabs extends BaseComponent {
     // Get configuration from data attributes
     const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
     const keyboardNav = this.getBoolAttr(element, 'keyboard', Tabs.defaults.keyboardNavigation);
-    const autoFocus = this.getBoolAttr(element, 'autofocus', Tabs.defaults.autoFocus);
+    const activation =
+      this.getAttr(element, 'activation', Tabs.defaults.activation) === 'manual'
+        ? 'manual'
+        : 'auto';
 
     // Store elements and config in state
     state.tabsList = tabsList;
@@ -94,7 +104,7 @@ export default class Tabs extends BaseComponent {
     state.activeTab = null;
     state.activePanel = null;
     state.keyboardNavigation = keyboardNav;
-    state.autoFocus = autoFocus;
+    state.activation = activation;
 
     // Setup tabs
     this._setupTabs(element, state);
@@ -145,6 +155,9 @@ export default class Tabs extends BaseComponent {
       // Setup tab attributes
       tab.setAttribute('role', 'tab');
       tab.setAttribute('tabindex', '-1');
+      if (tab.tagName === 'BUTTON' && !tab.hasAttribute('type')) {
+        tab.type = 'button';
+      }
 
       // Generate IDs if needed
       if (!tab.id) {
@@ -156,9 +169,13 @@ export default class Tabs extends BaseComponent {
       const panel = state.panels.find(p => p.id === panelId);
 
       if (panel) {
+        tab.setAttribute('aria-controls', panel.id);
         panel.setAttribute('role', 'tabpanel');
         panel.setAttribute('aria-labelledby', tab.id);
-        panel.setAttribute('tabindex', '0');
+        /* Panels with focusable content are reached through that content instead */
+        if (!panel.querySelector(FOCUSABLE)) {
+          panel.setAttribute('tabindex', '0');
+        }
         /* Initialize panel with inactive state */
         if (!panel.getAttribute('data-tab-panel')) {
           panel.setAttribute('data-tab-panel', 'inactive');
@@ -270,17 +287,19 @@ export default class Tabs extends BaseComponent {
       case ' ': {
         event.preventDefault();
         const panelId = event.currentTarget.dataset.tab;
-        this._activateTab(element, panelId, state, true);
+        if (panelId !== state.activeTab) {
+          this._activateTab(element, panelId, state, true);
+        }
         return;
       }
     }
 
     if (targetIndex >= 0) {
       const targetTab = state.tabs[targetIndex];
-      if (state.autoFocus) {
-        targetTab.focus();
+      targetTab.focus();
+      if (state.activation === 'auto' && targetTab.dataset.tab !== state.activeTab) {
+        this._activateTab(element, targetTab.dataset.tab, state, true);
       }
-      this._activateTab(element, targetTab.dataset.tab, state, true);
     }
   }
 
@@ -321,11 +340,6 @@ export default class Tabs extends BaseComponent {
     // Update state
     state.activeTab = panelId;
     state.activePanel = targetPanel;
-
-    // Focus management
-    if (state.autoFocus) {
-      targetTab.focus();
-    }
 
     // Dispatch events
     this._dispatch(element, 'tabs:change', {
