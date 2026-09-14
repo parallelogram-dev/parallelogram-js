@@ -183,7 +183,7 @@ export class DataTable extends BaseComponent {
       const aValue = this._getCellValue(a, column, sortType, headers);
       const bValue = this._getCellValue(b, column, sortType, headers);
 
-      let result = 0;
+      let result;
       if (sortType === 'number') {
         result = parseFloat(aValue) - parseFloat(bValue);
       } else if (sortType === 'date') {

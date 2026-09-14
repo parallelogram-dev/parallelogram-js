@@ -13,7 +13,6 @@ export default function tiktokPixelAdapter(config, { logger } = {}) {
   }
   if (window.ttq) return;
 
-  /* eslint-disable */
   (function (w, d, t) {
     w.TiktokAnalyticsObject = t;
     var ttq = (w[t] = w[t] || []);
@@ -61,7 +60,6 @@ export default function tiktokPixelAdapter(config, { logger } = {}) {
       else d.head.appendChild(script);
     };
   })(window, document, 'ttq');
-  /* eslint-enable */
 
   window.ttq.load(config.id);
   window.ttq.page();

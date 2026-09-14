@@ -18,7 +18,6 @@ export default function linkedinInsightAdapter(config, { logger } = {}) {
 
   if (window.lintrk) return;
 
-  /* eslint-disable */
   (function (l) {
     if (!l) {
       window.lintrk = function (a, b) {
@@ -34,5 +33,4 @@ export default function linkedinInsightAdapter(config, { logger } = {}) {
     if (s && s.parentNode) s.parentNode.insertBefore(b, s);
     else document.head.appendChild(b);
   })(window.lintrk);
-  /* eslint-enable */
 }

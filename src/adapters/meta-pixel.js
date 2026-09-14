@@ -13,7 +13,6 @@ export default function metaPixelAdapter(config, { logger } = {}) {
   }
   if (window.fbq) return;
 
-  /* eslint-disable */
   !(function (f, b, e, v, n, t, s) {
     if (f.fbq) return;
     n = f.fbq = function () {
@@ -31,7 +30,6 @@ export default function metaPixelAdapter(config, { logger } = {}) {
     if (s && s.parentNode) s.parentNode.insertBefore(t, s);
     else b.head.appendChild(t);
   })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-  /* eslint-enable */
 
   window.fbq('init', config.id);
   (config.events || ['PageView']).forEach(evt => window.fbq('track', evt));

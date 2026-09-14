@@ -14,7 +14,6 @@ export default function pinterestTagAdapter(config, { logger } = {}) {
   }
   if (window.pintrk) return;
 
-  /* eslint-disable */
   !(function (e) {
     if (!window.pintrk) {
       window.pintrk = function () {
@@ -31,7 +30,6 @@ export default function pinterestTagAdapter(config, { logger } = {}) {
       else document.head.appendChild(t);
     }
   })('https://s.pinimg.com/ct/core.js');
-  /* eslint-enable */
 
   window.pintrk('load', config.id, config.email ? { em: config.email } : undefined);
   window.pintrk('page');

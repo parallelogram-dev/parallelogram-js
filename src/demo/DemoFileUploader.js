@@ -159,7 +159,7 @@ export class DemoFileUploader extends BaseComponent {
     return new Response('Invalid action', { status: 400 });
   }
 
-  async _handleMockSequence(url, options) {
+  async _handleMockSequence() {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 300));
 

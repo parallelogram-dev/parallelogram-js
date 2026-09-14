@@ -15,6 +15,16 @@ export default [
       sourceType: 'module',
       globals: globals.browser,
     },
+    rules: {
+      ...compat.configs['flat/recommended'].rules,
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['src/demo/**/*.js'],
+    rules: {
+      'compat/compat': 'off',
+    },
   },
   {
     files: ['*.js', 'scripts/**/*.js', 'test/**/*.js'],

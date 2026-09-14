@@ -1,4 +1,4 @@
-import { default as PToasts } from '../components/PToasts.js';
+import '../components/PToasts.js';
 
 export class AlertManager {
   constructor({ logger, eventBus, placement = 'top-right', container } = {}) {

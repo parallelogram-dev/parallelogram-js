@@ -566,11 +566,10 @@ export class PageManager {
    * Extract target fragment from already parsed document
    */
   _extractTargetFragmentFromDoc(doc, viewTarget) {
-    let sourceFragment = null;
-    let targetFragment = null;
+    let targetFragment;
 
     // Find the source fragment in the parsed document
-    sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
+    let sourceFragment = doc.querySelector(`[data-view="${viewTarget}"]`);
 
     // If not found, try some fallback strategies
     if (!sourceFragment) {
@@ -987,7 +986,7 @@ export class PageManager {
 
     // Unmount removed components
     if (removedElements.size > 0) {
-      this.unmountRemoved(Array.from(removedElements));
+      this.unmountRemoved();
     }
   }
 
@@ -1165,7 +1164,7 @@ export class PageManager {
   /**
    * Unmount components from removed DOM nodes
    */
-  unmountRemoved(removedNodes) {
+  unmountRemoved() {
     let unmountedCount = 0;
 
     for (const [componentName, instance] of this.instances) {
@@ -1402,7 +1401,9 @@ export class PageManager {
           fallbackError,
           ComponentClass: ComponentClass.name,
         });
-        throw new Error(`Cannot instantiate component ${config.name}: ${error.message}`);
+        throw new Error(`Cannot instantiate component ${config.name}: ${error.message}`, {
+          cause: fallbackError,
+        });
       }
     }
   }
@@ -1500,7 +1501,6 @@ export class PageManager {
     this.registry.forEach(comp => {
       const instance = this.instances.get(comp.name);
       const isLoading = loadingStatus.loading.includes(comp.name);
-      const hasRetries = loadingStatus.retries[comp.name] > 0;
 
       // Count actual DOM elements that match this component's selector
       const elements = document.querySelectorAll(comp.selector);

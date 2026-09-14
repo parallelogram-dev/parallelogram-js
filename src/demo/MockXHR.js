@@ -56,7 +56,7 @@ export class MockXHR {
           this._handleSequenceUpdate(data);
           return;
         }
-      } catch (e) {
+      } catch {
         // Not JSON, continue to file upload handling
       }
     }

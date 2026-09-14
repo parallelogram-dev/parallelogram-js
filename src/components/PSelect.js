@@ -1,5 +1,5 @@
 import { TransitionManager } from '../managers/index.js';
-import { default as PToasts } from './PToasts.js';
+import './PToasts.js';
 
 import styles from '../styles/framework/components/PSelect.scss';
 
@@ -235,7 +235,7 @@ export default class PSelect extends HTMLElement {
     const options = [];
     const optionElements = this.querySelectorAll('option');
 
-    optionElements.forEach((option, index) => {
+    optionElements.forEach(option => {
       const disabled = option.hasAttribute('disabled');
       const selected = option.hasAttribute('selected');
       const value = option.value || option.textContent.trim();
@@ -332,7 +332,7 @@ export default class PSelect extends HTMLElement {
     }
   }
 
-  async _fetchOptions(query) {
+  async _fetchOptions(_query) {
     // Implementation for remote data fetching
     this.state.loading = true;
     // ... rest of fetch logic

@@ -169,7 +169,7 @@ export class DemoSelectLoader extends BaseComponent {
 
     eventsSelect.addEventListener(
       'selectloader:cleared',
-      e => {
+      () => {
         logEvent('selectloader:cleared', {});
       },
       { signal: controller.signal }
