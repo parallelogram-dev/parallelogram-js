@@ -26,7 +26,7 @@
  */
 
 import { BaseComponent } from '@parallelogram-js/core';
-import { default as PModal } from './PModal.js';
+import './PModal.js';
 import { generateId, createElement } from '../utils/dom-utils.js';
 
 export default class Modal extends BaseComponent {

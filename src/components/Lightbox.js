@@ -1,5 +1,4 @@
 import { BaseComponent } from '@parallelogram-js/core';
-import { ExtendedStates } from '../core/ComponentStates.js';
 
 /**
  * Lightbox Component - Image/media gallery viewer with proper state management
@@ -232,7 +231,7 @@ export class Lightbox extends BaseComponent {
     }
 
     /* Determine which images to preload based on strategy */
-    let indicesToLoad = [];
+    let indicesToLoad;
 
     if (config.preloadStrategy === 'all') {
       /* Preload all images in the gallery */

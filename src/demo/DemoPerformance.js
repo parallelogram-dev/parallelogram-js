@@ -721,7 +721,7 @@ export class DemoPerformance extends BaseComponent {
     testData.length = 0;
 
     setTimeout(() => {
-      if (typeof gc !== 'undefined') gc(); // Force garbage collection if available
+      globalThis.gc?.();
     }, 100);
 
     const finalMemory = performance.memory?.usedJSHeapSize || 0;

@@ -13,7 +13,6 @@ export default function clarityAdapter(config, { logger } = {}) {
   }
   if (window.clarity) return;
 
-  /* eslint-disable */
   (function (c, l, a, r, i, t, y) {
     c[a] =
       c[a] ||
@@ -27,5 +26,4 @@ export default function clarityAdapter(config, { logger } = {}) {
     if (y && y.parentNode) y.parentNode.insertBefore(t, y);
     else l.head.appendChild(t);
   })(window, document, 'clarity', 'script', config.id);
-  /* eslint-enable */
 }
