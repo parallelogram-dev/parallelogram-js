@@ -119,13 +119,17 @@ Fragments are inserted as HTML, so they must come from a trusted, same-origin so
     {
       id: 'menus',
       title: 'Menu picker',
-      markup: `<label for="menu-choice">Menu</label>
-<select id="menu-choice" data-selectloader data-selectloader-target="#menu-panel">
-  <option value="">Choose a menu</option>
-  <option value="fragments/breakfast.html">Breakfast</option>
-  <option value="fragments/lunch.html">Lunch</option>
-  <option value="fragments/missing.html">A menu that fails to load</option>
-</select>
+      description: 'Choose another menu, then Reset puts back and loads the breakfast menu.',
+      markup: `<form class="form" action="#menu">
+  <label for="menu-choice">Menu</label>
+  <select id="menu-choice" data-selectloader data-selectloader-target="#menu-panel">
+    <option value="">Choose a menu</option>
+    <option value="fragments/breakfast.html" selected>Breakfast</option>
+    <option value="fragments/lunch.html">Lunch</option>
+    <option value="fragments/missing.html">A menu that fails to load</option>
+  </select>
+  <button type="reset">Reset</button>
+</form>
 <div id="menu-panel" class="panel"></div>`,
       controls: [
         { attribute: 'data-selectloader-transition' },

@@ -46,7 +46,7 @@ Register the adapters a site uses with \`registerTrackerAdapter(name, adapter)\`
       id: 'block',
       title: 'Tracker block',
       description:
-        'This site registers a demonstration adapter named example that loads nothing. Click anywhere and the status moves from pending to booted.',
+        'This site registers a demonstration adapter named example that loads nothing. Click anywhere and the State panel shows the status move from pending to booted.',
       markup: `<script type="application/json" data-defer-tracker="example">
   { "id": "docs-site" }
 </script>`,
