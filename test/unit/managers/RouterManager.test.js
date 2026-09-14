@@ -64,6 +64,8 @@ describe('RouterManager', () => {
 
   beforeEach(() => {
     history.replaceState(null, '', '/start');
+    history.scrollRestoration = 'auto';
+    window.scrollTo(0, 0);
     bus = new EventManager();
     server = stubServer();
     assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
@@ -338,6 +340,82 @@ describe('RouterManager', () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
 
       expect([popstate.mock.calls.length, server.fetch.mock.calls.length]).toEqual([0, 0]);
+    });
+
+    it('takes over scroll restoration until destroyed', () => {
+      start();
+      const whileRunning = history.scrollRestoration;
+
+      router.destroy();
+      router = null;
+
+      expect([whileRunning, history.scrollRestoration]).toEqual(['manual', 'auto']);
+    });
+
+    it('returns to the scroll position a page had when the user left it', async () => {
+      start();
+      const startState = history.state;
+      window.scrollTo(0, 800);
+      const navigation = router.navigate('/next');
+      server.requests[0].respond(htmlResponse('<main>'));
+      await navigation;
+      window.scrollTo(0, 0);
+      const success = record('router:navigate-success');
+
+      history.pushState(startState, '', '/start');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: startState }));
+      server.requests[1]?.respond(htmlResponse('<main>'));
+
+      await vi.waitFor(() => expect(success).toHaveBeenCalledOnce());
+      expect(success.mock.calls[0][0].scroll).toEqual({ x: 0, y: 800 });
+    });
+
+    it('replaces the fragment that the history entry being left or entered changed', async () => {
+      start();
+      const startState = history.state;
+      const navigation = router.navigate('/reviews?page=2', { viewTarget: 'reviews' });
+      server.requests[0].respond(htmlResponse('<main>'));
+      await navigation;
+      const reviewsState = history.state;
+      const success = record('router:navigate-success');
+
+      history.pushState(startState, '', '/start');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: startState }));
+      server.requests[1]?.respond(htmlResponse('<main>'));
+      await vi.waitFor(() => expect(success).toHaveBeenCalledTimes(1));
+      history.pushState(reviewsState, '', '/reviews?page=2');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: reviewsState }));
+      server.requests[2]?.respond(htmlResponse('<main>'));
+      await vi.waitFor(() => expect(success).toHaveBeenCalledTimes(2));
+
+      expect(success.mock.calls.map(([payload]) => payload.viewTarget)).toEqual([
+        'reviews',
+        'reviews',
+      ]);
+    });
+
+    it('restores the scroll position when history moves back from a hash entry', () => {
+      start();
+      const startState = history.state;
+      window.scrollTo(0, 300);
+      window.dispatchEvent(new Event('scroll'));
+      history.pushState(null, '', '/start#reviews');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+      window.scrollTo(0, 1200);
+      window.dispatchEvent(new Event('scroll'));
+
+      history.pushState(startState, '', '/start');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: startState }));
+
+      expect(window.scrollY).toBe(300);
+    });
+
+    it('restores the scroll position saved before the page was reloaded', async () => {
+      history.replaceState({ key: 'saved-entry', scroll: { x: 0, y: 500 } }, '', '/start');
+
+      start();
+
+      await vi.waitFor(() => expect(window.scrollY).toBe(500));
     });
 
     it('stops reporting history navigation once destroyed', () => {
