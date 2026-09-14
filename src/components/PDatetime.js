@@ -1,5 +1,42 @@
 import styles from '../styles/framework/components/PDatetime.scss';
 
+const formats = new Map();
+
+/**
+ * A cached Intl.DateTimeFormat in the page's locale
+ */
+const dateFormat = options => {
+  const key = JSON.stringify(options);
+  if (!formats.has(key)) {
+    formats.set(key, new Intl.DateTimeFormat(undefined, options));
+  }
+  return formats.get(key);
+};
+
+/**
+ * Create an element with attributes and text set through DOM APIs
+ */
+const node = (tag, attributes = {}, text) => {
+  const element = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) {
+    element.setAttribute(name, value);
+  }
+  if (text !== undefined) {
+    element.textContent = text;
+  }
+  return element;
+};
+
+/**
+ * The same day of the month `months` away, clamped to the length of the target month
+ */
+const addMonths = (date, months) => {
+  const target = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(date.getDate(), lastDay));
+  return target;
+};
+
 /**
  * PDatetime - Enhanced Datetime Picker Web Component
  *
@@ -52,6 +89,12 @@ import styles from '../styles/framework/components/PDatetime.scss';
  * - p-datetime:open: Fired when the panel opens. detail is `{ value }` (plus `toValue` in range mode).
  * - p-datetime:close: Fired when the panel closes. detail is `{ changed, value }` (plus `toValue`),
  *   where `changed` says whether the value differs from when the panel opened.
+ *
+ * @accessibility
+ * The value fields and the calendar button open a dialog. In the day grid, the arrow keys move by day
+ * and week, Home and End go to the start and end of the week, Page Up and Page Down change month
+ * (with Shift, year), Enter or Space picks the focused day, and Escape closes the dialog and returns
+ * focus to the control that opened it.
  *
  * @styling
  * CSS custom properties for theming:
@@ -129,43 +172,43 @@ export default class PDatetime extends HTMLElement {
           <style>${styles}</style>
 
           <div class="field">
-            <div class="input" data-datetime-input data-placeholder="Select date..."></div>
-            <div class="input" data-datetime-input-to hidden data-placeholder="End date..."></div>
-            <button type="button" class="calendar-btn" data-datetime-trigger><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
+            <button type="button" class="input" data-datetime-input aria-haspopup="dialog" aria-expanded="false" data-placeholder="Select date..."></button>
+            <button type="button" class="input" data-datetime-input-to aria-haspopup="dialog" aria-expanded="false" hidden data-placeholder="End date..."></button>
+            <button type="button" class="calendar-btn" data-datetime-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
           </div>
 
-          <div class="panel" data-datetime-panel hidden>
-            <div class="range-info" data-datetime-range-info hidden>Click to select start date, then select end date</div>
+          <div class="panel" data-datetime-panel role="dialog" aria-label="Choose date" hidden>
+            <div class="range-info" data-datetime-range-info aria-live="polite" hidden>Click to select start date, then select end date</div>
 
             <div class="nav" data-datetime-nav>
-              <button data-datetime-nav-btn="prev"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
-              <div class="month-year" data-datetime-month-year>
+              <button type="button" data-datetime-nav-btn="prev" aria-label="Previous month"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
+              <button type="button" class="month-year" id="month-year" data-datetime-month-year aria-live="polite">
                 <span data-slot="month"></span>
                 <span data-slot="year"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
-              </div>
-              <button data-datetime-nav-btn="next"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
+              </button>
+              <button type="button" data-datetime-nav-btn="next" aria-label="Next month"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
             </div>
 
             <div class="grid-container" data-datetime-grid-container>
-              <div class="grid" data-datetime-grid></div>
+              <div class="grid" data-datetime-grid aria-labelledby="month-year"></div>
             </div>
 
             <div class="quick-dates" data-datetime-quick-dates hidden></div>
 
             <div class="time" data-datetime-time hidden>
-              <select class="time-select" data-datetime-hour></select>
+              <select class="time-select" data-datetime-hour aria-label="Hour"></select>
               <div class="time-separator">:</div>
-              <select class="time-select" data-datetime-minute></select>
-              <select class="ampm" data-datetime-ampm hidden>
+              <select class="time-select" data-datetime-minute aria-label="Minute"></select>
+              <select class="ampm" data-datetime-ampm aria-label="AM or PM" hidden>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
             </div>
 
             <div class="actions">
-              <button class="btn" data-datetime-action="clear">Clear</button>
-              <button class="btn primary" data-datetime-action="apply">Apply</button>
+              <button type="button" class="btn" data-datetime-action="clear">Clear</button>
+              <button type="button" class="btn primary" data-datetime-action="apply">Apply</button>
             </div>
           </div>
         `;
@@ -194,6 +237,9 @@ export default class PDatetime extends HTMLElement {
     this._connection = null;
     this._defaults = null;
     this._formDisabled = false;
+    this._activeDate = null;
+    this._opener = null;
+    this._renderQueued = false;
 
     /* Listeners on the component's own shadow nodes are added once; document listeners are added
        on connect and removed on disconnect */
@@ -272,31 +318,41 @@ export default class PDatetime extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue) return;
 
-    if (this.isConnected) {
-      this._render();
-    }
+    this._queueRender();
     this._syncFormState();
   }
 
+  /**
+   * Render once after a batch of attribute changes, unless a render happens first
+   */
+  _queueRender() {
+    if (this._renderQueued) return;
+    this._renderQueued = true;
+    queueMicrotask(() => {
+      if (this._renderQueued && this.isConnected) {
+        this._render();
+      }
+      this._renderQueued = false;
+    });
+  }
+
   _bindEvents() {
-    this._btn.addEventListener('click', () => {
+    const editStart = () => {
       if (this.isRange) {
         this._currentField = 'from';
         this._rangeState = 'selecting-from';
       }
       this._updateFocusRing();
+    };
+
+    this._btn.addEventListener('click', () => {
+      editStart();
       this.toggle();
     });
     this._input.addEventListener('click', () => {
-      if (this.isRange) {
-        this._currentField = 'from';
-        this._rangeState = 'selecting-from';
-      }
-      this._updateFocusRing();
+      editStart();
       this.open();
     });
-
-    // For range mode, clicking either input opens the picker
     this._toInput.addEventListener('click', () => {
       this._currentField = 'to';
       this._rangeState = 'selecting-to';
@@ -304,60 +360,183 @@ export default class PDatetime extends HTMLElement {
       this.open();
     });
 
-    /* Navigation buttons */
-    this.shadowRoot.querySelectorAll('[data-datetime-nav-btn]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const direction = btn.getAttribute('data-datetime-nav-btn');
-        this._handleNavigation(direction);
-      });
+    this.shadowRoot.querySelectorAll('[data-datetime-nav-btn]').forEach(button => {
+      button.addEventListener('click', () => this._handleNavigation(button.dataset.datetimeNavBtn));
     });
+    this._monthYearBtn.addEventListener('click', () => this._handleMonthYearClick());
 
-    /* Month/Year title click to change view mode */
-    this._monthYearBtn.addEventListener('click', () => {
-      this._handleMonthYearClick();
+    this._grid.addEventListener('click', event => this._onGridClick(event));
+    this._grid.addEventListener('keydown', event => this._onGridKeydown(event));
+    this.shadowRoot.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && this._open) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.close({ returnFocus: true });
+      }
     });
 
     /* Touch/swipe gestures for mobile */
     this._gridContainer.addEventListener(
       'touchstart',
-      e => {
-        this._touchStartX = e.changedTouches[0].screenX;
+      event => {
+        this._touchStartX = event.changedTouches[0].screenX;
       },
       { passive: true }
     );
-
     this._gridContainer.addEventListener(
       'touchend',
-      e => {
-        this._touchEndX = e.changedTouches[0].screenX;
+      event => {
+        this._touchEndX = event.changedTouches[0].screenX;
         this._handleSwipe();
       },
       { passive: true }
     );
 
-    /* Action buttons */
-    this.shadowRoot.querySelectorAll('[data-datetime-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.getAttribute('data-datetime-action');
-        if (action === 'clear') {
-          this.value = '';
-          if (this.isRange) {
-            this.rangeToValue = '';
-            this._currentField = 'from';
-            this._rangeState = 'selecting-from';
-          }
-          this._emitChange();
-          this._render();
-        } else if (action === 'apply') {
-          this.close();
+    this.shadowRoot.querySelectorAll('[data-datetime-action]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.dataset.datetimeAction === 'apply') {
+          this.close({ returnFocus: true });
+          return;
         }
+
+        this.value = '';
+        if (this.isRange) {
+          this.rangeToValue = '';
+          this._currentField = 'from';
+          this._rangeState = 'selecting-from';
+        }
+        this._emitChange();
+        this._render();
       });
     });
 
-    /* Time select change handlers */
     this._hourSelect.addEventListener('change', () => this._syncTime());
     this._minuteSelect.addEventListener('change', () => this._syncTime());
     this._ampm.addEventListener('change', () => this._syncTime());
+  }
+
+  /**
+   * Pick a day, or drill into a month or year, from a click in the calendar grid
+   */
+  _onGridClick(event) {
+    const button = event.target.closest('button');
+    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+
+    const { date, month, year } = button.dataset;
+    if (date) {
+      this._selectDate(this._parseValue(date));
+    } else if (month !== undefined) {
+      this._view = new Date(this._view.getFullYear(), Number(month), 1);
+      this._viewMode = 'day';
+      this._render();
+    } else if (year !== undefined) {
+      this._view = new Date(Number(year), this._view.getMonth(), 1);
+      this._viewMode = 'month';
+      this._render();
+    }
+  }
+
+  /**
+   * Keyboard navigation in the day grid, following the WAI-ARIA date picker dialog pattern
+   */
+  _onGridKeydown(event) {
+    const current = this._viewMode === 'day' && this._parseValue(event.target.dataset?.date);
+    if (!current) return;
+
+    const column = (current.getDay() - this._weekStart + 7) % 7;
+    const moves = {
+      ArrowLeft: () => new Date(current.getFullYear(), current.getMonth(), current.getDate() - 1),
+      ArrowRight: () => new Date(current.getFullYear(), current.getMonth(), current.getDate() + 1),
+      ArrowUp: () => new Date(current.getFullYear(), current.getMonth(), current.getDate() - 7),
+      ArrowDown: () => new Date(current.getFullYear(), current.getMonth(), current.getDate() + 7),
+      Home: () => new Date(current.getFullYear(), current.getMonth(), current.getDate() - column),
+      End: () =>
+        new Date(current.getFullYear(), current.getMonth(), current.getDate() + 6 - column),
+      PageUp: () => addMonths(current, event.shiftKey ? -12 : -1),
+      PageDown: () => addMonths(current, event.shiftKey ? 12 : 1),
+    };
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (event.target.getAttribute('aria-disabled') !== 'true') {
+        this._selectDate(current);
+      }
+      return;
+    }
+
+    if (!moves[event.key]) return;
+    event.preventDefault();
+    this._moveActiveDate(moves[event.key]());
+  }
+
+  _moveActiveDate(date) {
+    this._activeDate = date;
+    if (
+      date.getFullYear() !== this._view.getFullYear() ||
+      date.getMonth() !== this._view.getMonth()
+    ) {
+      this._view = new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+    this._renderCalendar();
+    this._focusActiveDay();
+  }
+
+  _focusActiveDay() {
+    this._grid.querySelector('[data-date][tabindex="0"]')?.focus({ preventScroll: true });
+  }
+
+  /**
+   * Apply a picked day to the value being edited
+   */
+  _selectDate(dt) {
+    this._activeDate = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+
+    if (!this.isRange && this.mode === 'date') {
+      this.value = this._dateString(dt);
+      this._emitChange();
+      this.close({ returnFocus: true });
+      return;
+    }
+
+    if (this.isRange) {
+      const picked = this._pickedValue(dt);
+      const pickedDate = this._parseValue(picked);
+      if (this._currentField === 'to' && this.value && pickedDate >= this._parseValue(this.value)) {
+        this.rangeToValue = picked;
+      } else {
+        /* A start date, or an end date before the start, begins the range here. An end that
+           still follows it is kept, and the end is chosen next. */
+        this.value = picked;
+        if (this.rangeToValue && pickedDate > this._parseValue(this.rangeToValue)) {
+          this.rangeToValue = '';
+        }
+        this._currentField = 'to';
+        this._rangeState = 'selecting-to';
+      }
+    } else {
+      const current = this._parseValue(this.value) ?? new Date();
+      current.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
+      this.value = current.toISOString();
+    }
+
+    this._emitChange();
+    this._render();
+    this._updateFocusRing();
+  }
+
+  /**
+   * The stored value for a picked day: `yyyy-mm-dd` in date mode, otherwise an ISO instant at 09:00
+   * in datetime mode and at the current time in time mode
+   */
+  _pickedValue(dt) {
+    if (this.mode === 'date') return this._dateString(dt);
+
+    const picked = new Date();
+    picked.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    if (this.mode === 'datetime') {
+      picked.setHours(9, 0, 0, 0);
+    }
+    return picked.toISOString();
   }
 
   get mode() {
@@ -554,14 +733,22 @@ export default class PDatetime extends HTMLElement {
     this._openedWith = { value: this.value, toValue: this.rangeToValue };
     clearTimeout(this._hideTimer);
 
+    const active = this.shadowRoot.activeElement;
+    this._opener = [this._input, this._toInput, this._btn].includes(active) ? active : this._input;
+
     this._alignViewToValue();
+    this._activeDate = null;
     this._render();
+    this._setExpanded(true);
 
     this._panel.hidden = false;
     requestAnimationFrame(() => {
       this._positionPanel();
       this._panel.classList.add('open');
       this._bindReposition();
+      if (this._open) {
+        this._focusInitial();
+      }
     });
 
     this.dispatchEvent(
@@ -571,6 +758,20 @@ export default class PDatetime extends HTMLElement {
         detail: this._eventValues(),
       })
     );
+  }
+
+  _focusInitial() {
+    if (this._modeConfig[this.mode]?.showCalendar === false) {
+      this._hourSelect.focus({ preventScroll: true });
+    } else {
+      this._focusActiveDay();
+    }
+  }
+
+  _setExpanded(expanded) {
+    for (const control of [this._input, this._toInput, this._btn]) {
+      control.setAttribute('aria-expanded', String(expanded));
+    }
   }
 
   /**
@@ -621,20 +822,29 @@ export default class PDatetime extends HTMLElement {
     if (target) this._view = target;
   }
 
-  close() {
+  /**
+   * Close the panel. Focus returns to the control that opened it when `returnFocus` is set or when
+   * focus was inside the panel.
+   */
+  close({ returnFocus = false } = {}) {
     if (!this._open) return;
     this._open = false;
 
+    const focusWasInside = this._panel.contains(this.shadowRoot.activeElement);
     this._panel.classList.remove('open');
-    /* Remove focus ring when panel closes */
     this._input.classList.remove('is-focused');
     this._toInput.classList.remove('is-focused');
     this._unbindReposition();
+    this._setExpanded(false);
     clearTimeout(this._hideTimer);
     this._hideTimer = setTimeout(() => {
       this._panel.hidden = true;
       this._panel.classList.remove('panel--above', 'panel--align-right');
     }, 150);
+
+    if (returnFocus || focusWasInside) {
+      (this._opener ?? this._input).focus({ preventScroll: true });
+    }
 
     const opened = this._openedWith ?? {};
     const changed =
@@ -709,6 +919,7 @@ export default class PDatetime extends HTMLElement {
   }
 
   _render() {
+    this._renderQueued = false;
     this._renderMode();
     this._renderCalendar();
     this._renderTime();
@@ -717,6 +928,13 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderMode() {
+    const noun = { date: 'date', datetime: 'date and time', time: 'time' }[this.mode] ?? 'date';
+    this._btn.setAttribute('aria-label', `Choose ${noun}`);
+    this._panel.setAttribute(
+      'aria-label',
+      this.isRange ? `Choose ${noun} range` : `Choose ${noun}`
+    );
+
     if (this.isRange) {
       this._input.hidden = false; // Show first input (from date)
       this._toInput.hidden = false; // Show second input (to date)
@@ -749,6 +967,14 @@ export default class PDatetime extends HTMLElement {
     const year = this._view.getFullYear();
     const month = this._view.getMonth();
 
+    const [previous, next] = {
+      day: ['Previous month', 'Next month'],
+      month: ['Previous year', 'Next year'],
+      year: ['Previous years', 'Next years'],
+    }[this._viewMode];
+    this._nav.querySelector('[data-datetime-nav-btn="prev"]').setAttribute('aria-label', previous);
+    this._nav.querySelector('[data-datetime-nav-btn="next"]').setAttribute('aria-label', next);
+
     /* Update title based on view mode */
     if (this._viewMode === 'year') {
       const startYear = year - 5;
@@ -759,9 +985,7 @@ export default class PDatetime extends HTMLElement {
       this._month.textContent = String(year);
       this._year.textContent = '';
     } else {
-      this._month.textContent = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(
-        this._view
-      );
+      this._month.textContent = dateFormat({ month: 'long' }).format(this._view);
       this._year.textContent = String(year);
     }
 
@@ -845,137 +1069,123 @@ export default class PDatetime extends HTMLElement {
       return;
     }
 
-    /* Day view (original calendar rendering) */
-    const today = new Date();
-    const selected = this._parseValue(this.value);
+    this._renderDays(year, month);
+  }
+
+  /**
+   * Render the day grid as rows of gridcells, each holding a named day button with a roving tabindex
+   */
+  _renderDays(year, month) {
+    const today = this._dateString(new Date());
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
+    const from = this._parseValue(this.value);
+    const to = this.isRange ? this._parseValue(this.rangeToValue) : null;
+    const hadFocus = this._grid.contains(this.shadowRoot.activeElement);
+    const active = this._resolveActiveDate(year, month);
 
     this._grid.classList.remove('month-view', 'year-view');
+    this._grid.setAttribute('role', 'grid');
+    this._grid.replaceChildren();
 
-    const first = new Date(year, month, 1);
-    const startDay = (first.getDay() - this._weekStart + 7) % 7;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    this._grid.innerHTML = '';
-
-    // Weekday headers
-    for (let d = 0; d < 7; d++) {
-      const slotDay = (d + this._weekStart) % 7;
-      const el = document.createElement('div');
-      el.className = 'wd';
-      el.textContent = new Intl.DateTimeFormat(undefined, { weekday: 'narrow' }).format(
-        new Date(2020, 5, slotDay + 1)
+    const header = node('div', { class: 'row', role: 'row' });
+    for (let column = 0; column < 7; column++) {
+      /* 7 June 2020 was a Sunday, matching getDay()'s numbering */
+      const weekday = new Date(2020, 5, 7 + ((column + this._weekStart) % 7));
+      header.append(
+        node(
+          'div',
+          {
+            class: 'wd',
+            role: 'columnheader',
+            'aria-label': dateFormat({ weekday: 'long' }).format(weekday),
+          },
+          dateFormat({ weekday: 'narrow' }).format(weekday)
+        )
       );
-      this._grid.appendChild(el);
     }
+    this._grid.append(header);
 
-    // Empty cells
-    for (let i = 0; i < startDay; i++) {
-      this._grid.appendChild(document.createElement('div'));
-    }
+    const leading = (new Date(year, month, 1).getDay() - this._weekStart + 7) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let row;
 
-    // Days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dt = new Date(year, month, day);
-      const btn = document.createElement('button');
-      btn.className = 'day';
-      btn.textContent = String(day);
-
-      if (dt.toDateString() === today.toDateString()) btn.classList.add('today');
-
-      const outOfRange = this._isDayOutOfRange(dt, effMin, effMax);
-      if (outOfRange) {
-        btn.classList.add('disabled');
-        btn.disabled = true;
+    for (let index = 0; index < leading + daysInMonth; index++) {
+      if (index % 7 === 0) {
+        row = node('div', { class: 'row', role: 'row' });
+        this._grid.append(row);
       }
 
-      if (this.isRange) {
-        // Range selection highlighting
-        const fromDate = this._parseValue(this.value);
-        const toDate = this._parseValue(this.rangeToValue);
+      const cell = node('div', { class: 'cell', role: 'gridcell' });
+      row.append(cell);
+      if (index < leading) continue;
 
-        if (fromDate && dt.toDateString() === fromDate.toDateString()) {
-          btn.classList.add('range-start');
-        }
-        if (toDate && dt.toDateString() === toDate.toDateString()) {
-          btn.classList.add('range-end');
-        }
+      const dt = new Date(year, month, index - leading + 1);
+      const date = this._dateString(dt);
+      const button = node(
+        'button',
+        {
+          type: 'button',
+          class: 'day',
+          'data-date': date,
+          tabindex: date === active ? '0' : '-1',
+          'aria-label': dateFormat({ dateStyle: 'full' }).format(dt),
+        },
+        String(dt.getDate())
+      );
 
-        // Highlight dates in between (if both dates exist)
-        if (fromDate && toDate && dt > fromDate && dt < toDate) {
-          btn.classList.add('in-range');
-        }
+      if (date === today) {
+        button.classList.add('today');
+        button.setAttribute('aria-current', 'date');
+      }
+      if (this._isDayOutOfRange(dt, effMin, effMax)) {
+        button.classList.add('disabled');
+        button.setAttribute('aria-disabled', 'true');
+      }
+
+      const isFrom = Boolean(from) && this._dateString(from) === date;
+      const isTo = Boolean(to) && this._dateString(to) === date;
+      if (!this.isRange) {
+        button.classList.toggle('selected', isFrom);
       } else {
-        // Single selection highlighting
-        if (selected && dt.toDateString() === selected.toDateString())
-          btn.classList.add('selected');
+        button.classList.toggle('range-start', isFrom);
+        button.classList.toggle('range-end', isTo);
+        button.classList.toggle('in-range', Boolean(from && to && dt > from && dt < to));
       }
+      cell.setAttribute('aria-selected', String(isFrom || isTo));
 
-      btn.addEventListener('click', () => {
-        if (this.isRange) {
-          // Apply date to the currently focused field
-          const newDateISO =
-            this.mode === 'date'
-              ? this._dateString(dt)
-              : (() => {
-                  const cur = new Date();
-                  cur.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
-                  if (this.mode === 'datetime') {
-                    cur.setHours(9, 0, 0, 0); // Default time
-                  }
-                  return cur.toISOString();
-                })();
-
-          const picked = this._parseValue(newDateISO);
-          if (this._currentField === 'to' && this.value && picked >= this._parseValue(this.value)) {
-            this.rangeToValue = newDateISO;
-          } else {
-            /* A start date, or an end date before the start, begins the range here. An end that
-               still follows it is kept, and the end is chosen next. */
-            this.value = newDateISO;
-            if (this.rangeToValue && picked > this._parseValue(this.rangeToValue)) {
-              this.rangeToValue = '';
-            }
-            this._currentField = 'to';
-            this._rangeState = 'selecting-to';
-          }
-
-          this._emitChange();
-          this._render();
-          this._updateFocusRing();
-        } else {
-          // Single date mode (original logic)
-          if (this.mode === 'date') {
-            this.value = this._dateString(dt);
-            this._emitChange();
-            this.close();
-          } else {
-            const cur = this._parseValue(this.value) ?? new Date();
-            cur.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
-            this.value = cur.toISOString();
-            this._emitChange();
-            this._render();
-          }
-        }
-      });
-
-      this._grid.appendChild(btn);
+      cell.append(button);
     }
+
+    if (hadFocus) {
+      this._focusActiveDay();
+    }
+  }
+
+  /**
+   * The day that holds keyboard focus in the month shown: the last focused day, the value being
+   * edited, today, or the first of the month
+   */
+  _resolveActiveDate(year, month) {
+    const inView = date => date && date.getFullYear() === year && date.getMonth() === month;
+    const editing = this._parseValue(
+      this.isRange && this._currentField === 'to' ? this.rangeToValue : this.value
+    );
+    const day = [this._activeDate, editing, new Date()].find(inView) ?? new Date(year, month, 1);
+    this._activeDate = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+    return this._dateString(this._activeDate);
   }
 
   /* Unified navigation handler */
   _handleNavigation(direction) {
     this._navigationDirection = direction;
-    const delta = direction === 'next' ? 1 : -1;
+    const months =
+      { day: 1, month: 12, year: 144 }[this._viewMode] * (direction === 'next' ? 1 : -1);
 
-    const operations = {
-      year: () => this._view.setFullYear(this._view.getFullYear() + 12 * delta),
-      month: () => this._view.setFullYear(this._view.getFullYear() + delta),
-      day: () => this._view.setMonth(this._view.getMonth() + delta),
-    };
-
-    operations[this._viewMode]();
+    this._view = new Date(this._view.getFullYear(), this._view.getMonth() + months, 1);
+    if (this._activeDate) {
+      this._activeDate = addMonths(this._activeDate, months);
+    }
     this._render();
   }
 
@@ -1016,46 +1226,38 @@ export default class PDatetime extends HTMLElement {
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
 
-    this._grid.innerHTML = '';
+    this._grid.replaceChildren();
+    this._grid.removeAttribute('role');
     this._grid.classList.add('month-view');
     this._grid.classList.remove('year-view');
 
-    /* Render 12 months */
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
       const monthDate = new Date(year, monthIndex, 1);
-      const btn = document.createElement('button');
-      btn.className = 'month';
-      btn.textContent = new Intl.DateTimeFormat(undefined, { month: 'short' }).format(monthDate);
-
-      if (
-        monthDate.getMonth() === today.getMonth() &&
-        monthDate.getFullYear() === today.getFullYear()
-      ) {
-        btn.classList.add('today');
-      }
-
-      if (
-        selected &&
-        monthDate.getMonth() === selected.getMonth() &&
-        monthDate.getFullYear() === selected.getFullYear()
-      ) {
-        btn.classList.add('selected');
-      }
-
-      /* Disable months wholly outside the allowed range */
       const monthEnd = new Date(year, monthIndex + 1, 0);
+      const button = node(
+        'button',
+        {
+          type: 'button',
+          class: 'month',
+          'data-month': String(monthIndex),
+          'aria-label': dateFormat({ month: 'long', year: 'numeric' }).format(monthDate),
+        },
+        dateFormat({ month: 'short' }).format(monthDate)
+      );
+
+      if (monthIndex === today.getMonth() && year === today.getFullYear()) {
+        button.classList.add('today');
+      }
+      if (selected && monthIndex === selected.getMonth() && year === selected.getFullYear()) {
+        button.classList.add('selected');
+        button.setAttribute('aria-pressed', 'true');
+      }
       if ((effMax && monthDate > effMax) || (effMin && monthEnd < effMin)) {
-        btn.classList.add('disabled');
-        btn.disabled = true;
+        button.classList.add('disabled');
+        button.disabled = true;
       }
 
-      btn.addEventListener('click', () => {
-        this._view.setMonth(monthIndex);
-        this._viewMode = 'day';
-        this._render();
-      });
-
-      this._grid.appendChild(btn);
+      this._grid.append(button);
     }
   }
 
@@ -1069,38 +1271,31 @@ export default class PDatetime extends HTMLElement {
     const minYear = effMin ? effMin.getFullYear() : null;
     const maxYear = effMax ? effMax.getFullYear() : null;
 
-    this._grid.innerHTML = '';
+    this._grid.replaceChildren();
+    this._grid.removeAttribute('role');
     this._grid.classList.add('year-view');
     this._grid.classList.remove('month-view');
 
-    /* Show 12-year range (3x4 grid like months) */
-    const startYear = currentYear - 5;
-    for (let i = 0; i < 12; i++) {
-      const year = startYear + i;
-      const btn = document.createElement('button');
-      btn.className = 'year';
-      btn.textContent = String(year);
+    for (let year = currentYear - 5; year < currentYear + 7; year++) {
+      const button = node(
+        'button',
+        { type: 'button', class: 'year', 'data-year': String(year) },
+        String(year)
+      );
 
       if (year === today.getFullYear()) {
-        btn.classList.add('today');
+        button.classList.add('today');
       }
-
       if (selected && year === selected.getFullYear()) {
-        btn.classList.add('selected');
+        button.classList.add('selected');
+        button.setAttribute('aria-pressed', 'true');
       }
-
       if ((minYear !== null && year < minYear) || (maxYear !== null && year > maxYear)) {
-        btn.classList.add('disabled');
-        btn.disabled = true;
+        button.classList.add('disabled');
+        button.disabled = true;
       }
 
-      btn.addEventListener('click', () => {
-        this._view.setFullYear(year);
-        this._viewMode = 'month';
-        this._render();
-      });
-
-      this._grid.appendChild(btn);
+      this._grid.append(button);
     }
   }
 
@@ -1173,61 +1368,37 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderInput() {
-    /* Set format options based on mode */
-    let opts;
-    if (this.mode === 'date') {
-      opts = { dateStyle: 'medium' };
-    } else if (this.mode === 'time') {
-      opts = { timeStyle: 'short' };
-    } else {
-      opts = { dateStyle: 'medium', timeStyle: 'short' };
-    }
+    const { formatOpts, placeholders } = this._modeConfig[this.mode] ?? this._modeConfig.date;
+    const show = (field, value, placeholder, label) => {
+      const date = this._parseValue(value);
+      const text = date ? dateFormat(formatOpts).format(date) : '';
+      field.textContent = text;
+      field.setAttribute('data-placeholder', placeholder);
+      field.setAttribute('aria-label', `${label}: ${text || 'not set'}`);
+    };
 
     if (this.isRange) {
-      // Handle range: first input = from, second input = to
-      if (this.value) {
-        const fromDate = this._parseValue(this.value);
-        this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(fromDate);
-      } else {
-        this._input.textContent = '';
-        const placeholder =
-          this.mode === 'date'
-            ? 'Start date...'
-            : this.mode === 'time'
-              ? 'Start time...'
-              : 'Start date & time...';
-        this._input.setAttribute('data-placeholder', placeholder);
-      }
-
-      if (this.rangeToValue) {
-        const toDate = this._parseValue(this.rangeToValue);
-        this._toInput.textContent = new Intl.DateTimeFormat(undefined, opts).format(toDate);
-      } else {
-        this._toInput.textContent = '';
-        const placeholder =
-          this.mode === 'date'
-            ? 'End date...'
-            : this.mode === 'time'
-              ? 'End time...'
-              : 'End date & time...';
-        this._toInput.setAttribute('data-placeholder', placeholder);
-      }
+      show(this._input, this.value, placeholders.rangeFrom, this.fromLabel);
+      show(this._toInput, this.rangeToValue, placeholders.rangeTo, this.toLabel);
     } else {
-      // Handle single input
-      if (this.value) {
-        const date = this._parseValue(this.value);
-        this._input.textContent = new Intl.DateTimeFormat(undefined, opts).format(date);
-      } else {
-        this._input.textContent = '';
-        const placeholder =
-          this.mode === 'date'
-            ? 'Select date...'
-            : this.mode === 'time'
-              ? 'Select time...'
-              : 'Select date & time...';
-        this._input.setAttribute('data-placeholder', placeholder);
-      }
+      show(this._input, this.value, placeholders.single, this._fieldLabel());
     }
+  }
+
+  /**
+   * The text of the form labels pointing at this element, or a name for the mode
+   */
+  _fieldLabel() {
+    const text = [...(this.labels ?? [])]
+      .map(label =>
+        label.textContent
+          .trim()
+          .replace(/[:：]$/, '')
+          .trim()
+      )
+      .filter(Boolean)
+      .join(' ');
+    return text || { date: 'Date', datetime: 'Date and time', time: 'Time' }[this.mode] || 'Date';
   }
 
   _renderQuickDates() {
@@ -1256,6 +1427,7 @@ export default class PDatetime extends HTMLElement {
           if (this._isDayOutOfRange(preview, effMin, effMax)) return;
 
           const btn = document.createElement('button');
+          btn.type = 'button';
           btn.className = 'preset';
           btn.textContent = dateMap[dateKey].label;
           btn.addEventListener('click', () => {
@@ -1464,8 +1636,7 @@ export default class PDatetime extends HTMLElement {
     const dates = [this.value, this.isRange ? this.rangeToValue : '']
       .map(value => this._parseValue(value))
       .filter(Boolean);
-    const describe = date =>
-      new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date);
+    const describe = date => dateFormat({ dateStyle: 'medium' }).format(date);
 
     if (min && dates.some(date => this._isDayOutOfRange(date, min, null))) {
       return {

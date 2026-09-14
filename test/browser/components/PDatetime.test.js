@@ -239,4 +239,135 @@ describe('p-datetime', () => {
       expect(form.querySelectorAll('input')).toHaveLength(0);
     });
   });
+
+  describe('keyboard and screen readers', () => {
+    const focused = picker => picker.shadowRoot.activeElement;
+    const press = (picker, key, options = {}) =>
+      (focused(picker) ?? picker).dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+          ...options,
+        })
+      );
+    const settle = async () => {
+      await nextFrame();
+      await nextFrame();
+    };
+    const ymd = (year, monthIndex, dayNumber) =>
+      `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+
+    it('names its value field after its form label', () => {
+      const form = document.createElement('form');
+      form.innerHTML =
+        '<label for="event-date">Event date:</label><p-datetime id="event-date" mode="date"></p-datetime>';
+      document.body.append(form);
+
+      const field = shadow(form.querySelector('p-datetime'), '[data-datetime-input]');
+      expect(field.getAttribute('aria-label')).toBe('Event date: not set');
+    });
+
+    it('names its buttons and its panel', () => {
+      const picker = renderPicker({ mode: 'date' });
+
+      expect([
+        trigger(picker).getAttribute('aria-label'),
+        shadow(picker, '[data-datetime-nav-btn="prev"]').getAttribute('aria-label'),
+        shadow(picker, '[data-datetime-nav-btn="next"]').getAttribute('aria-label'),
+        panel(picker).getAttribute('role'),
+      ]).toEqual(['Choose date', 'Previous month', 'Next month', 'dialog']);
+    });
+
+    it('shows its value in a button that opens the calendar on the selected day', async () => {
+      const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+      const field = shadow(picker, '[data-datetime-input]');
+
+      field.focus();
+      field.click();
+      await settle();
+
+      expect([
+        field.localName,
+        focused(picker)?.dataset.date,
+        field.getAttribute('aria-expanded'),
+      ]).toEqual(['button', '2023-07-12', 'true']);
+    });
+
+    it('moves between days with arrow keys, Home and End, and between months with Page Up', async () => {
+      const picker = renderPicker({ mode: 'date', value: '2023-07-31' });
+      picker.open();
+      await settle();
+
+      const visited = [];
+      for (const key of ['ArrowRight', 'PageUp', 'ArrowUp', 'End']) {
+        press(picker, key);
+        visited.push(focused(picker)?.dataset.date);
+      }
+
+      expect(visited).toEqual(['2023-08-01', '2023-07-01', '2023-06-24', '2023-06-25']);
+    });
+
+    it('picks the focused day with Enter and returns focus to the field', async () => {
+      const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+      const field = shadow(picker, '[data-datetime-input]');
+      field.focus();
+      field.click();
+      await settle();
+
+      press(picker, 'ArrowRight');
+      press(picker, 'Enter');
+
+      expect([picker.value, focused(picker) === field]).toEqual(['2023-07-13', true]);
+    });
+
+    it('closes with Escape and returns focus to the field', async () => {
+      const picker = renderPicker({ mode: 'date' });
+      const field = shadow(picker, '[data-datetime-input]');
+      field.focus();
+      field.click();
+      await settle();
+
+      press(picker, 'Escape');
+      await wait(200);
+
+      expect([
+        panel(picker).hidden,
+        focused(picker) === field,
+        field.getAttribute('aria-expanded'),
+      ]).toEqual([true, true, 'false']);
+    });
+
+    it('describes the day grid, each day, today and the selection', () => {
+      const now = new Date();
+      const selectedDay = now.getDate() === 15 ? 16 : 15;
+      const selected = ymd(now.getFullYear(), now.getMonth(), selectedDay);
+      const today = ymd(now.getFullYear(), now.getMonth(), now.getDate());
+      const picker = renderPicker({ mode: 'date', value: selected });
+
+      picker.open();
+
+      const selectedButton = shadow(picker, `[data-date="${selected}"]`);
+      const headers = [...picker.shadowRoot.querySelectorAll('[role="columnheader"]')];
+      const monday = new Date(2023, 6, 31);
+      expect({
+        grid: shadow(picker, '[data-datetime-grid]').getAttribute('role'),
+        label: selectedButton?.getAttribute('aria-label'),
+        selected: selectedButton?.closest('[role="gridcell"]')?.getAttribute('aria-selected'),
+        today: shadow(picker, `[data-date="${today}"]`)?.getAttribute('aria-current'),
+        headers: headers.length,
+        firstHeader: headers[0]?.getAttribute('aria-label'),
+      }).toEqual({
+        grid: 'grid',
+        label: new Intl.DateTimeFormat(undefined, { dateStyle: 'full' }).format(
+          new Date(now.getFullYear(), now.getMonth(), selectedDay)
+        ),
+        selected: 'true',
+        today: 'date',
+        headers: 7,
+        firstHeader: new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(monday),
+      });
+    });
+  });
 });
