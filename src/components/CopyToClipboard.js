@@ -54,8 +54,10 @@ export class CopyToClipboard extends BaseComponent {
         CopyToClipboard.defaults.successMessage
       ),
       errorMessage: this.getAttr(element, 'error-message', CopyToClipboard.defaults.errorMessage),
-      successDuration: parseInt(
-        this.getAttr(element, 'success-duration', CopyToClipboard.defaults.successDuration)
+      successDuration: this.getNumberAttr(
+        element,
+        'success-duration',
+        CopyToClipboard.defaults.successDuration
       ),
       successClass: this.getAttr(element, 'success-class', CopyToClipboard.defaults.successClass),
       errorClass: this.getAttr(element, 'error-class', CopyToClipboard.defaults.errorClass),

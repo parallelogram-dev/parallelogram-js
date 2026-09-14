@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@parallelogram-js/core/package.json` is exported.
 - Source maps for production and development bundles.
 - MIT `LICENSE` file, which `package.json` referenced but the package never shipped.
+- `BaseComponent#getBoolAttr()` and `BaseComponent#getNumberAttr()` for reading typed component attributes. `_getConfigFromAttrs()` now converts values to the type of each entry in `static defaults`.
 
 ### Deprecated
 
@@ -31,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Behaviour change:** boolean attributes set to `"false"` (or `"0"`) now turn options off. Previously every component read them as the truthy string `"false"`, so opt-outs such as `data-toggle-close-navigation="false"`, `data-tabs-keyboard="false"`, `data-reveal-once="false"`, `data-videoplay-autopause="false"`, `data-lightbox-close-escape="false"` and `data-datatable-sortable="false"` did nothing, and `data-toggle-manual="false"` or `data-tabs-autofocus="false"` switched the option on. Empty attributes (`data-toggle-capture`) now count as true. Affects Toggle, Tabs, Modal, Lightbox, DataTable, FormEnhancer, Scrollreveal, Scrollhide, Videoplay, Toast, CopyToClipboard and SelectLoader.
+- Components can be constructed without options (`new Toggle()`, `Tabs.enhanceAll()`); the BaseComponent constructor used to throw when called with no argument.
+- `data-datatable-paginate` accepts a page size (`"5"`) as documented, or `"true"` to paginate with `data-datatable-page-size`. Previously only numeric values enabled pagination and the number was ignored.
 - Documented import paths ending in `.js` (for example `@parallelogram-js/core/components/PModal.js`) resolved to `PModal.js.js` and failed. Every subpath now accepts both spellings and honours the `development` condition.
 - The `Modal` bundle silently dropped its `p-modal` dependency, and `PSelect` and `AlertManager` dropped `p-toasts`. `sideEffects` now covers the self-registering `p-*` elements.
 - Development bundles contained production code, because components imported BaseComponent through the package name and Rollup resolved it to the previous build's minified output.

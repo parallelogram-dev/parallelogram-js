@@ -96,12 +96,16 @@ export class Lightbox extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      closeOnEscape: this.getAttr(element, 'close-escape', Lightbox.defaults.closeOnEscape),
-      closeOnBackdrop: this.getAttr(element, 'close-backdrop', Lightbox.defaults.closeOnBackdrop),
-      showCounter: this.getAttr(element, 'show-counter', Lightbox.defaults.showCounter),
-      showNavigation: this.getAttr(element, 'show-nav', Lightbox.defaults.showNavigation),
-      keyNavigation: this.getAttr(element, 'key-nav', Lightbox.defaults.keyNavigation),
-      useDirectionalTransitions: this.getAttr(
+      closeOnEscape: this.getBoolAttr(element, 'close-escape', Lightbox.defaults.closeOnEscape),
+      closeOnBackdrop: this.getBoolAttr(
+        element,
+        'close-backdrop',
+        Lightbox.defaults.closeOnBackdrop
+      ),
+      showCounter: this.getBoolAttr(element, 'show-counter', Lightbox.defaults.showCounter),
+      showNavigation: this.getBoolAttr(element, 'show-nav', Lightbox.defaults.showNavigation),
+      keyNavigation: this.getBoolAttr(element, 'key-nav', Lightbox.defaults.keyNavigation),
+      useDirectionalTransitions: this.getBoolAttr(
         element,
         'directional-transitions',
         Lightbox.defaults.useDirectionalTransitions

@@ -67,11 +67,11 @@ export default class Modal extends BaseComponent {
     // Note: getAttr automatically adds component prefix (data-modal-)
     const target = this.getAttr(element, 'target');
     const size = this.getAttr(element, 'size', Modal.defaults.size);
-    const closable = this.getAttr(element, 'closable', Modal.defaults.closable);
-    const backdropClose = this.getAttr(element, 'backdrop-close', Modal.defaults.backdropClose);
-    const keyboard = this.getAttr(element, 'keyboard', Modal.defaults.keyboard);
-    const focus = this.getAttr(element, 'focus', Modal.defaults.focus);
-    const multiple = this.getAttr(element, 'multiple', Modal.defaults.multiple);
+    const closable = this.getBoolAttr(element, 'closable', Modal.defaults.closable);
+    const backdropClose = this.getBoolAttr(element, 'backdrop-close', Modal.defaults.backdropClose);
+    const keyboard = this.getBoolAttr(element, 'keyboard', Modal.defaults.keyboard);
+    const focus = this.getBoolAttr(element, 'focus', Modal.defaults.focus);
+    const multiple = this.getBoolAttr(element, 'multiple', Modal.defaults.multiple);
 
     if (!target) {
       this.logger?.warn('Modal: No data-modal-target attribute found', element);
