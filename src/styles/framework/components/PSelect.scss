@@ -1,10 +1,18 @@
 /* PSelect Web Component Styles */
 @use '../../design-system' as *;
 
+/* Looks like a form control until page styles size and border the element */
 :host {
   display: inline-block;
   position: relative;
   box-sizing: border-box;
+  min-width: 12rem;
+  min-height: 2.5rem;
+  padding: var(--select-padding);
+  border: var(--select-border);
+  border-radius: var(--select-border-radius);
+  background: var(--select-bg);
+  color: var(--select-text);
 }
 
 /* CSS custom properties using surface tokens */
@@ -52,7 +60,6 @@
   color: inherit;
   font-family: inherit;
   font-size: inherit;
-  border: inherit;
   border-radius: inherit;
   padding: inherit;
 }
