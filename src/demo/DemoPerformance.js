@@ -442,7 +442,10 @@ export class DemoPerformance extends BaseComponent {
       navCountEl.textContent = this.performanceData.navigationCount;
     }
 
-    const enhancedLinks = document.querySelectorAll('[data-router-enhanced]').length;
+    const enhancedLinks = window.router
+      ? [...document.querySelectorAll('a[href]')].filter(link => window.router.handlesLink(link))
+          .length
+      : 0;
     const enhancedLinksEl = this.element.querySelector('#enhanced-links');
     if (enhancedLinksEl) {
       enhancedLinksEl.textContent = enhancedLinks;
