@@ -992,11 +992,19 @@ export class PageManager {
 
   /**
    * Mount all components within a scope with enhanced options
+   *
+   * @param {Element} root - Scope to search for component selectors
+   * @param {Object} [options]
+   * @param {Element[]|null} [options.addedNodes] - Only search these nodes (mutation passes)
+   * @param {'all'|'critical'|'normal'} [options.priority='all'] - Which registry entries to
+   *   mount. 'all' mounts critical entries first, then the rest.
+   * @param {string} [options.trigger] - Label for logging
+   * @param {string|null} [options.fragmentTarget] - Fragment being mounted, if any
    */
   mountAllWithin(root, options = {}) {
     const {
       addedNodes = null,
-      priority = 'normal',
+      priority = 'all',
       trigger = 'initial',
       fragmentTarget = null, // New option to track which fragment is being mounted
     } = options;
@@ -1015,13 +1023,15 @@ export class PageManager {
     });
 
     try {
-      // Filter registry by priority if specified
-      const componentsToMount = this.registry.filter(cfg => {
-        if (priority === 'critical') {
-          return cfg.priority === 'critical' || cfg.critical === true;
-        }
-        return priority === 'normal' ? cfg.priority !== 'critical' : true;
-      });
+      const isCritical = cfg => cfg.priority === 'critical' || cfg.critical === true;
+      const critical = this.registry.filter(isCritical);
+      const normal = this.registry.filter(cfg => !isCritical(cfg));
+      const componentsToMount =
+        priority === 'critical'
+          ? critical
+          : priority === 'normal'
+            ? normal
+            : [...critical, ...normal];
 
       for (const config of componentsToMount) {
         try {
