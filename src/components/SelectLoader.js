@@ -1,23 +1,37 @@
 import { BaseComponent } from '../core/BaseComponent.js';
+import { announce } from '../utils/announce.js';
+import { prefersReducedMotion } from '../utils/motion.js';
 
 /**
- * SelectLoader Component
+ * SelectLoader - load an HTML fragment into a target when a select's choice changes
  *
- * Enhances a native <select> element to load HTML fragments using RouterManager
- * and replace content in a target container when the selection changes.
+ * Each option's value is the URL of a fragment, fetched through RouterManager. A newer choice
+ * cancels a load that is still running, the target is marked `aria-busy` while loading, and the
+ * loaded content is announced. Fragments are inserted as HTML, so they must come from a trusted,
+ * same-origin source; sanitise anything else first, for example with DOMPurify.
  *
  * @example
- * <!-- HTML -->
- * <select data-selectloader
- *         data-selectloader-target="#content-area">
+ * <select data-selectloader data-selectloader-target="#content-area">
  *   <option value="">Select an option...</option>
  *   <option value="/fragments/option1">Option 1</option>
  *   <option value="/fragments/option2">Option 2</option>
  * </select>
  *
- * <div id="content-area">
- *   <!-- Content will be loaded here -->
- * </div>
+ * <div id="content-area"></div>
+ *
+ * @attributes
+ * - data-selectloader-target: selector for the element that receives the content
+ * - data-selectloader-target-view: the target's data-view name, instead of a selector
+ * - data-selectloader-transition: fade (default), slide or none; skipped under reduced motion
+ * - data-selectloader-transition-duration: milliseconds (default 300)
+ * - data-selectloader-retain-scroll: keep the target's scroll position (default false)
+ * - data-selectloader-empty-message: text shown when nothing is chosen
+ * - data-selectloader-loading-class, data-selectloader-error-class: classes for those states
+ *
+ * @events
+ * - selectloader:before-change: cancelable; cancelling puts the previous choice back
+ * - selectloader:loading, selectloader:loaded, selectloader:error, selectloader:complete
+ * - selectloader:cleared: when the empty choice is selected
  */
 export default class SelectLoader extends BaseComponent {
   static selector = 'data-selectloader';
@@ -26,28 +40,21 @@ export default class SelectLoader extends BaseComponent {
     return {
       loadingClass: 'loading',
       errorClass: 'error',
-      transition: 'fade', // 'fade', 'slide', 'none'
+      transition: 'fade',
       transitionDuration: 300,
       retainScroll: false,
       emptyMessage: 'Please select an option',
     };
   }
 
-  /**
-   * Initialize the select loader
-   * @param {HTMLSelectElement} element - Select element to enhance
-   * @returns {Object} Component state
-   */
   _init(element) {
     const state = super._init(element);
 
-    /* Validate it's a select element */
     if (element.tagName !== 'SELECT') {
       this.logger?.error('SelectLoader: Element must be a <select>', { element });
       return state;
     }
 
-    /* Get configuration using BaseComponent helper */
     const config = this._getConfigFromAttrs(element, {
       target: 'target',
       loadingClass: 'loading-class',
@@ -58,16 +65,11 @@ export default class SelectLoader extends BaseComponent {
       emptyMessage: 'empty-message',
     });
 
-    /* Get target container using BaseComponent helper */
-    const targetElement = this._getTargetElement(element, 'target', {
-      required: true,
-    });
-
+    const targetElement = this._getTargetElement(element, 'target', { required: true });
     if (!targetElement) {
       return state;
     }
 
-    /* Store state */
     state.config = { ...SelectLoader.defaults, ...config };
     state.targetElement = targetElement;
     state.isLoading = false;
@@ -75,78 +77,58 @@ export default class SelectLoader extends BaseComponent {
     state.currentUrl = null;
     state.scrollPosition = 0;
 
-    /* Setup event listeners */
     this._setupEventListeners(element, state);
 
-    /* Initial load if select has a value */
     if (element.value) {
       this._loadFragment(element, state, element.value);
     } else {
       this._showEmptyMessage(state);
     }
 
-    this.logger?.info('SelectLoader initialized', {
-      element,
-      target: config.target,
-      options: element.options.length,
-    });
-
     return state;
   }
 
-  /**
-   * Setup event listeners
-   * @private
-   */
   _setupEventListeners(element, state) {
-    /* Cancel a pending load when the component is unmounted */
-    state.controller.signal.addEventListener('abort', () => state.request?.abort(), {
-      once: true,
-    });
+    const { signal } = state.controller;
 
-    /* Listen for select changes */
-    element.addEventListener(
-      'change',
-      event => {
-        this._handleChange(event, element, state);
-      },
-      { signal: state.controller.signal }
+    /* Cancel a pending load when the component is unmounted */
+    signal.addEventListener('abort', () => state.request?.abort(), { once: true });
+
+    element.addEventListener('change', () => this._handleChange(element, state), { signal });
+
+    /* The reset event fires before the controls are reset, so read the restored choice afterwards */
+    element.form?.addEventListener(
+      'reset',
+      () => setTimeout(() => this._afterReset(element, state)),
+      {
+        signal,
+      }
     );
 
-    /* Listen for form resets */
-    const form = element.closest('form');
-    if (form) {
-      form.addEventListener(
-        'reset',
-        async () => {
-          await this._delay(10);
-          this._showEmptyMessage(state);
-        },
-        { signal: state.controller.signal }
-      );
-    }
-
-    /* Listen for router navigation events via EventManager */
     this.eventBus?.on(
       'router:navigate-success',
       () => {
-        /* Check if target still exists after navigation */
         if (state.targetElement && !document.contains(state.targetElement)) {
           this.logger?.warn('SelectLoader: Target removed during navigation');
         }
       },
-      { signal: state.controller.signal }
+      { signal }
     );
   }
 
-  /**
-   * Handle select change event
-   * @private
-   */
-  async _handleChange(event, element, state) {
+  _afterReset(element, state) {
+    if (state.controller.signal.aborted) return;
+
+    if (element.value) {
+      this._loadFragment(element, state, element.value);
+    } else {
+      this._clear(element, state);
+    }
+  }
+
+  async _handleChange(element, state) {
     const value = element.value;
 
-    /* Emit cancelable event via BaseComponent helper */
     const beforeEvent = this._dispatch(element, 'selectloader:before-change', {
       value,
       previousUrl: state.currentUrl,
@@ -154,29 +136,27 @@ export default class SelectLoader extends BaseComponent {
     });
 
     if (beforeEvent.defaultPrevented) {
-      this.logger?.debug('SelectLoader: Change prevented by listener');
+      element.value = state.currentUrl ?? '';
       return;
     }
 
-    /* Handle empty selection */
-    if (!value || value === '') {
-      state.request?.abort();
-      this._showEmptyMessage(state);
-      state.currentUrl = null;
-
-      this._dispatch(element, 'selectloader:cleared', {
-        targetElement: state.targetElement,
-      });
+    if (!value) {
+      this._clear(element, state);
       return;
     }
 
-    /* Load the fragment */
     await this._loadFragment(element, state, value);
+  }
+
+  _clear(element, state) {
+    state.request?.abort();
+    state.currentUrl = null;
+    this._showEmptyMessage(state);
+    this._dispatch(element, 'selectloader:cleared', { targetElement: state.targetElement });
   }
 
   /**
    * Load an HTML fragment through RouterManager, cancelling any load still in progress
-   * @private
    */
   async _loadFragment(element, state, url) {
     state.request?.abort();
@@ -184,67 +164,54 @@ export default class SelectLoader extends BaseComponent {
     state.request = request;
     state.isLoading = true;
     state.currentUrl = url;
+    const { config, targetElement } = state;
+    const animate = config.transition !== 'none' && !prefersReducedMotion();
     let loaded = false;
 
-    /* Store scroll position if needed */
-    if (state.config.retainScroll) {
-      state.scrollPosition = state.targetElement.scrollTop;
+    if (config.retainScroll) {
+      state.scrollPosition = targetElement.scrollTop;
     }
 
-    /* Apply loading state without disabling the select, so a newer choice can replace this one */
-    element.classList.add(state.config.loadingClass);
-    state.targetElement.classList.add(state.config.loadingClass);
-    state.targetElement.setAttribute('aria-busy', 'true');
+    /* Mark loading without disabling the select, so a newer choice can replace this one */
+    element.classList.add(config.loadingClass);
+    targetElement.classList.add(config.loadingClass);
+    targetElement.setAttribute('aria-busy', 'true');
 
-    /* Emit loading event */
-    this._dispatch(element, 'selectloader:loading', {
-      url,
-      targetElement: state.targetElement,
-    });
+    this._dispatch(element, 'selectloader:loading', { url, targetElement });
 
     try {
-      /* Use RouterManager to fetch the fragment */
       if (!this.router) {
         throw new Error('RouterManager not available');
       }
 
       const { data: html } = await this.router.get(url, { signal: request.signal });
-
-      /* Transition out old content */
-      if (state.config.transition !== 'none') {
-        await this._transitionOut(state);
-      }
       request.signal.throwIfAborted();
-
-      /* Replace content */
-      state.targetElement.innerHTML = html;
-      state.targetElement.classList.remove(state.config.errorClass);
-
-      /* Restore scroll position */
-      if (state.config.retainScroll) {
-        state.targetElement.scrollTop = state.scrollPosition;
+      if (typeof html !== 'string') {
+        throw new Error(`Expected an HTML fragment from ${url}`);
       }
 
-      /* Transition in new content */
-      if (state.config.transition !== 'none') {
+      if (animate) {
+        await this._transitionOut(state);
+        request.signal.throwIfAborted();
+      }
+
+      targetElement.innerHTML = html;
+      targetElement.classList.remove(config.errorClass);
+
+      if (config.retainScroll) {
+        targetElement.scrollTop = state.scrollPosition;
+      }
+
+      if (animate) {
         await this._transitionIn(state);
       }
+      this._clearTransitionStyles(targetElement);
 
-      /* Emit success via BaseComponent _dispatch and EventManager */
-      this._dispatch(element, 'selectloader:loaded', {
-        url,
-        targetElement: state.targetElement,
-        html,
-      });
+      this._dispatch(element, 'selectloader:loaded', { url, targetElement, html });
+      this.eventBus?.emit('selectloader:content-loaded', { element, url, targetElement });
 
-      /* EventManager will propagate this event */
-      this.eventBus?.emit('selectloader:content-loaded', {
-        element,
-        url,
-        targetElement: state.targetElement,
-      });
-
-      this.logger?.info('SelectLoader: Fragment loaded', { url });
+      const label = [...element.options].find(option => option.value === url)?.textContent.trim();
+      announce(label ? `${label} loaded` : 'Content loaded');
       loaded = true;
     } catch (error) {
       /* A newer choice or unmounting cancelled this load */
@@ -253,18 +220,11 @@ export default class SelectLoader extends BaseComponent {
       }
 
       this.logger?.error('SelectLoader: Load failed', { url, error });
+      this._clearTransitionStyles(targetElement);
+      this._showErrorMessage(element, state, error);
+      announce(error.message || 'Failed to load content', { politeness: 'assertive' });
 
-      /* Show error message */
-      this._showErrorMessage(state, error);
-
-      /* Emit error event */
-      this._dispatch(element, 'selectloader:error', {
-        url,
-        error,
-        targetElement: state.targetElement,
-      });
-
-      /* Could notify via toast/alert if available */
+      this._dispatch(element, 'selectloader:error', { url, error, targetElement });
       this.eventBus?.emit('app:notification', {
         type: 'error',
         message: `Failed to load content: ${error.message}`,
@@ -274,9 +234,9 @@ export default class SelectLoader extends BaseComponent {
       if (state.request === request) {
         state.request = null;
         state.isLoading = false;
-        element.classList.remove(state.config.loadingClass);
-        state.targetElement.classList.remove(state.config.loadingClass);
-        state.targetElement.removeAttribute('aria-busy');
+        element.classList.remove(config.loadingClass);
+        targetElement.classList.remove(config.loadingClass);
+        targetElement.removeAttribute('aria-busy');
 
         if (!request.signal.aborted) {
           this._dispatch(element, 'selectloader:complete', { url, success: loaded });
@@ -285,10 +245,6 @@ export default class SelectLoader extends BaseComponent {
     }
   }
 
-  /**
-   * Transition out old content using BaseComponent helpers
-   * @private
-   */
   async _transitionOut(state) {
     const { transition, transitionDuration } = state.config;
 
@@ -299,10 +255,6 @@ export default class SelectLoader extends BaseComponent {
     }
   }
 
-  /**
-   * Transition in new content using BaseComponent helpers
-   * @private
-   */
   async _transitionIn(state) {
     const { transition, transitionDuration } = state.config;
 
@@ -313,15 +265,10 @@ export default class SelectLoader extends BaseComponent {
     }
   }
 
-  /**
-   * Slide out animation
-   * @private
-   */
   async _slideOut(element, duration) {
-    const height = element.offsetHeight;
     element.style.overflow = 'hidden';
-    element.style.height = `${height}px`;
-    element.offsetHeight; /* Force reflow */
+    element.style.height = `${element.offsetHeight}px`;
+    element.getBoundingClientRect();
 
     element.style.transition = `height ${duration}ms ease-out, opacity ${duration}ms ease-out`;
     element.style.height = '0';
@@ -330,80 +277,69 @@ export default class SelectLoader extends BaseComponent {
     await this._delay(duration);
   }
 
-  /**
-   * Slide in animation
-   * @private
-   */
   async _slideIn(element, duration) {
     const scrollHeight = element.scrollHeight;
     element.style.height = '0';
     element.style.overflow = 'hidden';
-    element.offsetHeight; /* Force reflow */
+    element.getBoundingClientRect();
 
     element.style.transition = `height ${duration}ms ease-in, opacity ${duration}ms ease-in`;
     element.style.height = `${scrollHeight}px`;
     element.style.opacity = '1';
 
     await this._delay(duration);
-
-    /* Cleanup */
-    element.style.height = '';
-    element.style.overflow = '';
-    element.style.transition = '';
   }
 
   /**
-   * Show empty message
-   * @private
+   * Remove the inline styles the transitions used, so they don't override page styles
    */
+  _clearTransitionStyles(element) {
+    for (const property of ['height', 'overflow', 'opacity', 'transition']) {
+      element.style.removeProperty(property);
+    }
+    if (element.getAttribute('style') === '') {
+      element.removeAttribute('style');
+    }
+  }
+
   _showEmptyMessage(state) {
-    const message = state.config.emptyMessage;
-    state.targetElement.innerHTML = `
-      <div class="select-loader__empty">
-        <p>${message}</p>
-      </div>
-    `;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'select-loader__empty';
+    const paragraph = document.createElement('p');
+    paragraph.textContent = state.config.emptyMessage;
+    wrapper.append(paragraph);
+
+    state.targetElement.replaceChildren(wrapper);
     state.targetElement.classList.remove(state.config.errorClass);
   }
 
   /**
-   * Show error message with retry button
-   * @private
+   * Show the error as text with a button that retries the same select's last choice
    */
-  _showErrorMessage(state, error) {
-    const message = error.message || 'Failed to load content';
-    const retryId = this._generateId('retry');
+  _showErrorMessage(element, state, error) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'select-loader__error';
+    const paragraph = document.createElement('p');
+    paragraph.textContent = error.message || 'Failed to load content';
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn btn--sm';
+    retry.textContent = 'Retry';
+    retry.addEventListener(
+      'click',
+      () => {
+        if (state.currentUrl) {
+          this._loadFragment(element, state, state.currentUrl);
+        }
+      },
+      { once: true, signal: state.controller.signal }
+    );
+    wrapper.append(paragraph, retry);
 
-    state.targetElement.innerHTML = `
-      <div class="select-loader__error">
-        <p>${message}</p>
-        <button type="button" id="${retryId}" class="btn btn--sm">Retry</button>
-      </div>
-    `;
+    state.targetElement.replaceChildren(wrapper);
     state.targetElement.classList.add(state.config.errorClass);
-
-    /* Setup retry button using BaseComponent event handling */
-    const retryButton = document.getElementById(retryId);
-    if (retryButton) {
-      retryButton.addEventListener(
-        'click',
-        () => {
-          /* Find the select element from state */
-          const element = Array.from(document.querySelectorAll('select')).find(
-            el => this.getState(el) === state
-          );
-          if (element && state.currentUrl) {
-            this._loadFragment(element, state, state.currentUrl);
-          }
-        },
-        { once: true }
-      );
-    }
   }
 
-  /**
-   * Public API: Reload current fragment
-   */
   reload(element) {
     const state = this._requireState(element, 'reload');
     if (!state || !state.currentUrl) return;
@@ -411,9 +347,6 @@ export default class SelectLoader extends BaseComponent {
     this._loadFragment(element, state, state.currentUrl);
   }
 
-  /**
-   * Public API: Load specific URL
-   */
   load(element, url) {
     const state = this._requireState(element, 'load');
     if (!state) return;
@@ -422,25 +355,19 @@ export default class SelectLoader extends BaseComponent {
     this._loadFragment(element, state, url);
   }
 
-  /**
-   * Public API: Clear selection and content
-   */
   clear(element) {
     const state = this._requireState(element, 'clear');
     if (!state) return;
 
     element.value = '';
     state.request?.abort();
-    this._showEmptyMessage(state);
     state.currentUrl = null;
+    this._showEmptyMessage(state);
   }
 
-  /**
-   * Public API: Get current load state
-   */
   getLoadState(element) {
     const state = this.getState(element);
-    return state
+    return state?.targetElement
       ? {
           isLoading: state.isLoading,
           currentUrl: state.currentUrl,
