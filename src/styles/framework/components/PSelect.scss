@@ -10,27 +10,28 @@
 /* CSS custom properties using surface tokens */
 :host {
   /* Control uses surface-control tokens */
-  --select-border-color: var(--surface-control-border-color);
+  --select-border-color: var(--surface-control-border-color, #{$color-border});
   --select-focus-color: #{$primary};
-  --select-bg: var(--surface-control-color-bg);
-  --select-text: var(--surface-control-color-text);
+  --select-bg: var(--surface-control-color-bg, #ffffff);
+  --select-text: var(--surface-control-color-text, #{$color-text});
   --select-placeholder: #{$color-text-muted};
 
   /* Menu hover/selection states using surface-dropdown-item tokens */
-  --select-hover-bg: var(--surface-dropdown-item-hover-bg);
-  --select-selected-bg: var(--surface-dropdown-item-selected-bg);
-  --select-current-bg: var(--surface-dropdown-item-current-bg);
+  --select-hover-bg: var(--surface-dropdown-item-hover-bg, #{$neutral-100});
+  --select-selected-bg: var(--surface-dropdown-item-selected-bg, rgba(59, 130, 246, 0.1));
+  --select-current-bg: var(--surface-dropdown-item-current-bg, #{$neutral-100});
 
   --select-padding: 0.45rem 0.6rem;
-  --select-border-radius: var(--surface-control-radius);
-  --select-border: var(--surface-control-border-width) solid var(--select-border-color);
+  --select-border-radius: var(--surface-control-radius, #{$radius-sm});
+  --select-border: var(--surface-control-border-width, #{$border-width}) solid
+    var(--select-border-color);
   --select-focus-shadow: inset 0 0 0 3px #{rgba($primary, 0.3)};
 
   /* Dropdown menu surface tokens */
-  --menu-border-radius: var(--surface-dropdown-radius);
-  --menu-border-color: var(--surface-dropdown-border-color);
-  --menu-bg: var(--surface-dropdown-color-bg);
-  --menu-shadow: var(--surface-dropdown-shadow);
+  --menu-border-radius: var(--surface-dropdown-radius, #{$radius-sm});
+  --menu-border-color: var(--surface-dropdown-border-color, #{$color-border});
+  --menu-bg: var(--surface-dropdown-color-bg, #ffffff);
+  --menu-shadow: var(--surface-dropdown-shadow, #{$shadow-md});
 }
 
 /* Dark mode adjustments */

@@ -3,6 +3,9 @@
  * Core framework entry point with consolidated imports and base styles
  */
 
+/* Design system custom properties, inherited by web components */
+@use '../design-system/root';
+
 /* Component imports */
 @use './components/datatable.scss';
 @use './components/lightbox.scss';

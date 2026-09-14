@@ -11,8 +11,8 @@
   pointer-events: none;
 
   /* Toast surface styling using panel tokens */
-  --toast-border-radius: var(--surface-panel-radius);
-  --toast-shadow: var(--surface-panel-shadow);
+  --toast-border-radius: var(--surface-panel-radius, #{$radius-md});
+  --toast-shadow: var(--surface-panel-shadow, #{$shadow-md});
   --toast-padding-x: #{$space-lg};
   --toast-padding-y: #{$space-sm};
 }

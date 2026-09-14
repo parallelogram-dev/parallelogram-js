@@ -12,16 +12,16 @@
   position: relative;
 
   /* Use surface-card tokens for nested items within panels */
-  border-radius: var(--uploader-file-radius-start, var(--surface-card-radius))
-    var(--uploader-file-radius-start, var(--surface-card-radius))
-    var(--uploader-file-radius-end, var(--surface-card-radius))
-    var(--uploader-file-radius-end, var(--surface-card-radius));
-  border-width: var(--surface-card-border-width);
+  border-radius: var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
+    var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
+    var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}))
+    var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}));
+  border-width: var(--surface-card-border-width, #{$border-width});
   border-style: solid;
-  border-color: var(--surface-card-border-color);
-  background: var(--surface-card-color-bg);
-  color: var(--surface-card-color-text);
-  box-shadow: var(--surface-card-shadow);
+  border-color: var(--surface-card-border-color, #{$neutral-300});
+  background: var(--surface-card-color-bg, #ffffff);
+  color: var(--surface-card-color-text, #{$color-text});
+  box-shadow: var(--surface-card-shadow, none);
 
   /* Customize */
   padding: $space-sm;
