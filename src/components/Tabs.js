@@ -84,11 +84,7 @@ export default class Tabs extends BaseComponent {
 
     // Get configuration from data attributes
     const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
-    const keyboardNav = this.getAttr(
-      element,
-      'keyboard',
-      Tabs.defaults.keyboardNavigation
-    );
+    const keyboardNav = this.getAttr(element, 'keyboard', Tabs.defaults.keyboardNavigation);
     const autoFocus = this.getAttr(element, 'autofocus', Tabs.defaults.autoFocus);
 
     // Store elements and config in state

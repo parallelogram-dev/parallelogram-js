@@ -220,7 +220,10 @@
                         <li><strong>Form Integration:</strong> Full form association with validation support</li>
                         <li><strong>Accessibility:</strong> Screen reader support, keyboard navigation</li>
                         <li><strong>Visual Feedback:</strong> Disabled states, hover effects, focus indicators</li>
-                        <li><strong>Custom Theming:</strong> Inherits CSS custom properties from parent for easy styling (see ocean theme example above)</li>
+                        <li>
+                            <strong>Custom Theming:</strong> Inherits CSS custom properties from parent for easy styling
+                            (see ocean theme example above)
+                        </li>
                     </ul>
                 </div>
             </section>
@@ -324,7 +327,9 @@
                         </div>
 
                         <div class="form__element">
-                            <label class="form__label" for="custom-datetime">Custom DateTime Format (yyyy-mm-dd hh:ii:ss):</label>
+                            <label class="form__label" for="custom-datetime"
+                                >Custom DateTime Format (yyyy-mm-dd hh:ii:ss):</label
+                            >
                             <div class="form__field">
                                 <p-datetime
                                     class="form__control"
@@ -369,7 +374,9 @@
                         </div>
 
                         <div class="form__element">
-                            <label class="form__label" for="custom-tz">Custom DateTime with Timezone (yyyy-mm-dd hh:ii:ss tz):</label>
+                            <label class="form__label" for="custom-tz"
+                                >Custom DateTime with Timezone (yyyy-mm-dd hh:ii:ss tz):</label
+                            >
                             <div class="form__field">
                                 <p-datetime
                                     class="form__control"
@@ -480,7 +487,9 @@
                             <strong>Quick Presets:</strong> Configurable quick date buttons (yesterday, today, tomorrow)
                         </li>
                         <li><strong>Form Integration:</strong> Creates hidden inputs for seamless form submission</li>
-                        <li><strong>Range Validation:</strong> Ensures end dates/times are not before start dates/times</li>
+                        <li>
+                            <strong>Range Validation:</strong> Ensures end dates/times are not before start dates/times
+                        </li>
                         <li><strong>Accessibility:</strong> Keyboard navigation and screen reader support</li>
                         <li><strong>Customizable:</strong> CSS custom properties and configurable field labels</li>
                     </ul>
@@ -573,38 +582,53 @@
 
             <section class="demo__section" data-demo-section>
                 <h2>Image Lightbox Gallery</h2>
-                <p>Click images to open them in a fullscreen lightbox with navigation. This gallery uses <strong>data-lightbox-preload="all"</strong> to eager-load all gallery images when opened:</p>
+                <p>
+                    Click images to open them in a fullscreen lightbox with navigation. This gallery uses
+                    <strong>data-lightbox-preload="all"</strong> to eager-load all gallery images when opened:
+                </p>
 
                 <div class="gallery__grid">
                     <figure class="gallery__item">
-                        <a data-lightbox="demo-gallery" data-lightbox-preload="all" href="https://picsum.photos/800/600?random=1">
-                            <img data-lazysrc
-                                 data-lazysrc-src="https://picsum.photos/150/150?random=1"
-                                 alt="Demo Image 1" />
+                        <a
+                            data-lightbox="demo-gallery"
+                            data-lightbox-preload="all"
+                            href="https://picsum.photos/800/600?random=1"
+                        >
+                            <img
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/150/150?random=1"
+                                alt="Demo Image 1"
+                            />
                         </a>
                         <figcaption>Gallery Image 1 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=2">
-                            <img data-lazysrc
-                                 data-lazysrc-src="https://picsum.photos/150/150?random=2"
-                                 alt="Demo Image 2" />
+                            <img
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/150/150?random=2"
+                                alt="Demo Image 2"
+                            />
                         </a>
                         <figcaption>Gallery Image 2 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=3">
-                            <img data-lazysrc
-                                 data-lazysrc-src="https://picsum.photos/150/150?random=3"
-                                 alt="Demo Image 3" />
+                            <img
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/150/150?random=3"
+                                alt="Demo Image 3"
+                            />
                         </a>
                         <figcaption>Gallery Image 3 (lazy loaded)</figcaption>
                     </figure>
                     <figure class="gallery__item">
                         <a data-lightbox="demo-gallery" href="https://picsum.photos/800/600?random=4">
-                            <img data-lazysrc
-                                 data-lazysrc-src="https://picsum.photos/150/150?random=4"
-                                 alt="Demo Image 4" />
+                            <img
+                                data-lazysrc
+                                data-lazysrc-src="https://picsum.photos/150/150?random=4"
+                                alt="Demo Image 4"
+                            />
                         </a>
                         <figcaption>Gallery Image 4 (lazy loaded)</figcaption>
                     </figure>
@@ -617,8 +641,13 @@
                         <li><strong>Accessibility:</strong> Keyboard support with Escape to close</li>
                         <li><strong>Backdrop Control:</strong> Click outside to close (configurable)</li>
                         <li><strong>Image Counter:</strong> Shows current position in gallery</li>
-                        <li><strong>Lazy Loading Integration:</strong> Automatically eager-loads lazy images when lightbox opens</li>
-                        <li><strong>Preload Strategies:</strong> Configure preloading with <code>data-lightbox-preload="adjacent|all|none"</code>
+                        <li>
+                            <strong>Lazy Loading Integration:</strong> Automatically eager-loads lazy images when
+                            lightbox opens
+                        </li>
+                        <li>
+                            <strong>Preload Strategies:</strong> Configure preloading with
+                            <code>data-lightbox-preload="adjacent|all|none"</code>
                             <ul>
                                 <li><code>adjacent</code> (default): Preload current + previous + next images</li>
                                 <li><code>all</code>: Preload entire gallery for instant navigation</li>
@@ -721,9 +750,12 @@
                     <div class="copy-demo__item">
                         <pre id="code-sample" class="copy-demo__code">
 const framework = new ParallelogramJS();
-framework.mount();</pre
+framework.mount();</pre>
+                        <button
+                            data-copytoclipboard
+                            data-copytoclipboard-target="#code-sample"
+                            class="btn btn--outline"
                         >
-                        <button data-copytoclipboard data-copytoclipboard-target="#code-sample" class="btn btn--outline">
                             Copy Code
                         </button>
                     </div>
@@ -818,7 +850,14 @@ framework.mount();</pre
                 </div>
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close>Close</button>
-                    <button class="btn btn--primary" data-modal data-modal-target="#form-modal" data-btn-action="open-form-modal">Open Form</button>
+                    <button
+                        class="btn btn--primary"
+                        data-modal
+                        data-modal-target="#form-modal"
+                        data-btn-action="open-form-modal"
+                    >
+                        Open Form
+                    </button>
                 </div>
             </p-modal>
 
@@ -875,7 +914,9 @@ framework.mount();</pre
                 </div>
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close data-btn-action="cancel-form">Cancel</button>
-                    <button type="submit" form="contact-form" class="btn btn--primary" data-btn-action="submit-form">Send Message</button>
+                    <button type="submit" form="contact-form" class="btn btn--primary" data-btn-action="submit-form">
+                        Send Message
+                    </button>
                 </div>
             </p-modal>
 
@@ -930,13 +971,20 @@ framework.mount();</pre
                     <p>The PageManager handles component mounting, unmounting, and cleanup automatically.</p>
                 </div>
                 <div slot="actions">
-                    <button class="btn btn--secondary" data-modal-close data-btn-action="close-large-modal">Close</button>
+                    <button class="btn btn--secondary" data-modal-close data-btn-action="close-large-modal">
+                        Close
+                    </button>
                     <button class="btn btn--primary" data-btn-action="view-performance">📈 View Performance</button>
                 </div>
             </p-modal>
 
             <!-- Extra Small Confirmation Modal -->
-            <p-modal id="confirm-modal" data-modal-size="xs" data-modal-closable="true" data-modal-backdrop-close="false">
+            <p-modal
+                id="confirm-modal"
+                data-modal-size="xs"
+                data-modal-closable="true"
+                data-modal-backdrop-close="false"
+            >
                 <h2 slot="title">Confirm Action</h2>
                 <div>
                     <p>Are you sure you want to delete this item? This action cannot be undone.</p>
@@ -952,7 +1000,10 @@ framework.mount();</pre
                 <h2 slot="title">Extra Large Modal - Documentation</h2>
                 <div>
                     <h3>PModal Component Documentation</h3>
-                    <p>The PModal component provides a flexible, accessible modal dialog system with the following features:</p>
+                    <p>
+                        The PModal component provides a flexible, accessible modal dialog system with the following
+                        features:
+                    </p>
 
                     <h4>Size Options</h4>
                     <ul>
@@ -982,7 +1033,9 @@ framework.mount();</pre
                 </div>
                 <div slot="actions">
                     <button class="btn btn--secondary" data-modal-close>Close</button>
-                    <button class="btn btn--primary" data-modal data-modal-target="#fullscreen-modal">Try Fullscreen</button>
+                    <button class="btn btn--primary" data-modal data-modal-target="#fullscreen-modal">
+                        Try Fullscreen
+                    </button>
                 </div>
             </p-modal>
 
@@ -991,15 +1044,26 @@ framework.mount();</pre
                 <h2 slot="title">Fullscreen Modal Experience</h2>
                 <div>
                     <h3>Welcome to Fullscreen Mode!</h3>
-                    <p>This modal demonstrates the fullscreen size option with elegant 3rem (48px) margins on all sides.</p>
+                    <p>
+                        This modal demonstrates the fullscreen size option with elegant 3rem (48px) margins on all
+                        sides.
+                    </p>
 
                     <h4>Key Features:</h4>
                     <ul>
-                        <li>✨ <strong>Inset Margins:</strong> 3rem space on all sides prevents edge-to-edge jarring appearance</li>
-                        <li>🎨 <strong>Rounded Corners:</strong> Maintains the design system's border-radius for visual consistency</li>
+                        <li>
+                            ✨ <strong>Inset Margins:</strong> 3rem space on all sides prevents edge-to-edge jarring
+                            appearance
+                        </li>
+                        <li>
+                            🎨 <strong>Rounded Corners:</strong> Maintains the design system's border-radius for visual
+                            consistency
+                        </li>
                         <li>📱 <strong>Responsive:</strong> Automatically adapts to different screen sizes</li>
                         <li>⌨️ <strong>Accessible:</strong> Full keyboard navigation and screen reader support</li>
-                        <li>🎭 <strong>Smooth Animations:</strong> Respects prefers-reduced-motion for accessibility</li>
+                        <li>
+                            🎭 <strong>Smooth Animations:</strong> Respects prefers-reduced-motion for accessibility
+                        </li>
                     </ul>
 
                     <h4>Use Cases:</h4>
@@ -1022,11 +1086,13 @@ framework.mount();</pre
                         <li><strong>Motion-Aware:</strong> Transitions only when user prefers motion</li>
                     </ul>
 
-                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.1); border-radius: 0.5rem;">
+                    <div
+                        style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.1); border-radius: 0.5rem"
+                    >
                         <h5>💡 Pro Tip</h5>
-                        <p style="margin: 0;">
-                            The fullscreen modal provides maximum space while maintaining visual breathing room.
-                            The 3rem inset creates a professional, polished appearance that doesn't feel cramped.
+                        <p style="margin: 0">
+                            The fullscreen modal provides maximum space while maintaining visual breathing room. The
+                            3rem inset creates a professional, polished appearance that doesn't feel cramped.
                         </p>
                     </div>
                 </div>

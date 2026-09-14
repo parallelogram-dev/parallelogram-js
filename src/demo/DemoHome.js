@@ -44,11 +44,15 @@ export class DemoHome extends BaseComponent {
     // Performance panel close button
     const closeButton = document.querySelector('.performance-panel__close');
     if (closeButton) {
-      closeButton.addEventListener('click', () => {
-        if (this.performancePanelVisible) {
-          this.togglePerformancePanel();
-        }
-      }, { signal });
+      closeButton.addEventListener(
+        'click',
+        () => {
+          if (this.performancePanelVisible) {
+            this.togglePerformancePanel();
+          }
+        },
+        { signal }
+      );
     }
 
     // Update performance panel periodically when visible

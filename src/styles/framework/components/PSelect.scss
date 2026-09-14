@@ -67,7 +67,9 @@
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-sizing: border-box;
   padding: inherit;
 }
@@ -96,7 +98,7 @@
   margin-left: auto;
 }
 
-.control[aria-expanded="true"] .arrow {
+.control[aria-expanded='true'] .arrow {
   transform: rotate(180deg);
 }
 
@@ -129,16 +131,16 @@
   background: var(--select-hover-bg);
 }
 
-.option[aria-selected="true"] {
+.option[aria-selected='true'] {
   background: var(--select-selected-bg);
   font-weight: 500;
 }
 
-.option[aria-current="true"] {
+.option[aria-current='true'] {
   background: var(--select-current-bg);
 }
 
-.option[aria-disabled="true"] {
+.option[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
   background: transparent !important;

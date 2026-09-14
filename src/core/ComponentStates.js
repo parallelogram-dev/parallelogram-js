@@ -107,10 +107,7 @@ export function isMountedState(stateValue) {
   // Extended states also indicate mounted
   const extendedMountedStates = Object.values(ExtendedStates);
 
-  return (
-    mountedStates.includes(stateValue) ||
-    extendedMountedStates.includes(stateValue)
-  );
+  return mountedStates.includes(stateValue) || extendedMountedStates.includes(stateValue);
 }
 
 /**
@@ -139,11 +136,7 @@ export function isInitializingState(stateValue) {
  */
 export function getInitialState(currentValue) {
   // If empty or already a state value, return pending
-  if (
-    !currentValue ||
-    isMountedState(currentValue) ||
-    currentValue === ComponentStates.PENDING
-  ) {
+  if (!currentValue || isMountedState(currentValue) || currentValue === ComponentStates.PENDING) {
     return ComponentStates.PENDING;
   }
 

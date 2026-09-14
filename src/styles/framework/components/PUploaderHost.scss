@@ -46,8 +46,9 @@
     cursor: pointer;
 
     /* Slower transitions for touch feedback */
-    transition: border-color $duration-slow $ease-smooth,
-                background-color $duration-slow $ease-smooth;
+    transition:
+      border-color $duration-slow $ease-smooth,
+      background-color $duration-slow $ease-smooth;
 
     @include hover {
       border-color: var(--surface-touch-hover-border-color);

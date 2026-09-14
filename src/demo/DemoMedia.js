@@ -14,66 +14,90 @@ export class DemoMedia extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
-    
+
     console.log('DemoMedia component initializing for element:', element);
-    
+
     this.element = element;
     this.setupEventListeners(state);
     this.setupButtonHandlers(state);
     this.initializeMetricsDisplay();
     this.notifyPageLoaded();
-    
+
     if (this.eventBus) {
       this.eventBus.emit('demo-media:mounted', { element });
     }
-    
+
     return state;
   }
 
   setupEventListeners(state) {
     const { controller } = state;
-    
+
     // Gallery functionality
-    document.addEventListener('click', e => {
-      this.handleGalleryClick(e);
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'click',
+      e => {
+        this.handleGalleryClick(e);
+      },
+      { signal: controller.signal }
+    );
 
     // Listen for lazy image events
-    document.addEventListener('lazysrc:loaded', e => {
-      console.log('lazysrc:loaded event received', e.detail);
-      this.mediaMetrics.imagesLoaded++;
-      if (e.detail && e.detail.loadTime) {
-        this.mediaMetrics.totalLoadTime += e.detail.loadTime;
-      }
-      this.updateMetricsDisplay();
+    document.addEventListener(
+      'lazysrc:loaded',
+      e => {
+        console.log('lazysrc:loaded event received', e.detail);
+        this.mediaMetrics.imagesLoaded++;
+        if (e.detail && e.detail.loadTime) {
+          this.mediaMetrics.totalLoadTime += e.detail.loadTime;
+        }
+        this.updateMetricsDisplay();
 
-      if (window.Toast && window.Toast.show) {
-        window.Toast.show('Image loaded successfully', 'success');
-      }
-    }, { signal: controller.signal });
-    
-    document.addEventListener('lazysrc:loading-start', e => {
-      this.updateMetricsDisplay();
-    }, { signal: controller.signal });
+        if (window.Toast && window.Toast.show) {
+          window.Toast.show('Image loaded successfully', 'success');
+        }
+      },
+      { signal: controller.signal }
+    );
 
-    document.addEventListener('lazysrc:detached', e => {
-      this.mediaMetrics.componentsCleaned++;
-      this.updateMetricsDisplay();
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'lazysrc:loading-start',
+      e => {
+        this.updateMetricsDisplay();
+      },
+      { signal: controller.signal }
+    );
+
+    document.addEventListener(
+      'lazysrc:detached',
+      e => {
+        this.mediaMetrics.componentsCleaned++;
+        this.updateMetricsDisplay();
+      },
+      { signal: controller.signal }
+    );
 
     // Listen for carousel events
-    document.addEventListener('carousel:slide-change', e => {
-      console.log('Carousel slide changed:', e.detail);
-    }, { signal: controller.signal });
+    document.addEventListener(
+      'carousel:slide-change',
+      e => {
+        console.log('Carousel slide changed:', e.detail);
+      },
+      { signal: controller.signal }
+    );
   }
 
   setupButtonHandlers(state) {
     const { controller } = state;
-    
+
     // Handle download button
-    const downloadButtons = this.element.querySelectorAll('[data-btn-action="downloadCurrentImage"]');
+    const downloadButtons = this.element.querySelectorAll(
+      '[data-btn-action="downloadCurrentImage"]'
+    );
     downloadButtons.forEach(button => {
-      button.addEventListener('click', () => this.downloadCurrentImage(), { signal: controller.signal });
+      button.addEventListener('click', () => this.downloadCurrentImage(), {
+        signal: controller.signal,
+      });
     });
   }
 
@@ -118,7 +142,9 @@ export class DemoMedia extends BaseComponent {
 
     const activeComponentsEl = document.getElementById('active-components');
     if (activeComponentsEl) {
-      const activeCount = document.querySelectorAll('[data-lazysrc]:not([data-lazysrc-complete])').length;
+      const activeCount = document.querySelectorAll(
+        '[data-lazysrc]:not([data-lazysrc-complete])'
+      ).length;
       activeComponentsEl.textContent = activeCount;
     }
 

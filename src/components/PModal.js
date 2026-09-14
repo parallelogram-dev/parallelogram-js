@@ -92,7 +92,7 @@ export default class PModal extends HTMLElement {
     this.addEventListener('focusin', this._onFocus);
 
     // Handle slotted buttons with data-modal-close attribute
-    this.addEventListener('click', (event) => {
+    this.addEventListener('click', event => {
       if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
         this.close();
       }

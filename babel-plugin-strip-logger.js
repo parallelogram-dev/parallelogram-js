@@ -11,8 +11,7 @@
 const STRIP_METHODS = new Set(['debug', 'log', 'info', 'group', 'groupEnd']);
 
 function isLoggerCallToStrip(callee) {
-  const isMember =
-    callee.type === 'MemberExpression' || callee.type === 'OptionalMemberExpression';
+  const isMember = callee.type === 'MemberExpression' || callee.type === 'OptionalMemberExpression';
   if (!isMember) return false;
 
   const obj = callee.object;
@@ -31,10 +30,7 @@ export default function stripLoggerPlugin() {
     visitor: {
       ExpressionStatement(path) {
         const { expression } = path.node;
-        if (
-          expression.type === 'OptionalCallExpression' ||
-          expression.type === 'CallExpression'
-        ) {
+        if (expression.type === 'OptionalCallExpression' || expression.type === 'CallExpression') {
           if (isLoggerCallToStrip(expression.callee)) {
             path.remove();
           }

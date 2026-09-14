@@ -13,7 +13,7 @@ import {
   trapFocus,
   restoreFocus,
   createElement,
-  getTargetElement
+  getTargetElement,
 } from '../utils/dom-utils.js';
 
 /**
@@ -180,7 +180,7 @@ export class BaseComponent {
         this.logger?.warn(`Target element with data-view="${viewName}" not found`, {
           viewName,
           element,
-          attribute: viewAttr
+          attribute: viewAttr,
         });
       }
       return target;
@@ -294,9 +294,7 @@ export class BaseComponent {
     // Extract component name from class name and convert to kebab-case
     const className = this.constructor.name;
     // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
-    const kebab = className
-      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-      .toLowerCase();
+    const kebab = className.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
     this._selector = `data-${kebab}`;
     return this._selector;

@@ -24,27 +24,32 @@ stateDiagram-v2
 ## States
 
 ### `mounted` (ComponentStates.MOUNTED)
+
 - **Initial state** - Table has been initialized with existing data
 - **CSS**: Normal table rendering
 - **Transitions to**: `loading` when `loadData()` is called
 
 ### `loading` (ExtendedStates.LOADING)
+
 - **Async state** - Data is being fetched from server
 - **CSS**: Overlay with spinner, pointer-events disabled
 - **Duration**: Until fetch completes or fails
 - **Transitions to**: `loaded`, `error`, or `empty`
 
 ### `loaded` (ExtendedStates.LOADED)
+
 - **Success state** - Data has been successfully fetched and rendered
 - **CSS**: Normal table rendering
 - **Transitions to**: `loading` when data is reloaded
 
 ### `error` (ComponentStates.ERROR)
+
 - **Error state** - Data fetch failed
 - **CSS**: Red border, error message displayed
 - **Transitions to**: `loading` when retry is attempted
 
 ### `empty`
+
 - **Empty state** - Fetch succeeded but returned no data
 - **CSS**: "No data available" message in tbody
 - **Transitions to**: `loading` when retry is attempted
@@ -159,7 +164,7 @@ State-based selectors provide visual feedback:
     justify-content: center;
     z-index: 10;
     /* Animated spinner using SVG data URL */
-    background-image: url("data:image/svg+xml,...");
+    background-image: url('data:image/svg+xml,...');
     background-repeat: no-repeat;
     background-position: center;
   }
@@ -209,7 +214,9 @@ State-based selectors provide visual feedback:
 The DataTable component dispatches events at key lifecycle points:
 
 ### `datatable:mounted`
+
 Fired when table is initialized
+
 ```javascript
 {
   element: HTMLElement,
@@ -218,7 +225,9 @@ Fired when table is initialized
 ```
 
 ### `datatable:loaded`
+
 Fired when data is successfully loaded
+
 ```javascript
 {
   element: HTMLElement,
@@ -228,7 +237,9 @@ Fired when data is successfully loaded
 ```
 
 ### `datatable:error`
+
 Fired when data loading fails
+
 ```javascript
 {
   element: HTMLElement,
@@ -239,7 +250,9 @@ Fired when data loading fails
 ```
 
 ### `datatable:empty`
+
 Fired when loaded data is empty
+
 ```javascript
 {
   element: HTMLElement,
@@ -248,7 +261,9 @@ Fired when loaded data is empty
 ```
 
 ### `datatable:rendered`
+
 Fired after table is re-rendered
+
 ```javascript
 {
   element: HTMLElement,
@@ -263,11 +278,13 @@ Fired after table is re-rendered
 ### HTML
 
 ```html
-<table id="products-table"
-       data-datatable
-       data-datatable-sortable="true"
-       data-datatable-filterable="true"
-       data-datatable-paginate="10">
+<table
+  id="products-table"
+  data-datatable
+  data-datatable-sortable="true"
+  data-datatable-filterable="true"
+  data-datatable-paginate="10"
+>
   <thead>
     <tr>
       <th data-sort="name">Product Name</th>
@@ -293,27 +310,23 @@ const dataTable = new DataTable();
 dataTable.mount(table);
 
 /* Load data from API */
-dataTable.loadData(
-  table,
-  '/api/products',
-  (product) => {
-    /* Row mapper function - convert data to TR element */
-    const row = document.createElement('tr');
-    row.innerHTML = `
+dataTable.loadData(table, '/api/products', product => {
+  /* Row mapper function - convert data to TR element */
+  const row = document.createElement('tr');
+  row.innerHTML = `
       <td>${product.name}</td>
       <td>$${product.price}</td>
       <td>${product.stock}</td>
     `;
-    return row;
-  }
-);
+  return row;
+});
 
 /* Listen for events */
-table.addEventListener('datatable:loaded', (event) => {
+table.addEventListener('datatable:loaded', event => {
   console.log(`Loaded ${event.detail.rowCount} products`);
 });
 
-table.addEventListener('datatable:error', (event) => {
+table.addEventListener('datatable:error', event => {
   console.error('Failed to load data:', event.detail.message);
 
   /* Optionally show retry button */
@@ -337,8 +350,8 @@ const currentState = table.getAttribute('data-datatable');
 console.log('Current state:', currentState); // "loading", "loaded", "error", etc.
 
 /* Watch for state changes using MutationObserver */
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
+const observer = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
     if (mutation.attributeName === 'data-datatable') {
       const newState = table.getAttribute('data-datatable');
       console.log('State changed to:', newState);
@@ -348,23 +361,26 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(table, {
   attributes: true,
-  attributeFilter: ['data-datatable']
+  attributeFilter: ['data-datatable'],
 });
 ```
 
 ## Benefits
 
 ### User Experience
+
 - **Visual feedback** - Spinner shows loading progress
 - **Error recovery** - Clear error messages with retry capability
 - **Empty states** - Graceful handling of no-data scenarios
 
 ### Developer Experience
+
 - **Simple API** - `loadData()` handles all state transitions
 - **Event-driven** - React to state changes via events
 - **CSS-based UI** - No JavaScript DOM manipulation for visual states
 
 ### Performance
+
 - **Non-blocking** - Async operations don't freeze UI
 - **Efficient rendering** - Only updates necessary DOM elements
 - **State isolation** - Each table manages its own state independently
@@ -380,9 +396,8 @@ The error message is displayed via CSS `::before` pseudo-element reading the `da
 try {
   // ... fetch data
 } catch (error) {
-  const friendlyMessage = error.status === 404
-    ? 'Products not found'
-    : 'Unable to load products. Please try again.';
+  const friendlyMessage =
+    error.status === 404 ? 'Products not found' : 'Unable to load products. Please try again.';
 
   element.setAttribute('data-error-message', friendlyMessage);
 }
