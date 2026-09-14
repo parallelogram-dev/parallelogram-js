@@ -1,5 +1,4 @@
 // rollup.config.js
-import glob from 'glob';
 import path from 'path';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
@@ -10,14 +9,14 @@ import stripLogger from './babel-plugin-strip-logger.js';
 import fs from 'fs';
 
 // Get all component files
-const componentFiles = glob.sync('src/components/*.js');
+const componentFiles = fs.globSync('src/components/*.js');
 
 // Get all core files
-const coreFiles = glob.sync('src/core/*.js');
+const coreFiles = fs.globSync('src/core/*.js');
 
 // Get all adapter files (exclude shared _-prefixed helpers; they inline into adapters)
-const adapterFiles = glob
-  .sync('src/adapters/*.js')
+const adapterFiles = fs
+  .globSync('src/adapters/*.js')
   .filter(file => !path.basename(file).startsWith('_'));
 
 // Helper to create plugin array for components
