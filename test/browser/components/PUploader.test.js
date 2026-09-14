@@ -550,3 +550,103 @@ describe('p-uploader layout', () => {
     });
   });
 });
+
+describe('p-uploader ordering and replacing without dragging', () => {
+  beforeEach(() => {
+    RecordingUpload.instances = [];
+    RecordingUpload.status = 200;
+    RecordingUpload.body = '{"id":"server-2"}';
+    RecordingUpload.hold = false;
+  });
+
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const renderFiles = async (attributes, ids) => {
+    const uploader = element('p-uploader', attributes);
+    ids.forEach(id =>
+      uploader.append(element('p-uploader-file', { 'file-id': id, filename: `${id}.jpg` }))
+    );
+    document.body.append(uploader);
+    await nextTask();
+    uploader.setXHR(RecordingUpload);
+    return uploader;
+  };
+
+  const control = (uploader, id, action) =>
+    uploader
+      .querySelector(`p-uploader-file[file-id="${id}"]`)
+      ?.shadowRoot.querySelector(`button[data-action="${action}"]`);
+
+  it('moves a file down with its Move down button, saves the order and keeps focus on it', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderFiles({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+
+    const moveDown = control(uploader, 'first', 'move-down');
+    moveDown?.focus();
+    moveDown?.click();
+
+    await vi.waitFor(() => expect(save).toHaveBeenCalled());
+    const moved = uploader.querySelector('p-uploader-file[file-id="first"]');
+    expect({
+      order: fileIds(uploader),
+      saved: JSON.parse(save.mock.calls[0][1].body),
+      focused: moved.shadowRoot.activeElement?.dataset.action,
+    }).toEqual({
+      order: ['second', 'first', 'third'],
+      saved: { sequence: ['second', 'first', 'third'] },
+      focused: 'move-down',
+    });
+  });
+
+  it('disables moving past either end of the list', async () => {
+    const uploader = await renderFiles({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+
+    expect({
+      firstUp: control(uploader, 'first', 'move-up')?.disabled,
+      firstDown: control(uploader, 'first', 'move-down')?.disabled,
+      lastDown: control(uploader, 'third', 'move-down')?.disabled,
+    }).toEqual({ firstUp: true, firstDown: false, lastDown: true });
+  });
+
+  it('offers no move buttons without a sequence-action', async () => {
+    const uploader = await renderFiles({}, ['first', 'second']);
+
+    expect(control(uploader, 'first', 'move-down')).toBeFalsy();
+  });
+
+  it('replaces the file in a single-file uploader', async () => {
+    const remove = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', remove);
+    const uploader = await renderFiles(
+      { 'max-files': '1', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['old']
+    );
+    const input = uploader.shadowRoot.querySelector('input[type="file"]');
+    const pick = vi.spyOn(input, 'click').mockImplementation(() => {});
+
+    control(uploader, 'old', 'replace')?.click();
+    addFiles(uploader, [new File(['x'], 'new.txt', { type: 'text/plain' })]);
+
+    await vi.waitFor(() =>
+      expect(
+        [...uploader.querySelectorAll('p-uploader-file')].map(file => file.getAttribute('filename'))
+      ).toEqual(['new.txt'])
+    );
+    expect({
+      picked: pick.mock.calls.length,
+      deleted: remove.mock.calls.map(([url, init]) => [url, JSON.parse(init.body)]),
+      full: uploader.hasAttribute('full'),
+    }).toEqual({ picked: 1, deleted: [['/api/delete', { id: 'old' }]], full: true });
+  });
+});
