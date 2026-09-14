@@ -185,7 +185,7 @@ Self-contained custom HTML elements that work standalone:
 npm install
 npm run build        # Build framework
 npm run build-css    # Build CSS only
-npm run demo         # Run demo at localhost:3000
+npm run site         # Documentation site at localhost:3000
 ```
 
 ## License
