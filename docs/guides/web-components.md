@@ -159,8 +159,8 @@ Custom modal dialog with slots for title, content, and actions.
 
 **Events:**
 
-- `modal:open` - Fired when modal opens
-- `modal:close` - Fired when modal closes
+- `p-modal:open` - Fired when modal opens
+- `p-modal:close` - Fired when modal closes
 
 ---
 
@@ -334,7 +334,7 @@ Drag-and-drop file uploader with preview and progress.
 - `files:removed` - Fired when file is removed
 - `upload:progress` - Fired during upload progress
 - `upload:complete` - Fired when upload completes
-- `upload:error` - Fired on upload error
+- `p-uploader:upload-error` - Fired on upload error
 
 ---
 

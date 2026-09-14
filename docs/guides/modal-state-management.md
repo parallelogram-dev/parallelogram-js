@@ -122,8 +122,8 @@ p-modal[data-modal='closing'] {
 
 The modal dispatches events at key lifecycle points:
 
-- `modal:open` - Fired when modal opens (during `_onOpen()`)
-- `modal:close` - Fired when modal closes (during `_onClose()`)
+- `p-modal:open` - Fired when modal opens (during `_onOpen()`)
+- `p-modal:close` - Fired when modal closes (during `_onClose()`)
 
 State changes do not trigger separate events; use the existing lifecycle events instead.
 
@@ -207,7 +207,7 @@ The `close()` method reads this value to ensure the `closing` state duration mat
 1. **Don't manipulate state directly** - Use `open()` and `close()` methods
 2. **Don't skip states** - Let the state machine handle transitions
 3. **Use CSS variables** - Configure animation timing via CSS, not JavaScript
-4. **Listen to events** - Use `modal:open` and `modal:close` for lifecycle hooks
+4. **Listen to events** - Use `p-modal:open` and `p-modal:close` for lifecycle hooks
 5. **Check state when needed** - Read `data-modal` attribute for current state
 
 ## Migration Notes

@@ -111,11 +111,11 @@ export default class Modal extends BaseComponent {
     });
 
     // Listen for modal events
-    modalElement.addEventListener('modal:open', this._handleModalOpen.bind(this, element), {
+    modalElement.addEventListener('p-modal:open', this._handleModalOpen.bind(this, element), {
       signal: state.controller.signal,
     });
 
-    modalElement.addEventListener('modal:close', this._handleModalClose.bind(this, element), {
+    modalElement.addEventListener('p-modal:close', this._handleModalClose.bind(this, element), {
       signal: state.controller.signal,
     });
 

@@ -341,7 +341,7 @@ export default class PDatetime extends HTMLElement {
 
   _bindEvents() {
     const editStart = () => {
-      if (this.isRange) {
+      if (this.range) {
         this._currentField = 'from';
         this._rangeState = 'selecting-from';
       }
@@ -403,7 +403,7 @@ export default class PDatetime extends HTMLElement {
         }
 
         this.value = '';
-        if (this.isRange) {
+        if (this.range) {
           this.rangeToValue = '';
           this._currentField = 'from';
           this._rangeState = 'selecting-from';
@@ -494,14 +494,14 @@ export default class PDatetime extends HTMLElement {
   _selectDate(dt) {
     this._activeDate = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
 
-    if (!this.isRange && this.mode === 'date') {
+    if (!this.range && this.mode === 'date') {
       this.value = this._dateString(dt);
       this._emitChange();
       this.close({ returnFocus: true });
       return;
     }
 
-    if (this.isRange) {
+    if (this.range) {
       const picked = this._pickedValue(dt);
       const pickedDate = this._parseValue(picked);
       if (this._currentField === 'to' && this.value && pickedDate >= this._parseValue(this.value)) {
@@ -578,11 +578,20 @@ export default class PDatetime extends HTMLElement {
   set quickDates(v) {
     this.setAttribute('quick-dates', v);
   }
-  get isRange() {
+  get range() {
     return this.hasAttribute('range');
   }
+  set range(v) {
+    this.toggleAttribute('range', Boolean(v));
+  }
+  /**
+   * @deprecated 0.5.0 Use range instead. Removed in 0.6.0.
+   */
+  get isRange() {
+    return this.range;
+  }
   set isRange(v) {
-    v ? this.setAttribute('range', '') : this.removeAttribute('range');
+    this.range = v;
   }
   get rangeTo() {
     return this.getAttribute('range-to');
@@ -783,7 +792,7 @@ export default class PDatetime extends HTMLElement {
    */
   _alignViewToValue() {
     const editing =
-      this.isRange && this._currentField === 'to' ? this.rangeToValue || this.value : this.value;
+      this.range && this._currentField === 'to' ? this.rangeToValue || this.value : this.value;
     const date = this._parseBoundary(editing);
     if (!date) {
       this._alignViewToBoundary();
@@ -795,7 +804,7 @@ export default class PDatetime extends HTMLElement {
   }
 
   _eventValues() {
-    return this.isRange ? { value: this.value, toValue: this.rangeToValue } : { value: this.value };
+    return this.range ? { value: this.value, toValue: this.rangeToValue } : { value: this.value };
   }
 
   /**
@@ -851,7 +860,7 @@ export default class PDatetime extends HTMLElement {
 
     const opened = this._openedWith ?? {};
     const changed =
-      this.value !== opened.value || (this.isRange && this.rangeToValue !== opened.toValue);
+      this.value !== opened.value || (this.range && this.rangeToValue !== opened.toValue);
     this.dispatchEvent(
       new CustomEvent('p-datetime:close', {
         bubbles: true,
@@ -933,12 +942,9 @@ export default class PDatetime extends HTMLElement {
   _renderMode() {
     const noun = { date: 'date', datetime: 'date and time', time: 'time' }[this.mode] ?? 'date';
     this._btn.setAttribute('aria-label', `Choose ${noun}`);
-    this._panel.setAttribute(
-      'aria-label',
-      this.isRange ? `Choose ${noun} range` : `Choose ${noun}`
-    );
+    this._panel.setAttribute('aria-label', this.range ? `Choose ${noun} range` : `Choose ${noun}`);
 
-    if (this.isRange) {
+    if (this.range) {
       this._input.hidden = false; // Show first input (from date)
       this._toInput.hidden = false; // Show second input (to date)
       this._rangeInfo.hidden = false;
@@ -1083,7 +1089,7 @@ export default class PDatetime extends HTMLElement {
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
     const from = this._parseValue(this.value);
-    const to = this.isRange ? this._parseValue(this.rangeToValue) : null;
+    const to = this.range ? this._parseValue(this.rangeToValue) : null;
     const hadFocus = this._grid.contains(this.shadowRoot.activeElement);
     const active = this._resolveActiveDate(year, month);
 
@@ -1148,7 +1154,7 @@ export default class PDatetime extends HTMLElement {
 
       const isFrom = Boolean(from) && this._dateString(from) === date;
       const isTo = Boolean(to) && this._dateString(to) === date;
-      if (!this.isRange) {
+      if (!this.range) {
         button.classList.toggle('selected', isFrom);
       } else {
         button.classList.toggle('range-start', isFrom);
@@ -1172,7 +1178,7 @@ export default class PDatetime extends HTMLElement {
   _resolveActiveDate(year, month) {
     const inView = date => date && date.getFullYear() === year && date.getMonth() === month;
     const editing = this._parseValue(
-      this.isRange && this._currentField === 'to' ? this.rangeToValue : this.value
+      this.range && this._currentField === 'to' ? this.rangeToValue : this.value
     );
     const day = [this._activeDate, editing, new Date()].find(inView) ?? new Date(year, month, 1);
     this._activeDate = new Date(day.getFullYear(), day.getMonth(), day.getDate());
@@ -1345,7 +1351,7 @@ export default class PDatetime extends HTMLElement {
 
     /* Set current values based on the focused field in range mode */
     let valueToUse;
-    if (this.isRange && this._currentField === 'to') {
+    if (this.range && this._currentField === 'to') {
       valueToUse = this.rangeToValue;
     } else {
       valueToUse = this.value;
@@ -1380,7 +1386,7 @@ export default class PDatetime extends HTMLElement {
       field.setAttribute('aria-label', `${label}: ${text || 'not set'}`);
     };
 
-    if (this.isRange) {
+    if (this.range) {
       show(this._input, this.value, placeholders.rangeFrom, this.fromLabel);
       show(this._toInput, this.rangeToValue, placeholders.rangeTo, this.toLabel);
     } else {
@@ -1463,7 +1469,7 @@ export default class PDatetime extends HTMLElement {
 
     /* Determine which field to update based on range mode and current field */
     let d;
-    if (this.isRange && this._currentField === 'to') {
+    if (this.range && this._currentField === 'to') {
       d = this._parseValue(this.rangeToValue) ?? new Date();
     } else {
       d = this._parseValue(this.value) ?? new Date();
@@ -1481,7 +1487,7 @@ export default class PDatetime extends HTMLElement {
     d.setHours(hours, minutes, 0, 0);
 
     /* Update the appropriate field based on range mode */
-    if (this.isRange && this._currentField === 'to') {
+    if (this.range && this._currentField === 'to') {
       this.rangeToValue = d.toISOString();
     } else {
       this.value = d.toISOString();
@@ -1605,7 +1611,7 @@ export default class PDatetime extends HTMLElement {
     if (!this._internals) return;
 
     const state = JSON.stringify({ value: this.value, toValue: this.rangeToValue });
-    if (this.isRange && this.rangeTo) {
+    if (this.range && this.rangeTo) {
       const data = new FormData();
       if (this.name) data.append(this.name, this._formValueFor(this.value));
       data.append(this.rangeTo, this._formValueFor(this.rangeToValue));
@@ -1624,19 +1630,17 @@ export default class PDatetime extends HTMLElement {
 
   _validityProblem() {
     const noun = this.mode === 'time' ? 'time' : 'date';
-    if (this.required && (!this.value || (this.isRange && !this.rangeToValue))) {
+    if (this.required && (!this.value || (this.range && !this.rangeToValue))) {
       return {
         flags: { valueMissing: true },
-        message: this.isRange
-          ? `Please choose a start and end ${noun}.`
-          : `Please choose a ${noun}.`,
+        message: this.range ? `Please choose a start and end ${noun}.` : `Please choose a ${noun}.`,
       };
     }
     if (this.mode === 'time') return null;
 
     const min = this._effectiveMin();
     const max = this._effectiveMax();
-    const dates = [this.value, this.isRange ? this.rangeToValue : '']
+    const dates = [this.value, this.range ? this.rangeToValue : '']
       .map(value => this._parseValue(value))
       .filter(Boolean);
     const describe = date => dateFormat({ dateStyle: 'medium' }).format(date);
@@ -1730,7 +1734,7 @@ export default class PDatetime extends HTMLElement {
     this._toInput.classList.remove('is-focused');
 
     // Add focused class to the current field
-    if (this.isRange) {
+    if (this.range) {
       if (this._currentField === 'to') {
         this._toInput.classList.add('is-focused');
       } else {
@@ -1744,7 +1748,7 @@ export default class PDatetime extends HTMLElement {
   _emitChange() {
     this._syncFormState();
 
-    const eventDetail = this.isRange
+    const eventDetail = this.range
       ? {
           value: this.value,
           toValue: this.rangeToValue,

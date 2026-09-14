@@ -2,6 +2,7 @@ import { generateId } from '../utils/dom-utils.js';
 import hostStyles from '../styles/framework/components/PUploaderHost.scss';
 import fileStyles from '../styles/framework/components/PUploader.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -177,13 +178,18 @@ const getFileTemplate = () => {
  *   an `X-CSRF-Token` header is sent from `<meta name="csrf-token">` when the page has one.
  *
  * @events
- * - upload:success, upload:error: a file finished uploading, with `{ fileId, response }` or `{ fileId, error }`
- * - sequence:update: a new order was saved, with `{ sequence }`
- * - file:update, file:delete: dispatched by `p-uploader-file` after a save or delete
+ * Events bubble out of shadow roots.
+ * - p-uploader:upload-success, p-uploader:upload-error: a file finished uploading, with
+ *   `{ fileId, response }` or `{ fileId, error }`
+ * - p-uploader:sequence-update: a new order was saved, with `{ sequence }`
+ * - p-uploader-file:update, p-uploader-file:delete: dispatched by `p-uploader-file` after a save,
+ *   with `{ fileId, field, value }`, or a delete, with `{ fileId }`
  * - p-uploader:limit: files went beyond `max-files`; cancelable, with `{ maxFiles, accepted, rejected }`.
  *   Cancel it to show your own message.
  * - p-uploader:reject: a file was refused; cancelable, with `{ file, reason }` where reason is
  *   `"type"` or `"size"`
+ * - upload:success, upload:error, sequence:update, file:update, file:delete: the same events under
+ *   their names before 0.5.0; deprecated, and no longer dispatched from 0.6.0
  *
  * @csspart files - the list of files
  * @csspart selector - the drop zone
@@ -618,7 +624,7 @@ export default class PUploader extends HTMLElement {
     this.addEventListener('drop', e => this._handleDrop(e), { signal });
 
     this.addEventListener(
-      'file:delete',
+      'p-uploader-file:delete',
       e => {
         const fileId = e.detail.fileId;
         if (fileId && this.files.has(fileId)) {
@@ -844,11 +850,11 @@ export default class PUploader extends HTMLElement {
     fileData.replaces?._handleConfirmDelete();
     this._updateDraggableState();
 
-    this.dispatchEvent(
-      new CustomEvent('upload:success', {
-        detail: { fileId: fileData.id, response },
-        bubbles: true,
-      })
+    dispatchComponentEvent(
+      this,
+      'p-uploader:upload-success',
+      { fileId: fileData.id, response },
+      { legacy: 'upload:success' }
     );
   }
 
@@ -859,11 +865,11 @@ export default class PUploader extends HTMLElement {
     fileData.element.setAttribute('state', 'error');
     fileData.element.setAttribute('error', error);
 
-    this.dispatchEvent(
-      new CustomEvent('upload:error', {
-        detail: { fileId: fileData.id, error },
-        bubbles: true,
-      })
+    dispatchComponentEvent(
+      this,
+      'p-uploader:upload-error',
+      { fileId: fileData.id, error },
+      { legacy: 'upload:error' }
     );
   }
 
@@ -991,11 +997,11 @@ export default class PUploader extends HTMLElement {
         this._sequenceFailed = false;
         this._showMessage('');
       }
-      this.dispatchEvent(
-        new CustomEvent('sequence:update', {
-          detail: { sequence: fileIds },
-          bubbles: true,
-        })
+      dispatchComponentEvent(
+        this,
+        'p-uploader:sequence-update',
+        { sequence: fileIds },
+        { legacy: 'sequence:update' }
       );
     } catch (error) {
       if (error.name === 'AbortError') return;
@@ -1585,12 +1591,11 @@ export class PUploaderFile extends HTMLElement {
     dataElement.textContent = value;
     this._updateFieldDisplay(key, value);
 
-    this.dispatchEvent(
-      new CustomEvent('file:update', {
-        detail: { fileId, field: key, value },
-        bubbles: true,
-        composed: true,
-      })
+    dispatchComponentEvent(
+      this,
+      'p-uploader-file:update',
+      { fileId, field: key, value },
+      { legacy: 'file:update' }
     );
   }
 
@@ -1620,12 +1625,11 @@ export class PUploaderFile extends HTMLElement {
         /* Delete successful, remove the file */
         this._removeFile();
 
-        this.dispatchEvent(
-          new CustomEvent('file:delete', {
-            detail: { fileId: fileId },
-            bubbles: true,
-            composed: true,
-          })
+        dispatchComponentEvent(
+          this,
+          'p-uploader-file:delete',
+          { fileId },
+          { legacy: 'file:delete' }
         );
       } else {
         /* Delete failed, show error */

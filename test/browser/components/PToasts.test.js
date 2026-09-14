@@ -81,9 +81,9 @@ describe('p-toasts', () => {
     expect(getComputedStyle(lastToast(host)).backgroundColor).not.toBe(TRANSPARENT);
   });
 
-  it('fires toast:close when the dismiss button is pressed', async () => {
+  it('fires p-toasts:close when the dismiss button is pressed', async () => {
     const host = mount();
-    const closed = new Promise(resolve => host.addEventListener('toast:close', resolve));
+    const closed = new Promise(resolve => host.addEventListener('p-toasts:close', resolve));
 
     host.toast({ message: 'Saved', timeout: 0 });
     host.shadowRoot.querySelector('.close').click();

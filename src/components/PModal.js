@@ -3,6 +3,7 @@ import { ExtendedStates } from '../core/ComponentStates.js';
 import { getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
 
 /** Modals that are open, most recently opened last, shared by every p-modal on the page */
 const openModals = [];
@@ -53,8 +54,11 @@ const deepActiveElement = () => {
  * - actions: footer buttons; any element with `data-modal-close` closes the modal
  *
  * @events
- * - modal:open: dispatched when the modal opens, with `{ modal }`
- * - modal:close: dispatched once the modal has closed, with `{ modal }`
+ * Events bubble out of shadow roots.
+ * - p-modal:open: dispatched when the modal opens, with `{ modal }`
+ * - p-modal:close: dispatched once the modal has closed, with `{ modal }`
+ * - modal:open, modal:close: the same events under their names before 0.5.0; deprecated, and no
+ *   longer dispatched from 0.6.0
  *
  * @csspart panel - the `<dialog>`; style the dimmed page with `::part(panel)::backdrop`
  * @csspart header - the title row
@@ -105,8 +109,6 @@ export default class PModal extends HTMLElement {
   }
 
   connectedCallback() {
-    this._upgradeProperty('open');
-
     /* Custom element constructors may not add attributes, so the initial state is set here */
     if (!this.hasAttribute('data-modal-state')) {
       this._setModalState(this.getAttribute('data-modal') || ExtendedStates.CLOSED);
@@ -160,6 +162,7 @@ export default class PModal extends HTMLElement {
     this._titleSlot.addEventListener('slotchange', () => this._updateName(), { signal });
     this._updateName();
 
+    this._upgradeOpenProperty();
     if (this.hasAttribute('open')) {
       this._onOpen();
     }
@@ -279,12 +282,7 @@ export default class PModal extends HTMLElement {
     this._hold();
     this._focusInitial();
 
-    this.dispatchEvent(
-      new CustomEvent('modal:open', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
+    dispatchComponentEvent(this, 'p-modal:open', { modal: this }, { legacy: 'modal:open' });
 
     whenAnimationsFinish(this._dialog).then(() => {
       if (this.hasAttribute('open') && !this._closing) {
@@ -311,12 +309,7 @@ export default class PModal extends HTMLElement {
       topModal._focusInitial();
     }
 
-    this.dispatchEvent(
-      new CustomEvent('modal:close', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
+    dispatchComponentEvent(this, 'p-modal:close', { modal: this }, { legacy: 'modal:close' });
   }
 
   /**
@@ -417,15 +410,16 @@ export default class PModal extends HTMLElement {
   }
 
   /**
-   * Upgrade property for proper web component behavior
-   * @private
-   * @param {string} prop
+   * Open the modal when `open` was set as a property before the element was defined, without
+   * letting that property hide the open() method
    */
-  _upgradeProperty(prop) {
-    if (Object.hasOwn(this, prop)) {
-      const value = this[prop];
-      delete this[prop];
-      this[prop] = value;
+  _upgradeOpenProperty() {
+    if (!Object.hasOwn(this, 'open')) return;
+
+    const requested = this.open;
+    delete this.open;
+    if (requested && typeof requested !== 'function') {
+      this.setAttribute('open', '');
     }
   }
 }
