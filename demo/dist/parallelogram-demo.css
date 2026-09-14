@@ -81,9 +81,6 @@
 /* Dark Mode Overrides */
 /* Components should wrap these in @media (prefers-color-scheme: dark) {} */
 /* Forward all mixins */
-/* Design System - Main Entry Point */
-/* Import this file to access all design tokens, mixins, and component patterns */
-/* Forward all tokens so they're available when using @use */
 /* Design System Mixins */
 /* Utility mixins for common patterns */
 /* ============================================================================
@@ -111,10 +108,6 @@
    Elevation Mixin
    ============================================================================ */
 /* Forward component patterns */
-/* Design System - Main Entry Point */
-/* Import this file to access all design tokens, mixins, and component patterns */
-/* Forward all tokens so they're available when using @use */
-/* Forward all mixins */
 /* Component Tokens & Patterns */
 /* Reusable component styling patterns using CSS custom properties */
 /* ============================================================================
@@ -322,12 +315,6 @@
   }
 }
 /* Forward legacy variables for backwards compatibility */
-/* Design System - Main Entry Point */
-/* Import this file to access all design tokens, mixins, and component patterns */
-/* Forward all tokens so they're available when using @use */
-/* Design System - Main Entry Point */
-/* Import this file to access all design tokens, mixins, and component patterns */
-/* Forward all tokens so they're available when using @use */
 /* Design System Variables - LEGACY */
 /* ============================================================================
    DEPRECATION NOTICE
@@ -430,9 +417,9 @@
      Typography
      ========================================== */
   --font-family-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono:
-    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -1006,8 +993,8 @@ hr {
   --demo-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --demo-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   /*  Typography */
-  --demo-font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --demo-font-family-mono: "SFMono-Regular", Consolas, monospace;
+  --demo-font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --demo-font-family-mono: 'SFMono-Regular', Consolas, monospace;
   --demo-font-size-xs: 0.75rem;
   --demo-font-size-sm: 0.875rem;
   --demo-font-size-base: 1rem;
@@ -3322,15 +3309,6 @@ th.sortable:hover {
 
 /*  Form framework (base .btn styles - must load before button variants) */
 /**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
-/**
- * Demo Styles Entry Point
- * Imports all demo-specific SCSS files and component styles
- */
-/*  Design system (must be first to provide tokens) */
-/**
  * Standardized Form Framework
  * Provides consistent structure and styling for all form elements
  *
@@ -3824,10 +3802,6 @@ th.sortable:hover {
   }
 }
 /*  New BEM-compliant component styles */
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Button Component (redirects to new .btn system) */
 /*  Note: .button class is deprecated, use .btn instead */
 /*  This file provides backward compatibility and additional demo-specific styles */
@@ -3997,10 +3971,6 @@ th.sortable:hover {
   padding: 1.5rem;
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /* Copy to Clipboard Component Styles */
 .copy-feedback--success {
   background-color: var(--color-success) !important;
@@ -4052,10 +4022,6 @@ th.sortable:hover {
   flex: 1;
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Form Component */
 .form--enhanced {
   background: var(--color-surface);
@@ -4269,10 +4235,6 @@ form[data-form-validator] .valid:focus {
   box-shadow: var(--focus-ring-success);
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /**
  * Modal Component Styles
  * BEM methodology: .modal__element--modifier
@@ -4689,10 +4651,6 @@ form[data-form-validator] .valid:focus {
 
 /*  CSS class-based animations - now use consolidated animation system */
 /*  These classes are deprecated - use .animate--fade-slide-up and .animate--bounce-in instead */
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Stagger Component */
 .stagger {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4738,10 +4696,6 @@ form[data-form-validator] .valid:focus {
   height: 80px;
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Metrics Component */
 .metrics__grid {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4779,10 +4733,6 @@ form[data-form-validator] .valid:focus {
   margin-top: 1rem;
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Features Component */
 .features__grid {
   gap: 2rem;
@@ -4806,20 +4756,12 @@ form[data-form-validator] .valid:focus {
   margin-top: 2rem;
   padding: 1.5rem;
 }
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Table Component (BEM) */
 .table--demo {
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0;
 }
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Gallery Component (BEM) */
 .gallery__grid {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -4873,10 +4815,6 @@ form[data-form-validator] .valid:focus {
   border-radius: 8px;
 }
 
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Copy Demo Component (BEM) */
 .copy-demo__content {
   flex: 1;
@@ -4897,10 +4835,6 @@ form[data-form-validator] .valid:focus {
   padding: 0.75rem;
   border-radius: 6px;
 }
-/**
- * Demo Performance Page Styles
- * Comprehensive dashboard styles for performance monitoring
- */
 /*  Video Component Styles */
 .video__container {
   position: relative;
