@@ -18,7 +18,7 @@ const entries = (folder, keep = () => true) =>
  */
 const input = Object.fromEntries([
   ['index', 'src/index.js'],
-  ...entries('components'),
+  ...entries('components', file => !file.endsWith('.contract.js')),
   ...entries('adapters', file => !file.startsWith('_')),
   ...entries('core'),
   ...entries('managers', file => file !== 'index.js'),

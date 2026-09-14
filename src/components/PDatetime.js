@@ -97,15 +97,13 @@ const addMonths = (date, months) => {
  * (with Shift, year), Enter or Space picks the focused day, and Escape closes the dialog and returns
  * focus to the control that opened it.
  *
- * @styling
- * CSS custom properties for theming:
- * - --p-surface: Background color (default: #fff)
- * - --p-border: Border color (default: #e5e7eb)
- * - --p-radius: Border radius (default: 12px)
- * - --p-shadow: Box shadow (default: 0 10px 30px rgba(0,0,0,.12))
- * - --p-accent: Accent color (default: #3b82f6)
- * - --p-primary: Primary color (default: #111)
- * - --p-muted: Muted background (default: #f8f9fb)
+ * @cssprop --datetime-accent - selected days, focus rings and primary buttons
+ * @cssprop --datetime-bg, --datetime-text, --datetime-muted - panel background, text and muted text
+ * @cssprop --datetime-border, --datetime-radius, --datetime-shadow - field and panel surface
+ * @cssprop --datetime-hover - background of hovered days and buttons
+ * @cssprop --datetime-cell-size - size of each day in the grid
+ * @cssprop --datetime-panel-min-width - narrowest the panel gets
+ * @cssprop --datetime-animation-duration - length of the panel animation
  *
  * @example
  * // JavaScript usage

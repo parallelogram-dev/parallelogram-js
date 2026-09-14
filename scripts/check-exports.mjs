@@ -29,7 +29,7 @@ const modules = (folder, keep = () => true) =>
     .map(file => `${folder}/${path.basename(file, '.js')}`);
 
 const jsSubpaths = [
-  ...modules('components'),
+  ...modules('components', file => !file.endsWith('.contract.js')),
   ...modules('adapters', file => !file.startsWith('_')),
   ...modules('core'),
   ...modules('managers', file => file !== 'index.js'),
