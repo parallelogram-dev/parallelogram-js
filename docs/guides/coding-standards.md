@@ -603,14 +603,10 @@ src/
 │   ├── EventManager.js       // Manager classes
 │   └── RouterManager.js
 └── styles/
-    ├── framework/
-    │   └── components/
-    │       ├── modal.scss    // Component styles (lowercase)
-    │       └── datatable.scss
-    └── demo/
+    └── framework/
         └── components/
-            ├── button.scss   // Demo-specific styles
-            └── form.scss
+            ├── modal.scss    // Component styles (lowercase)
+            └── datatable.scss
 ```
 
 ### Method Naming

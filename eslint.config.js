@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/', 'demo/dist/', 'site/dist/', 'coverage/', 'node_modules/'],
+    ignores: ['dist/', 'site/dist/', 'coverage/', 'node_modules/'],
   },
   js.configs.recommended,
   {
@@ -18,12 +18,6 @@ export default [
     rules: {
       ...compat.configs['flat/recommended'].rules,
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    },
-  },
-  {
-    files: ['src/demo/**/*.js'],
-    rules: {
-      'compat/compat': 'off',
     },
   },
   {

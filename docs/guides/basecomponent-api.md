@@ -568,7 +568,7 @@ Build and verify:
 
 ```bash
 npm run build
-npm run demo
+npm run site
 ```
 
 ---
