@@ -65,6 +65,10 @@ export class RouterManager {
     this._navigation = null;
     this._swap = Promise.resolve();
     this._failedElement = null;
+    this._entry = null;
+    this._entryCount = 0;
+    this._scrollPositions = new Map();
+    this._previousScrollRestoration = history.scrollRestoration;
 
     /* Aborted in destroy() to remove every window and document listener */
     this._listeners = new AbortController();
@@ -77,6 +81,12 @@ export class RouterManager {
 
     const { signal } = this._listeners;
 
+    /* The router restores scroll itself, after the new content is in place */
+    this._entry = this._adoptEntry(history.state);
+    history.scrollRestoration = 'manual';
+    this._restoreScrollAfterLoad(history.state?.scroll);
+
+    window.addEventListener('scroll', () => this._rememberScroll(), { passive: true, signal });
     window.addEventListener('popstate', event => this._onPopState(event), { signal });
     document.addEventListener('click', event => this._onClick(event), { signal });
     window.addEventListener(
@@ -91,6 +101,7 @@ export class RouterManager {
     window.addEventListener(
       'pagehide',
       () => {
+        this._persistScroll();
         this.eventBus.emit('router:bfcache-store', { url: this.currentUrl });
       },
       { signal }
@@ -214,13 +225,23 @@ export class RouterManager {
   /**
    * Load the page for the history entry the browser moved to
    *
-   * Moves between entries of the same document (a hash change) are left to the browser.
+   * Moves between entries of the same document (a hash change) only restore their scroll position.
+   * Otherwise the fragment changed by the later of the two entries is replaced: going back undoes
+   * the navigation that created the entry being left.
    */
   _onPopState(event) {
+    const departing = this._entry;
+    const isTraversal = Boolean(event.state?.key);
+    const arriving = this._adoptEntry(event.state, departing.position + 1);
+    const savedScroll = this._scrollPositions.get(arriving.key) ?? event.state?.scroll ?? null;
     const url = new URL(location.href);
+    this._entry = arriving;
 
     if (this._isSameDocument(url, this.currentUrl)) {
       this.currentUrl = url;
+      if (isTraversal && savedScroll) {
+        this._scrollTo(savedScroll);
+      }
       return;
     }
 
@@ -230,7 +251,83 @@ export class RouterManager {
       trigger: 'popstate',
     });
 
-    this.navigate(url, { trigger: 'popstate', force: true }).catch(() => {});
+    const changed = arriving.position < departing.position ? departing : arriving;
+
+    this.navigate(url, {
+      trigger: 'popstate',
+      force: true,
+      viewTarget: changed.viewTarget,
+      scroll: savedScroll,
+    }).catch(() => {});
+  }
+
+  /**
+   * The router's key, position and view target for a history entry
+   *
+   * Entries the router did not create (the first page, native hash navigations) are given a key
+   * and position so their scroll position can be remembered.
+   */
+  _adoptEntry(state, position = 0) {
+    if (state?.key) {
+      return { key: state.key, position: state.position ?? position, viewTarget: state.viewTarget };
+    }
+
+    const entry = { key: this._createKey(), position };
+    const base = state && typeof state === 'object' ? state : {};
+    history.replaceState({ ...base, key: entry.key, position }, '');
+    return entry;
+  }
+
+  _createKey() {
+    this._entryCount += 1;
+    return `${Date.now().toString(36)}-${this._entryCount}`;
+  }
+
+  _entryState(trigger) {
+    const { key, position, viewTarget } = this._entry;
+    return { timestamp: Date.now(), trigger, key, position, viewTarget };
+  }
+
+  _rememberScroll() {
+    const scroll = { x: window.scrollX, y: window.scrollY };
+    this._scrollPositions.set(this._entry.key, scroll);
+    return scroll;
+  }
+
+  /**
+   * Save the scroll position into the current history entry, so it survives a reload
+   */
+  _persistScroll() {
+    const scroll = this._rememberScroll();
+    if (history.state?.key === this._entry.key) {
+      history.replaceState({ ...history.state, scroll }, '');
+    }
+  }
+
+  /**
+   * Restore a scroll position saved before a reload, unless the user has already scrolled
+   */
+  _restoreScrollAfterLoad(scroll) {
+    if (!scroll) {
+      return;
+    }
+
+    const restore = () =>
+      requestAnimationFrame(() => {
+        if (window.scrollX === 0 && window.scrollY === 0) {
+          this._scrollTo(scroll);
+        }
+      });
+
+    if (document.readyState === 'complete') {
+      restore();
+    } else {
+      window.addEventListener('load', restore, { once: true, signal: this._listeners.signal });
+    }
+  }
+
+  _scrollTo({ x, y }) {
+    window.scrollTo({ left: x, top: y, behavior: 'instant' });
   }
 
   /**
@@ -332,6 +429,8 @@ export class RouterManager {
    * @param {boolean} [options.force=false] Navigate even when the URL is the current one
    * @param {boolean} [options.immutableUrl=false] Leave the address bar and history untouched
    * @param {string} [options.viewTarget] Fragment to replace
+   * @param {{ x: number, y: number }|null} [options.scroll] Scroll position for listeners to
+   *   restore once the page is replaced
    * @returns {Promise<string|undefined>} The fetched HTML, or undefined when the navigation was
    *   skipped, replaced by a newer one or handed to the browser
    * @throws {Error} The fetch or swap error when the navigation fails.
@@ -344,6 +443,7 @@ export class RouterManager {
       force = false,
       immutableUrl = false,
       viewTarget,
+      scroll = null,
     } = options;
 
     const targetUrl = new URL(url, location.href);
@@ -394,11 +494,13 @@ export class RouterManager {
       signal.throwIfAborted();
 
       if (!immutableUrl && !fromHistory) {
-        const historyState = { timestamp: Date.now(), trigger };
         if (replace) {
-          history.replaceState(historyState, '', finalUrl.href);
+          this._entry = { ...this._entry, viewTarget };
+          history.replaceState(this._entryState(trigger), '', finalUrl.href);
         } else {
-          history.pushState(historyState, '', finalUrl.href);
+          this._persistScroll();
+          this._entry = { key: this._createKey(), position: this._entry.position + 1, viewTarget };
+          history.pushState(this._entryState(trigger), '', finalUrl.href);
         }
         historyUpdated = true;
       }
@@ -416,6 +518,7 @@ export class RouterManager {
         replace,
         viewTarget,
         immutableUrl,
+        scroll,
         signal,
         waitUntil: promise => pending.push(promise),
       });
@@ -574,6 +677,7 @@ export class RouterManager {
 
     this._listeners.abort();
     this._abortInFlight();
+    history.scrollRestoration = this._previousScrollRestoration;
 
     this.eventBus.emit('router:destroyed', {});
 
