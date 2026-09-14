@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RouterManager#handlesLink(link)` reports whether the router takes over clicks on a link, and the `router.navigating` getter reports whether a navigation (including its fragment swap) is in progress.
 - `router:navigate-success` carries `waitUntil(promise)`, which keeps the navigation in progress until the page swap settles, plus `requestedUrl`, `redirected` and the navigation's abort `signal`. `router:navigate-end` reports a `status` of `success`, `error`, `aborted` or `full-load`.
 - `RouterManager#get()` accepts `signal` and `timeout` in its second argument, and a `fullLoadOnError` router option (default `true`) controls the full page load fallback.
+- PageManager `focusTarget` (default `'h1'`, or `false` to leave focus alone) and `announce` (default `true`) options for what happens after a router navigation. `router:navigate-success` carries the `scroll` position saved for a Back/Forward entry.
 
 ### Deprecated
 
@@ -70,6 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Behaviour change:** a link click during a slow navigation used to be swallowed, and a request cancelled by another could leave the newer one impossible to cancel, so fast Back/Forward presses could show an older page. The most recent navigation now wins: earlier requests are aborted, and page swaps run one after another.
 - **Behaviour change:** a navigation that fails (an HTTP error, network failure or timeout), returns something other than HTML, or is redirected to another site now falls back to a normal page load, so the browser shows the server's own error page. Previously the old page stayed on screen, the router refused to retry the same URL, and the link click caused an unhandled promise rejection. With `fullLoadOnError: false`, the `router-error` class now stays on the page until the next navigation starts instead of being removed in the same tick.
 - Fragment transitions set through `targetGroupTransitions` waited for an `animationend` or `transitionend` event that never fired when the class defined no animation or the fragment was hidden, so the swap never finished and the page title, component mounting and later navigations never happened (as in the demo's navbar). Transitions now wait for the fragment's running animations, finish straight away when there are none, and give up shortly after the longest animation should have ended.
+- **Behaviour change:** after a client-side navigation, keyboard focus fell back to `<body>` (the activated link was usually swapped out) and screen readers heard nothing, unlike a full page load. PageManager now moves focus, without scrolling, to the element named by the URL hash, an `[autofocus]` element, or the new main fragment's first `h1` (falling back to the fragment itself, given `tabindex="-1"` when needed), and announces the new `document.title` through a shared polite live region.
+- **Behaviour change:** Back and Forward landed at the top of the page (or scrolled the old content before it was replaced). While the router runs it sets `history.scrollRestoration` to `manual`, remembers the scroll position of each history entry, restores it once the page is replaced, and saves it into `history.state` so it also survives a reload. Moves between hash entries of the same page restore their position too.
+- Back and Forward always replaced the `main` target group, even for entries created by a `data-view-target` link. They now replace the fragment changed by the navigation being undone or redone.
+- Links to another page with a hash (`/pricing#plans`) landed at the top of the new page. The target is now scrolled into view and focused after the swap.
 - After a server redirect, the address bar and `router.currentUrl` show the URL the page came from instead of the one that was requested.
 - `router.isNavigating()` threw a TypeError, because a boolean property of the same name hid the method.
 - `router.get()` cancelled any navigation in progress and was cancelled by the next one, so SelectLoader loads and page navigations aborted each other and showed error messages. Requests made with `router.get()` are now independent, and a `signal` passed to it no longer disables the timeout. Timeouts reject with a `TimeoutError` instead of an `AbortError`.
@@ -79,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Router history entries store `key`, `position`, `viewTarget` and `scroll` in `history.state`, and the router adds a `key` and `position` to entries it did not create (the first page and native hash navigations).
 - The library builds as one production and one development Rollup graph. Code shared between entries (BaseComponent, DOM helpers, state helpers) lives once in `dist/shared/` instead of being copied into every component bundle.
 
 - Web component SCSS is now compiled by a local Rollup plugin (`rollup-plugin-scss.js`) using Sass's modern API and cssnano 9, replacing the unmaintained `rollup-plugin-postcss`. Minified CSS now keeps declarations in source order, and inline SVGs keep the `viewBox` from source (cssnano 5 stripped it).

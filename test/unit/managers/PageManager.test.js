@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventManager } from '../../../src/managers/EventManager.js';
 import { PageManager } from '../../../src/managers/PageManager.js';
 import { RouterManager } from '../../../src/managers/RouterManager.js';
@@ -38,11 +38,12 @@ describe('PageManager', () => {
     document.body.replaceChildren();
   });
 
-  const start = (registry, eventBus = new EventManager()) => {
+  const start = (registry, eventBus = new EventManager(), options = {}) => {
     manager = new PageManager({
       containerSelector: '#app',
       registry,
       eventBus,
+      options,
     });
     return manager;
   };
@@ -146,5 +147,102 @@ describe('PageManager', () => {
     await swap;
 
     expect(document.querySelector('main').textContent).toBe('Pricing');
+  });
+
+  describe('after navigating', () => {
+    let bus;
+
+    beforeEach(() => {
+      document.body.innerHTML =
+        '<a id="pricing-link" href="/pricing">Pricing</a><main id="app" data-view="main">Home</main>';
+      window.scrollTo(0, 0);
+      bus = new EventManager();
+    });
+
+    const navigate = async (html, payload = {}) => {
+      let swap;
+      bus.emit('router:navigate-success', {
+        html,
+        url: new URL('/pricing', location.href),
+        trigger: 'link-click',
+        waitUntil: promise => {
+          swap = promise;
+        },
+        ...payload,
+      });
+      await swap;
+    };
+
+    const options = { mountDelay: 0, targetGroups: { main: ['main'] } };
+
+    it('moves focus to the heading of the new page', async () => {
+      start([], bus, options);
+      document.querySelector('#pricing-link').focus();
+
+      await navigate('<main data-view="main"><h1>Pricing</h1></main>');
+
+      const heading = document.querySelector('h1');
+      expect({
+        focused: document.activeElement === heading,
+        tabindex: heading.getAttribute('tabindex'),
+      }).toEqual({ focused: true, tabindex: '-1' });
+    });
+
+    it('scrolls to and focuses the element the address points to', async () => {
+      start([], bus, options);
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+      await navigate(
+        '<main data-view="main"><h1>Pricing</h1><section id="plans"></section></main>',
+        {
+          url: new URL('/pricing#plans', location.href),
+        }
+      );
+
+      expect([document.activeElement.id, scrollIntoView.mock.contexts[0]?.id]).toEqual([
+        'plans',
+        'plans',
+      ]);
+    });
+
+    it('focuses a field marked autofocus in the new content', async () => {
+      start([], bus, options);
+
+      await navigate('<main data-view="main"><h1>Sign in</h1><input id="email" autofocus></main>');
+
+      expect(document.activeElement.id).toBe('email');
+    });
+
+    it('leaves focus where it is when focus management is turned off', async () => {
+      start([], bus, { ...options, focusTarget: false });
+      document.querySelector('#pricing-link').focus();
+
+      await navigate('<main data-view="main"><h1>Pricing</h1></main>');
+
+      expect(document.activeElement.id).toBe('pricing-link');
+    });
+
+    it('announces the title of the new page', async () => {
+      start([], bus, options);
+
+      await navigate(
+        '<html><head><title>Pricing | Shop</title></head><body><main data-view="main"><h1>Pricing</h1></main></body></html>'
+      );
+
+      await vi.waitFor(() =>
+        expect(document.querySelector('[role="status"]')?.textContent).toBe('Pricing | Shop')
+      );
+    });
+
+    it('restores the scroll position saved for a history entry', async () => {
+      start([], bus, options);
+
+      await navigate('<main data-view="main"><h1>Home</h1></main>', {
+        trigger: 'popstate',
+        scroll: { x: 0, y: 640 },
+      });
+
+      expect(window.scrollY).toBe(640);
+    });
   });
 });

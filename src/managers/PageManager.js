@@ -1,4 +1,8 @@
 import { ComponentHost } from '../core/ComponentHost.js';
+import { announce } from '../utils/announce.js';
+
+const NATIVELY_FOCUSABLE =
+  'a[href], area[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, iframe, [tabindex], [contenteditable]:not([contenteditable="false"])';
 
 /**
  * PageManager - Enhanced page lifecycle and component management
@@ -19,6 +23,8 @@ export class PageManager {
       mountDelay: 1200,
       scrollPosition: 'top', // 'top', 'preserve', 'element'
       scrollElement: null,
+      focusTarget: 'h1',
+      announce: true,
       // Component loading
       retryFailedLoads: true,
       maxRetryAttempts: 3,
@@ -78,7 +84,7 @@ export class PageManager {
     // Router event handlers
     this._subscribe(
       'router:navigate-success',
-      ({ html, url, trigger, viewTarget, viewTargets, waitUntil }) => {
+      ({ html, url, trigger, viewTarget, viewTargets, scroll, waitUntil }) => {
         const fromPopstate = trigger === 'popstate';
         const swap = this.replaceFragments(html, {
           fromNavigation: true,
@@ -87,6 +93,7 @@ export class PageManager {
           trigger,
           viewTargets: this._resolveTargetGroups(viewTargets || [viewTarget || 'main']),
           preserveScroll: fromPopstate && this.options.scrollPosition === 'preserve',
+          scroll,
         });
 
         if (waitUntil) {
@@ -269,6 +276,11 @@ export class PageManager {
         }
       }
 
+      const main = successfulTargets.find(result => result.viewTarget === 'main');
+      if (fromNavigation && main) {
+        this._completeNavigation(main.targetFragment, url);
+      }
+
       // Update performance metrics
       if (this.options.trackPerformance) {
         const duration = performance.now() - startTime;
@@ -347,6 +359,7 @@ export class PageManager {
       if (
         viewTarget === 'main' &&
         !options.preserveScroll &&
+        !options.url?.hash &&
         this.options.scrollPosition === 'top' &&
         !options.fromPopstate
       ) {
@@ -885,6 +898,17 @@ export class PageManager {
    * after the out transition completes for a smoother experience
    */
   _handleScrollRestoration(storedPosition, options) {
+    if (options.fromPopstate && options.scroll && this.options.scrollPosition !== 'preserve') {
+      window.scrollTo({ top: options.scroll.y, left: options.scroll.x, behavior: 'instant' });
+      return;
+    }
+
+    const hashTarget = this._hashTarget(options.url);
+    if (hashTarget) {
+      hashTarget.scrollIntoView({ block: 'start', behavior: 'instant' });
+      return;
+    }
+
     if (options.preserveScroll && storedPosition) {
       // Restore exact scroll position
       window.scrollTo({ top: storedPosition.y, left: storedPosition.x, behavior: 'instant' });
@@ -910,6 +934,56 @@ export class PageManager {
       case 'preserve':
         // Do nothing - keep current position
         break;
+    }
+  }
+
+  /**
+   * Move focus into the new page and announce its title, as a full page load would
+   */
+  _completeNavigation(fragment, url) {
+    const target = this._navigationFocusTarget(fragment, url);
+    if (target) {
+      if (!target.matches(NATIVELY_FOCUSABLE)) {
+        target.setAttribute('tabindex', '-1');
+      }
+      target.focus({ preventScroll: true });
+    }
+
+    if (this.options.announce) {
+      const title = document.title || fragment.querySelector('h1')?.textContent.trim();
+      if (title) {
+        announce(title);
+      }
+    }
+  }
+
+  /**
+   * The element the URL hash names, else an [autofocus] element or the `focusTarget` match in the
+   * new main fragment, else the fragment itself; null when `focusTarget` is false
+   */
+  _navigationFocusTarget(fragment, url) {
+    const { focusTarget } = this.options;
+    if (focusTarget === false) {
+      return null;
+    }
+
+    return (
+      this._hashTarget(url) ??
+      fragment.querySelector('[autofocus]') ??
+      (focusTarget ? fragment.querySelector(focusTarget) : null) ??
+      fragment
+    );
+  }
+
+  _hashTarget(url) {
+    if (!url?.hash || url.hash === '#') {
+      return null;
+    }
+
+    try {
+      return document.getElementById(decodeURIComponent(url.hash.slice(1)));
+    } catch {
+      return null;
     }
   }
 
