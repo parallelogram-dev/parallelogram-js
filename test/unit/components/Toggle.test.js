@@ -33,9 +33,9 @@ describe('Toggle', () => {
   });
 
   it('turns on options written as empty attributes', () => {
-    const state = mountToggle({ capture: '', multiple: '' });
+    const state = mountToggle({ capture: '', 'close-escape': '' });
 
-    expect(state).toMatchObject({ capture: true, multiple: true });
+    expect(state).toMatchObject({ capture: true, closeOnEscape: true });
   });
 
   it('keeps the selector of a target that is also a trigger', () => {
