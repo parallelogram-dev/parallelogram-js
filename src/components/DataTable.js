@@ -247,7 +247,7 @@ export class DataTable extends BaseComponent {
     const tbody = element.querySelector('tbody');
 
     // Clear current rows
-    tbody.innerHTML = '';
+    tbody.replaceChildren();
 
     // Determine which rows to show
     let rowsToShow = state.filteredRows;
@@ -279,7 +279,7 @@ export class DataTable extends BaseComponent {
     const container = state.paginationContainer;
     const totalPages = Math.ceil(state.filteredRows.length / state.config.pageSize);
 
-    container.innerHTML = '';
+    container.replaceChildren();
 
     if (totalPages <= 1) return;
 
@@ -359,7 +359,7 @@ export class DataTable extends BaseComponent {
 
       /* Convert data to table rows using mapper function */
       const tbody = element.querySelector('tbody');
-      tbody.innerHTML = '';
+      tbody.replaceChildren();
 
       const rows = data.map(item => rowMapper(item));
       state.originalRows = rows;

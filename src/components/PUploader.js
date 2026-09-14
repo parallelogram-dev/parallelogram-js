@@ -1,6 +1,7 @@
 import { generateId } from '../utils/dom-utils.js';
 import hostStyles from '../styles/framework/components/PUploaderHost.scss';
 import fileStyles from '../styles/framework/components/PUploader.scss';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -73,8 +74,9 @@ let fileTemplate;
 const getFileTemplate = () => {
   if (!fileTemplate) {
     fileTemplate = document.createElement('template');
-    fileTemplate.innerHTML = `
-      <style>${fileStyles}</style>
+    setStaticHTML(
+      fileTemplate,
+      `
       <slot></slot>
       <div class="uploader__overlay">
         <progress class="uploader__progress" part="progress" max="100" value="0" aria-label="Upload progress"></progress>
@@ -117,7 +119,8 @@ const getFileTemplate = () => {
           </div>
         </form>
       </dialog>
-    `;
+    `
+    );
   }
   return fileTemplate;
 };
@@ -507,9 +510,9 @@ export default class PUploader extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <style>${hostStyles}</style>
-
+    setStaticHTML(
+      this.shadowRoot,
+      `
       <slot name="field-definitions"></slot>
 
       <div class="uploader__files" part="files">
@@ -523,7 +526,9 @@ export default class PUploader extends HTMLElement {
       </div>
 
       <p class="uploader__message" part="message" role="status"></p>
-    `;
+    `
+    );
+    adoptStyles(this.shadowRoot, hostStyles);
     this.shadowRoot.querySelector('.uploader__fileinput').accept =
       this.getAttribute('accept-types') || '*/*';
   }
@@ -1096,6 +1101,7 @@ export class PUploaderFile extends HTMLElement {
     }
 
     const root = document.importNode(getFileTemplate().content, true);
+    adoptStyles(this.shadowRoot, fileStyles);
 
     root
       .querySelector('.uploader__overlay')

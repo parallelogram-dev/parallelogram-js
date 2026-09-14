@@ -1,5 +1,6 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
+import { setStaticHTML } from '../utils/shadow.js';
 
 const ICONS = {
   close:
@@ -355,7 +356,7 @@ export class Lightbox extends BaseComponent {
       control.className = className;
       control.dataset.lightboxAction = action;
       control.setAttribute('aria-label', label);
-      control.innerHTML = ICONS[action];
+      setStaticHTML(control, ICONS[action]);
       return control;
     };
 
