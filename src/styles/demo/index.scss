@@ -4,7 +4,7 @@
  */
 
 /*  Design system (must be first to provide tokens) */
-@use '../design-system';
+@use '../design-system/root';
 
 /*  Settings and variables */
 @use 'settings';
