@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `<p-select>` and `<p-datetime>` had no size or border of their own: their shadow content is positioned to fill the element, so without page styles on the element `<p-datetime>` collapsed to nothing and `<p-select>` showed bare text. Both now look like a form control by default, 12rem wide and 2.5rem tall with a border and background from their `--select-*` and `--datetime-*` properties, and page styles on the element still override that.
 - **BREAKING:** enhancement components registered with `app.components.add()` are named by their `name` option or, by default, their full selector. Names used to come from the first `data-*` attribute or class in the selector, so `[data-widget="chart"]` and `[data-widget="map"]` shared one instance and mounted the wrong class. `dependsOn` and `pageManager.instances` use the new names, and registering a name twice throws.
 - **BREAKING:** `app.components.add()` only treats valid custom element names (containing a hyphen, such as `p-modal`) as web components. Plain selectors such as `form`, `details` or `ul > li` were sent to the web component loader and never mounted.
 - Parallelogram mounted every component twice on startup (once in PageManager's constructor and again over `document.body`), and components outside a narrower `containerSelector` were never observed. It now mounts and observes the whole document once; a standalone PageManager observes `options.observeRoot`, which defaults to its container.
