@@ -17,6 +17,12 @@
     "demo": "npm run build-demo && npm run build-demo-css && serve demo -l 3000",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
+    "test:watch": "vitest --project unit",
+    "coverage": "vitest run --project unit --coverage",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -59,6 +65,9 @@
   "directories": {
     "test": "test"
   },
+  "browserslist": [
+    "baseline 2023"
+  ],
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -68,17 +77,26 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
+    "@eslint/js": "^10.0.1",
     "@rollup/plugin-babel": "^7.1.0",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
+    "@vitest/browser-playwright": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "clean-css-cli": "^5.6.3",
     "cssnano": "^9.0.4",
+    "eslint": "^10.10.0",
+    "eslint-plugin-compat": "^7.0.2",
+    "globals": "^17.12.0",
+    "happy-dom": "^20.14.5",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.28",
     "prettier": "^3.9.6",
     "rollup": "^4.63.2",
     "sass": "^1.104.1",
-    "serve": "^14.2.6"
+    "serve": "^14.2.6",
+    "vitest": "^5.0.0"
   },
   "repository": {
     "type": "git",
