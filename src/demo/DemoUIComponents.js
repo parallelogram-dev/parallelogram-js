@@ -79,7 +79,7 @@ export class DemoUIComponents extends BaseComponent {
         button.addEventListener(
           'click',
           () => {
-            window.location.href = '/performance';
+            window.location.href = 'performance';
           },
           { signal: controller.signal }
         );
