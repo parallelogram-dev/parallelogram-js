@@ -102,6 +102,31 @@ describe('p-uploader', () => {
     expect(window.__puploaderInjected).toBeUndefined();
   });
 
+  it('announces a saved field to the page as p-uploader-file:update', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    const { file } = await mountUploader();
+    const updated = new Promise(resolve =>
+      document.addEventListener(
+        'p-uploader-file:update',
+        event => resolve([event.composed, event.detail]),
+        { once: true }
+      )
+    );
+    const shadow = file.shadowRoot;
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    shadow.querySelector('dialog [name="caption"]').value = 'New caption';
+    shadow.querySelector('dialog [data-action="save"]').click();
+
+    await expect(updated).resolves.toEqual([
+      true,
+      { fileId: 'file-1', field: 'caption', value: 'New caption' },
+    ]);
+  });
+
   it('labels the delete dialog with its own heading even when the filename has quotes', async () => {
     const file = element('p-uploader-file', { filename: 'say "cheese".jpg' });
     document.body.append(file);
@@ -332,6 +357,55 @@ describe('p-uploader host', () => {
 
     await vi.waitFor(() => expect(save).toHaveBeenCalled());
     expect(new Headers(save.mock.calls[0][1].headers).get('X-CSRF-Token')).toBe('from-property');
+  });
+
+  it('announces a saved order to the page as p-uploader:sequence-update', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const saved = new Promise(resolve =>
+      document.addEventListener(
+        'p-uploader:sequence-update',
+        event => resolve([event.composed, [...event.detail.sequence].sort()]),
+        { once: true }
+      )
+    );
+
+    reorder(uploader);
+
+    await expect(saved).resolves.toEqual([true, ['first', 'second']]);
+  });
+
+  it('announces a finished upload to the page as p-uploader:upload-success', async () => {
+    const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+    const uploaded = new Promise(resolve =>
+      document.addEventListener(
+        'p-uploader:upload-success',
+        event => resolve([event.composed, event.detail.response]),
+        { once: true }
+      )
+    );
+
+    addFiles(uploader, [new File(['hello'], 'notes.txt', { type: 'text/plain' })]);
+
+    await expect(uploaded).resolves.toEqual([true, { id: 'server-1' }]);
+  });
+
+  it('still dispatches upload:success after p-uploader:upload-success until 0.6.0', async () => {
+    const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+    const events = [];
+    for (const type of ['p-uploader:upload-success', 'upload:success']) {
+      uploader.addEventListener(type, () => events.push(type));
+    }
+
+    addFiles(uploader, [new File(['hello'], 'notes.txt', { type: 'text/plain' })]);
+
+    await vi.waitFor(() => expect(events).toEqual(['p-uploader:upload-success', 'upload:success']));
   });
 
   it('restores the original order when saving a new order fails', async () => {

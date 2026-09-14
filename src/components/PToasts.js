@@ -1,6 +1,7 @@
 import styles from '../styles/framework/components/PToasts.scss';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
 
 /** Alternative type names, normalised to the four styled types */
 const TYPE_ALIASES = { warn: 'warning', danger: 'error' };
@@ -33,8 +34,11 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * - placement: top-right (default), top-left, top-center, bottom-right, bottom-left or bottom-center
  *
  * @events
- * - toast:show: with `{ id, type, message }`
- * - toast:close: with `{ id, type, message }`
+ * Events bubble out of shadow roots.
+ * - p-toasts:show: with `{ id, type, message }`
+ * - p-toasts:close: with `{ id, type, message }`
+ * - toast:show, toast:close: the same events under their names before 0.5.0; deprecated, and no
+ *   longer dispatched from 0.6.0
  *
  * @csspart stack - the element holding the toasts
  * @csspart toast - each toast
@@ -162,12 +166,7 @@ export default class PToasts extends HTMLElement {
     const spoken = title ? `${title}: ${messageElement.textContent}` : messageElement.textContent;
     this._announce(spoken, ASSERTIVE_TYPES.has(type));
 
-    this.dispatchEvent(
-      new CustomEvent('toast:show', {
-        detail: { id, type, message },
-        bubbles: true,
-      })
-    );
+    dispatchComponentEvent(this, 'p-toasts:show', { id, type, message }, { legacy: 'toast:show' });
 
     return entry.dismiss;
   }
@@ -181,11 +180,11 @@ export default class PToasts extends HTMLElement {
     entry.element.setAttribute('data-state', 'leaving');
     whenAnimationsFinish(entry.element).then(() => entry.element.remove());
 
-    this.dispatchEvent(
-      new CustomEvent('toast:close', {
-        detail: { id, type: entry.type, message: entry.message },
-        bubbles: true,
-      })
+    dispatchComponentEvent(
+      this,
+      'p-toasts:close',
+      { id, type: entry.type, message: entry.message },
+      { legacy: 'toast:close' }
     );
   }
 
@@ -246,7 +245,7 @@ export default class PToasts extends HTMLElement {
     this._modal = modal;
     modal.append(this);
     modal.addEventListener(
-      modal.localName === 'p-modal' ? 'modal:close' : 'close',
+      modal.localName === 'p-modal' ? 'p-modal:close' : 'close',
       () => this._goHome(modal),
       {
         once: true,

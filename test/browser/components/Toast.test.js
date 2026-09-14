@@ -71,7 +71,7 @@ describe('Toast triggers', () => {
   it('reports each toast to the event bus once', () => {
     const eventBus = new EventManager();
     const seen = [];
-    for (const name of ['toast:show', 'toast:shown']) {
+    for (const name of ['p-toasts:show', 'toast:show', 'toast:shown']) {
       eventBus.on(name, () => seen.push(name));
     }
     toast = new Toast({ eventBus });

@@ -56,11 +56,11 @@ modal.toggle(); // Toggle open/close
 ### Events
 
 ```javascript
-modal.addEventListener('modal:open', e => {
+modal.addEventListener('p-modal:open', e => {
   console.log('Modal opened:', e.detail.modal);
 });
 
-modal.addEventListener('modal:close', e => {
+modal.addEventListener('p-modal:close', e => {
   console.log('Modal closed:', e.detail.modal);
 });
 ```
@@ -296,7 +296,7 @@ uploader.addEventListener('upload:complete', e => {
   console.log('Upload complete:', e.detail.response);
 });
 
-uploader.addEventListener('upload:error', e => {
+uploader.addEventListener('p-uploader:upload-error', e => {
   console.error('Upload error:', e.detail.error);
 });
 ```

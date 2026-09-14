@@ -68,7 +68,7 @@ export class AlertManager {
     if (!this.eventBus) return;
 
     this._forwarding = new AbortController();
-    for (const eventName of ['toast:show', 'toast:close']) {
+    for (const eventName of ['p-toasts:show', 'p-toasts:close']) {
       element.addEventListener(
         eventName,
         event => this.eventBus.emit(`alerts:${eventName.split(':')[1]}`, event.detail),

@@ -1,6 +1,7 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
 
 const DEFAULT_PLACEHOLDER = 'Select…';
 
@@ -507,7 +508,7 @@ export default class PSelect extends HTMLElement {
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);
-    this.dispatchEvent(new CustomEvent('p-select:open', { bubbles: true }));
+    dispatchComponentEvent(this, 'p-select:open');
   }
 
   close() {
@@ -525,7 +526,7 @@ export default class PSelect extends HTMLElement {
       }
     });
 
-    this.dispatchEvent(new CustomEvent('p-select:close', { bubbles: true }));
+    dispatchComponentEvent(this, 'p-select:close');
   }
 
   toggle() {
@@ -545,12 +546,7 @@ export default class PSelect extends HTMLElement {
 
     this.dispatchEvent(new Event('input', { bubbles: true }));
     this.dispatchEvent(new Event('change', { bubbles: true }));
-    this.dispatchEvent(
-      new CustomEvent('p-select:change', {
-        detail: { value: option.value, label: option.label },
-        bubbles: true,
-      })
-    );
+    dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
 
     this.close();
   }
