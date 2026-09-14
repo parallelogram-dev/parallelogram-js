@@ -1,24 +1,25 @@
+import { injectScript } from './_script.js';
+
 /**
- * Fathom Analytics (privacy-friendly, no cookies).
+ * Fathom Analytics (privacy-friendly, no cookies)
  *
  * config: `{ site: "ABCDEFGH", src?: string }`
  *
- * `site` is the Fathom site id; `src` overrides the default script URL (use for
- * custom/self-hosted domains).
+ * `site` is the Fathom site id; `src` points at a custom domain or self-hosted copy of the script.
+ * Fathom records page views after router navigation itself.
  *
  * @param {{ site?: string, src?: string }} config
- * @param {{ logger?: object }} [ctx]
+ * @param {{ nonce?: string }} [ctx]
+ * @returns {Promise<unknown>|undefined} settles when the script loads
  */
-export default function fathomAdapter(config, { logger } = {}) {
+export default function fathomAdapter(config, { nonce } = {}) {
   if (!config.site) {
-    logger?.warn('fathom: no site in config');
-    return;
+    throw new Error('fathom: no site in config');
   }
   if (window.fathom) return;
 
-  const script = document.createElement('script');
-  script.defer = true;
-  script.src = config.src || 'https://cdn.usefathom.com/script.js';
-  script.setAttribute('data-site', config.site);
-  document.head.appendChild(script);
+  return injectScript(config.src || 'https://cdn.usefathom.com/script.js', {
+    nonce,
+    attrs: { 'data-site': config.site },
+  });
 }
