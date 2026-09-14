@@ -1,4 +1,5 @@
 import styles from '../styles/framework/components/PDatetime.scss';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 
 const formats = new Map();
 
@@ -168,9 +169,9 @@ export default class PDatetime extends HTMLElement {
       },
     };
 
-    this.shadowRoot.innerHTML = `
-          <style>${styles}</style>
-
+    setStaticHTML(
+      this.shadowRoot,
+      `
           <div class="field">
             <button type="button" class="input" data-datetime-input aria-haspopup="dialog" aria-expanded="false" data-placeholder="Select date..."></button>
             <button type="button" class="input" data-datetime-input-to aria-haspopup="dialog" aria-expanded="false" hidden data-placeholder="End date..."></button>
@@ -211,7 +212,9 @@ export default class PDatetime extends HTMLElement {
               <button type="button" class="btn primary" data-datetime-action="apply">Apply</button>
             </div>
           </div>
-        `;
+        `
+    );
+    adoptStyles(this.shadowRoot, styles);
 
     this._input = this.shadowRoot.querySelector('[data-datetime-input]');
     this._toInput = this.shadowRoot.querySelector('[data-datetime-input-to]');
@@ -1318,7 +1321,7 @@ export default class PDatetime extends HTMLElement {
     this._ampm.hidden = !is12Hour;
 
     /* Build hour select options */
-    this._hourSelect.innerHTML = '';
+    this._hourSelect.replaceChildren();
     const hourRange = is12Hour ? 12 : 24;
     const hourStart = is12Hour ? 1 : 0;
 
@@ -1330,7 +1333,7 @@ export default class PDatetime extends HTMLElement {
     }
 
     /* Build minute select options */
-    this._minuteSelect.innerHTML = '';
+    this._minuteSelect.replaceChildren();
     const minuteStep = this._step || 15; /* Default 15-minute increments */
 
     for (let m = 0; m < 60; m += minuteStep) {
@@ -1414,7 +1417,7 @@ export default class PDatetime extends HTMLElement {
         tomorrow: { days: 1, label: 'Tomorrow' },
       };
 
-      this._quickDates.innerHTML = '';
+      this._quickDates.replaceChildren();
 
       const effMin = this._effectiveMin();
       const effMax = this._effectiveMax();

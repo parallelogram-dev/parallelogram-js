@@ -2,6 +2,7 @@ import styles from '../styles/framework/components/PModal.scss';
 import { ExtendedStates } from '../core/ComponentStates.js';
 import { getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 
 /** Modals that are open, most recently opened last, shared by every p-modal on the page */
 const openModals = [];
@@ -74,9 +75,9 @@ export default class PModal extends HTMLElement {
     super();
     const root = this.attachShadow({ mode: 'open' });
 
-    root.innerHTML = `
-      <style>${styles}</style>
-
+    setStaticHTML(
+      root,
+      `
       <dialog class="modal__panel" data-modal-panel part="panel" tabindex="-1">
         <header class="modal__header" data-modal-header part="header">
           <div class="modal__title" part="title"><slot name="title"><h2>Dialog</h2></slot></div>
@@ -90,7 +91,9 @@ export default class PModal extends HTMLElement {
           <slot name="actions"></slot>
         </footer>
       </dialog>
-    `;
+    `
+    );
+    adoptStyles(root, styles);
 
     this._dialog = root.querySelector('dialog');
     this._closeButton = root.querySelector('[data-modal-close-btn]');

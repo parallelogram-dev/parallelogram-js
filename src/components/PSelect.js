@@ -2,6 +2,7 @@ import { TransitionManager } from '../managers/index.js';
 import './PToasts.js';
 
 import styles from '../styles/framework/components/PSelect.scss';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 
 /**
  * PSelect - Enhanced select/combobox web component
@@ -139,9 +140,9 @@ export default class PSelect extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <style>${styles}</style>
-
+    setStaticHTML(
+      this.shadowRoot,
+      `
       <div class="root">
         <div
           class="control"
@@ -159,7 +160,9 @@ export default class PSelect extends HTMLElement {
 
         <div class="menu" role="listbox" hidden></div>
       </div>
-    `;
+    `
+    );
+    adoptStyles(this.shadowRoot, styles);
 
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
@@ -575,7 +578,7 @@ export default class PSelect extends HTMLElement {
 
   _renderOptions() {
     const menu = this._els.menu;
-    menu.innerHTML = '';
+    menu.replaceChildren();
 
     const options = this.state.filtered;
 

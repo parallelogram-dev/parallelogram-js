@@ -1,4 +1,5 @@
 import styles from '../styles/framework/components/PToasts.scss';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 
 /** Alternative type names that share another type's styling and announcement. */
 const TYPE_ALIASES = { warn: 'warning' };
@@ -8,10 +9,8 @@ export default class PToasts extends HTMLElement {
     super();
     const root = this.attachShadow({ mode: 'open' });
 
-    root.innerHTML = `
-      <style>${styles}</style>  
-      <div id="container" role="region" aria-live="polite"></div>
-    `;
+    setStaticHTML(root, '<div id="container" role="region" aria-live="polite"></div>');
+    adoptStyles(root, styles);
 
     this._container = root.getElementById('container');
     this._idCounter = 0;
