@@ -24,7 +24,7 @@ graph TD
 ### Step 1: Core System Setup
 
 ```javascript
-// File: src/demo/demo.js
+// File: site/src/main.js
 async function initFramework() {
   // 1. Initialize logger first for debugging throughout
   const logger = new DevLogger({ level: 'debug', prefix: 'Demo' }, true);

@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The demo pages and their build (`npm run demo`, `npm run build:demo`, `demo/`, `src/demo/` and the demo stylesheets). The documentation site in `site/` replaces them, and GitHub Pages now deploys it.
 - `QueuedComponentProxy` (`@parallelogram-js/core/core/QueuedComponentProxy`), PageManager's internal loading methods (`_ensureInstance`, `_handleAsyncLoading`, `_createInstance`, `unmountRemoved`) and its unused `batchUpdates`, `updateThrottleMs`, `lazyLoadThreshold` and `scrollRestoration` options.
 - `p-datetime`'s theme handling, which set `theme="inherit"` and inline `--datetime-input-*` properties on the host element that its stylesheet never read. `theme` is no longer an observed attribute.
 - TransitionManager's unused `root` option and property.

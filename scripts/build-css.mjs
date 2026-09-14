@@ -5,8 +5,6 @@
  * index.css and index.min.css from the framework entry, plus one minified
  * file per enhancement component in dist/styles/components. Shadow DOM styles
  * (the P*.scss files) are bundled into their web components instead.
- *
- * `node scripts/build-css.mjs demo` builds the demo site stylesheet.
  */
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -44,15 +42,7 @@ async function library() {
   ]);
 }
 
-async function demo() {
-  return [
-    await build('src/styles/demo/index.scss', 'demo/dist/parallelogram-demo.min.css', {
-      keepExpanded: true,
-    }),
-  ];
-}
-
-const targets = { library, demo };
+const targets = { library };
 const target = process.argv[2] ?? 'library';
 
 if (!targets[target]) {
