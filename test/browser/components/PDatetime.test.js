@@ -137,4 +137,106 @@ describe('p-datetime', () => {
 
     expect([picker.hasAttribute('theme'), picker.getAttribute('style')]).toEqual([false, null]);
   });
+
+  describe('in a form', () => {
+    const renderForm = markup => {
+      const form = document.createElement('form');
+      form.innerHTML = markup;
+      document.body.append(form);
+      return { form, picker: form.querySelector('p-datetime') };
+    };
+
+    const thisMonthDay = number => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(number).padStart(2, '0')}`;
+    };
+
+    it('is a form-associated custom element', () => {
+      const { form, picker } = renderForm('<p-datetime name="eventDate" mode="date"></p-datetime>');
+
+      expect(picker.form).toBe(form);
+    });
+
+    it('stores and submits a picked date as yyyy-mm-dd', () => {
+      const { form, picker } = renderForm('<p-datetime name="eventDate" mode="date"></p-datetime>');
+
+      trigger(picker).click();
+      day(picker, 10).click();
+
+      expect([picker.value, new FormData(form).get('eventDate')]).toEqual([
+        thisMonthDay(10),
+        thisMonthDay(10),
+      ]);
+    });
+
+    it('submits the value set through its value property', () => {
+      const { form, picker } = renderForm('<p-datetime name="eventDate" mode="date"></p-datetime>');
+
+      picker.value = '2025-03-10';
+
+      expect(new FormData(form).get('eventDate')).toBe('2025-03-10');
+    });
+
+    it('submits both ends of a range under their own names', () => {
+      const { form, picker } = renderForm(
+        '<p-datetime name="checkIn" range range-to="checkOut" mode="date"></p-datetime>'
+      );
+
+      picker.value = '2025-03-10';
+      picker.rangeToValue = '2025-03-14';
+
+      const data = new FormData(form);
+      expect([data.get('checkIn'), data.get('checkOut')]).toEqual(['2025-03-10', '2025-03-14']);
+    });
+
+    it('shows a yyyy-mm-dd value as that calendar date', () => {
+      const { picker } = renderForm(
+        '<p-datetime name="eventDate" mode="date" value="2024-01-15"></p-datetime>'
+      );
+
+      const expected = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date(2024, 0, 15)
+      );
+      expect(shadow(picker, '[data-datetime-input]').textContent.trim()).toBe(expected);
+    });
+
+    it('reports a missing required date', () => {
+      const { form, picker } = renderForm(
+        '<p-datetime name="eventDate" mode="date" required></p-datetime>'
+      );
+
+      expect([form.checkValidity(), picker.validity.valueMissing]).toEqual([false, true]);
+    });
+
+    it('returns to its initial value when the form is reset', () => {
+      const { form, picker } = renderForm(
+        '<p-datetime name="eventDate" mode="date" value="2024-01-15"></p-datetime>'
+      );
+
+      trigger(picker).click();
+      day(picker, 20).click();
+      form.reset();
+
+      expect(picker.value).toBe('2024-01-15');
+    });
+
+    it('does not open inside a disabled fieldset', async () => {
+      const { picker } = renderForm(
+        '<fieldset disabled><p-datetime name="eventDate" mode="date"></p-datetime></fieldset>'
+      );
+
+      trigger(picker).click();
+      await wait(50);
+
+      expect(panel(picker).hidden).toBe(true);
+    });
+
+    it('does not add hidden inputs to the page', () => {
+      const { form } = renderForm(
+        '<p-datetime name="checkIn" range range-to="checkOut" mode="date" value="2025-03-10"></p-datetime>'
+      );
+
+      expect(form.querySelectorAll('input')).toHaveLength(0);
+    });
+  });
 });
