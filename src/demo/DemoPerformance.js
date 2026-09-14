@@ -635,7 +635,7 @@ export class DemoPerformance extends BaseComponent {
   }
 
   testNavigation() {
-    const pages = ['/', '/ui-components', '/media', '/interactive'];
+    const pages = ['./', 'ui-components', 'media', 'interactive'];
     const randomPage = pages[Math.floor(Math.random() * pages.length)];
 
     const startTime = performance.now();
