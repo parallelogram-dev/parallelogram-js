@@ -94,4 +94,15 @@ describe('p-select', () => {
 
     expect(select.shadowRoot.querySelector('.input').disabled).toBe(true);
   });
+
+  it('keeps the menu open when it is reopened while closing', async () => {
+    const { select } = renderForm(COUNTRIES);
+
+    select.open();
+    select.close();
+    select.open();
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    expect(select.shadowRoot.querySelector('[role="listbox"]').hidden).toBe(false);
+  });
 });

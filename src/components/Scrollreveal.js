@@ -1,4 +1,5 @@
 import { BaseComponent } from '../core/BaseComponent.js';
+import { prefersReducedMotion } from '../utils/motion.js';
 
 /**
  * Scrollreveal Component with FIFO Queue Staggering
@@ -127,7 +128,7 @@ export default class Scrollreveal extends BaseComponent {
       // Check if using CSS class animation
       const revealClass = element.dataset.revealClass;
 
-      if (!revealClass) {
+      if (!revealClass && !prefersReducedMotion()) {
         // Only set inline styles if not using CSS classes
         element.style.opacity = '0';
 
@@ -335,7 +336,9 @@ export default class Scrollreveal extends BaseComponent {
           await this.transitionManager.enter(item);
         } else {
           // Fallback to simple opacity/transform
-          item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+          item.style.transition = prefersReducedMotion()
+            ? 'none'
+            : 'opacity 0.6s ease, transform 0.6s ease';
           item.style.opacity = '1';
           item.style.transform = 'translateY(0)';
         }

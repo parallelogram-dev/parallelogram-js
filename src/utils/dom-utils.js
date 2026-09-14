@@ -3,6 +3,8 @@
  * Shared utilities for both BaseComponent and Web Components
  */
 
+import { prefersReducedMotion } from './motion.js';
+
 /**
  * Convert kebab-case to camelCase
  * @param {string} str - String to convert
@@ -134,8 +136,9 @@ export async function waitForTransition(element, timeout = 2000) {
  * @returns {Promise} Promise that resolves when fade completes
  */
 export async function fadeIn(element, duration = 300) {
+  const ms = prefersReducedMotion() ? 0 : duration;
   element.style.opacity = '0';
-  element.style.transition = `opacity ${duration}ms ease-in-out`;
+  element.style.transition = `opacity ${ms}ms ease-in-out`;
   element.offsetHeight; /* Force reflow */
   element.style.opacity = '1';
 
@@ -143,7 +146,7 @@ export async function fadeIn(element, duration = 300) {
     setTimeout(() => {
       element.style.transition = '';
       resolve();
-    }, duration);
+    }, ms);
   });
 }
 
@@ -154,8 +157,9 @@ export async function fadeIn(element, duration = 300) {
  * @returns {Promise} Promise that resolves when fade completes
  */
 export async function fadeOut(element, duration = 300) {
+  const ms = prefersReducedMotion() ? 0 : duration;
   element.style.opacity = '1';
-  element.style.transition = `opacity ${duration}ms ease-in-out`;
+  element.style.transition = `opacity ${ms}ms ease-in-out`;
   element.offsetHeight; /* Force reflow */
   element.style.opacity = '0';
 
@@ -163,7 +167,7 @@ export async function fadeOut(element, duration = 300) {
     setTimeout(() => {
       element.style.transition = '';
       resolve();
-    }, duration);
+    }, ms);
   });
 }
 
