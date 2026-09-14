@@ -44,8 +44,6 @@ const app = Parallelogram.create({
         duration: 200,
       },
     },
-    enableComponentPooling: true,
-    enableHealthMonitoring: true,
     trackPerformance: true,
   },
 });
