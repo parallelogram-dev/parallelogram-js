@@ -61,6 +61,16 @@ describe('documentation site rendering', () => {
     ]).toEqual([true, true]);
   });
 
+  it('adds a state panel only for components that write state attributes', () => {
+    const withState = parse(componentPage(Tabs));
+    const withoutState = parse(componentPage(CopyToClipboard));
+
+    expect([
+      withState.querySelector('[data-example-state]') !== null,
+      withoutState.querySelector('[data-example-state]') === null,
+    ]).toEqual([true, false]);
+  });
+
   it('offers a control suited to each attribute type', () => {
     const control = (type, extra = {}) =>
       parse(
