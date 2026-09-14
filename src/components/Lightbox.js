@@ -1,4 +1,4 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 
 /**
  * Lightbox Component - Image/media gallery viewer with proper state management

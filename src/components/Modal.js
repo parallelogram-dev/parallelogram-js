@@ -25,7 +25,7 @@
  *   .forEach(trigger => modals.mount(trigger));
  */
 
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 import './PModal.js';
 import { generateId, createElement } from '../utils/dom-utils.js';
 
