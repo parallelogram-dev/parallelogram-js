@@ -39,7 +39,9 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * once per page session. When the router shows a new page, or a block for a
  * tracker that has already loaded mounts on a later page, the adapter's optional
  * `page` step runs instead, for page views and conversions that the vendor script
- * doesn't record itself.
+ * doesn't record itself. Its `mounted` flag is true when a block has just mounted on
+ * the new page, so the events in that block's config should be sent, and false when
+ * the page changed around a block that stayed.
  *
  * `data-defer-tracker-status` moves through pending, awaiting-consent, loading,
  * booted, duplicate and error.
@@ -199,7 +201,7 @@ let trackerNonce;
  * The adapter loads the vendor script and runs the first page's tracking. It can
  * return a Promise that settles when the script loads, so the tracker reports
  * `loading` until then and `error` if it fails. An optional `boot.page(config, ctx,
- * { url })` step runs for later pages.
+ * { url, mounted })` step runs for later pages.
  *
  * @param {string} name
  * @param {(config: object, ctx: { logger?: object, eventBus?: object, nonce?: string }) => void|Promise<unknown>} boot
@@ -345,7 +347,7 @@ export default class DeferTracker extends BaseComponent {
 
       const element = [...tracker.elements].find(candidate => candidate.isConnected);
       if (element) {
-        this._runPage(tracker, element, url);
+        this._runPage(tracker, element, url, false);
       }
     }
   }
@@ -384,7 +386,7 @@ export default class DeferTracker extends BaseComponent {
         return;
       }
     } else {
-      this._runPage(tracker, element, url);
+      this._runPage(tracker, element, url, true);
     }
 
     tracker.elements.add(element);
@@ -461,14 +463,14 @@ export default class DeferTracker extends BaseComponent {
     );
   }
 
-  _runPage(tracker, element, url) {
+  _runPage(tracker, element, url, mounted) {
     tracker.pageUrl = url;
     const page = adapters.get(tracker.name)?.page;
     if (typeof page !== 'function') return;
 
     const config = this.getState(element)?.config ?? tracker.config;
     try {
-      page(config, this._context(element), { url });
+      page(config, this._context(element), { url, mounted });
     } catch (error) {
       this.logger?.error('Tracker page step failed', { name: tracker.name, error });
     }

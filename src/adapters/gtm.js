@@ -1,27 +1,31 @@
+import { injectScript } from './_script.js';
+
 /**
- * Google Tag Manager container loader.
+ * Google Tag Manager container loader
  *
  * config: `{ id: "GTM-XXXXXX" }`
  *
- * Deferring GTM defers every tag it manages, so this is often the only tracker
- * block a site needs. Idempotent: bails if the container script is already present.
+ * Deferring GTM defers every tag it manages, so this is often the only tracker block a site needs.
+ * The CSP nonce is set on the container script, as in Google's nonce-aware snippet, so Tag Manager
+ * can pass it on to Custom HTML tags.
  *
  * @param {{ id?: string }} config
- * @param {{ logger?: object }} [ctx]
+ * @param {{ nonce?: string }} [ctx]
+ * @returns {Promise<unknown>|undefined} settles when the container loads
  */
-export default function gtmAdapter(config, { logger } = {}) {
+export default function gtmAdapter(config, { nonce } = {}) {
   if (!config.id) {
-    logger?.warn('gtm: no id in config');
-    return;
+    throw new Error('gtm: no id in config');
   }
-
-  if (window.google_tag_manager && window.google_tag_manager[config.id]) return;
+  if (window.google_tag_manager?.[config.id]) return;
 
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
 
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(config.id)}`;
-  document.head.appendChild(script);
+  return injectScript(
+    `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(config.id)}`,
+    {
+      nonce,
+    }
+  );
 }
