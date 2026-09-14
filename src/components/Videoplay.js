@@ -324,8 +324,11 @@ export default class Videoplay extends BaseComponent {
     try {
       await video.play();
     } catch (error) {
-      this.logger?.warn('Failed to play video', { video: state.videoSelector || 'self', error });
-      this._emitVideoEvent(video, 'play-error', { reason, error: error.message });
+      /* Safari rejects with AbortError when a pause or new source interrupts play, which is expected */
+      if (error?.name !== 'AbortError') {
+        this.logger?.warn('Failed to play video', { video: state.videoSelector || 'self', error });
+        this._emitVideoEvent(video, 'play-error', { reason, error: error.message });
+      }
     } finally {
       state.expectingPlay = false;
       state.playReason = null;

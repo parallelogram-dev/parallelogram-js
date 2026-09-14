@@ -10,6 +10,10 @@ const deepActiveElement = () => {
   return active;
 };
 
+/** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
+const INTERACTIVE =
+  'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
+
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
   for (let current = node; current; current = current.parentNode ?? current.host) {
@@ -30,7 +34,8 @@ const containsComposed = (container, node) => {
  * Toggles are independent unless they share a `data-toggle-group`, in which case opening one closes
  * the others in the group. A capture toggle, such as a dropdown, also closes when the user clicks or
  * moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its
- * trigger, and following a page link inside an open target closes it. Manual targets only close from
+ * trigger; when focus rests on the page instead, as it does in Safari after clicking a button, Escape
+ * closes the toggle opened last. Following a page link inside an open target closes it. Manual targets only close from
  * a trigger or their group.
  *
  * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions
@@ -58,7 +63,8 @@ const containsComposed = (container, node) => {
  * - data-toggle-group: toggles that share a group name close each other
  * - data-toggle-capture: close on a click or focus outside the trigger and target (default false)
  * - data-toggle-close-navigation: close when a page link inside the target is followed (default true)
- * - data-toggle-close-escape: close with Escape while focus is in the trigger or target (default true)
+ * - data-toggle-close-escape: close with Escape while focus is in the trigger or target, or rests on
+ *   the page (default true)
  * - data-toggle-manual: on the trigger or target, close only from a trigger or group (default false)
  * - data-toggle-animate: "false" switches state without waiting for animations (default true)
  * - data-toggle-state: set on the target to closed, opening, open or closing
@@ -236,19 +242,33 @@ export default class Toggle extends BaseComponent {
 
   /**
    * Close the most recently opened toggle that holds focus, unless something else handled Escape
+   *
+   * When focus rests on the page rather than a control, the most recently opened toggle closes
+   * instead, since Safari doesn't focus a button when it is clicked.
    */
   _onKeydown(event) {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
 
     const path = event.composedPath();
-    for (const [target, opener] of [...this._open].reverse()) {
+    const closable = [...this._open].reverse().filter(([, opener]) => {
       const state = this.getState(opener);
-      if (!state || state.manual || !state.closeOnEscape || !this._touches(target, path)) continue;
+      return state && !state.manual && state.closeOnEscape;
+    });
 
-      event.preventDefault();
-      this.hide(opener, { returnFocus: path.includes(target) });
-      return;
-    }
+    const holdingFocus = closable.find(([target]) => this._touches(target, path));
+    const [target, opener] = holdingFocus ?? (this._focusRests() ? (closable[0] ?? []) : []);
+    if (!opener) return;
+
+    event.preventDefault();
+    this.hide(opener, { returnFocus: !holdingFocus || path.includes(target) });
+  }
+
+  /**
+   * Whether focus is on the page itself rather than on something that may use Escape
+   */
+  _focusRests() {
+    const active = deepActiveElement();
+    return !active || active === document.body || !active.matches(INTERACTIVE);
   }
 
   /**

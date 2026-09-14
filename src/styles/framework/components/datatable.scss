@@ -112,13 +112,9 @@
 }
 
 .datatable__status {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  margin-top: 0.5rem;
+  color: var(--datatable-muted-color, #6b7280);
+  font-size: 0.875em;
 }
 
 /* State-based styling */

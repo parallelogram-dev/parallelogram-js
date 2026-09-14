@@ -45,6 +45,24 @@ describe('Scrollhide', () => {
     expect([header.classList.contains('scrolloverlay'), added.length]).toEqual([true, 0]);
   });
 
+  it('does not hide the target while the browser restores the scroll position during loading', async () => {
+    Object.defineProperty(document, 'readyState', { configurable: true, get: () => 'loading' });
+    try {
+      scrollhide.mount(header);
+      await scrollTo(1500);
+      const hiddenWhileLoading = header.classList.contains('scrollhide');
+
+      delete document.readyState;
+      window.dispatchEvent(new Event('load'));
+      await frames();
+      await scrollTo(1700);
+
+      expect([hiddenWhileLoading, header.classList.contains('scrollhide')]).toEqual([false, true]);
+    } finally {
+      delete document.readyState;
+    }
+  });
+
   it('hides on scrolling down and shows on scrolling up, reporting each to the event bus once', async () => {
     const seen = [];
     for (const name of ['scrollhide:hidden', 'scrollhide:shown']) {

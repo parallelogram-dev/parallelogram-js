@@ -125,6 +125,21 @@ describe('Toggle', () => {
     expect(stateOf('#site-menu')).toBe('open');
   });
 
+  it('closes the last opened toggle with Escape when a click left focus outside it, as in Safari', async () => {
+    build(`
+      <main id="page" tabindex="-1">
+        <button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+        <nav id="site-menu"><a href="#about">About</a></nav>
+      </main>`);
+    $('#menu-button').click();
+    $('#page').focus();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
+
+    escapeFrom($('#page'));
+
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('closed'), WAIT);
+  });
+
   it('closes a capture toggle when focus moves outside it', async () => {
     build(`
       <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-capture>Account</button>
