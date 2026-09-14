@@ -49,6 +49,20 @@ const errorMessage = (body, fallback) => {
   return content.length <= 200 && !content.includes('<') ? content : fallback;
 };
 
+/**
+ * A byte count as a short size such as `5 MB`
+ */
+const formatBytes = bytes => {
+  const units = ['bytes', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unit = 0;
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit++;
+  }
+  return `${Number(size.toFixed(1))} ${units[unit]}`;
+};
+
 let fileTemplate;
 
 /**
@@ -98,15 +112,17 @@ const getFileTemplate = () => {
 };
 
 /**
- * PUploader - Web Component for file uploads with configurable fields
+ * PUploader - uploads, orders and describes a set of files
  *
- * Usage:
+ * @usage
  * <p-uploader
  *   max-files="5"
  *   upload-action="/api/upload"
  *   update-action="/api/update"
  *   delete-action="/api/delete"
  *   sequence-action="/api/sequence"
+ *   accept-types="image/*"
+ *   max-file-size="5242880"
  * >
  *   <p-uploader-fields slot="field-definitions">
  *     <p-uploader-field key="title" label="Title" type="text" required></p-uploader-field>
@@ -118,6 +134,50 @@ const getFileTemplate = () => {
  *     <p-uploader-data key="caption">My Caption</p-uploader-data>
  *   </p-uploader-file>
  * </p-uploader>
+ *
+ * @attributes
+ * - upload-action: URL that receives each new file as multipart form data. Files can only be added
+ *   when it is set.
+ * - update-action: URL that receives `{ id, field, value }` as JSON when a field is saved. Editing is
+ *   offered only when it is set.
+ * - delete-action: URL that receives `{ id }` as JSON when a file is deleted. Deleting is offered only
+ *   when it is set.
+ * - sequence-action: URL that receives `{ sequence: [ids] }` as JSON after files are reordered.
+ *   Reordering is offered only when it is set.
+ * - max-files: number (default 5)
+ * - accept-types: comma-separated MIME types, wildcards (`image/*`) or extensions (`.pdf`)
+ *   (default any type)
+ * - max-file-size: largest accepted file in bytes (default 10 MB)
+ * - input-name: form data name each uploaded file is sent under (default `file`)
+ * - allow-edit: `"false"` turns off editing and deleting
+ * - allow-sort: `"false"` turns off reordering
+ * - full: set by the component while it holds `max-files` files; the drop zone is hidden meanwhile
+ *
+ * @properties
+ * - requestHeaders: headers for every request, as an object or a function returning one. Without it,
+ *   an `X-CSRF-Token` header is sent from `<meta name="csrf-token">` when the page has one.
+ *
+ * @events
+ * - upload:success, upload:error: a file finished uploading, with `{ fileId, response }` or `{ fileId, error }`
+ * - sequence:update: a new order was saved, with `{ sequence }`
+ * - file:update, file:delete: dispatched by `p-uploader-file` after a save or delete
+ * - p-uploader:limit: files went beyond `max-files`; cancelable, with `{ maxFiles, accepted, rejected }`.
+ *   Cancel it to show your own message.
+ * - p-uploader:reject: a file was refused; cancelable, with `{ file, reason }` where reason is
+ *   `"type"` or `"size"`
+ *
+ * @csspart files - the list of files
+ * @csspart selector - the drop zone
+ * @csspart add-button - the button that opens the file picker
+ * @csspart message - messages about refused files and failed saves
+ *
+ * @cssprop --puploader-radius - host corner radius
+ * @cssprop --puploader-border-width - host border width
+ * @cssprop --puploader-border-color - host border colour
+ * @cssprop --puploader-bg - host background
+ * @cssprop --puploader-color - host text colour
+ * @cssprop --puploader-shadow - host shadow
+ * @cssprop --puploader-padding - host padding
  */
 export default class PUploader extends HTMLElement {
   constructor() {
@@ -132,6 +192,9 @@ export default class PUploader extends HTMLElement {
     this.XHRConstructor = null;
     this.eventBus = null;
     this.logger = null;
+    this.requestHeaders = null;
+    this._inFlight = new Set();
+    this._dropAccepted = false;
 
     /* Render initial structure */
     this._render();
@@ -141,6 +204,7 @@ export default class PUploader extends HTMLElement {
     this._setupEventListeners();
     this._loadFieldDefinitions();
     this._loadExistingFiles();
+    this._updateFullState();
 
     /* Defer validation to ensure child elements have fully initialized */
     setTimeout(() => {
@@ -149,9 +213,11 @@ export default class PUploader extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (this.abortController) {
-      this.abortController.abort();
+    this.abortController?.abort();
+    for (const request of this._inFlight) {
+      request.abort();
     }
+    this._inFlight.clear();
   }
 
   static get observedAttributes() {
@@ -165,7 +231,16 @@ export default class PUploader extends HTMLElement {
       'max-file-size',
       'allow-edit',
       'allow-sort',
+      'input-name',
     ];
+  }
+
+  attributeChangedCallback(name) {
+    if (name === 'accept-types') {
+      this.shadowRoot.querySelector('.uploader__fileinput').accept = this.config.acceptTypes;
+    } else if (name === 'max-files' && this.isConnected) {
+      this._updateFullState();
+    }
   }
 
   get config() {
@@ -175,11 +250,11 @@ export default class PUploader extends HTMLElement {
 
     return {
       maxFiles: getIntAttr('max-files', 5),
-      uploadAction: getAttr('upload-action', '/upload'),
-      updateAction: getAttr('update-action', '/update'),
-      deleteAction: getAttr('delete-action', '/delete'),
-      sequenceAction: getAttr('sequence-action', '/sequence'),
-      inputName: getAttr('input-name', 'files'),
+      uploadAction: getAttr('upload-action', ''),
+      updateAction: getAttr('update-action', ''),
+      deleteAction: getAttr('delete-action', ''),
+      sequenceAction: getAttr('sequence-action', ''),
+      inputName: getAttr('input-name', 'file'),
       acceptTypes: getAttr('accept-types', '*/*'),
       maxFileSize: getIntAttr('max-file-size', 10 * 1024 * 1024),
       allowEdit: getBoolAttr('allow-edit'),
@@ -200,10 +275,60 @@ export default class PUploader extends HTMLElement {
   }
 
   _getXHRConstructor() {
-    if (this.XHRConstructor === null) {
-      this.XHRConstructor = window.MockXHR || XMLHttpRequest;
+    return this.XHRConstructor ?? XMLHttpRequest;
+  }
+
+  /**
+   * Headers added to every request: `requestHeaders` when set, otherwise an `X-CSRF-Token` header
+   * from `<meta name="csrf-token">` when the page has one
+   *
+   * @returns {Record<string, string>}
+   */
+  _requestHeaders() {
+    const headers =
+      typeof this.requestHeaders === 'function' ? this.requestHeaders() : this.requestHeaders;
+    if (headers) {
+      return { ...headers };
     }
-    return this.XHRConstructor;
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    return token ? { 'X-CSRF-Token': token } : {};
+  }
+
+  /**
+   * POST JSON to an action URL with the request headers, cancelled if the uploader is removed
+   *
+   * @returns {Promise<Response>}
+   */
+  async _postJson(url, body) {
+    const controller = new AbortController();
+    this._inFlight.add(controller);
+    try {
+      return await fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...this._requestHeaders() },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } finally {
+      this._inFlight.delete(controller);
+    }
+  }
+
+  _canSort() {
+    return this.config.allowSort && Boolean(this.config.sequenceAction);
+  }
+
+  _updateFullState() {
+    this.toggleAttribute(
+      'full',
+      this.querySelectorAll('p-uploader-file').length >= this.config.maxFiles
+    );
+  }
+
+  _showMessage(text) {
+    this.shadowRoot.querySelector('.uploader__message').textContent = text;
   }
 
   _loadFieldDefinitions() {
@@ -334,16 +459,17 @@ export default class PUploader extends HTMLElement {
 
       <slot name="field-definitions"></slot>
 
-      <div class="uploader__files">
+      <div class="uploader__files" part="files">
         <slot></slot>
       </div>
 
       <div class="uploader__selector" part="selector">
-        <input type="file" multiple class="uploader__fileinput" id="file-input">
-        <label class="uploader__label" for="file-input">
-          + Add files by selecting or dragging here
-        </label>
+        <input type="file" multiple class="uploader__fileinput" tabindex="-1" aria-hidden="true">
+        <button type="button" class="uploader__add" part="add-button">+ Add files</button>
+        <span class="uploader__hint">or drag them here</span>
       </div>
+
+      <p class="uploader__message" part="message" role="status"></p>
     `;
     this.shadowRoot.querySelector('.uploader__fileinput').accept =
       this.getAttribute('accept-types') || '*/*';
@@ -357,6 +483,17 @@ export default class PUploader extends HTMLElement {
     const selector = this.shadowRoot.querySelector('.uploader__selector');
 
     fileInput.addEventListener('change', e => this._handleFileSelect(e), { signal });
+
+    /* The add button, and anywhere else in the drop zone, opens the file picker */
+    selector.addEventListener(
+      'click',
+      event => {
+        if (event.target !== fileInput) {
+          fileInput.click();
+        }
+      },
+      { signal }
+    );
 
     selector.addEventListener(
       'dragover',
@@ -388,6 +525,7 @@ export default class PUploader extends HTMLElement {
         if (this.draggedElement) {
           e.preventDefault();
           e.stopPropagation();
+          this._dropAccepted = true;
           return;
         }
         e.preventDefault();
@@ -397,24 +535,22 @@ export default class PUploader extends HTMLElement {
       { signal }
     );
 
-    if (this.config.allowSort) {
-      this.addEventListener(
-        'dragover',
-        e => {
-          if (this.draggedElement) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-          }
-        },
-        { signal }
-      );
+    this.addEventListener(
+      'dragover',
+      e => {
+        if (this.draggedElement) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        }
+      },
+      { signal }
+    );
 
-      this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
-      this.addEventListener('dragend', () => this._handleDragEnd(), { signal });
-      this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
-      this.addEventListener('dragleave', e => this._handleDragLeave(e), { signal });
-      this.addEventListener('drop', e => this._handleDrop(e), { signal });
-    }
+    this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
+    this.addEventListener('dragend', () => this._handleDragEnd(), { signal });
+    this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
+    this.addEventListener('dragleave', e => this._handleDragLeave(e), { signal });
+    this.addEventListener('drop', e => this._handleDrop(e), { signal });
 
     this.addEventListener(
       'file:delete',
@@ -423,6 +559,7 @@ export default class PUploader extends HTMLElement {
         if (fileId && this.files.has(fileId)) {
           this.files.delete(fileId);
         }
+        this._updateFullState();
       },
       { signal }
     );
@@ -440,7 +577,7 @@ export default class PUploader extends HTMLElement {
           order: index,
         });
 
-        if (this.config.allowSort && existingFiles.length > 1) {
+        if (this._canSort() && existingFiles.length > 1) {
           fileElement.setAttribute('draggable', 'true');
         }
       }
@@ -459,25 +596,79 @@ export default class PUploader extends HTMLElement {
   }
 
   _processFiles(files) {
-    const currentFileCount = this.querySelectorAll('p-uploader-file').length;
-    const availableSlots = this.config.maxFiles - currentFileCount;
+    const messages = [];
 
-    if (availableSlots <= 0) {
-      alert(`Maximum ${this.config.maxFiles} files allowed`);
+    if (!this.config.uploadAction) {
+      this._showMessage('Files can’t be added because no upload-action is set.');
+      this.logger?.error('PUploader: set upload-action to add files');
       return;
     }
 
-    const filesToUpload = files.slice(0, availableSlots);
+    const accepted = files.filter(file => {
+      const reason = this._rejectionReason(file);
+      if (!reason) return true;
 
-    if (files.length > availableSlots) {
-      alert(
-        `Only ${availableSlots} more file${availableSlots === 1 ? '' : 's'} can be added (${this.config.maxFiles} max)`
-      );
+      const rejection = new CustomEvent('p-uploader:reject', {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+        detail: { file, reason },
+      });
+      if (this.dispatchEvent(rejection)) {
+        messages.push(
+          reason === 'size'
+            ? `${file.name} is larger than ${formatBytes(this.config.maxFileSize)}.`
+            : `${file.name} isn’t an accepted file type.`
+        );
+      }
+      return false;
+    });
+
+    const { maxFiles } = this.config;
+    const available = Math.max(0, maxFiles - this.querySelectorAll('p-uploader-file').length);
+    const toUpload = accepted.slice(0, available);
+    const overLimit = accepted.slice(available);
+
+    if (overLimit.length > 0) {
+      const limit = new CustomEvent('p-uploader:limit', {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+        detail: { maxFiles, accepted: toUpload, rejected: overLimit },
+      });
+      if (this.dispatchEvent(limit)) {
+        messages.push(`You can add up to ${maxFiles} file${maxFiles === 1 ? '' : 's'}.`);
+      }
     }
 
-    filesToUpload.forEach(file => {
-      this._uploadFile(file);
-    });
+    this._showMessage(messages.join(' '));
+    toUpload.forEach(file => this._uploadFile(file));
+  }
+
+  /**
+   * Why a file can't be uploaded, or null when it can
+   *
+   * @returns {'type'|'size'|null}
+   */
+  _rejectionReason(file) {
+    const patterns = this.config.acceptTypes
+      .split(',')
+      .map(pattern => pattern.trim().toLowerCase())
+      .filter(Boolean);
+    const name = file.name.toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    const typeAccepted =
+      patterns.length === 0 ||
+      patterns.some(pattern => {
+        if (pattern === '*/*' || pattern === '*') return true;
+        if (pattern.startsWith('.')) return name.endsWith(pattern);
+        if (pattern.endsWith('/*')) return type.startsWith(pattern.slice(0, -1));
+        return type === pattern;
+      });
+
+    if (!typeAccepted) return 'type';
+    if (file.size > this.config.maxFileSize) return 'size';
+    return null;
   }
 
   async _uploadFile(file) {
@@ -502,6 +693,7 @@ export default class PUploader extends HTMLElement {
     fileData.element = fileElement;
 
     this.appendChild(fileElement);
+    this._updateFullState();
 
     if (file.type.startsWith('image/')) {
       try {
@@ -519,10 +711,12 @@ export default class PUploader extends HTMLElement {
 
   _performUpload(fileData) {
     const formData = new FormData();
-    formData.append('file', fileData.file);
+    formData.append(this.config.inputName, fileData.file);
 
     const XHRConstructor = this._getXHRConstructor();
     const xhr = new XHRConstructor();
+    this._inFlight.add(xhr);
+    const settle = () => this._inFlight.delete(xhr);
 
     xhr.upload.addEventListener('progress', e => {
       if (e.lengthComputable) {
@@ -533,9 +727,10 @@ export default class PUploader extends HTMLElement {
     });
 
     xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
+      settle();
+      if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const response = JSON.parse(xhr.responseText);
+          const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
           this._handleUploadSuccess(fileData, response);
         } catch {
           this._handleUploadError(fileData, 'Invalid server response');
@@ -546,10 +741,15 @@ export default class PUploader extends HTMLElement {
     });
 
     xhr.addEventListener('error', () => {
+      settle();
       this._handleUploadError(fileData, 'Network error');
     });
+    xhr.addEventListener('abort', settle);
 
     xhr.open('POST', this.config.uploadAction);
+    for (const [name, value] of Object.entries(this._requestHeaders())) {
+      xhr.setRequestHeader(name, value);
+    }
     xhr.send(formData);
   }
 
@@ -592,7 +792,7 @@ export default class PUploader extends HTMLElement {
   }
 
   _updateDraggableState() {
-    if (!this.config.allowSort) return;
+    if (!this._canSort()) return;
 
     const allFiles = this.querySelectorAll('p-uploader-file');
     const shouldBeDraggable = allFiles.length > 1;
@@ -628,16 +828,30 @@ export default class PUploader extends HTMLElement {
     }, 0);
   }
 
+  /**
+   * Save the new order after a drop inside the uploader, or put the files back when the drag was
+   * abandoned
+   */
   _handleDragEnd() {
     if (!this.draggedElement) return;
 
     this.draggedElement.removeAttribute('dragging');
+    const files = [...this.querySelectorAll('p-uploader-file')];
+    files.forEach(el => el.removeAttribute('drag-over'));
 
-    const allFiles = this.querySelectorAll('p-uploader-file');
-    allFiles.forEach(el => el.removeAttribute('drag-over'));
-
+    const dropped = this._dropAccepted;
     this.draggedElement = null;
     this.draggedOverElement = null;
+    this._dropAccepted = false;
+
+    const moved = this.originalFileOrder?.some((file, index) => files[index] !== file);
+    if (!moved) {
+      this.originalFileOrder = null;
+    } else if (dropped) {
+      this._updateSequence();
+    } else {
+      this._revertSequence();
+    }
   }
 
   _handleDragEnter(e) {
@@ -685,76 +899,44 @@ export default class PUploader extends HTMLElement {
 
     e.preventDefault();
     e.stopPropagation();
-
-    this._updateSequence();
+    this._dropAccepted = true;
   }
 
   async _updateSequence() {
-    /* Get the new order after drag */
-    const currentFiles = Array.from(this.querySelectorAll('p-uploader-file'));
-    const fileIds = currentFiles.map(el => el.getAttribute('file-id')).filter(id => id !== null);
+    const fileIds = [...this.querySelectorAll('p-uploader-file')]
+      .map(el => el.getAttribute('file-id'))
+      .filter(id => id !== null);
 
     try {
-      const response = await fetch(this.config.sequenceAction, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sequence: fileIds }),
-      });
-
-      if (response.ok) {
-        /* Success - clear the original order backup */
-        this.originalFileOrder = null;
-
-        this.dispatchEvent(
-          new CustomEvent('sequence:update', {
-            detail: { sequence: fileIds },
-            bubbles: true,
-          })
-        );
-      } else {
-        /* Revert to original order on failure */
-        if (this.originalFileOrder) {
-          this._revertSequence();
-        }
-
-        const errorText = await response.text();
-        if (this.logger) {
-          this.logger.error('Failed to update sequence:', errorText);
-        }
+      const response = await this._postJson(this.config.sequenceAction, { sequence: fileIds });
+      if (!response.ok) {
+        throw new Error(errorMessage(await response.text(), `HTTP ${response.status}`));
       }
+
+      this.originalFileOrder = null;
+      this._showMessage('');
+      this.dispatchEvent(
+        new CustomEvent('sequence:update', {
+          detail: { sequence: fileIds },
+          bubbles: true,
+        })
+      );
     } catch (error) {
-      /* Revert to original order on network error */
-      if (this.originalFileOrder) {
-        this._revertSequence();
-      }
+      if (error.name === 'AbortError') return;
 
-      if (this.logger) {
-        this.logger.error('Failed to update sequence:', error);
-      }
+      this._revertSequence();
+      this._showMessage(
+        'The new order couldn’t be saved, so the files are back in their previous order.'
+      );
+      this.logger?.error('Failed to update sequence:', error);
     }
   }
 
   _revertSequence() {
-    if (!this.originalFileOrder) return;
-
-    /* Restore the original order by re-appending elements */
-    const fragment = document.createDocumentFragment();
-
-    /* Remove all file elements and add them to fragment in original order */
-    this.originalFileOrder.forEach(fileElement => {
-      if (fileElement.parentNode) {
-        fileElement.parentNode.removeChild(fileElement);
-      }
-      fragment.appendChild(fileElement);
-    });
-
-    /* Re-append in original order */
-    const selector = this.shadowRoot.querySelector('.uploader__selector');
-    this.insertBefore(fragment, selector);
-
-    /* Clear the backup */
+    if (this.originalFileOrder) {
+      /* Light-DOM order is slot order, so appending the files in their old order restores it */
+      this.append(...this.originalFileOrder.filter(file => file.parentNode === this));
+    }
     this.originalFileOrder = null;
   }
 
@@ -832,7 +1014,7 @@ export class PUploaderFile extends HTMLElement {
     const preview = this.getAttribute('preview') || '';
     const error = this.getAttribute('error') || '';
     const filename = this.getAttribute('filename') || '';
-    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const permissions = this._permissions();
     const currentPanel = this.getAttribute('data-current-panel') || 'info';
 
     /* Load field data from slotted elements */
@@ -891,18 +1073,9 @@ export class PUploaderFile extends HTMLElement {
     );
     infoPanel.setAttribute('aria-label', `File information for ${filename}`);
     root.querySelector('.uploader__filename').textContent = filename;
-    if (allowEdit) {
-      infoPanel.querySelector('.uploader__body').prepend(
-        el('button', {
-          class: 'uploader__delete-icon',
-          'data-action': 'show-delete',
-          title: 'Delete file',
-          'aria-label': 'Delete file',
-        })
-      );
-    }
+    this._syncDeleteButton(infoPanel, permissions.remove);
     if (state === 'uploaded') {
-      root.querySelector('.uploader__fields').append(...this._createFields(allowEdit));
+      root.querySelector('.uploader__fields').append(...this._createFields(permissions.edit));
     }
 
     const deletePanel = root.querySelector('[data-panel="delete"]');
@@ -916,6 +1089,36 @@ export class PUploaderFile extends HTMLElement {
 
     this.shadowRoot.replaceChildren(root);
     this._setupFileEventListeners();
+  }
+
+  /**
+   * What the owning uploader lets this file offer: editing needs an update-action and deleting a
+   * delete-action, and allow-edit="false" turns both off
+   */
+  _permissions() {
+    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const config = this.closest('p-uploader')?.config ?? {};
+    return {
+      edit: allowEdit && Boolean(config.updateAction),
+      remove: allowEdit && Boolean(config.deleteAction),
+    };
+  }
+
+  _syncDeleteButton(infoPanel, show) {
+    const existing = infoPanel.querySelector('.uploader__delete-icon');
+    if (show && !existing) {
+      infoPanel.querySelector('.uploader__body').prepend(
+        el('button', {
+          type: 'button',
+          class: 'uploader__delete-icon',
+          'data-action': 'show-delete',
+          title: 'Delete file',
+          'aria-label': 'Delete file',
+        })
+      );
+    } else if (!show) {
+      existing?.remove();
+    }
   }
 
   _loadFieldData() {
@@ -1118,9 +1321,12 @@ export class PUploaderFile extends HTMLElement {
       return;
     }
 
-    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const permissions = this._permissions();
     const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
     const fieldsContainer = infoPanel?.querySelector('.uploader__fields');
+    if (infoPanel) {
+      this._syncDeleteButton(infoPanel, permissions.remove);
+    }
 
     if (!fieldsContainer) {
       return;
@@ -1134,7 +1340,7 @@ export class PUploaderFile extends HTMLElement {
       existingFields.forEach(field => field.remove());
 
       /* Insert new fields after filename */
-      filenameElement.after(...this._createFields(allowEdit));
+      filenameElement.after(...this._createFields(permissions.edit));
     }
 
     /* Also render the edit panels if they don't exist */
@@ -1276,16 +1482,10 @@ export class PUploaderFile extends HTMLElement {
       const uploader = this.closest('p-uploader');
       if (uploader && uploader.config.updateAction) {
         try {
-          const response = await fetch(uploader.config.updateAction, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id: this.getAttribute('file-id'),
-              field: fieldKey,
-              value: newValue,
-            }),
+          const response = await uploader._postJson(uploader.config.updateAction, {
+            id: this.getAttribute('file-id'),
+            field: fieldKey,
+            value: newValue,
           });
 
           if (response.ok) {
@@ -1318,6 +1518,8 @@ export class PUploaderFile extends HTMLElement {
             this.setAttribute('data-current-panel', 'error');
           }
         } catch (error) {
+          if (error.name === 'AbortError') return;
+
           /* Revert the changes on network error */
           this._fieldData.set(fieldKey, oldValue);
           dataElement.textContent = oldElementValue;
@@ -1353,14 +1555,8 @@ export class PUploaderFile extends HTMLElement {
     }
 
     try {
-      const response = await fetch(uploader.config.deleteAction, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: fileId,
-        }),
+      const response = await uploader._postJson(uploader.config.deleteAction, {
+        id: fileId,
       });
 
       if (response.ok) {
@@ -1384,6 +1580,8 @@ export class PUploaderFile extends HTMLElement {
         this.setAttribute('data-current-panel', 'error');
       }
     } catch (error) {
+      if (error.name === 'AbortError') return;
+
       /* Network error, show error */
       if (uploader.logger) {
         uploader.logger.error('Failed to delete file:', error);
@@ -1405,10 +1603,9 @@ export class PUploaderFile extends HTMLElement {
     /* Remove element from DOM */
     this.remove();
 
-    /* Update draggable state */
-    if (uploader && uploader._updateDraggableState) {
-      uploader._updateDraggableState();
-    }
+    /* Update draggable and full state */
+    uploader?._updateDraggableState?.();
+    uploader?._updateFullState?.();
   }
 }
 
