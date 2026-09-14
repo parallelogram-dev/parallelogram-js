@@ -2,12 +2,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import SelectLoader from '../../../src/components/SelectLoader.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
 
-const mountLoader = ({ eventBus = new EventManager(), router } = {}) => {
-  document.body.innerHTML = `
+const mountLoader = ({
+  eventBus = new EventManager(),
+  router,
+  attributes = '',
+  wrap = false,
+} = {}) => {
+  const markup = `
     <select
       data-selectloader
       data-selectloader-target="#product-details"
       data-selectloader-transition="none"
+      ${attributes}
     >
       <option value="">Choose a product</option>
       <option value="/fragments/laptop.html">Laptop</option>
@@ -15,6 +21,7 @@ const mountLoader = ({ eventBus = new EventManager(), router } = {}) => {
     </select>
     <div id="product-details"></div>
   `;
+  document.body.innerHTML = wrap ? `<form>${markup}</form>` : markup;
   const select = document.querySelector('select');
   const loader = new SelectLoader({ eventBus, router });
   loader.mount(select);
@@ -40,6 +47,7 @@ const choose = (select, value) => {
 
 describe('SelectLoader', () => {
   afterEach(() => {
+    vi.unstubAllGlobals();
     document.body.replaceChildren();
   });
 
@@ -86,5 +94,102 @@ describe('SelectLoader', () => {
     loader.unmount(select);
 
     expect(router.requests[0].signal?.aborted).toBe(true);
+  });
+
+  it('shows the empty message as text rather than markup', () => {
+    const { target } = mountLoader({ attributes: 'data-selectloader-empty-message="<img src=x>"' });
+
+    expect([target.textContent.trim(), target.querySelector('img')]).toEqual(['<img src=x>', null]);
+  });
+
+  it('shows the error message as text and retries from its button', async () => {
+    const get = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('<b>Down</b>'))
+      .mockResolvedValueOnce({ data: '<p>Laptop details</p>' });
+    const { select, target } = mountLoader({ router: { get } });
+
+    choose(select, '/fragments/laptop.html');
+    await vi.waitFor(() => expect(target.querySelector('.select-loader__error')).not.toBeNull());
+    const errorView = [target.querySelector('p').textContent, target.querySelector('b')];
+    target.querySelector('button').click();
+
+    await vi.waitFor(() => expect(target.textContent).toBe('Laptop details'));
+    expect(errorView).toEqual(['<b>Down</b>', null]);
+  });
+
+  it('puts the previous choice back when a listener cancels the change', () => {
+    const router = stubRouter();
+    const { select } = mountLoader({ router });
+    select.addEventListener('selectloader:before-change', event => event.preventDefault());
+
+    choose(select, '/fragments/phone.html');
+
+    expect([select.value, router.get.mock.calls.length]).toEqual(['', 0]);
+  });
+
+  it('treats a response that is not HTML as an error', async () => {
+    const router = { get: vi.fn(async () => ({ data: { product: 'Laptop' } })) };
+    const { select, target } = mountLoader({ router });
+    const errors = [];
+    select.addEventListener('selectloader:error', event => errors.push(event.detail.error.message));
+
+    choose(select, '/fragments/laptop.html');
+
+    await vi.waitFor(() => expect(errors).toHaveLength(1));
+    expect(target.textContent).not.toContain('[object Object]');
+  });
+
+  it('announces the content it has loaded', async () => {
+    const router = { get: vi.fn(async () => ({ data: '<p>Laptop details</p>' })) };
+    const { select } = mountLoader({ router });
+
+    choose(select, '/fragments/laptop.html');
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-parallelogram-announcer]')?.textContent).toBe(
+        'Laptop loaded'
+      )
+    );
+  });
+
+  it('swaps content straight away when the user prefers reduced motion', async () => {
+    vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
+    const router = { get: vi.fn(async () => ({ data: '<p>Laptop details</p>' })) };
+    document.body.innerHTML = `
+      <select data-selectloader data-selectloader-target="#product-details"
+              data-selectloader-transition="slide" data-selectloader-transition-duration="400">
+        <option value="">Choose a product</option>
+        <option value="/fragments/laptop.html">Laptop</option>
+      </select>
+      <div id="product-details"></div>`;
+    const select = document.querySelector('select');
+    const target = document.querySelector('#product-details');
+    new SelectLoader({ eventBus: new EventManager(), router }).mount(select);
+
+    choose(select, '/fragments/laptop.html');
+
+    await vi.waitFor(() => expect(target.textContent).toBe('Laptop details'), { timeout: 150 });
+  });
+
+  it('leaves no inline styles behind after a slide', async () => {
+    const router = { get: vi.fn(async () => ({ data: '<p>Laptop details</p>' })) };
+    document.body.innerHTML = `
+      <select data-selectloader data-selectloader-target="#product-details"
+              data-selectloader-transition="slide" data-selectloader-transition-duration="10">
+        <option value="">Choose a product</option>
+        <option value="/fragments/laptop.html">Laptop</option>
+      </select>
+      <div id="product-details"></div>`;
+    const select = document.querySelector('select');
+    const complete = new Promise(resolve =>
+      select.addEventListener('selectloader:complete', resolve)
+    );
+    new SelectLoader({ eventBus: new EventManager(), router }).mount(select);
+
+    choose(select, '/fragments/laptop.html');
+    await complete;
+
+    expect(document.querySelector('#product-details').getAttribute('style') ?? '').toBe('');
   });
 });
