@@ -171,6 +171,8 @@ input {
   &__fields {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
   }
 
   &__filename,
@@ -201,9 +203,6 @@ input {
   }
 
   &__delete-icon {
-    position: absolute;
-    top: 0;
-    right: 0;
     width: $size-icon-md;
     height: $size-icon-md;
     border: none;
@@ -319,14 +318,7 @@ slot {
   display: none;
 }
 
-.uploader__fields--editable .uploader__filename {
-  padding-right: 8rem;
-}
-
 .uploader__edit {
-  position: absolute;
-  top: 0;
-  right: calc(#{$size-icon-md} + #{$space-sm});
   height: $size-icon-md;
   padding: 0;
   font: inherit;
@@ -398,4 +390,35 @@ input:focus-visible,
 textarea:focus-visible {
   outline: 2px solid $primary;
   outline-offset: 2px;
+}
+
+.uploader__toolbar {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: $space-xs;
+  flex-shrink: 0;
+  margin-left: $space-sm;
+}
+
+.uploader__move,
+.uploader__replace {
+  height: $size-icon-md;
+  padding: 0 $space-xs;
+  font: inherit;
+  font-size: $font-sm;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.uploader__replace {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }

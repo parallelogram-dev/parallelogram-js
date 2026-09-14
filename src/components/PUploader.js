@@ -165,6 +165,10 @@ const getFileTemplate = () => {
  * - full: set by the component while it holds `max-files` files; the drop zone is hidden meanwhile
  * - stacked: joins the files into one list with no gap, rounding only its outer corners
  *
+ * With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to
+ * dragging. With max-files="1" and an upload-action, each file has a Replace button, and the new
+ * file takes the old one's place (deleted through delete-action) once it has uploaded.
+ *
  * @properties
  * - requestHeaders: headers for every request, as an object or a function returning one. Without it,
  *   an `X-CSRF-Token` header is sent from `<meta name="csrf-token">` when the page has one.
@@ -193,7 +197,7 @@ const getFileTemplate = () => {
  * @cssprop --puploader-files-gap - space between files (default the small spacing step)
  *
  * Files are `p-uploader-file` elements, which expose the parts `preview`, `progress`, `panel`,
- * `fields`, `field`, `filename`, `actions`, `edit-button` and `dialog`. Fields are shown only when
+ * `fields`, `field`, `filename`, `toolbar`, `actions`, `edit-button` and `dialog`. Fields are shown only when
  * `p-uploader-fields` declares them; read-only files hide fields that have no value, and
  * editable files edit every field in one dialog.
  */
@@ -336,6 +340,48 @@ export default class PUploader extends HTMLElement {
 
   _canSort() {
     return this.config.allowSort && Boolean(this.config.sequenceAction);
+  }
+
+  _canReplace() {
+    return this.config.maxFiles === 1 && Boolean(this.config.uploadAction);
+  }
+
+  /**
+   * Move a file one place up or down, keep focus on the control that moved it, announce the new
+   * position and save the order
+   */
+  _moveFile(file, offset) {
+    const files = [...this.querySelectorAll('p-uploader-file')];
+    const target = files[files.indexOf(file) + offset];
+    if (!this._canSort() || !target) return;
+
+    const action = file.shadowRoot.activeElement?.dataset.action;
+    this.originalFileOrder = files;
+    if (offset < 0) {
+      target.before(file);
+    } else {
+      target.after(file);
+    }
+    this._updateDraggableState();
+
+    const controls = [action, 'move-up', 'move-down'].map(name =>
+      file.shadowRoot.querySelector(`[data-action="${name}"]`)
+    );
+    controls.find(control => control && !control.disabled)?.focus();
+
+    const position = [...this.querySelectorAll('p-uploader-file')].indexOf(file) + 1;
+    this._showMessage(
+      `Moved ${file.getAttribute('filename') || 'the file'} to position ${position} of ${files.length}.`
+    );
+    this._updateSequence();
+  }
+
+  /**
+   * Open the file picker to choose a file that takes the place of an existing one
+   */
+  _startReplace(file) {
+    this._replaceTarget = file;
+    this.shadowRoot.querySelector('.uploader__fileinput').click();
   }
 
   _updateFullState() {
@@ -490,6 +536,13 @@ export default class PUploader extends HTMLElement {
     const selector = this.shadowRoot.querySelector('.uploader__selector');
 
     fileInput.addEventListener('change', e => this._handleFileSelect(e), { signal });
+    fileInput.addEventListener(
+      'cancel',
+      () => {
+        this._replaceTarget = null;
+      },
+      { signal }
+    );
 
     /* The add button, and anywhere else in the drop zone, opens the file picker */
     selector.addEventListener(
@@ -611,6 +664,9 @@ export default class PUploader extends HTMLElement {
       return;
     }
 
+    const replacing = this._replaceTarget?.parentNode === this ? this._replaceTarget : null;
+    this._replaceTarget = null;
+
     const accepted = files.filter(file => {
       const reason = this._rejectionReason(file);
       if (!reason) return true;
@@ -632,7 +688,8 @@ export default class PUploader extends HTMLElement {
     });
 
     const { maxFiles } = this.config;
-    const available = Math.max(0, maxFiles - this.querySelectorAll('p-uploader-file').length);
+    const count = this.querySelectorAll('p-uploader-file').length - (replacing ? 1 : 0);
+    const available = Math.max(0, maxFiles - count);
     const toUpload = accepted.slice(0, available);
     const overLimit = accepted.slice(available);
 
@@ -649,7 +706,7 @@ export default class PUploader extends HTMLElement {
     }
 
     this._showMessage(messages.join(' '));
-    toUpload.forEach(file => this._uploadFile(file));
+    toUpload.forEach(file => this._uploadFile(file, replacing));
   }
 
   /**
@@ -678,13 +735,14 @@ export default class PUploader extends HTMLElement {
     return null;
   }
 
-  async _uploadFile(file) {
+  async _uploadFile(file, replacing = null) {
     const fileId = generateId('file');
     const fileData = {
       id: fileId,
       file: file,
       state: 'uploading',
       progress: 0,
+      replaces: replacing,
     };
 
     this.files.set(fileId, fileData);
@@ -699,7 +757,11 @@ export default class PUploader extends HTMLElement {
 
     fileData.element = fileElement;
 
-    this.appendChild(fileElement);
+    if (replacing) {
+      replacing.before(fileElement);
+    } else {
+      this.appendChild(fileElement);
+    }
     this._updateFullState();
 
     if (file.type.startsWith('image/')) {
@@ -773,6 +835,8 @@ export default class PUploader extends HTMLElement {
       fileData.element.setAttribute('file-id', response.id);
     }
 
+    /* A replacement takes the old file's place once it has uploaded */
+    fileData.replaces?._handleConfirmDelete();
     this._updateDraggableState();
 
     this.dispatchEvent(
@@ -799,20 +863,17 @@ export default class PUploader extends HTMLElement {
   }
 
   _updateDraggableState() {
-    if (!this._canSort()) return;
+    const files = [...this.querySelectorAll('p-uploader-file')];
+    const draggable = this._canSort() && files.length > 1;
 
-    const allFiles = this.querySelectorAll('p-uploader-file');
-    const shouldBeDraggable = allFiles.length > 1;
-
-    allFiles.forEach(fileElement => {
-      const currentPanel = fileElement.getAttribute('data-current-panel') || 'info';
-      const isPanelActive = currentPanel !== 'info';
-
-      if (shouldBeDraggable && !isPanelActive) {
-        fileElement.setAttribute('draggable', 'true');
+    files.forEach(file => {
+      const panelOpen = (file.getAttribute('data-current-panel') || 'info') !== 'info';
+      if (draggable && !panelOpen) {
+        file.setAttribute('draggable', 'true');
       } else {
-        fileElement.removeAttribute('draggable');
+        file.removeAttribute('draggable');
       }
+      file._syncOrderButtons?.();
     });
   }
 
@@ -921,7 +982,10 @@ export default class PUploader extends HTMLElement {
       }
 
       this.originalFileOrder = null;
-      this._showMessage('');
+      if (this._sequenceFailed) {
+        this._sequenceFailed = false;
+        this._showMessage('');
+      }
       this.dispatchEvent(
         new CustomEvent('sequence:update', {
           detail: { sequence: fileIds },
@@ -932,6 +996,7 @@ export default class PUploader extends HTMLElement {
       if (error.name === 'AbortError') return;
 
       this._revertSequence();
+      this._sequenceFailed = true;
       this._showMessage(
         'The new order couldn’t be saved, so the files are back in their previous order.'
       );
@@ -945,6 +1010,7 @@ export default class PUploader extends HTMLElement {
       this.append(...this.originalFileOrder.filter(file => file.parentNode === this));
     }
     this.originalFileOrder = null;
+    this._updateDraggableState();
   }
 
   async _createThumbnail(file, maxWidth, maxHeight) {
@@ -1021,7 +1087,6 @@ export class PUploaderFile extends HTMLElement {
     const preview = this.getAttribute('preview') || '';
     const error = this.getAttribute('error') || '';
     const filename = this.getAttribute('filename') || '';
-    const permissions = this._permissions();
     const currentPanel = this.getAttribute('data-current-panel') || 'info';
 
     /* Load field data from slotted elements */
@@ -1074,7 +1139,6 @@ export class PUploaderFile extends HTMLElement {
     const infoPanel = root.querySelector('[data-panel="info"]');
     infoPanel.setAttribute('aria-label', `File information for ${filename}`);
     root.querySelector('.uploader__filename').textContent = filename;
-    this._syncDeleteButton(infoPanel, permissions.remove);
 
     const deletePanel = root.querySelector('[data-panel="delete"]');
     this._deleteHeadingId ??= generateId('delete-heading');
@@ -1082,9 +1146,11 @@ export class PUploaderFile extends HTMLElement {
     deletePanel.querySelector('.uploader__heading').id = this._deleteHeadingId;
 
     this._renderDetails(root, state);
+    this._renderToolbar(root, state);
     this._showPanels(root, currentPanel, state);
 
     this.shadowRoot.replaceChildren(root);
+    this._syncOrderButtons();
     this._setupFileEventListeners();
   }
 
@@ -1110,21 +1176,12 @@ export class PUploaderFile extends HTMLElement {
    */
   _renderDetails(root, state) {
     const fields = root.querySelector('.uploader__fields');
-    fields.querySelectorAll('.uploader__field, .uploader__edit').forEach(node => node.remove());
+    fields.querySelectorAll('.uploader__field').forEach(node => node.remove());
     if (state !== 'uploaded') return;
 
     const { edit } = this._permissions();
     fields.append(...this._createFields(edit));
-    fields.classList.toggle('uploader__fields--editable', edit && Boolean(this._fieldSchema?.size));
-
     if (edit && this._fieldSchema?.size) {
-      fields.append(
-        el(
-          'button',
-          { type: 'button', class: 'uploader__edit', 'data-action': 'edit', part: 'edit-button' },
-          'Edit details'
-        )
-      );
       this._fillEditor(root);
     }
   }
@@ -1142,10 +1199,68 @@ export class PUploaderFile extends HTMLElement {
     };
   }
 
-  _syncDeleteButton(infoPanel, show) {
-    const existing = infoPanel.querySelector('.uploader__delete-icon');
-    if (show && !existing) {
-      infoPanel.querySelector('.uploader__body').prepend(
+  /**
+   * Rebuild the info panel toolbar: Edit details, Move up, Move down, Replace and Delete, each only
+   * when the uploader's configuration allows it
+   */
+  _renderToolbar(root, state) {
+    const body = root.querySelector('[data-panel="info"] .uploader__body');
+    if (!body) return;
+
+    body.querySelector('.uploader__toolbar')?.remove();
+    const toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
+    body.append(toolbar);
+
+    const uploader = this.closest('p-uploader');
+    const uploaded = state === 'uploaded';
+    const permissions = this._permissions();
+
+    if (uploaded && permissions.edit && this._fieldSchema?.size) {
+      toolbar.append(
+        el(
+          'button',
+          { type: 'button', class: 'uploader__edit', 'data-action': 'edit', part: 'edit-button' },
+          'Edit details'
+        )
+      );
+    }
+    if (uploaded && uploader?._canSort()) {
+      toolbar.append(
+        el(
+          'button',
+          {
+            type: 'button',
+            class: 'uploader__move',
+            'data-action': 'move-up',
+            title: 'Move up',
+            'aria-label': 'Move up',
+          },
+          '↑'
+        ),
+        el(
+          'button',
+          {
+            type: 'button',
+            class: 'uploader__move',
+            'data-action': 'move-down',
+            title: 'Move down',
+            'aria-label': 'Move down',
+          },
+          '↓'
+        )
+      );
+    }
+    if (uploaded && uploader?._canReplace()) {
+      toolbar.append(
+        el(
+          'button',
+          { type: 'button', class: 'uploader__replace', 'data-action': 'replace' },
+          'Replace'
+        )
+      );
+    }
+    if (permissions.remove) {
+      toolbar.append(
         el('button', {
           type: 'button',
           class: 'uploader__delete-icon',
@@ -1154,9 +1269,19 @@ export class PUploaderFile extends HTMLElement {
           'aria-label': 'Delete file',
         })
       );
-    } else if (!show) {
-      existing?.remove();
     }
+  }
+
+  /**
+   * Disable Move up on the first file and Move down on the last
+   */
+  _syncOrderButtons() {
+    const files = [...(this.closest('p-uploader')?.querySelectorAll('p-uploader-file') ?? [])];
+    const index = files.indexOf(this);
+    const up = this.shadowRoot.querySelector('[data-action="move-up"]');
+    const down = this.shadowRoot.querySelector('[data-action="move-down"]');
+    if (up) up.disabled = index <= 0;
+    if (down) down.disabled = index === -1 || index >= files.length - 1;
   }
 
   _loadFieldData() {
@@ -1269,11 +1394,12 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _renderInfoPanelFields() {
-    const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
-    if (!infoPanel) return;
+    if (!this.shadowRoot.querySelector('[data-panel="info"]')) return;
 
-    this._syncDeleteButton(infoPanel, this._permissions().remove);
-    this._renderDetails(this.shadowRoot, this.getAttribute('state') || 'uploaded');
+    const state = this.getAttribute('state') || 'uploaded';
+    this._renderDetails(this.shadowRoot, state);
+    this._renderToolbar(this.shadowRoot, state);
+    this._syncOrderButtons();
   }
 
   _setupFileEventListeners() {
@@ -1291,6 +1417,9 @@ export class PUploaderFile extends HTMLElement {
         const actions = {
           edit: () => this._openEditor(),
           'show-delete': () => this._setPanel('delete'),
+          'move-up': () => this.closest('p-uploader')?._moveFile(this, -1),
+          'move-down': () => this.closest('p-uploader')?._moveFile(this, 1),
+          replace: () => this.closest('p-uploader')?._startReplace(this),
           cancel: () => (inDialog ? this._closeEditor() : this._setPanel('info')),
           'confirm-delete': () => this._handleConfirmDelete(),
         };
