@@ -53,17 +53,17 @@ export default class Scrollreveal extends BaseComponent {
     const state = super._init(element);
 
     // Get configuration from data attributes
-    const threshold = this.getAttr(element, 'threshold', Scrollreveal.defaults.threshold);
-    const once = this.getAttr(element, 'once', Scrollreveal.defaults.once);
-    const delay = this.getAttr(element, 'delay', Scrollreveal.defaults.delay);
-    const stagger = this.getAttr(element, 'stagger', Scrollreveal.defaults.stagger);
+    const threshold = this.getNumberAttr(element, 'threshold', Scrollreveal.defaults.threshold);
+    const once = this.getBoolAttr(element, 'once', Scrollreveal.defaults.once);
+    const delay = this.getNumberAttr(element, 'delay', Scrollreveal.defaults.delay);
+    const stagger = this.getNumberAttr(element, 'stagger', Scrollreveal.defaults.stagger);
     const initialState = this.getAttr(element, 'initial', Scrollreveal.defaults.initialState);
 
     // Store state
-    state.threshold = parseFloat(threshold);
-    state.once = Boolean(once);
-    state.delay = parseInt(delay, 10);
-    state.stagger = parseInt(stagger, 10);
+    state.threshold = threshold;
+    state.once = once;
+    state.delay = delay;
+    state.stagger = stagger;
     state.initialState = initialState;
     state.hasBeenRevealed = false;
     state.isRevealing = false;

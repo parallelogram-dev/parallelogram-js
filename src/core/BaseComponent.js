@@ -26,7 +26,7 @@ import {
  * @property {Function} cleanup - Cleanup function called on unmount
  */
 export class BaseComponent {
-  constructor({ eventBus, logger, router }) {
+  constructor({ eventBus, logger, router } = {}) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
@@ -202,6 +202,11 @@ export class BaseComponent {
 
   /**
    * Parse multiple data attributes into configuration object
+   *
+   * Each value is converted to the type of the matching entry in
+   * `static defaults`: boolean defaults are read with getBoolAttr(), number
+   * defaults with getNumberAttr(), and everything else as a string.
+   *
    * @param {HTMLElement} element - Element with data attributes
    * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
    * @returns {Object} Configuration object
@@ -216,7 +221,13 @@ export class BaseComponent {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this.getAttr(element, attrName, defaultValue);
+      if (typeof defaultValue === 'boolean') {
+        config[key] = this.getBoolAttr(element, attrName, defaultValue);
+      } else if (typeof defaultValue === 'number') {
+        config[key] = this.getNumberAttr(element, attrName, defaultValue);
+      } else {
+        config[key] = this.getAttr(element, attrName, defaultValue);
+      }
     }
     return config;
   }
@@ -338,6 +349,11 @@ export class BaseComponent {
 
   /**
    * Get component attribute (data-<component>-<attr>)
+   *
+   * Always returns the raw string when the attribute is present. Use
+   * getBoolAttr() or getNumberAttr() for flags and numbers, because the
+   * string "false" is truthy.
+   *
    * @param {HTMLElement} element - Target element
    * @param {string} attr - Attribute name (without data- prefix)
    * @param {*} defaultValue - Default value if attribute doesn't exist
@@ -348,6 +364,46 @@ export class BaseComponent {
   getAttr(element, attr, defaultValue = null) {
     const value = element.getAttribute(`${this._getSelector()}-${attr}`);
     return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Get a boolean component attribute (data-<component>-<attr>)
+   *
+   * A missing attribute returns the default. "false" and "0" (in any case)
+   * mean false; any other value, including an empty attribute, means true.
+   *
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {boolean|null} [defaultValue=false] - Value when the attribute is missing
+   * @returns {boolean|null}
+   * @example
+   * // <div data-toggle-animate="false">
+   * this.getBoolAttr(element, 'animate', true); // false
+   */
+  getBoolAttr(element, attr, defaultValue = false) {
+    const value = this.getAttr(element, attr);
+    if (value === null) return defaultValue;
+    return !['false', '0'].includes(value.trim().toLowerCase());
+  }
+
+  /**
+   * Get a numeric component attribute (data-<component>-<attr>)
+   *
+   * Returns the default when the attribute is missing, empty or not a finite number.
+   *
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {number|null} [defaultValue=null] - Value when the attribute is missing or invalid
+   * @returns {number|null}
+   * @example
+   * // <div data-scrollhide-scroll-threshold="80">
+   * this.getNumberAttr(element, 'scroll-threshold', 50); // 80
+   */
+  getNumberAttr(element, attr, defaultValue = null) {
+    const value = this.getAttr(element, attr);
+    if (value === null || value.trim() === '') return defaultValue;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : defaultValue;
   }
 
   /**

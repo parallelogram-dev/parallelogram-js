@@ -83,24 +83,22 @@ export class FormEnhancer extends BaseComponent {
 
   _getConfiguration(element) {
     return {
-      validateOnInput: this.getAttr(
+      validateOnInput: this.getBoolAttr(
         element,
         'validate-on-input',
         FormEnhancer.defaults.validateOnInput
       ),
-      validateOnBlur: this.getAttr(
+      validateOnBlur: this.getBoolAttr(
         element,
         'validate-on-blur',
         FormEnhancer.defaults.validateOnBlur
       ),
-      showErrorsImmediately: this.getAttr(
+      showErrorsImmediately: this.getBoolAttr(
         element,
         'show-errors-immediately',
         FormEnhancer.defaults.showErrorsImmediately
       ),
-      debounce: parseInt(
-        this.getAttr(element, 'validate-debounce', FormEnhancer.defaults.debounce)
-      ),
+      debounce: this.getNumberAttr(element, 'validate-debounce', FormEnhancer.defaults.debounce),
     };
   }
 
