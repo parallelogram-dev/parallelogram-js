@@ -35,12 +35,12 @@ class PendingImage {
   }
 }
 
-const lazyImage = name => {
-  const image = document.createElement('img');
-  image.setAttribute('data-lazysrc', '');
-  image.setAttribute('data-lazysrc-src', `/images/${name}.jpg`);
-  document.body.append(image);
-  return image;
+const lazyBackground = name => {
+  const panel = document.createElement('div');
+  panel.setAttribute('data-lazysrc', '');
+  panel.setAttribute('data-lazysrc-bg', `/images/${name}.jpg`);
+  document.body.append(panel);
+  return panel;
 };
 
 describe('Lazysrc', () => {
@@ -55,44 +55,44 @@ describe('Lazysrc', () => {
     document.body.replaceChildren();
   });
 
-  it('starts loading every image that enters the viewport at the same time', async () => {
+  it('starts loading every background image that enters the viewport at the same time', async () => {
     const lazysrc = new Lazysrc();
-    const images = ['harbour', 'market', 'station'].map(lazyImage);
-    images.forEach(image => lazysrc.mount(image));
+    const panels = ['harbour', 'market', 'station'].map(lazyBackground);
+    panels.forEach(panel => lazysrc.mount(panel));
 
-    RecordingObserver.latest.reveal(images);
+    RecordingObserver.latest.reveal(panels);
 
     await vi.waitFor(() => expect(PendingImage.created).toHaveLength(3));
   });
 
-  it('stops observing an image once it is unmounted', () => {
+  it('stops observing a background image once it is unmounted', () => {
     const lazysrc = new Lazysrc();
-    const image = lazyImage('harbour');
-    lazysrc.mount(image);
+    const panel = lazyBackground('harbour');
+    lazysrc.mount(panel);
 
-    lazysrc.unmount(image);
+    lazysrc.unmount(panel);
 
-    expect(RecordingObserver.latest.observed.has(image)).toBe(false);
+    expect(RecordingObserver.latest.observed.has(panel)).toBe(false);
   });
 
-  it('ignores force-load requests for an unmounted image', async () => {
+  it('ignores force-load requests for an unmounted background image', async () => {
     const lazysrc = new Lazysrc();
-    const image = lazyImage('harbour');
-    lazysrc.mount(image);
-    lazysrc.unmount(image);
+    const panel = lazyBackground('harbour');
+    lazysrc.mount(panel);
+    lazysrc.unmount(panel);
 
-    image.dispatchEvent(new CustomEvent('lazysrc:forceLoad'));
+    panel.dispatchEvent(new CustomEvent('lazysrc:forceLoad'));
     await Promise.resolve();
 
     expect(PendingImage.created).toHaveLength(0);
   });
 
-  it('reports the load state of an image synchronously', () => {
+  it('reports the load state of a background image synchronously', () => {
     const lazysrc = new Lazysrc();
-    const image = lazyImage('harbour');
-    lazysrc.mount(image);
+    const panel = lazyBackground('harbour');
+    lazysrc.mount(panel);
 
-    expect([lazysrc.isLoaded(image), lazysrc.isLoading(image), lazysrc.hasError(image)]).toEqual([
+    expect([lazysrc.isLoaded(panel), lazysrc.isLoading(panel), lazysrc.hasError(panel)]).toEqual([
       false,
       false,
       false,
@@ -101,7 +101,7 @@ describe('Lazysrc', () => {
 
   it('counts the images it manages in its status', () => {
     const lazysrc = new Lazysrc();
-    ['harbour', 'market'].map(lazyImage).forEach(image => lazysrc.mount(image));
+    ['harbour', 'market'].map(lazyBackground).forEach(panel => lazysrc.mount(panel));
 
     expect(lazysrc.getStatus()).toMatchObject({
       totalElements: 2,
