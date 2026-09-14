@@ -30,56 +30,133 @@ export class BaseComponent {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
-    // Primary storage for element states
-    this.elements = new WeakMap();
+    /** @type {Map<HTMLElement, ComponentState>} Mounted elements and their state */
+    this.elements = new Map();
     // Backward-compat alias for older components expecting `states`
     this.states = this.elements;
-    this._keys = null;
+    /** @type {Map<HTMLElement, Promise<void>>} Elements whose asynchronous _init is still running */
+    this._initializing = new Map();
+    /** @type {WeakMap<HTMLElement, AbortController>} Controllers created by the base _init */
+    this._controllers = new WeakMap();
   }
 
+  /**
+   * Mount the component on an element, or call update() if it is already mounted.
+   *
+   * If _init throws, the element is not tracked and its abort signal is aborted
+   * before the error is rethrown. An _init that returns a Promise is tracked
+   * straight away, and its state is stored once the Promise resolves.
+   */
   mount(element) {
-    if (this.elements.has(element)) return this.update(element);
-    const state = this._init(element);
-    this.elements.set(element, state);
+    if (this.elements.has(element) || this._initializing.has(element)) {
+      return this.update(element);
+    }
+
+    let state;
+    try {
+      state = this._init(element);
+    } catch (error) {
+      this._abortController(element);
+      throw error;
+    }
+
+    if (typeof state?.then !== 'function') {
+      this.elements.set(element, state);
+      return;
+    }
+
+    const pending = Promise.resolve(state).then(
+      resolved => {
+        if (this._initializing.get(element) !== pending) {
+          this._cleanupLate(element, resolved);
+          return;
+        }
+        this._initializing.delete(element);
+        this.elements.set(element, resolved);
+      },
+      error => {
+        if (this._initializing.get(element) === pending) {
+          this._initializing.delete(element);
+          this._abortController(element);
+        }
+        this.logger?.error('Component failed to initialize', { element, error });
+      }
+    );
+    this._initializing.set(element, pending);
   }
 
   update(_element) {
     // Override in subclasses for update logic
   }
 
+  /**
+   * Unmount the component from an element.
+   *
+   * The state's cleanup() runs and the element's abort signal is aborted
+   * afterwards, even if cleanup throws.
+   */
   unmount(element) {
+    if (this._initializing.has(element)) {
+      this._initializing.delete(element);
+      this._abortController(element);
+      return;
+    }
+
     const state = this.elements.get(element);
     if (!state) return;
-    try {
-      state.cleanup?.();
-    } finally {
-      this.elements.delete(element);
-    }
+
+    this.elements.delete(element);
+    this._controllers.delete(element);
+    this._runCleanup(state);
   }
 
   destroy() {
-    for (const element of this._elementsKeys()) {
+    for (const element of this.trackedElements()) {
       this.unmount(element);
     }
   }
 
+  /**
+   * Elements this component is mounted on, including ones still initializing.
+   *
+   * @returns {HTMLElement[]}
+   */
+  trackedElements() {
+    return [...this.elements.keys(), ...this._initializing.keys()];
+  }
+
+  /**
+   * @deprecated 0.5.0 Use trackedElements() instead. Will be removed in 0.6.0.
+   * @returns {Set<HTMLElement>}
+   */
   _elementsKeys() {
-    if (!this._keys) this._keys = new Set();
-    return this._keys;
+    return new Set(this.trackedElements());
   }
 
-  _track(element) {
-    if (!this._keys) this._keys = new Set();
-    this._keys.add(element);
+  _runCleanup(state) {
+    try {
+      state?.cleanup?.();
+    } finally {
+      state?.controller?.abort();
+    }
   }
 
-  _untrack(element) {
-    this._keys?.delete(element);
+  _cleanupLate(element, state) {
+    try {
+      this._runCleanup(state);
+    } catch (error) {
+      this.logger?.error('Component cleanup failed', { element, error });
+    }
+  }
+
+  _abortController(element) {
+    this._controllers.get(element)?.abort();
+    this._controllers.delete(element);
   }
 
   /**
    * Initialize per-element state. Called by mount() the first time an element
-   * is encountered; the returned object is stored in this.elements (a WeakMap)
+   * is encountered; the returned object is stored in this.elements (a Map)
    * and retrieved later by getState() / unmount().
    *
    * Subclasses MUST override and return a ComponentState object. The returned
@@ -88,7 +165,7 @@ export class BaseComponent {
    * observers, timers, DOM nodes, etc).
    *
    * Recommended pattern — call super._init(element) to inherit the base
-   * AbortController + element tracking, then extend the returned state and
+   * AbortController, then extend the returned state and
    * wrap cleanup so the base teardown still runs:
    *
    *   _init(element) {
@@ -101,7 +178,7 @@ export class BaseComponent {
    *
    *     state.cleanup = () => {
    *       state.observer.disconnect();
-   *       baseCleanup();   // aborts the controller and untracks the element
+   *       baseCleanup();   // aborts the controller
    *     };
    *     return state;
    *   }
@@ -115,12 +192,8 @@ export class BaseComponent {
    */
   _init(element) {
     const controller = new AbortController();
-    const cleanup = () => {
-      controller.abort();
-      this._untrack(element);
-    };
-    this._track(element);
-    return { cleanup, controller };
+    this._controllers.set(element, controller);
+    return { cleanup: () => controller.abort(), controller };
   }
 
   // Helper method for getting state
