@@ -194,20 +194,17 @@ export class Lightbox extends BaseComponent {
     document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
     document.body.classList.add('overflow--hidden');
 
-    /* Transition to open state */
+    /* Become fully open once the overlay's own opening animation has finished */
+    const overlay = this.lightboxElement;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (this.lightboxElement && state.config) {
-          this.lightboxElement.classList.add(state.config.showClass);
-          /* After transition completes, set to fully open */
-          this.lightboxElement.addEventListener(
-            'transitionend',
-            () => {
-              this._setState(triggerElement, 'open');
-            },
-            { once: true }
-          );
-        }
+        if (this.lightboxElement !== overlay) return;
+        overlay.classList.add(state.config.showClass);
+        this._whenAnimationsFinish(overlay).then(() => {
+          if (this.lightboxElement === overlay && state.lightboxState === 'opening') {
+            this._setState(triggerElement, 'open');
+          }
+        });
       });
     });
 
@@ -317,13 +314,41 @@ export class Lightbox extends BaseComponent {
     img.src = data.src;
   }
 
+  /**
+   * Start loading an image.
+   *
+   * @returns {Promise<void>} Resolves when the image loads or fails
+   */
   _preloadImage(data) {
-    const img = new Image();
-    if (data.srcset) {
-      img.sizes = data.sizes;
-      img.srcset = data.srcset;
-    }
-    img.src = data.src;
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = img.onerror = () => resolve();
+      if (data.srcset) {
+        img.sizes = data.sizes;
+        img.srcset = data.srcset;
+      }
+      img.src = data.src;
+    });
+  }
+
+  /**
+   * Resolve when the element's own running CSS animations and transitions finish.
+   *
+   * Falls back to the timeout so a cancelled animation, or one that never
+   * starts, cannot leave the lightbox stuck in an intermediate state.
+   *
+   * @param {Element} element
+   * @param {number} [timeout=1000] - Milliseconds to wait at most
+   * @returns {Promise<void>}
+   */
+  _whenAnimationsFinish(element, timeout = 1000) {
+    const animations = element.getAnimations();
+    if (animations.length === 0) return Promise.resolve();
+
+    return Promise.race([
+      Promise.allSettled(animations.map(animation => animation.finished)),
+      new Promise(resolve => setTimeout(resolve, timeout)),
+    ]).then(() => {});
   }
 
   _createLightboxElement(triggerElement) {
@@ -404,49 +429,7 @@ export class Lightbox extends BaseComponent {
 
     /* Apply directional transition if configured */
     if (config.useDirectionalTransitions && direction && state.lightboxState === 'open') {
-      this._setState(triggerElement, 'transitioning');
-
-      const slideOutClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
-      const slideInClass = direction === 'next' ? config.slideRightClass : config.slideLeftClass;
-
-      img.classList.add(slideOutClass);
-
-      img.addEventListener(
-        'transitionend',
-        () => {
-          const loader = new Image();
-          loader.onload = () => {
-            this._applyImageData(img, imageData);
-            img.style.transition = 'none';
-            img.classList.add(slideInClass);
-            img.offsetHeight;
-            img.classList.remove(slideOutClass);
-
-            requestAnimationFrame(() => {
-              img.style.transition = '';
-              img.classList.remove(slideInClass);
-
-              img.addEventListener(
-                'transitionend',
-                () => {
-                  this._setState(triggerElement, 'open');
-                },
-                { once: true }
-              );
-            });
-          };
-          loader.onerror = () => {
-            this._applyImageData(img, imageData);
-            this._setState(triggerElement, 'open');
-          };
-          if (imageData.srcset) {
-            loader.sizes = imageData.sizes;
-            loader.srcset = imageData.srcset;
-          }
-          loader.src = imageData.src;
-        },
-        { once: true }
-      );
+      this._slideToImage(triggerElement, img, imageData, direction);
     } else {
       this._applyImageData(img, imageData);
     }
@@ -467,9 +450,47 @@ export class Lightbox extends BaseComponent {
     }
   }
 
+  /**
+   * Slide the current image out and the next one in.
+   *
+   * The new image is swapped in once it has loaded or failed, and the lightbox
+   * always returns to 'open' afterwards, so a broken image or a transition that
+   * never ends cannot block further navigation.
+   */
+  async _slideToImage(triggerElement, img, imageData, direction) {
+    const state = this.getState(triggerElement);
+    const { config } = state;
+    const overlay = this.lightboxElement;
+    const slideOutClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
+    const slideInClass = direction === 'next' ? config.slideRightClass : config.slideLeftClass;
+
+    this._setState(triggerElement, 'transitioning');
+
+    try {
+      img.classList.add(slideOutClass);
+      await Promise.all([this._whenAnimationsFinish(img), this._preloadImage(imageData)]);
+      if (this.lightboxElement !== overlay) return;
+
+      this._applyImageData(img, imageData);
+      img.style.transition = 'none';
+      img.classList.add(slideInClass);
+      img.classList.remove(slideOutClass);
+      img.getBoundingClientRect();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+
+      img.style.transition = '';
+      img.classList.remove(slideInClass);
+      await this._whenAnimationsFinish(img);
+    } finally {
+      if (this.lightboxElement === overlay && state.lightboxState === 'transitioning') {
+        this._setState(triggerElement, 'open');
+      }
+    }
+  }
+
   _previousImage(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (state.currentIndex > 0) {
       state.currentIndex--;
@@ -479,7 +500,7 @@ export class Lightbox extends BaseComponent {
 
   _nextImage(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (state.currentIndex < state.galleryElements.length - 1) {
       state.currentIndex++;
@@ -496,7 +517,7 @@ export class Lightbox extends BaseComponent {
     if (config.closeOnEscape || config.keyNavigation) {
       this.keyHandler = e => {
         /* Check if this lightbox is currently open */
-        if (state.lightboxState !== 'open' && state.lightboxState !== 'transitioning') return;
+        if (!['opening', 'open', 'transitioning'].includes(state.lightboxState)) return;
 
         let handled = false;
         switch (e.key) {
@@ -565,17 +586,7 @@ export class Lightbox extends BaseComponent {
       this.eventBus?.emit('lightbox:closed', {});
     };
 
-    /* Wait for transition */
-    const handleTransitionEnd = event => {
-      if (event && event.target !== this.lightboxElement) return;
-      cleanup();
-    };
-
-    this.lightboxElement.addEventListener('transitionend', handleTransitionEnd, { once: true });
-    this.lightboxElement.addEventListener('animationend', handleTransitionEnd, { once: true });
-
-    /* Fallback */
-    setTimeout(cleanup, 1000);
+    this._whenAnimationsFinish(this.lightboxElement).then(cleanup);
   }
 
   /* Public API */
@@ -597,7 +608,7 @@ export class Lightbox extends BaseComponent {
 
   goTo(triggerElement, index) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (index >= 0 && index < state.galleryElements.length) {
       state.currentIndex = index;
