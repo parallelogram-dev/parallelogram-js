@@ -21,7 +21,7 @@
 .uploader {
   &__files {
     display: grid;
-    gap: $space-sm;
+    gap: var(--puploader-files-gap, #{$space-sm});
 
     & + & {
       margin-top: $space-sm;
@@ -110,4 +110,25 @@
 
 :host([full]) .uploader__selector {
   display: none;
+}
+
+:host([stacked]) .uploader__files {
+  gap: 0;
+}
+
+:host([stacked]) ::slotted(p-uploader-file) {
+  --uploader-file-radius-start: 0;
+  --uploader-file-radius-end: 0;
+}
+
+:host([stacked]) ::slotted(p-uploader-file:not(:first-of-type)) {
+  margin-top: calc(var(--surface-card-border-width, 1px) * -1);
+}
+
+:host([stacked]) ::slotted(p-uploader-file:first-of-type) {
+  --uploader-file-radius-start: var(--surface-card-radius);
+}
+
+:host([stacked]) ::slotted(p-uploader-file:last-of-type) {
+  --uploader-file-radius-end: var(--surface-card-radius);
 }
