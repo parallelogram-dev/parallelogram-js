@@ -121,7 +121,7 @@ export class Parallelogram {
     });
 
     // Create event bus
-    this.eventBus = new EventManager();
+    this.eventBus = new EventManager({ logger: this.logger });
 
     // Create component registry for enhancement components
     const registry = ComponentRegistry.create(this.config.mode);

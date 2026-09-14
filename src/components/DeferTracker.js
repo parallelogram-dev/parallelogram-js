@@ -309,7 +309,9 @@ export default class DeferTracker extends BaseComponent {
     if (config.consent && consentResolver && !consentResolver(config.consent)) {
       this.logger?.info('Tracker awaiting consent', { name, consent: config.consent });
       this.setAttr(element, 'status', 'awaiting-consent');
-      this.eventBus?.once('consent:granted', () => this._boot(element, name, config));
+      this.eventBus?.once('consent:granted', () => this._boot(element, name, config), {
+        signal: this.getState(element)?.controller.signal,
+      });
       return;
     }
 

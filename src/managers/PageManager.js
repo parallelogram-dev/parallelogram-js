@@ -76,13 +76,15 @@ export class PageManager {
    * Initialize the PageManager with event listeners
    */
   _initialize() {
+    this._listeners = new AbortController();
+
     this.logger?.info('PageManager initializing', {
       containerSelector: this.containerSelector,
       registrySize: this.registry.length,
     });
 
     // Router event handlers
-    this.eventBus.on(
+    this._subscribe(
       'router:navigate-success',
       ({ html, url, trigger, viewTarget, viewTargets }) => {
         // Resolve target groups based on configuration
@@ -98,7 +100,7 @@ export class PageManager {
       }
     );
 
-    this.eventBus.on('router:popstate', async ({ url }) => {
+    this._subscribe('router:popstate', async ({ url }) => {
       try {
         this.logger?.info('Handling popstate navigation', { url: url.toString() });
         const { data } = await this.router.get(url.toString());
@@ -120,7 +122,7 @@ export class PageManager {
     });
 
     // Component lifecycle events
-    this.eventBus.on('component:lazy-load', ({ element, componentName }) => {
+    this._subscribe('component:lazy-load', ({ element, componentName }) => {
       this._handleLazyLoad(element, componentName);
     });
 
@@ -131,6 +133,13 @@ export class PageManager {
       containerSelector: this.containerSelector,
       options: this.options,
     });
+  }
+
+  /**
+   * Subscribe to an event bus event until this manager is destroyed.
+   */
+  _subscribe(event, handler) {
+    return this.eventBus.on(event, handler, { signal: this._listeners.signal });
   }
 
   /**
@@ -1638,10 +1647,8 @@ export class PageManager {
     if (this._errorCounts) this._errorCounts.clear();
     if (this._circuitBreakers) this._circuitBreakers.clear();
 
-    // Remove event listeners
-    this.eventBus.off('router:navigate-success');
-    this.eventBus.off('router:popstate');
-    this.eventBus.off('component:lazy-load');
+    // Remove event bus listeners
+    this._listeners?.abort();
 
     this.eventBus.emit('page-manager:destroyed', {});
 

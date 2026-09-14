@@ -69,6 +69,10 @@ export class RouterManager {
     // Bind event handlers
     this.boundPopState = this._onPopState.bind(this);
     this.boundLinkClick = this._onLinkClick.bind(this);
+    this.boundAnchorClick = this._onAnchorClick.bind(this);
+
+    /* Aborted in destroy() to remove every window, link and event bus listener */
+    this._listeners = new AbortController();
 
     this._initialize();
   }
@@ -79,24 +83,32 @@ export class RouterManager {
   _initialize() {
     this.logger?.info('RouterManager initializing');
 
+    const { signal } = this._listeners;
+
     // History events
-    window.addEventListener('popstate', this.boundPopState);
-    window.addEventListener('pageshow', e => {
-      if (e.persisted) {
-        this.eventBus.emit('router:bfcache-restore', { url: this.currentUrl });
-      }
-    });
-    window.addEventListener('pagehide', () => {
-      this.eventBus.emit('router:bfcache-store', { url: this.currentUrl });
-    });
+    window.addEventListener('popstate', this.boundPopState, { signal });
+    window.addEventListener(
+      'pageshow',
+      e => {
+        if (e.persisted) {
+          this.eventBus.emit('router:bfcache-restore', { url: this.currentUrl });
+        }
+      },
+      { signal }
+    );
+    window.addEventListener(
+      'pagehide',
+      () => {
+        this.eventBus.emit('router:bfcache-store', { url: this.currentUrl });
+      },
+      { signal }
+    );
 
     // Enhance existing links
     this._enhanceLinks();
 
     // Listen for dynamic content changes
-    this.eventBus.on('dom:content-loaded', () => {
-      this._enhanceLinks();
-    });
+    this.eventBus.on('dom:content-loaded', () => this._enhanceLinks(), { signal });
 
     this.eventBus.emit('router:initialized', { currentUrl: this.currentUrl });
   }
@@ -108,14 +120,16 @@ export class RouterManager {
     const links = document.querySelectorAll('a[href]:not([data-router-enhanced])');
     links.forEach(link => {
       if (this._shouldEnhanceLink(link)) {
-        link.addEventListener('click', this.boundLinkClick);
+        link.addEventListener('click', this.boundLinkClick, { signal: this._listeners.signal });
         link.setAttribute('data-router-enhanced', 'true');
         this.logger?.debug('Enhanced link', { href: link.href });
       } else {
         // Handle hash-only links for smooth scrolling
         const href = link.getAttribute('href');
         if (href && href.startsWith('#')) {
-          link.addEventListener('click', this._onAnchorClick.bind(this));
+          link.addEventListener('click', this.boundAnchorClick, {
+            signal: this._listeners.signal,
+          });
           link.setAttribute('data-router-enhanced', 'anchor');
           this.logger?.debug('Enhanced anchor link', { href });
         }
@@ -563,18 +577,9 @@ export class RouterManager {
   destroy() {
     this.logger?.info('RouterManager destroying');
 
-    // Remove event listeners
-    window.removeEventListener('popstate', this.boundPopState);
-
-    // Remove enhanced link listeners
-    document.querySelectorAll('a[data-router-enhanced="true"]').forEach(link => {
-      link.removeEventListener('click', this.boundLinkClick);
-      link.removeAttribute('data-router-enhanced');
-    });
-
-    // Remove anchor link listeners
-    document.querySelectorAll('a[data-router-enhanced="anchor"]').forEach(link => {
-      link.removeEventListener('click', this._onAnchorClick);
+    // Remove window, link and event bus listeners
+    this._listeners.abort();
+    document.querySelectorAll('a[data-router-enhanced]').forEach(link => {
       link.removeAttribute('data-router-enhanced');
     });
 
@@ -586,9 +591,6 @@ export class RouterManager {
 
     // Abort any pending requests
     this._abortInFlight();
-
-    // Remove event bus listeners
-    this.eventBus.off('dom:content-loaded');
 
     this.eventBus.emit('router:destroyed', {});
 

@@ -1,46 +1,100 @@
+/**
+ * EventManager - Publish/subscribe event bus shared by the framework
+ *
+ * Listeners run synchronously in subscription order, and a listener that throws
+ * is reported without stopping the others. Subscriptions can be tied to an
+ * AbortSignal, so a component or manager removes all of its listeners at once.
+ */
 export class EventManager {
-  constructor() {
+  /**
+   * @param {Object} [options]
+   * @param {Object} [options.logger] - Receives listener errors; console.error is used otherwise
+   */
+  constructor({ logger } = {}) {
+    this.logger = logger;
     this.listeners = new Map();
   }
 
-  on(event, callback) {
+  /**
+   * Subscribe to an event.
+   *
+   * @param {string} event
+   * @param {Function} callback - Called with the emitted payload
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal] - Removes the listener when aborted
+   * @returns {() => void} Function that removes the listener
+   */
+  on(event, callback, { signal } = {}) {
+    if (signal?.aborted) return () => {};
+
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    const listeners = this.listeners.get(event);
-    listeners.add(callback);
-    return () => this.off(event, callback);
-  }
+    this.listeners.get(event).add(callback);
 
-  once(event, callback) {
-    const unsubscribe = this.on(event, payload => {
-      unsubscribe();
-      callback(payload);
-    });
+    const unsubscribe = () => this.off(event, callback);
+    signal?.addEventListener('abort', unsubscribe, { once: true });
     return unsubscribe;
   }
 
+  /**
+   * Subscribe to the next emission of an event only.
+   *
+   * @param {string} event
+   * @param {Function} callback - Called with the emitted payload
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal] - Removes the listener when aborted
+   * @returns {() => void} Function that removes the listener
+   */
+  once(event, callback, options) {
+    const unsubscribe = this.on(
+      event,
+      payload => {
+        unsubscribe();
+        callback(payload);
+      },
+      options
+    );
+    return unsubscribe;
+  }
+
+  /**
+   * Remove one listener, or every listener for the event when no callback is given.
+   *
+   * @param {string} event
+   * @param {Function} [callback]
+   */
   off(event, callback) {
     const listeners = this.listeners.get(event);
-    if (listeners) {
-      listeners.delete(callback);
-      if (listeners.size === 0) {
-        this.listeners.delete(event);
-      }
+    if (!listeners) return;
+
+    if (callback === undefined) {
+      this.listeners.delete(event);
+      return;
+    }
+
+    listeners.delete(callback);
+    if (listeners.size === 0) {
+      this.listeners.delete(event);
     }
   }
 
   emit(event, payload) {
     const listeners = this.listeners.get(event);
     if (!listeners) return;
-    const listenersCopy = [...listeners];
-    for (const callback of listenersCopy) {
+
+    for (const callback of [...listeners]) {
       try {
         callback(payload);
       } catch (error) {
-        console.error(`[EventManager] Error in listener for "${event}":`, error);
+        const report = this.logger ? this.logger.error.bind(this.logger) : console.error;
+        report(`[EventManager] Error in listener for "${event}":`, error);
       }
     }
+  }
+
+  listenerCount(event) {
+    return this.listeners.get(event)?.size ?? 0;
   }
 
   clear(event) {
