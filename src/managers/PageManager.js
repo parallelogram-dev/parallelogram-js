@@ -2,6 +2,10 @@ import { ComponentHost } from '../core/ComponentHost.js';
 import { announce } from '../utils/announce.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 
+const TRACKED_ASSETS = '[data-router-track="reload"]';
+
+const HEAD_ASSETS = 'link[rel~="stylesheet"][href], script[src]';
+
 const MANAGED_HEAD_SELECTORS = [
   'meta[name="description"]',
   'meta[name="keywords"]',
@@ -49,6 +53,8 @@ export class PageManager {
       // Fragment target groups - define which fragments update together
       targetGroups: {},
       fragmentFallbacks: false,
+      runScripts: true,
+      assetTimeout: 3000,
       ...options,
     };
 
@@ -228,6 +234,8 @@ export class PageManager {
         throw this._fragmentMismatchError(missing);
       }
 
+      await this._mergeHeadAssets(doc, url);
+
       /* Fragments are replaced independently, so a slow or failing one cannot hold up the others */
       const outcomes = await Promise.allSettled(
         fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
@@ -371,6 +379,10 @@ export class PageManager {
     if (viewTarget === 'main') {
       this._handleScrollRestoration(options.storedScroll, options);
       this._updateDocumentHead(options.doc);
+    }
+
+    if (this.options.runScripts) {
+      this._runFragmentScripts(targetFragment);
     }
 
     this.mountAllWithin(targetFragment, { priority: 'critical', fragmentTarget: viewTarget });
@@ -636,6 +648,113 @@ export class PageManager {
       this.logger?.error('Failed to update document head', { error });
       this.eventBus.emit('page:head-update-error', { error });
     }
+  }
+
+  /**
+   * Prepare the head for the fetched document before any of its content is shown
+   *
+   * Assets marked [data-router-track="reload"] identify the site's versioned bundles; when their set
+   * differs from the current page's, nothing is replaced so the router can load the page normally.
+   * Stylesheets and external scripts that the new page's head adds are appended and waited for, up
+   * to `assetTimeout` milliseconds each. A response without head content is left alone.
+   *
+   * @throws {Error} A `TrackedAssetsChangedError` when the tracked assets differ.
+   */
+  async _mergeHeadAssets(doc, url) {
+    if (!doc.head || doc.head.childElementCount === 0) {
+      return;
+    }
+
+    const base = url?.href ?? document.baseURI;
+    const keys = (elements, baseUrl) =>
+      new Set([...elements].map(element => this._assetKey(element, baseUrl)));
+
+    const trackedNow = keys(document.querySelectorAll(TRACKED_ASSETS), document.baseURI);
+    const trackedNext = keys(doc.querySelectorAll(TRACKED_ASSETS), base);
+    if (
+      trackedNow.size !== trackedNext.size ||
+      [...trackedNext].some(key => !trackedNow.has(key))
+    ) {
+      const error = new Error('Tracked assets changed, so the page must be loaded normally');
+      error.name = 'TrackedAssetsChangedError';
+      throw error;
+    }
+
+    const present = keys(document.querySelectorAll(HEAD_ASSETS), document.baseURI);
+    const loading = [];
+
+    for (const element of doc.head.querySelectorAll(HEAD_ASSETS)) {
+      if (element.matches(TRACKED_ASSETS) || present.has(this._assetKey(element, base))) {
+        continue;
+      }
+
+      const asset =
+        element.localName === 'script'
+          ? this._cloneScript(element, base)
+          : document.importNode(element, true);
+      if (asset.localName === 'link') {
+        asset.href = new URL(element.getAttribute('href'), base).href;
+      }
+
+      loading.push(this._whenAssetLoads(asset));
+      document.head.append(asset);
+    }
+
+    await Promise.all(loading);
+  }
+
+  _assetKey(element, base) {
+    const url = element.getAttribute('src') ?? element.getAttribute('href');
+    return url === null ? element.outerHTML : `${element.localName} ${new URL(url, base).href}`;
+  }
+
+  _whenAssetLoads(element) {
+    return new Promise(resolve => {
+      const timer = setTimeout(resolve, this.options.assetTimeout);
+      const done = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      element.addEventListener('load', done, { once: true });
+      element.addEventListener('error', done, { once: true });
+    });
+  }
+
+  /**
+   * Run the scripts in swapped-in content, which the browser does not execute when content is set
+   * through innerHTML
+   *
+   * Scripts marked [data-router-skip] and data blocks such as `type="application/json"` are left
+   * alone. Page scripts run again on every visit, as they would on a full page load.
+   */
+  _runFragmentScripts(fragment) {
+    for (const original of fragment.querySelectorAll('script:not([data-router-skip])')) {
+      const type = (original.getAttribute('type') ?? '').trim().toLowerCase();
+      if (type === '' || type === 'module' || /(java|ecma)script/.test(type)) {
+        original.replaceWith(this._cloneScript(original));
+      }
+    }
+  }
+
+  /**
+   * An executable copy of a parsed script, keeping its order among other scripts added with it
+   */
+  _cloneScript(original, base = null) {
+    const script = document.createElement('script');
+    for (const { name, value } of original.attributes) {
+      script.setAttribute(name, value);
+    }
+    if (base && original.hasAttribute('src')) {
+      script.src = new URL(original.getAttribute('src'), base).href;
+    }
+    if (!original.hasAttribute('async')) {
+      script.async = false;
+    }
+    if (original.nonce) {
+      script.nonce = original.nonce;
+    }
+    script.textContent = original.textContent;
+    return script;
   }
 
   /**

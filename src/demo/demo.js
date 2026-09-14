@@ -1,11 +1,13 @@
 import { Parallelogram } from '../../src/index.js';
 import { MockXHR } from './MockXHR.js';
+import { installMockFetch } from './mockFetch.js';
 import { registerTrackerAdapter } from '../../src/components/DeferTracker.js';
 import ga4 from '../../src/adapters/ga4.js';
 import metaPixel from '../../src/adapters/meta-pixel.js';
 import clarity from '../../src/adapters/clarity.js';
 
 window.MockXHR = MockXHR;
+installMockFetch();
 
 /* Register only the tracker adapters this site uses; unused ones tree-shake out. */
 registerTrackerAdapter('ga4', ga4);
