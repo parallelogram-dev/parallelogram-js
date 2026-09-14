@@ -1,126 +1,151 @@
-/* DataTable Component Styles */
-.datatable-filter {
+/* DataTable Component Styles
+ *
+ * Selectors are wrapped in :where() so page styles override them easily; focus outlines keep normal
+ * specificity so a page reset can't remove them by accident.
+ */
+
+:where(.datatable-filter) {
   margin-bottom: 1rem;
 }
 
-.datatable-search {
+:where(.datatable-search) {
   width: 100%;
   max-width: 300px;
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--datatable-border-color, #d1d5db);
   border-radius: 4px;
   font-size: 0.875rem;
 }
 
-.datatable-search:focus-visible {
+.datatable-search:focus-visible,
+.datatable__sort:focus-visible,
+.datatable__pagination button:focus-visible {
   outline: 2px solid var(--framework-focus-color, #3b82f6);
   outline-offset: 1px;
+}
+
+.datatable-search:focus-visible {
   border-color: var(--framework-focus-color, #3b82f6);
 }
 
-th.sortable {
+:where(th.sortable):hover {
+  background-color: var(--datatable-header-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+:where(.datatable__sort) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
   cursor: pointer;
-  user-select: none;
-  position: relative;
 }
 
-th.sortable:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.sort-icon {
-  margin-left: 0.5rem;
-  color: #6b7280;
+:where(.sort-icon) {
+  color: var(--datatable-muted-color, #6b7280);
   font-size: 0.8em;
 }
 
-.datatable__pagination {
+:where([aria-sort] .sort-icon) {
+  color: currentColor;
+}
+
+:where(.datatable__pagination) {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
   margin-top: 1rem;
 }
 
-.datatable__pagination button {
+:where(.datatable__pagination button) {
+  min-width: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
+  border: 1px solid var(--datatable-border-color, #d1d5db);
   border-radius: 4px;
-  cursor: pointer;
+  background: var(--datatable-button-bg, #ffffff);
+  color: var(--datatable-button-color, #374151);
+  font: inherit;
   font-size: 0.875rem;
-  transition: all 0.2s;
+  cursor: pointer;
 }
 
-.datatable__pagination button:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+:where(.datatable__pagination button:hover:not(:disabled)) {
+  background: var(--datatable-button-hover-bg, #f3f4f6);
+  border-color: var(--datatable-button-hover-border-color, #9ca3af);
 }
 
-.datatable__pagination button:disabled {
+:where(.datatable__pagination button:disabled) {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.datatable__pagination button.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+/* Dark enough for white text to reach 4.5:1 */
+:where(.datatable__pagination button[aria-current='page']) {
+  background: var(--datatable-current-bg, #1d4ed8);
+  border-color: var(--datatable-current-bg, #1d4ed8);
+  color: var(--datatable-current-color, #ffffff);
+}
+
+:where(.datatable__gap) {
+  padding: 0 0.25rem;
+  color: var(--datatable-muted-color, #6b7280);
+}
+
+:where(.datatable__message td) {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--datatable-muted-color, #6b7280);
+  font-style: italic;
+}
+
+:where(.datatable__message td[role='alert']) {
+  color: var(--brand-danger, #b91c1c);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.datatable__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* State-based styling */
-[data-datatable-state='loading'] {
-  pointer-events: none;
-  position: relative;
+:where([data-datatable-state='loading']) {
   opacity: 0.6;
+  cursor: progress;
+}
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 0 A20 20 0 0 1 40 20' fill='none' stroke='%233b82f6' stroke-width='4'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 20 20' to='360 20 20' dur='1s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
+:where([data-datatable-state='error']) {
+  outline: 2px solid var(--brand-danger, #ef4444);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.datatable__pagination button) {
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s;
   }
 }
 
-[data-datatable-state='error'] {
-  border: 2px solid var(--brand-danger, #ef4444);
-  background-color: rgba(239, 68, 68, 0.05);
-
-  &::before {
-    content: attr(data-error-message);
-    display: block;
-    padding: 1rem;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--brand-danger, #ef4444);
-    border-radius: 4px;
-    color: var(--brand-danger, #ef4444);
-    font-weight: 500;
-    margin-bottom: 1rem;
+@media (forced-colors: active) {
+  .datatable__pagination button[aria-current='page'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
   }
-}
-
-[data-datatable-state='empty'] {
-  tbody {
-    &::after {
-      content: 'No data available';
-      display: table-row;
-      text-align: center;
-      padding: 2rem;
-      color: #6b7280;
-      font-style: italic;
-    }
-  }
-}
-
-[data-datatable-state='loaded'],
-[data-datatable-state='mounted'] {
-  /* Normal state - no special styling */
 }

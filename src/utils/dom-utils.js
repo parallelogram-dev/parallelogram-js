@@ -237,6 +237,8 @@ export function createElement(tag, attributes = {}, content = '') {
       Object.assign(element.style, value);
     } else if (key === 'dataset' && typeof value === 'object') {
       Object.assign(element.dataset, value);
+    } else if (key === 'htmlFor') {
+      element.setAttribute('for', value);
     } else {
       element.setAttribute(key, value);
     }
