@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/demo` from the published package.
 - Stale `dist/components/Carousel.js`, `Uploader.js` and `WIP.js` builds. Their sources were deleted in an earlier cleanup, but the built files were still published and importable via `@parallelogram-js/core/components/*`.
 
+### Security
+
+- `p-uploader` inserted filenames, field values, edited text and server error responses into its shadow DOM as HTML, allowing stored cross-site scripting (for example through an uploaded file's name or a saved caption). File cards are now built with DOM APIs and all data is written as text. Failed uploads, updates and deletes show a JSON `message`/`error` or a short plain-text reason, and fall back to a generic message for anything else, such as an HTML error page.
+
 ### Fixed
 
 - Documented import paths ending in `.js` (for example `@parallelogram-js/core/components/PModal.js`) resolved to `PModal.js.js` and failed. Every subpath now accepts both spellings and honours the `development` condition.

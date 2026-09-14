@@ -3,6 +3,101 @@ import hostStyles from '../styles/framework/components/PUploaderHost.scss';
 import fileStyles from '../styles/framework/components/PUploader.scss';
 
 /**
+ * Create an element whose attributes and text are set through DOM APIs, so
+ * values from attributes, server responses or user input are never parsed as HTML.
+ *
+ * @param {string} tag
+ * @param {Record<string, string>} [attributes]
+ * @param {string} [text]
+ * @returns {HTMLElement}
+ */
+const el = (tag, attributes = {}, text) => {
+  const element = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) {
+    element.setAttribute(name, value);
+  }
+  if (text !== undefined) {
+    element.textContent = text;
+  }
+  return element;
+};
+
+/**
+ * Turn a failed response body into a short message that is safe to show.
+ *
+ * JSON bodies contribute their `message` or `error` string. Plain-text bodies
+ * are used when short and free of markup; anything else (such as an HTML error
+ * page) falls back to the generic message.
+ *
+ * @param {string|null|undefined} body
+ * @param {string} fallback
+ * @returns {string}
+ */
+const errorMessage = (body, fallback) => {
+  const content = body?.trim();
+  if (!content) return fallback;
+
+  if (content.startsWith('{')) {
+    try {
+      const { message, error } = JSON.parse(content);
+      return [message, error].find(value => typeof value === 'string' && value) ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  return content.length <= 200 && !content.includes('<') ? content : fallback;
+};
+
+let fileTemplate;
+
+/**
+ * Static structure of a file card. Per-file data is filled in afterwards.
+ *
+ * @returns {HTMLTemplateElement}
+ */
+const getFileTemplate = () => {
+  if (!fileTemplate) {
+    fileTemplate = document.createElement('template');
+    fileTemplate.innerHTML = `
+      <style>${fileStyles}</style>
+      <slot></slot>
+      <div class="uploader__overlay">
+        <progress class="uploader__progress" max="100" value="0"></progress>
+      </div>
+      <div class="uploader__container">
+        <picture class="uploader__preview"><img alt=""></picture>
+        <div class="uploader__content">
+          <div data-panel="error" class="uploader__panel" role="alert" aria-live="assertive">
+            <div class="uploader__alert">
+              <div class="error-message"></div>
+              <div class="uploader__actions"></div>
+            </div>
+          </div>
+          <div data-panel="info" class="uploader__panel" role="region">
+            <div class="uploader__body">
+              <div class="uploader__fields">
+                <h1 class="uploader__filename"></h1>
+              </div>
+            </div>
+          </div>
+          <div data-panel="delete" class="uploader__panel" role="dialog">
+            <div class="uploader__alert">
+              <h2 class="uploader__heading">Delete this file?</h2>
+              <div class="uploader__actions">
+                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
+                <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return fileTemplate;
+};
+
+/**
  * PUploader - Web Component for file uploads with configurable fields
  *
  * Usage:
@@ -234,8 +329,6 @@ export default class PUploader extends HTMLElement {
   }
 
   _render() {
-    const acceptTypes = this.getAttribute('accept-types') || '*/*';
-
     this.shadowRoot.innerHTML = `
       <style>${hostStyles}</style>
 
@@ -246,12 +339,14 @@ export default class PUploader extends HTMLElement {
       </div>
 
       <div class="uploader__selector" part="selector">
-        <input type="file" multiple accept="${acceptTypes}" class="uploader__fileinput" id="file-input">
+        <input type="file" multiple class="uploader__fileinput" id="file-input">
         <label class="uploader__label" for="file-input">
           + Add files by selecting or dragging here
         </label>
       </div>
     `;
+    this.shadowRoot.querySelector('.uploader__fileinput').accept =
+      this.getAttribute('accept-types') || '*/*';
   }
 
   _setupEventListeners() {
@@ -446,7 +541,7 @@ export default class PUploader extends HTMLElement {
           this._handleUploadError(fileData, 'Invalid server response');
         }
       } else {
-        this._handleUploadError(fileData, xhr.responseText || 'Upload failed');
+        this._handleUploadError(fileData, errorMessage(xhr.responseText, 'Upload failed'));
       }
     });
 
@@ -746,59 +841,80 @@ export class PUploaderFile extends HTMLElement {
       this._loadFieldData();
     }
 
-    this.shadowRoot.innerHTML = `
-      <style>${fileStyles}
-      .uploader__preview {
-        display: ${preview ? 'block' : 'none'};
-      }
-      </style>
+    const root = document.importNode(getFileTemplate().content, true);
 
-      <slot></slot>
+    root
+      .querySelector('.uploader__overlay')
+      .classList.toggle('uploader__overlay--show', state === 'uploading');
+    root.querySelector('.uploader__progress').value = progress;
 
-      <div class="uploader__overlay ${state === 'uploading' ? 'uploader__overlay--show' : ''}">
-        <progress class="uploader__progress" max="100" value="${progress}"></progress>
-      </div>
+    const picture = root.querySelector('.uploader__preview');
+    picture.style.display = preview ? 'block' : 'none';
+    const image = picture.querySelector('img');
+    image.alt = filename;
+    if (preview) {
+      image.src = preview;
+    }
 
-      <div class="uploader__container">
-        <picture class="uploader__preview">
-          <img src="${preview || ''}" alt="${filename}">
-        </picture>
+    const errorPanel = root.querySelector('[data-panel="error"]');
+    errorPanel.classList.toggle(
+      'uploader__panel--show',
+      currentPanel === 'error' || state === 'error'
+    );
+    errorPanel.querySelector('.error-message').textContent = error;
+    errorPanel.querySelector('.uploader__actions').append(
+      state === 'error'
+        ? el(
+            'button',
+            {
+              class: 'uploader__btn uploader__btn--delete',
+              'data-action': 'confirm-delete',
+              'aria-label': 'Remove file',
+            },
+            'Remove'
+          )
+        : el(
+            'button',
+            {
+              class: 'uploader__btn uploader__btn--secondary',
+              'data-action': 'cancel',
+              'aria-label': 'Cancel',
+            },
+            'Cancel'
+          )
+    );
 
-        <div class="uploader__content">
-          <div data-panel="error" class="uploader__panel ${currentPanel === 'error' || state === 'error' ? 'uploader__panel--show' : ''}" role="alert" aria-live="assertive">
-            <div class="uploader__alert">
-              <div class="error-message">${error}</div>
-              <div class="uploader__actions">
-                ${state === 'error' ? '<button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Remove file">Remove</button>' : '<button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel">Cancel</button>'}
-              </div>
-            </div>
-          </div>
+    const infoPanel = root.querySelector('[data-panel="info"]');
+    infoPanel.classList.toggle(
+      'uploader__panel--show',
+      currentPanel === 'info' && state === 'uploaded'
+    );
+    infoPanel.setAttribute('aria-label', `File information for ${filename}`);
+    root.querySelector('.uploader__filename').textContent = filename;
+    if (allowEdit) {
+      infoPanel.querySelector('.uploader__body').prepend(
+        el('button', {
+          class: 'uploader__delete-icon',
+          'data-action': 'show-delete',
+          title: 'Delete file',
+          'aria-label': 'Delete file',
+        })
+      );
+    }
+    if (state === 'uploaded') {
+      root.querySelector('.uploader__fields').append(...this._createFields(allowEdit));
+    }
 
-          <div data-panel="info" class="uploader__panel ${currentPanel === 'info' && state === 'uploaded' ? 'uploader__panel--show' : ''}" role="region" aria-label="File information for ${filename}">
-            <div class="uploader__body">
-              ${allowEdit ? '<button class="uploader__delete-icon" data-action="show-delete" title="Delete file" aria-label="Delete file"></button>' : ''}
-              <div class="uploader__fields">
-                <h1 class="uploader__filename">${filename}</h1>
-                ${state === 'uploaded' ? this._renderFields(allowEdit) : ''}
-              </div>
-            </div>
-          </div>
+    const deletePanel = root.querySelector('[data-panel="delete"]');
+    deletePanel.classList.toggle('uploader__panel--show', currentPanel === 'delete');
+    this._deleteHeadingId ??= generateId('delete-heading');
+    deletePanel.setAttribute('aria-labelledby', this._deleteHeadingId);
+    deletePanel.querySelector('.uploader__heading').id = this._deleteHeadingId;
+    if (state === 'uploaded') {
+      deletePanel.before(...this._createEditPanels());
+    }
 
-          ${state === 'uploaded' ? this._renderEditPanels() : ''}
-
-          <div data-panel="delete" class="uploader__panel ${currentPanel === 'delete' ? 'uploader__panel--show' : ''}" role="dialog" aria-labelledby="delete-heading-${filename}">
-            <div class="uploader__alert">
-              <h2 id="delete-heading-${filename}" class="uploader__heading">Delete this file?</h2>
-              <div class="uploader__actions">
-                <button class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
-                <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
+    this.shadowRoot.replaceChildren(root);
     this._setupFileEventListeners();
   }
 
@@ -813,59 +929,99 @@ export class PUploaderFile extends HTMLElement {
     });
   }
 
-  _renderFields(allowEdit) {
+  /**
+   * @returns {HTMLElement[]} One read-only row per field in the schema
+   */
+  _createFields(allowEdit) {
     if (!this._fieldSchema || this._fieldSchema.size === 0) {
-      return '';
+      return [];
     }
 
-    let html = '';
-    this._fieldSchema.forEach((fieldDef, key) => {
-      const value = this._fieldData.get(key) || '';
-      html += `
-        <div class="uploader__field">
-          <label class="field__label">${fieldDef.label}</label>
-          <span class="field__value ${allowEdit ? 'field__value--editable' : ''}" ${allowEdit ? `data-action="edit-field" data-field="${key}"` : ''}>${value || '<em>-</em>'}</span>
-          ${
-            allowEdit
-              ? `<button class="field__edit" data-action="edit-field" data-field="${key}" title="Edit ${fieldDef.label}"></button>`
-              : ''
-          }
-        </div>
-      `;
+    return [...this._fieldSchema].map(([key, fieldDef]) => {
+      const field = el('div', { class: 'uploader__field' });
+      const value = el('span', { class: 'field__value' });
+      this._setFieldValue(value, this._fieldData.get(key));
+
+      field.append(el('label', { class: 'field__label' }, fieldDef.label), value);
+
+      if (allowEdit) {
+        value.classList.add('field__value--editable');
+        value.dataset.action = 'edit-field';
+        value.dataset.field = key;
+        field.append(
+          el('button', {
+            class: 'field__edit',
+            'data-action': 'edit-field',
+            'data-field': key,
+            title: `Edit ${fieldDef.label}`,
+          })
+        );
+      }
+
+      return field;
     });
-    return html;
   }
 
-  _renderEditPanels() {
+  /**
+   * @returns {HTMLElement[]} One edit panel per field in the schema
+   */
+  _createEditPanels() {
     if (!this._fieldSchema || this._fieldSchema.size === 0) {
-      return '';
+      return [];
     }
 
     const currentPanel = this.getAttribute('data-current-panel') || 'info';
-    let html = '';
 
-    this._fieldSchema.forEach((fieldDef, key) => {
-      const value = this._fieldData.get(key) || '';
-      const isActive = currentPanel === `edit-${key}`;
+    return [...this._fieldSchema].map(([key, fieldDef]) => {
+      const panel = el('div', {
+        'data-panel': `edit-${key}`,
+        class: 'uploader__panel',
+        role: 'dialog',
+        'aria-label': `Edit ${fieldDef.label}`,
+      });
+      panel.classList.toggle('uploader__panel--show', currentPanel === `edit-${key}`);
 
-      html += `
-        <div data-panel="edit-${key}" class="uploader__panel ${isActive ? 'uploader__panel--show' : ''}" role="dialog" aria-label="Edit ${fieldDef.label}">
-          <div class="uploader__body">
-            ${
-              fieldDef.type === 'textarea'
-                ? `<textarea class="uploader__textarea" name="${key}" placeholder="${fieldDef.label}" rows="3" aria-label="${fieldDef.label}">${value}</textarea>`
-                : `<input type="${fieldDef.type}" class="uploader__input" name="${key}" placeholder="${fieldDef.label}" value="${value}" aria-label="${fieldDef.label}">`
-            }
-            <div class="uploader__actions">
-              <button class="uploader__btn uploader__btn--primary" data-action="confirm-edit" data-field="${key}" aria-label="Save ${fieldDef.label}">Save</button>
-              <button class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel editing">Cancel</button>
-            </div>
-          </div>
-        </div>
-      `;
+      const control =
+        fieldDef.type === 'textarea'
+          ? el('textarea', { class: 'uploader__textarea', rows: '3' })
+          : el('input', { type: fieldDef.type, class: 'uploader__input' });
+      control.name = key;
+      control.placeholder = fieldDef.label;
+      control.setAttribute('aria-label', fieldDef.label);
+      control.value = this._fieldData.get(key) || '';
+
+      const actions = el('div', { class: 'uploader__actions' });
+      actions.append(
+        el(
+          'button',
+          {
+            class: 'uploader__btn uploader__btn--primary',
+            'data-action': 'confirm-edit',
+            'data-field': key,
+            'aria-label': `Save ${fieldDef.label}`,
+          },
+          'Save'
+        ),
+        el(
+          'button',
+          {
+            class: 'uploader__btn uploader__btn--secondary',
+            'data-action': 'cancel',
+            'aria-label': 'Cancel editing',
+          },
+          'Cancel'
+        )
+      );
+
+      const body = el('div', { class: 'uploader__body' });
+      body.append(control, actions);
+      panel.append(body);
+      return panel;
     });
+  }
 
-    return html;
+  _setFieldValue(element, value) {
+    element.replaceChildren(value || el('em', {}, '-'));
   }
 
   _updatePanelVisibility(currentPanel) {
@@ -948,9 +1104,11 @@ export class PUploaderFile extends HTMLElement {
   _updateFieldDisplay(fieldKey, newValue) {
     const infoPanel = this.shadowRoot.querySelector('.uploader__panel[data-panel="info"]');
     if (infoPanel) {
-      const fieldValueElement = infoPanel.querySelector(`[data-field="${fieldKey}"].field__value`);
+      const fieldValueElement = infoPanel.querySelector(
+        `[data-field="${CSS.escape(fieldKey)}"].field__value`
+      );
       if (fieldValueElement) {
-        fieldValueElement.innerHTML = newValue || '<em>-</em>';
+        this._setFieldValue(fieldValueElement, newValue);
       }
     }
   }
@@ -968,9 +1126,6 @@ export class PUploaderFile extends HTMLElement {
       return;
     }
 
-    /* Build the fields HTML */
-    const fieldsHTML = this._renderFields(allowEdit);
-
     /* Find the filename element and insert fields after it */
     const filenameElement = fieldsContainer.querySelector('.uploader__filename');
     if (filenameElement) {
@@ -979,7 +1134,7 @@ export class PUploaderFile extends HTMLElement {
       existingFields.forEach(field => field.remove());
 
       /* Insert new fields after filename */
-      filenameElement.insertAdjacentHTML('afterend', fieldsHTML);
+      filenameElement.after(...this._createFields(allowEdit));
     }
 
     /* Also render the edit panels if they don't exist */
@@ -1005,11 +1160,7 @@ export class PUploaderFile extends HTMLElement {
       return;
     }
 
-    /* Build edit panels HTML */
-    const editPanelsHTML = this._renderEditPanels();
-
-    /* Insert edit panels before delete panel */
-    deletePanel.insertAdjacentHTML('beforebegin', editPanelsHTML);
+    deletePanel.before(...this._createEditPanels());
   }
 
   _setupFileEventListeners() {
@@ -1082,7 +1233,7 @@ export class PUploaderFile extends HTMLElement {
     if (panel.startsWith('edit-')) {
       setTimeout(() => {
         const fieldKey = panel.replace('edit-', '');
-        const input = this.shadowRoot.querySelector(`[name="${fieldKey}"]`);
+        const input = this.shadowRoot.querySelector(`[name="${CSS.escape(fieldKey)}"]`);
         if (input) {
           input.focus();
           /* Select all text in input for easy editing */
@@ -1102,7 +1253,7 @@ export class PUploaderFile extends HTMLElement {
   }
 
   async _handleConfirmEdit(fieldKey) {
-    const input = this.shadowRoot.querySelector(`[name="${fieldKey}"]`);
+    const input = this.shadowRoot.querySelector(`[name="${CSS.escape(fieldKey)}"]`);
 
     if (input) {
       const newValue = input.value;
@@ -1112,7 +1263,7 @@ export class PUploaderFile extends HTMLElement {
       this._fieldData.set(fieldKey, newValue);
 
       /* Update the slotted data element */
-      let dataElement = this.querySelector(`p-uploader-data[key="${fieldKey}"]`);
+      let dataElement = this.querySelector(`p-uploader-data[key="${CSS.escape(fieldKey)}"]`);
       if (!dataElement) {
         dataElement = document.createElement('p-uploader-data');
         dataElement.setAttribute('key', fieldKey);
@@ -1163,7 +1314,7 @@ export class PUploaderFile extends HTMLElement {
             if (uploader.logger) {
               uploader.logger.error('Failed to update field:', errorText);
             }
-            this.setAttribute('error', `Update failed: ${errorText || 'Server error'}`);
+            this.setAttribute('error', `Update failed: ${errorMessage(errorText, 'Server error')}`);
             this.setAttribute('data-current-panel', 'error');
           }
         } catch (error) {
@@ -1229,7 +1380,7 @@ export class PUploaderFile extends HTMLElement {
         if (uploader.logger) {
           uploader.logger.error('Failed to delete file:', errorText);
         }
-        this.setAttribute('error', `Delete failed: ${errorText || 'Server error'}`);
+        this.setAttribute('error', `Delete failed: ${errorMessage(errorText, 'Server error')}`);
         this.setAttribute('data-current-panel', 'error');
       }
     } catch (error) {
