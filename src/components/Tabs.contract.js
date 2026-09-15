@@ -8,7 +8,9 @@ export default {
   summary: 'Tabbed panels built from a list of tab buttons or in-page links',
   description: `Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them. While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first panel, so the page doesn't jump when it does. If Tabs fails to load, every panel shows again; if it is never registered, the other panels stay hidden.
 
-Once mounted, Tabs follows the WAI-ARIA tabs pattern: arrow keys, Home and End move focus between tabs, inactive panels get the \`hidden\` attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting puts the markup back as it was.`,
+Once mounted, Tabs follows the WAI-ARIA tabs pattern: arrow keys, Home and End move focus between tabs, inactive panels get the \`hidden\` attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting puts the markup back as it was.
+
+Deep links keep working: when the address names a panel, or an element inside one, Tabs selects that panel's tab when it mounts and whenever the hash changes, ahead of \`aria-selected\` and the default tab. In nested tab sets, both the outer and inner tabs holding it are selected. Choosing a tab doesn't change the address.`,
   attributes: [
     { name: 'data-tabs', type: 'flag', description: 'Marks the container' },
     {
@@ -36,7 +38,8 @@ Once mounted, Tabs follows the WAI-ARIA tabs pattern: arrow keys, Home and End m
       type: 'string',
       default: null,
       option: 'defaultTab',
-      description: 'The id of the panel to show first when no tab has aria-selected="true"',
+      description:
+        'The id of the panel to show first when the address names no panel and no tab has aria-selected="true"',
     },
     {
       name: 'data-tabs-keyboard',

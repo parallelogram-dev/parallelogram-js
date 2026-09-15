@@ -28,6 +28,10 @@ const MANAGED_ATTRIBUTES = [
  * attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting
  * puts the markup back as it was.
  *
+ * Deep links keep working: when the address names a panel, or an element inside one, Tabs selects
+ * that panel's tab when it mounts and whenever the hash changes, ahead of `aria-selected` and the
+ * default tab. Choosing a tab doesn't change the address.
+ *
  * @example
  * <div data-tabs>
  *   <div data-tabs-list>
@@ -46,7 +50,8 @@ const MANAGED_ATTRIBUTES = [
  * - data-tab: on each tab button or link, the id of its panel
  * - data-tabs-panels: the element that holds the panels
  * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive
- * - data-tabs-default-tab: id of the panel to show first when no tab has aria-selected="true"
+ * - data-tabs-default-tab: id of the panel to show first when the address names no panel and no tab
+ *   has aria-selected="true"
  * - data-tabs-keyboard: "false" turns off arrow key, Home and End navigation (default true)
  * - data-tabs-activation: auto selects a tab when it receives focus, manual selects it on Enter or
  *   Space (default auto)
@@ -119,12 +124,19 @@ export default class Tabs extends BaseComponent {
     this._setupTabs(state);
 
     const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
-    const initialTab = this._getInitialTab(tabs, defaultTab);
+    const linkedTab = this._getLinkedTab(state);
+    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab);
     if (initialTab) {
       this._activateTab(element, initialTab.dataset.tab, state, false);
     }
+    /* The browser couldn't scroll to a target in a hidden panel. Scroll now, unless the page has
+       already been scrolled, as when a reload restores its position. */
+    if (linkedTab && window.scrollX === 0 && window.scrollY === 0) {
+      this._hashTarget()?.scrollIntoView({ block: 'start' });
+    }
 
     const { signal } = state.controller;
+    window.addEventListener('hashchange', () => this._handleHashChange(element, state), { signal });
     for (const tab of tabs) {
       tab.addEventListener('click', event => this._handleTabClick(event, element, state), {
         signal,
@@ -229,6 +241,46 @@ export default class Tabs extends BaseComponent {
     }
 
     return tabs[0];
+  }
+
+  /**
+   * Find the tab whose panel is, or holds, the element the address's hash names
+   *
+   * @returns {HTMLElement|null}
+   */
+  _getLinkedTab(state) {
+    const target = this._hashTarget();
+    const panel = target && state.panels.find(candidate => candidate.contains(target));
+    return panel ? (state.tabs.find(tab => tab.dataset.tab === panel.id) ?? null) : null;
+  }
+
+  /**
+   * The element the address's hash names, or null
+   *
+   * @returns {HTMLElement|null}
+   */
+  _hashTarget() {
+    try {
+      const id = decodeURIComponent(location.hash.slice(1));
+      return id ? document.getElementById(id) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Select the tab the new hash links to and scroll to its target, moving focus with the selection
+   * only if the old tab had it
+   */
+  _handleHashChange(element, state) {
+    const tab = this._getLinkedTab(state);
+    if (!tab || tab.dataset.tab === state.activeTab) return;
+
+    const oldTab = state.tabs.find(candidate => candidate.dataset.tab === state.activeTab);
+    const hadFocus = Boolean(oldTab) && document.activeElement === oldTab;
+    this._activateTab(element, tab.dataset.tab, state, true);
+    if (hadFocus) tab.focus({ preventScroll: true });
+    this._hashTarget()?.scrollIntoView({ block: 'start' });
   }
 
   _handleTabClick(event, element, state) {

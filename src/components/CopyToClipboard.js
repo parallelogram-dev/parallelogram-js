@@ -1,4 +1,5 @@
 import { BaseComponent } from '../core/BaseComponent.js';
+import { announce } from '../utils/announce.js';
 
 /**
  * CopyToClipboard Component - Copy text to clipboard
@@ -174,7 +175,7 @@ export class CopyToClipboard extends BaseComponent {
       };
     }
 
-    CopyToClipboard._announce(message);
+    announce(message);
 
     state.resetTimer = setTimeout(
       () => this._resetFeedback(element, state),
@@ -189,32 +190,6 @@ export class CopyToClipboard extends BaseComponent {
     state.restoreLabel = null;
     this.removeAttr(element, 'state');
     element.classList.remove(state.config.successClass, state.config.errorClass);
-  }
-
-  /**
-   * Announce a message through one visually hidden status region shared by all instances.
-   */
-  static _announce(message) {
-    let region = document.querySelector('[data-copytoclipboard-status]');
-    if (!region) {
-      region = document.createElement('div');
-      region.setAttribute('data-copytoclipboard-status', '');
-      region.setAttribute('role', 'status');
-      Object.assign(region.style, {
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
-        overflow: 'hidden',
-        clipPath: 'inset(50%)',
-        whiteSpace: 'nowrap',
-      });
-      document.body.append(region);
-    }
-
-    region.textContent = '';
-    requestAnimationFrame(() => {
-      region.textContent = message;
-    });
   }
 
   static enhanceAll(selector = '[data-copytoclipboard]', options) {

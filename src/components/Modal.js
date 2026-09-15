@@ -23,6 +23,10 @@
  * Opening a modal closes the others unless the trigger sets data-modal-multiple, and focus returns
  * to the trigger on close unless it sets data-modal-focus="false".
  *
+ * Each open dispatches modal:opened once, on the trigger that opened the modal, and modal:closed goes
+ * to the same trigger. When a script opens the modal, they go to its first mounted trigger. Every
+ * trigger's aria-expanded follows the modal.
+ *
  * JavaScript (standalone):
  * import Modal from '@parallelogram-js/core/components/Modal';
  * Modal.enhanceAll();
@@ -31,6 +35,13 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import './PModal.js';
 import { generateId, createElement } from '../utils/dom-utils.js';
+
+/* The trigger whose open() call is opening each modal */
+const openers = new WeakMap();
+/* The trigger each modal's modal:opened went to, so modal:closed goes to the same one */
+const reportedOn = new WeakMap();
+/* p-modal:open and p-modal:close events one of the modal's triggers has already reported */
+const reported = new WeakSet();
 
 export default class Modal extends BaseComponent {
   static selector = 'data-modal';
@@ -147,7 +158,7 @@ export default class Modal extends BaseComponent {
   }
 
   /**
-   * Open a modal
+   * Open a modal, reporting modal:opened on this trigger
    * @param {HTMLElement} triggerElement - Trigger element
    */
   open(triggerElement) {
@@ -160,7 +171,12 @@ export default class Modal extends BaseComponent {
     }
 
     /* p-modal returns focus to the trigger when it closes, unless data-modal-focus="false" */
-    state.modalElement.open({ returnFocus: state.focus ? triggerElement : null });
+    openers.set(state.modalElement, triggerElement);
+    try {
+      state.modalElement.open({ returnFocus: state.focus ? triggerElement : null });
+    } finally {
+      openers.delete(state.modalElement);
+    }
   }
 
   /**
@@ -246,41 +262,48 @@ export default class Modal extends BaseComponent {
   }
 
   /**
-   * Handle modal open event
+   * Handle modal open event. Every trigger for the modal listens; the first to see the event
+   * reports it once, on the trigger that opened the modal, or on itself when a script opened it.
    * @private
    * @param {HTMLElement} triggerElement - Trigger element
    * @param {CustomEvent} event - Modal open event
    */
   _handleModalOpen(triggerElement, event) {
-    /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'true');
+    if (reported.has(event)) return;
+    reported.add(event);
+
+    const modal = event.detail.modal;
+    const trigger = openers.get(modal) ?? triggerElement;
+    trigger.setAttribute('aria-expanded', 'true');
+    reportedOn.set(modal, trigger);
 
     /* Dispatches on the trigger and emits on the event bus */
-    this._dispatch(triggerElement, 'modal:opened', {
-      trigger: triggerElement,
-      modal: event.detail.modal,
-    });
+    this._dispatch(trigger, 'modal:opened', { trigger, modal });
 
-    this.logger?.info('Modal opened', { triggerElement, modal: event.detail.modal });
+    this.logger?.info('Modal opened', { triggerElement: trigger, modal });
   }
 
   /**
-   * Handle modal close event
+   * Handle modal close event, reporting it once on the trigger its open was reported on
    * @private
    * @param {HTMLElement} triggerElement - Trigger element
    * @param {CustomEvent} event - Modal close event
    */
   _handleModalClose(triggerElement, event) {
-    /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'false');
+    if (reported.has(event)) return;
+    reported.add(event);
+
+    const modal = event.detail.modal;
+    const trigger = reportedOn.get(modal) ?? triggerElement;
+    trigger.setAttribute('aria-expanded', 'false');
+    reportedOn.delete(modal);
 
     /* Dispatches on the trigger and emits on the event bus */
-    this._dispatch(triggerElement, 'modal:closed', {
-      trigger: triggerElement,
-      modal: event.detail.modal,
-    });
+    this._dispatch(trigger, 'modal:closed', { trigger, modal });
 
-    this.logger?.info('Modal closed', { triggerElement, modal: event.detail.modal });
+    this.logger?.info('Modal closed', { triggerElement: trigger, modal });
   }
 
   /**

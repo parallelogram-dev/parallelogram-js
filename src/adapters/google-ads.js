@@ -7,7 +7,7 @@ import { ensureGtag } from './_gtag.js';
  * consentDefault?: object }`
  *
  * A block with `conversion` sends it once, whether it is on the first page or one the router shows
- * later, such as an order confirmation.
+ * later, such as an order confirmation, and alongside a remarketing block with the same id.
  *
  * @param {{ id?: string, conversion?: object, consentDefault?: object }} config
  * @param {{ nonce?: string }} [ctx]
@@ -25,6 +25,12 @@ export default function googleAdsAdapter(config, { nonce } = {}) {
   }
   return loaded;
 }
+
+googleAdsAdapter.block = config => {
+  if (config.conversion) {
+    window.gtag?.('event', 'conversion', config.conversion);
+  }
+};
 
 googleAdsAdapter.page = (config, ctx, { mounted } = {}) => {
   if (mounted && config.conversion) {
