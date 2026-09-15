@@ -38,3 +38,19 @@ export function whenAnimationsFinish(element, { fallback = 1000 } = {}) {
     }),
   ]).then(() => clearTimeout(timer));
 }
+
+/**
+ * Resolve on the next animation frame, or after a short timeout while the document is hidden,
+ * where browsers pause animation frames
+ *
+ * @returns {Promise<void>}
+ */
+export function nextFrame() {
+  return new Promise(resolve => {
+    if (document.visibilityState === 'hidden') {
+      setTimeout(resolve, 16);
+    } else {
+      requestAnimationFrame(() => resolve());
+    }
+  });
+}

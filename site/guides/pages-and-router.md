@@ -173,6 +173,7 @@ Back and forward replace the target of whichever of the two history entries is n
 - A value containing `(` runs the built-in fade and 20px slide on inline styles, over `duration` with `easing`.
 - When both are classes, the `out` class stays on the fragment through the swap and is removed a frame after the `in` class is added. The `in` class is removed when it finishes.
 - Transitions are skipped when the user prefers reduced motion. A failing transition doesn't stop the swap.
+- In a hidden tab, where browsers pause animation frames, the frames the swap waits for fall back to a short timeout, so a navigation from code still finishes.
 
 ```js
 Parallelogram.create({

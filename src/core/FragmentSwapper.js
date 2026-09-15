@@ -1,5 +1,5 @@
 import { announce } from '../utils/announce.js';
-import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
+import { nextFrame, prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 import { trustedHTML, trustedScript, trustedScriptURL } from '../utils/trusted.js';
 
 const TRACKED_ASSETS = '[data-router-track="reload"]';
@@ -218,7 +218,7 @@ export class FragmentSwapper {
         this.options.scrollPosition === 'top' &&
         !options.fromPopstate
       ) {
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        await nextFrame();
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
@@ -376,33 +376,32 @@ export class FragmentSwapper {
    * @param {string} direction - 'in' or 'out'
    * @param {string} outClassName - Name of the 'out' class to remove when 'in' starts
    */
-  _performCSSTransition(fragment, className, duration, direction = 'in', outClassName = null) {
-    return new Promise(resolve => {
-      requestAnimationFrame(async () => {
-        fragment.classList.add(className);
+  async _performCSSTransition(
+    fragment,
+    className,
+    duration,
+    direction = 'in',
+    outClassName = null
+  ) {
+    await nextFrame();
+    fragment.classList.add(className);
 
-        /* Remove the 'out' class a frame later so the 'in' class applies first, avoiding a flicker */
-        if (direction === 'in' && outClassName) {
-          requestAnimationFrame(() => {
-            fragment.classList.remove(outClassName);
-          });
-        }
+    /* Remove the 'out' class a frame later so the 'in' class applies first, avoiding a flicker */
+    if (direction === 'in' && outClassName) {
+      nextFrame().then(() => fragment.classList.remove(outClassName));
+    }
 
-        if (fragment.getAnimations?.().length === 0) {
-          this.logger?.debug(`Transition class "${className}" did not start an animation`, {
-            fragment,
-          });
-        }
-
-        await whenAnimationsFinish(fragment, { fallback: duration + 250 });
-
-        if (direction === 'in') {
-          fragment.classList.remove(className);
-        }
-
-        resolve();
+    if (fragment.getAnimations?.().length === 0) {
+      this.logger?.debug(`Transition class "${className}" did not start an animation`, {
+        fragment,
       });
-    });
+    }
+
+    await whenAnimationsFinish(fragment, { fallback: duration + 250 });
+
+    if (direction === 'in') {
+      fragment.classList.remove(className);
+    }
   }
 
   /**
