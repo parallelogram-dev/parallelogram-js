@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Accordion, an enhancement component for native `<details>` elements. It animates their height as they open and close instead of snapping, writes `data-accordion-state`, and keeps details that share a `name` closing each other with the same animation, including in browsers without `name` support. Without JavaScript the details still work. Import `components/Accordion` and the package stylesheet or `styles/accordion.css`.
+
 ### Changed
 
 - Open Toggle targets keep the display page styles give them, such as `flex` or `grid`, instead of the stylesheet setting `display: block`.

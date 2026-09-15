@@ -1,0 +1,104 @@
+/**
+ * Accordion Component Styles
+ *
+ * Styles details elements marked data-accordion as a bordered list. The summary's disclosure
+ * triangle is replaced by a plus icon on the right, which turns into a cross while the item is open.
+ * Accordion animates each item's height with the length and easing below, and writes
+ * data-accordion-state (closed, opening, open or closing).
+ *
+ * Wrap each item's content in one element after the summary, such as a div. It gets the content
+ * padding and contains its children's margins, so the height animation ends without a jump.
+ *
+ * The plus icon is from Tabler Icons (MIT licence, https://tabler.io/icons).
+ */
+
+:root {
+  --accordion-duration: 0.3s;
+  --accordion-easing: ease;
+  --accordion-border-color: #e2e8f0;
+  --accordion-summary-padding: 1rem 1.25rem;
+  --accordion-summary-color: #111827;
+  --accordion-summary-hover-bg: #f9fafb;
+  --accordion-content-padding: 0 1.25rem 1.25rem;
+  --accordion-content-color: #374151;
+  --accordion-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  --accordion-icon-size: 1.25rem;
+  --accordion-icon-color: currentColor;
+  --accordion-icon-rotation: 45deg;
+}
+
+[data-accordion] {
+  border-bottom: 1px solid var(--accordion-border-color);
+}
+
+/* The first item of a run of items also has a top border */
+[data-accordion]:not([data-accordion] + [data-accordion]) {
+  border-top: 1px solid var(--accordion-border-color);
+}
+
+[data-accordion] > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--accordion-summary-padding);
+  color: var(--accordion-summary-color);
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    content: '';
+    flex: none;
+    width: var(--accordion-icon-size);
+    height: var(--accordion-icon-size);
+    background-color: var(--accordion-icon-color);
+    mask: var(--accordion-icon) center / contain no-repeat;
+  }
+
+  &:hover {
+    background: var(--accordion-summary-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+    outline-offset: calc(-1 * var(--framework-focus-width, 2px));
+  }
+}
+
+/* The icon turns while the item is open or opening, and turns back as soon as it starts closing */
+[data-accordion][open]:not([data-accordion-state='closing']) > summary::after {
+  rotate: var(--accordion-icon-rotation);
+}
+
+/* The content: padding here rather than margins on its children, which the animation would clip */
+[data-accordion] > summary ~ * {
+  display: flow-root;
+  margin: 0;
+  padding: var(--accordion-content-padding);
+  color: var(--accordion-content-color);
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-accordion] > summary::after {
+    transition: rotate var(--accordion-duration) var(--accordion-easing);
+  }
+}
+
+@media (forced-colors: active) {
+  [data-accordion] > summary::after {
+    background-color: CanvasText;
+  }
+}
