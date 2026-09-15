@@ -232,6 +232,11 @@ export class FormEnhancer extends BaseComponent {
   }
 
   _onSubmit(form, state, event) {
+    /* A formnovalidate button skips validation, as it does without FormEnhancer */
+    if (event.submitter?.formNoValidate) {
+      return;
+    }
+
     const errors = this._validateAll(form, state);
 
     if (errors.length === 0) {
