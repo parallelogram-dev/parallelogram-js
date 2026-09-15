@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `registerTrackerAdapter()` takes an optional third argument, `{ ids, origins }`, limiting what DeferTracker's blocks can load. With `ids`, a block whose tracker id (`id`, `site`, `domain` or `scriptId`) isn't listed is marked `error`, logs a warning and its adapter isn't called. Register Tag Manager with `ids`, since a container's Custom HTML tags run any script; DeferTracker warns once when `gtm` starts without them. Calls without options behave as before.
 - `<p-uploader-file>` has its own import path, `@parallelogram-js/core/components/PUploaderFile`, which defines only that element. `components/PUploader` still defines it and exports `PUploaderFile`, and custom-elements.json lists it under its new module.
+- The documentation site publishes `llms.txt`, an index of its guides and component pages for coding agents, and `llms-full.txt`, with every guide and each component's attributes, events, CSS custom properties and first example in one file. It also publishes `sitemap.xml` and `robots.txt`. All four are generated from the guides and component contracts, like the pages.
+- `package.json` names the documentation site as the package's `homepage` and GitHub issues as its `bugs` URL.
 
 - DataTable's pagination and status text can be translated: `data-datatable-status-message` (with `{from}`, `{to}` and `{total}`), `data-datatable-pagination-label`, `data-datatable-previous-text`, `data-datatable-previous-label`, `data-datatable-next-text`, `data-datatable-next-label` and `data-datatable-page-label` (with `{page}`). The English defaults are unchanged.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
@@ -143,7 +145,7 @@ Fixes from the post-0.5.0 audit, and a clean-up of options and methods that neve
 
 ## [0.5.0] - 2026-09-15
 
-Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
+Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://github.com/parallelogram-dev/parallelogram-js/blob/main/site/guides/upgrading.md) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
 
 ### Added
 
@@ -340,10 +342,6 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
 - The demo build deletes stale hashed chunks from `demo/dist`.
 
-## [0.4.1] - 2026-06-26
-
-Changes in this release weren't recorded here; see the git history for what it contains.
-
 ## [0.4.0] - 2026-06-03
 
 ### Added
@@ -357,29 +355,7 @@ Changes in this release weren't recorded here; see the git history for what it c
 
 - Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
 
-## [0.1.3 – 0.3.2] - not recorded
-
-Changes in these releases weren't recorded here; see the git history for what each one contains. They were published to npm on these dates:
-
-- 0.3.2 - 2026-06-03
-- 0.3.1 - 2026-05-27
-- 0.3.0 - 2026-05-18
-- 0.2.11 - 2026-05-13
-- 0.2.10 - 2026-05-12
-- 0.2.9 - 2026-05-12
-- 0.2.8 - 2026-02-11
-- 0.2.7 - 2025-11-26
-- 0.2.6 - 2025-11-26
-- 0.2.5 - 2025-11-26
-- 0.2.4 - 2025-11-25
-- 0.2.3 - 2025-11-21
-- 0.2.2 - 2025-11-20
-- 0.2.1 - 2025-11-20
-- 0.2.0 - 2025-11-19
-- 0.1.4 - 2025-11-19
-- 0.1.3 - 2025-11-19
-
-## [0.1.2] - 2025-11-19
+## [0.1.2] - 2025-01-19
 
 ### Added
 
@@ -422,7 +398,7 @@ Changes in these releases weren't recorded here; see the git history for what ea
   - Toggle component (opening/closing states)
   - Lightbox component (active animation states)
 
-## [0.1.1] - 2025-11-18
+## [0.1.1] - 2025-01-19
 
 ### Added
 
@@ -436,7 +412,7 @@ Changes in these releases weren't recorded here; see the git history for what ea
 - Improved async/defer script handling in initialization
 - Enhanced ComponentRegistry validation and error messaging
 
-## [0.1.0] - 2025-11-18
+## [0.1.0] - 2025-01-18
 
 ### Changed
 

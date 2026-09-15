@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { discoveryFiles } from './discovery.js';
 import { orderGuides, readGuide } from './guides.js';
 import { componentPage, guidePage, homePage, layout, slugFor, titleFor } from './render.js';
 
@@ -41,6 +42,15 @@ export function loadGuides() {
         readGuide(path.basename(file, '.md'), readFileSync(path.join(guidesDir, file), 'utf8'))
       )
   );
+}
+
+/**
+ * llms.txt, llms-full.txt, sitemap.xml and robots.txt, from the current contracts and guides
+ *
+ * @returns {Promise<Record<string, string>>} Each file's contents by its path from the site root
+ */
+export async function loadDiscoveryFiles() {
+  return discoveryFiles(await loadContracts(), loadGuides());
 }
 
 /**
