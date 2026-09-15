@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Videoplay removes a managed video's `autoplay` attribute when it mounts and starts playback itself. While the attribute stayed, browsers downloaded every autoplay video at page load, however far below the fold, ignoring `preload`, and could start one off screen or for a user who prefers reduced motion. Without JavaScript the attribute still autoplays the video, and unmounting puts it back.
 - Scrollreveal reveals an element with `data-reveal-once="false"` again when it scrolls back into view while its hide animation is running, where it stayed hidden in view.
 - Lazysrc's `loadElement()` and `loadAll()` resolve for an element with nothing to load, such as an image without any source or an element that is neither an image nor has `data-lazysrc-bg`, which they waited on forever. The element settles in the `error` state and dispatches `lazysrc:error`.
+- Lightbox puts the class from `data-lightbox-state-opening-class`, `-open-class`, `-transitioning-class` and `-closing-class` on the viewer while it is in that state, replacing the previous state's class, as documented. They were read but never applied. `data-lightbox-state-closed-class` is deprecated and removed in 0.6.0, because the viewer is removed when it closes and there is nothing to put the class on.
 
 ## [0.5.3] - 2026-09-15
 

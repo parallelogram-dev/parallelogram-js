@@ -182,8 +182,14 @@ export class Lightbox extends BaseComponent {
     const oldState = state.lightboxState;
     state.lightboxState = newState;
 
-    /* Update lightbox element data attribute for state-based CSS */
+    /* Update the viewer's state attribute, and swap the previous state's class for the new one's */
     if (this.lightboxElement) {
+      const classesFor = value =>
+        (state.config[`state${value[0].toUpperCase()}${value.slice(1)}Class`] ?? '')
+          .split(' ')
+          .filter(Boolean);
+      this.lightboxElement.classList.remove(...classesFor(oldState));
+      this.lightboxElement.classList.add(...classesFor(newState));
       this.setState(this.lightboxElement, newState);
     }
 
