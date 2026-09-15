@@ -8,6 +8,8 @@ import type { ComponentState } from '@parallelogram-js/core/core/BaseComponent';
 import Lightbox from '@parallelogram-js/core/components/Lightbox';
 import { AlertManager } from '@parallelogram-js/core/managers/AlertManager';
 import Toggle from '@parallelogram-js/core/components/Toggle';
+import { registerTrackerAdapter } from '@parallelogram-js/core/components/DeferTracker';
+import gtm from '@parallelogram-js/core/adapters/gtm';
 
 export function configure(): Parallelogram {
   const app = Parallelogram.create({
@@ -116,4 +118,12 @@ export function lightbox(viewer: Lightbox, link: HTMLElement): number {
 
   const status = viewer.getStatus(link);
   return status?.lightboxState === 'open' ? status.gallerySize : 0;
+}
+
+export function registerTrackers(): void {
+  registerTrackerAdapter('gtm', gtm, {
+    ids: ['GTM-XXXXXX'],
+    origins: ['https://stats.example.com'],
+  });
+  registerTrackerAdapter('gtm', gtm);
 }
