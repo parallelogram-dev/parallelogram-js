@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PModal from '../../../src/components/PModal.js';
-import { ExtendedStates } from '../../../src/core/ComponentStates.js';
 
 describe('p-modal', () => {
   afterEach(() => {
@@ -18,7 +17,7 @@ describe('p-modal', () => {
     const modal = document.createElement('p-modal');
     document.body.append(modal);
 
-    expect(modal.getAttribute('data-modal-state')).toBe(ExtendedStates.CLOSED);
+    expect(modal.getAttribute('data-modal-state')).toBe('closed');
   });
 
   it('handles its close button once after being moved to another container', () => {
