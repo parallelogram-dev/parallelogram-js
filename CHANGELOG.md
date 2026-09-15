@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A navigation in a background tab finishes straight away instead of when the tab is shown. Scrolling to the top and class-based fragment transitions waited on animation frames, which browsers pause in hidden tabs, and now fall back to a short timeout while the document is hidden.
 - Toggle, Tabs, Modal, Lightbox and DataTable read their defaults through the instance's class, so a subclass that overrides `static get defaults()` gets its own defaults instead of the parent's.
 - With `fullLoadOnError: false`, a navigation whose page fails to swap in after the address changed can be tried again straight away. The router skipped it as a navigation to the current URL.
+- A navigation replaced by a newer one before its head assets are merged no longer adds the new page's stylesheets and scripts to the head. The Pages and the router guide describes what a replaced navigation leaves.
 
 ## [0.5.3] - 2026-09-15
 

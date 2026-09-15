@@ -204,7 +204,7 @@ Before any fragment changes, and only when the fetched page has head content:
 2. Stylesheets (`link[rel~="stylesheet"][href]`) and external scripts (`script[src]`) in the new head that the current page doesn't have are appended to the head. URLs are resolved against the new page's address, and scripts keep their order.
 3. The swap waits for each one to load or fail, for up to `assetTimeout` milliseconds each.
 
-Assets are never removed, and a head script already on the page doesn't run again.
+Assets are never removed, and a head script already on the page doesn't run again. A navigation that is replaced by a newer one before this step adds nothing to the head. Assets it had already added stay in the head and finish loading, and its scripts run, but none of its fragments are replaced.
 
 When the `main` fragment is replaced, the head is reconciled with the new page. The title is updated when the new one isn't empty, and `lang` and `dir` on the `html` element are copied or removed. These tags are replaced as sets, so tags the new page lacks are removed and repeated tags are all kept:
 

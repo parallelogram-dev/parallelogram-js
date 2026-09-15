@@ -117,7 +117,7 @@ export class FragmentSwapper {
         throw this._fragmentMismatchError(missing);
       }
 
-      await this._mergeHeadAssets(doc, url);
+      await this._mergeHeadAssets(doc, url, options.signal);
 
       if (options.signal?.aborted) {
         return;
@@ -540,11 +540,12 @@ export class FragmentSwapper {
    * Assets marked [data-router-track="reload"] identify the site's versioned bundles; when their set
    * differs from the current page's, nothing is replaced so the router can load the page normally.
    * Stylesheets and external scripts that the new page's head adds are appended and waited for, up
-   * to `assetTimeout` milliseconds each. A response without head content is left alone.
+   * to `assetTimeout` milliseconds each, unless the signal has already aborted. A response without
+   * head content is left alone.
    *
    * @throws {Error} A `TrackedAssetsChangedError` when the tracked assets differ.
    */
-  async _mergeHeadAssets(doc, url) {
+  async _mergeHeadAssets(doc, url, signal) {
     if (!doc.head || doc.head.childElementCount === 0) {
       return;
     }
@@ -562,6 +563,10 @@ export class FragmentSwapper {
       const error = new Error('Tracked assets changed, so the page must be loaded normally');
       error.name = 'TrackedAssetsChangedError';
       throw error;
+    }
+
+    if (signal?.aborted) {
+      return;
     }
 
     const present = keys(document.querySelectorAll(HEAD_ASSETS), document.baseURI);

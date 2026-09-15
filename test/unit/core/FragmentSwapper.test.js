@@ -80,6 +80,25 @@ describe('FragmentSwapper', () => {
     ).resolves.toBe('finished');
   });
 
+  it('adds no head assets for a swap whose signal has already aborted', async () => {
+    document.body.innerHTML = '<main data-view="main">Home</main>';
+    const swapper = new FragmentSwapper({
+      options: { assetTimeout: 10 },
+      eventBus: new EventManager(),
+      mountWithin: vi.fn(),
+      unmountWithin: vi.fn(),
+    });
+    const navigation = new AbortController();
+    navigation.abort();
+
+    await swapper.replaceFragments(
+      '<html><head><link rel="stylesheet" href="/pricing.css"></head><body><main data-view="main">Pricing</main></body></html>',
+      { viewTargets: ['main'], signal: navigation.signal }
+    );
+
+    expect(document.head.querySelector('link[href$="/pricing.css"]')).toBeNull();
+  });
+
   it('moves the parsed content into the fragment without setting its HTML', async () => {
     document.body.innerHTML = '<main data-view="main">Home</main>';
     const setInnerHTML = vi.spyOn(ownerOf(HTMLElement.prototype, 'innerHTML'), 'innerHTML', 'set');
