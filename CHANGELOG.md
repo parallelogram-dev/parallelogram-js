@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two Pinterest tags on a page record one page visit when they start and one each time the router shows a new page, instead of one per tag, and the visit is recorded after every tag starting at the same time has loaded. Two HubSpot blocks with different hub ids likewise record one page view per router navigation, since they share the `_hsq` queue.
 - DeferTracker checks consent again before running an adapter's page step, so a tracker whose consent has been withdrawn no longer records later pages the router shows. A vendor script that has already loaded can't be unloaded, so sites should also call the vendor's own consent update.
 - `<p-select>` dispatches `input`, `change` and `p-select:change` only when the chosen option changes. Opening a select and pressing Tab or Enter on the option already chosen, or calling `select()` with the current value, dispatched all three.
+- `<p-select>`'s `input` and `change` events are composed, like a native select's, so a page hears them outside a shadow root the select is in.
 
 ## [0.5.3] - 2026-09-15
 
