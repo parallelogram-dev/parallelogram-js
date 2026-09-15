@@ -248,21 +248,26 @@ describe('p-select combobox', () => {
     await userEvent.keyboard('{ArrowDown}{Enter}');
 
     await userEvent.tab();
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     const listbox = listboxOf(select);
-    expect({
-      nextFocused: document.activeElement === next,
-      shadowFocus:
-        select.shadowRoot.activeElement?.id ?? select.shadowRoot.activeElement?.className ?? null,
-      listboxHidden: listbox.hidden,
-      listboxDisplay: getComputedStyle(listbox).display,
-    }).toEqual({
-      nextFocused: true,
-      shadowFocus: null,
-      listboxHidden: true,
-      listboxDisplay: 'none',
-    });
+    await vi.waitFor(
+      () =>
+        expect({
+          nextFocused: document.activeElement === next,
+          shadowFocus:
+            select.shadowRoot.activeElement?.id ??
+            select.shadowRoot.activeElement?.className ??
+            null,
+          listboxHidden: listbox.hidden,
+          listboxDisplay: getComputedStyle(listbox).display,
+        }).toEqual({
+          nextFocused: true,
+          shadowFocus: null,
+          listboxHidden: true,
+          listboxDisplay: 'none',
+        }),
+      { timeout: 2000 }
+    );
   });
 
   it('puts the chosen label back when Escape abandons a search', () => {
