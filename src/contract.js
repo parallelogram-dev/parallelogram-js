@@ -87,6 +87,8 @@
 /**
  * @typedef {Object} ElementContract
  * @property {string} tag
+ * @property {string} [module] - The import path of the module that defines it, when that isn't the
+ *   component's own, such as `components/PUploaderFile`
  * @property {string} description
  * @property {AttributeContract[]} [attributes]
  * @property {EventContract[]} [events]
@@ -254,6 +256,9 @@ export function validateContract(contract) {
   for (const element of contract.elements ?? []) {
     if (!/^[a-z][a-z0-9]*-[a-z0-9-]+$/.test(element.tag ?? '')) {
       problems.push(`An element has an invalid tag: ${element.tag}`);
+    }
+    if (element.module !== undefined && !/^components\/[A-Z][A-Za-z]+$/.test(element.module)) {
+      problems.push(`${element.tag} module must be a components/ import path`);
     }
     if (!isText(element.description)) problems.push(`${element.tag} needs a description`);
     checkAttributes(element.attributes ?? [], element.tag, problems);

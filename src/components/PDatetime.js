@@ -63,7 +63,8 @@ const addMonths = (date, months) => {
  * @attributes
  * - mode: "date" | "datetime" | "time" (default: "date") - Controls picker type (date, datetime, or time only)
  * - value: string - Current value (or start of the range): `yyyy-mm-dd` in date mode, an ISO
- *   instant in datetime and time modes. Date-only values are always read as local dates.
+ *   instant in datetime and time modes. Date-only values are always read as local dates, and time
+ *   mode also reads `HH:mm` or `HH:mm:ss` as that time today.
  * - name: string - Form field name. The element is form-associated and submits its own value.
  * - time-format: "12" | "24" (default: "24") - Time display format
  * - show-quick-dates: boolean - Shows quick date preset buttons
@@ -243,6 +244,9 @@ export default class PDatetime extends HTMLElement {
     this._activeDate = null;
     this._opener = null;
     this._renderQueued = false;
+    this._timeLists = null;
+    this._presets = null;
+    this._dayLayout = null;
 
     /* Listeners on the component's own shadow nodes are added once; document listeners are added
        on connect and removed on disconnect */
@@ -1125,17 +1129,32 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * Render the day grid as rows of gridcells, each holding a named day button with a roving tabindex
+   * Render the day grid as rows of gridcells, each holding a named day button with a roving tabindex.
+   * The grid is built only when the month shown, the week start or the min and max change; otherwise
+   * its day buttons are updated in place.
    */
   _renderDays(year, month) {
-    const today = this._dateString(new Date());
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
-    const from = this._parseValue(this.value);
-    const to = this.range ? this._parseValue(this.rangeToValue) : null;
     const hadFocus = this._grid.contains(this.shadowRoot.activeElement);
-    const active = this._resolveActiveDate(year, month);
+    const layout = [year, month, this._weekStart, effMin?.getTime(), effMax?.getTime()].join('|');
 
+    if (layout !== this._dayLayout) {
+      this._dayLayout = layout;
+      this._buildDays(year, month, effMin, effMax);
+    }
+    this._updateDays(this._resolveActiveDate(year, month));
+
+    if (hadFocus) {
+      this._focusActiveCell();
+    }
+  }
+
+  /**
+   * Build the weekday headers and a gridcell for each day of the month, with the days outside min and
+   * max disabled
+   */
+  _buildDays(year, month, effMin, effMax) {
     this._grid.classList.remove('month-view', 'year-view');
     this._grid.setAttribute('role', 'grid');
     this._grid.replaceChildren();
@@ -1173,44 +1192,60 @@ export default class PDatetime extends HTMLElement {
       if (index < leading) continue;
 
       const dt = new Date(year, month, index - leading + 1);
-      const date = this._dateString(dt);
       const button = node(
         'button',
         {
           type: 'button',
           class: 'day',
-          'data-date': date,
-          tabindex: date === active ? '0' : '-1',
+          'data-date': this._dateString(dt),
           'aria-label': dateFormat({ dateStyle: 'full' }).format(dt),
         },
         String(dt.getDate())
       );
 
-      if (date === today) {
-        button.classList.add('today');
-        button.setAttribute('aria-current', 'date');
-      }
       if (this._isDayOutOfRange(dt, effMin, effMax)) {
         button.classList.add('disabled');
         button.setAttribute('aria-disabled', 'true');
       }
 
-      const isFrom = Boolean(from) && this._dateString(from) === date;
-      const isTo = Boolean(to) && this._dateString(to) === date;
-      if (!this.range) {
-        button.classList.toggle('selected', isFrom);
-      } else {
-        button.classList.toggle('range-start', isFrom);
-        button.classList.toggle('range-end', isTo);
-        button.classList.toggle('in-range', Boolean(from && to && dt > from && dt < to));
-      }
-      cell.setAttribute('aria-selected', String(isFrom || isTo));
-
       cell.append(button);
     }
+  }
 
-    if (hadFocus) {
-      this._focusActiveCell();
+  /**
+   * Mark today, the selected day or range, and the day holding the roving tabindex
+   *
+   * @param {string} active - The `yyyy-mm-dd` date that takes focus in the grid
+   */
+  _updateDays(active) {
+    const today = this._dateString(new Date());
+    const from = this._parseValue(this.value);
+    const to = this.range ? this._parseValue(this.rangeToValue) : null;
+    const fromDate = from && this._dateString(from);
+    const toDate = to && this._dateString(to);
+
+    for (const button of this._grid.querySelectorAll('.day')) {
+      const { date } = button.dataset;
+      const dt = this._parseValue(date);
+      const isFrom = date === fromDate;
+      const isTo = date === toDate;
+
+      button.tabIndex = date === active ? 0 : -1;
+      button.classList.toggle('today', date === today);
+      if (date === today) {
+        button.setAttribute('aria-current', 'date');
+      } else {
+        button.removeAttribute('aria-current');
+      }
+
+      button.classList.toggle('selected', !this.range && isFrom);
+      button.classList.toggle('range-start', this.range && isFrom);
+      button.classList.toggle('range-end', this.range && isTo);
+      button.classList.toggle(
+        'in-range',
+        Boolean(this.range && from && to && dt > from && dt < to)
+      );
+      button.parentElement.setAttribute('aria-selected', String(isFrom || isTo));
     }
   }
 
@@ -1360,6 +1395,7 @@ export default class PDatetime extends HTMLElement {
     this._grid.classList.add(viewClass);
     this._grid.setAttribute('role', 'grid');
     this._grid.replaceChildren();
+    this._dayLayout = null;
 
     buttons.forEach((button, index) => {
       if (index % 3 === 0) {
@@ -1398,27 +1434,31 @@ export default class PDatetime extends HTMLElement {
     const is12Hour = this.timeFormat === '12';
     this._ampm.hidden = !is12Hour;
 
-    /* Build hour select options */
-    this._hourSelect.replaceChildren();
-    const hourRange = is12Hour ? 12 : 24;
-    const hourStart = is12Hour ? 1 : 0;
-
-    for (let h = hourStart; h < (is12Hour ? hourStart + 12 : hourRange); h++) {
-      const option = document.createElement('option');
-      option.value = h;
-      option.textContent = String(h).padStart(2, '0');
-      this._hourSelect.appendChild(option);
-    }
-
-    /* Build minute select options */
-    this._minuteSelect.replaceChildren();
     const minuteStep = this._step || 15; /* Default 15-minute increments */
 
-    for (let m = 0; m < 60; m += minuteStep) {
-      const option = document.createElement('option');
-      option.value = m;
-      option.textContent = String(m).padStart(2, '0');
-      this._minuteSelect.appendChild(option);
+    /* Build the hour and minute options only when the time format or step changes */
+    const timeLists = `${is12Hour}:${minuteStep}`;
+    if (timeLists !== this._timeLists) {
+      this._timeLists = timeLists;
+
+      this._hourSelect.replaceChildren();
+      const hourRange = is12Hour ? 12 : 24;
+      const hourStart = is12Hour ? 1 : 0;
+
+      for (let h = hourStart; h < (is12Hour ? hourStart + 12 : hourRange); h++) {
+        const option = document.createElement('option');
+        option.value = h;
+        option.textContent = String(h).padStart(2, '0');
+        this._hourSelect.appendChild(option);
+      }
+
+      this._minuteSelect.replaceChildren();
+      for (let m = 0; m < 60; m += minuteStep) {
+        const option = document.createElement('option');
+        option.value = m;
+        option.textContent = String(m).padStart(2, '0');
+        this._minuteSelect.appendChild(option);
+      }
     }
 
     /* Set current values based on the focused field in range mode */
@@ -1429,9 +1469,8 @@ export default class PDatetime extends HTMLElement {
       valueToUse = this.value;
     }
 
-    if (valueToUse) {
-      const date = this._parseValue(valueToUse);
-
+    const date = this._parseValue(valueToUse);
+    if (date) {
       if (is12Hour) {
         let hours = date.getHours();
         this._ampm.value = hours >= 12 ? 'PM' : 'AM';
@@ -1445,6 +1484,9 @@ export default class PDatetime extends HTMLElement {
       const currentMinute = date.getMinutes();
       const closestMinute = Math.round(currentMinute / minuteStep) * minuteStep;
       this._minuteSelect.value = closestMinute >= 60 ? 0 : closestMinute;
+    } else {
+      this._hourSelect.selectedIndex = 0;
+      this._minuteSelect.selectedIndex = 0;
     }
   }
 
@@ -1487,53 +1529,63 @@ export default class PDatetime extends HTMLElement {
     const shouldShow = this.showQuickDates && this.mode !== 'time';
     this._quickDates.hidden = !shouldShow;
 
-    if (shouldShow) {
-      const dates = this.quickDates.split(',').map(s => s.trim());
-      const dateMap = {
-        yesterday: { days: -1, label: 'Yesterday' },
-        today: { days: 0, label: 'Today' },
-        tomorrow: { days: 1, label: 'Tomorrow' },
-      };
+    if (!shouldShow) return;
 
-      this._quickDates.replaceChildren();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
-      const effMin = this._effectiveMin();
-      const effMax = this._effectiveMax();
+    /* Build the presets only when the list, the boundaries or today's date change */
+    const presets = [
+      this.quickDates,
+      effMin?.getTime(),
+      effMax?.getTime(),
+      this._dateString(new Date()),
+    ].join('|');
+    if (presets === this._presets) return;
+    this._presets = presets;
 
-      dates.forEach(dateKey => {
-        if (dateMap[dateKey]) {
-          /* Skip presets that fall outside the allowed range */
-          const preview = new Date();
-          preview.setDate(preview.getDate() + dateMap[dateKey].days);
-          if (this._isDayOutOfRange(preview, effMin, effMax)) return;
+    const dates = this.quickDates.split(',').map(s => s.trim());
+    const dateMap = {
+      yesterday: { days: -1, label: 'Yesterday' },
+      today: { days: 0, label: 'Today' },
+      tomorrow: { days: 1, label: 'Tomorrow' },
+    };
 
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'preset';
-          btn.textContent = dateMap[dateKey].label;
-          btn.addEventListener('click', () => {
-            const date = new Date();
-            date.setDate(date.getDate() + dateMap[dateKey].days);
+    this._quickDates.replaceChildren();
 
-            if (this.mode === 'date') {
-              this.value = this._dateString(date);
-            } else {
-              date.setHours(9, 0, 0, 0);
-              this.value = date.toISOString();
-            }
+    dates.forEach(dateKey => {
+      if (dateMap[dateKey]) {
+        /* Skip presets that fall outside the allowed range */
+        const preview = new Date();
+        preview.setDate(preview.getDate() + dateMap[dateKey].days);
+        if (this._isDayOutOfRange(preview, effMin, effMax)) return;
 
-            /* Reset view to day mode and navigate to selected date */
-            this._viewMode = 'day';
-            this._view = new Date(date);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset';
+        btn.textContent = dateMap[dateKey].label;
+        btn.addEventListener('click', () => {
+          const date = new Date();
+          date.setDate(date.getDate() + dateMap[dateKey].days);
 
-            this._emitChange();
-            this._render();
-            if (this.mode === 'date') this.close();
-          });
-          this._quickDates.appendChild(btn);
-        }
-      });
-    }
+          if (this.mode === 'date') {
+            this.value = this._dateString(date);
+          } else {
+            date.setHours(9, 0, 0, 0);
+            this.value = date.toISOString();
+          }
+
+          /* Reset view to day mode and navigate to selected date */
+          this._viewMode = 'day';
+          this._view = new Date(date);
+
+          this._emitChange();
+          this._render();
+          if (this.mode === 'date') this.close();
+        });
+        this._quickDates.appendChild(btn);
+      }
+    });
   }
 
   _syncTime() {
@@ -1639,13 +1691,20 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * A Date for a stored value. `yyyy-mm-dd` is read as a local date; anything else goes to Date.
+   * A Date for a stored value. `yyyy-mm-dd` is read as a local date, and in time mode `HH:mm` or
+   * `HH:mm:ss` as that time today; anything else goes to Date.
    *
    * @param {string} value
    * @returns {Date|null}
    */
   _parseValue(value) {
     if (!value) return null;
+    const time = this.mode === 'time' && /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/.exec(value);
+    if (time) {
+      const today = new Date();
+      today.setHours(Number(time[1]), Number(time[2]), Number(time[3] ?? 0), 0);
+      return today;
+    }
     const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
     const date = dateOnly
       ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
@@ -1742,7 +1801,9 @@ export default class PDatetime extends HTMLElement {
 
   formDisabledCallback(disabled) {
     this._formDisabled = disabled;
-    this._btn.disabled = disabled;
+    for (const control of [this._input, this._toInput, this._btn]) {
+      control.disabled = disabled;
+    }
     if (disabled) this.close();
   }
 

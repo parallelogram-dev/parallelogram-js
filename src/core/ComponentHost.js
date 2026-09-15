@@ -29,6 +29,14 @@
 
 const isThenable = value => typeof value?.then === 'function';
 
+/* Whether a node, or one of its ancestors, is in a set of nodes */
+const isInside = (node, nodes) => {
+  for (let current = node; current; current = current.parentNode) {
+    if (nodes.has(current)) return true;
+  }
+  return false;
+};
+
 export class ComponentHost {
   /**
    * @param {Object} options
@@ -57,6 +65,8 @@ export class ComponentHost {
     this.entries = new Map();
     /** @type {Map<string, Object>} Load record per entry name */
     this.records = new Map();
+    /** @type {Map<string, Object>} Entries and combined selector per mount priority */
+    this.passes = new Map();
     this.timers = new Set();
     this.observer = null;
     this.root = null;
@@ -120,7 +130,7 @@ export class ComponentHost {
   add(entry) {
     this._register(entry);
     if (this.root) {
-      this._mountEntry(entry, this._matching(entry, [this.root]), null);
+      this._mountEntry(entry, this._matching(entry.selector, [this.root]), null);
     }
     return this;
   }
@@ -141,11 +151,15 @@ export class ComponentHost {
     }
 
     const scopes = nodes ?? [root];
+    const { entries, valid, selector } = this._pass(priority);
+    const found = selector ? this._matching(selector, scopes) : [];
 
-    for (const entry of this._entriesFor(priority)) {
+    for (const entry of entries) {
       let elements;
       try {
-        elements = this._matching(entry, scopes);
+        elements = valid.includes(entry)
+          ? found.filter(element => element.matches(entry.selector))
+          : this._matching(entry.selector, scopes);
       } catch (error) {
         this.logger?.error(`Invalid selector for component ${entry.name}`, { error, entry });
         this.eventBus.emit('page:component-mount-error', { componentName: entry.name, error });
@@ -164,22 +178,7 @@ export class ComponentHost {
    * @param {Element} root
    */
   unmountWithin(root) {
-    for (const [name, record] of this.records) {
-      if (record.instance) {
-        for (const element of this._trackedElements(record.instance)) {
-          if (root === element || root.contains(element)) {
-            this._unmountElement(name, record.instance, element);
-          }
-        }
-      }
-
-      for (const element of [...record.pending.keys()]) {
-        if (root === element || root.contains(element)) {
-          record.pending.delete(element);
-          element.classList.remove('component-loading');
-        }
-      }
-    }
+    this._unmountWhere(element => root.contains(element));
   }
 
   /**
@@ -194,6 +193,26 @@ export class ComponentHost {
     if (!entry) return false;
 
     this._mountEntry(entry, [element], null);
+    return true;
+  }
+
+  /**
+   * Load a component that failed to load for good again, with a fresh set of retries
+   *
+   * Failed dependencies are retried too, and matching elements in the root wait for the new load.
+   *
+   * @param {string} name
+   * @returns {boolean} False when no component with that name has failed to load
+   */
+  retry(name) {
+    const entry = this.entries.get(name);
+    if (!entry || this.records.get(name)?.status !== 'failed') return false;
+
+    (entry.dependsOn ?? []).forEach(dependency => this.retry(dependency));
+    this.records.delete(name);
+    if (this.root) {
+      this._mountEntry(entry, this._matching(entry.selector, [this.root]), null);
+    }
     return true;
   }
 
@@ -241,6 +260,7 @@ export class ComponentHost {
       throw new Error(`Components can't depend on each other in a cycle: ${cycle.join(' → ')}`);
     }
     this.entries.set(entry.name, entry);
+    this.passes.clear();
   }
 
   /**
@@ -276,11 +296,35 @@ export class ComponentHost {
     return [...critical, ...normal];
   }
 
-  _matching(entry, scopes) {
+  /**
+   * The entries a mount pass covers, those with valid selectors, and one selector joining theirs so
+   * each scope is searched once
+   */
+  _pass(priority) {
+    if (!this.passes.has(priority)) {
+      const entries = this._entriesFor(priority);
+      const valid = entries.filter(entry => {
+        try {
+          document.createDocumentFragment().querySelector(entry.selector);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      this.passes.set(priority, {
+        entries,
+        valid,
+        selector: valid.map(entry => entry.selector).join(','),
+      });
+    }
+    return this.passes.get(priority);
+  }
+
+  _matching(selector, scopes) {
     const elements = new Set();
     for (const scope of scopes) {
-      if (scope.matches?.(entry.selector)) elements.add(scope);
-      scope.querySelectorAll?.(entry.selector).forEach(element => elements.add(element));
+      if (scope.matches?.(selector)) elements.add(scope);
+      scope.querySelectorAll?.(selector).forEach(element => elements.add(element));
     }
     return [...elements];
   }
@@ -309,7 +353,10 @@ export class ComponentHost {
       return;
     }
 
-    if (record.status === 'failed') return;
+    if (record.status === 'failed') {
+      elements.forEach(element => element.classList.add('component-error'));
+      return;
+    }
 
     elements.forEach(element => {
       record.pending.set(element, fragmentTarget);
@@ -483,35 +530,49 @@ export class ComponentHost {
   }
 
   _mountElement(name, instance, element, fragmentTarget) {
-    if (instance.elements?.has(element)) return;
+    if (instance.elements?.has(element) || instance._initializing?.has(element)) return;
 
-    try {
-      instance.mount(element);
-      if (fragmentTarget) {
-        element.setAttribute('data-fragment-target', fragmentTarget);
-      }
+    const mounted = () =>
       this.eventBus.emit('page:component-mounted', {
         componentName: name,
         element,
         instance,
         fragmentTarget,
       });
-    } catch (error) {
-      this.logger?.error(`Failed to mount ${name}`, { error, element });
+    const failed = error =>
       this.eventBus.emit('page:component-mount-error', {
         componentName: name,
         error,
         element,
         fragmentTarget,
       });
+
+    try {
+      const result = instance.mount(element);
+      if (fragmentTarget) {
+        element.setAttribute('data-fragment-target', fragmentTarget);
+      }
+      if (!isThenable(result)) {
+        mounted();
+        return;
+      }
+      /* An asynchronous _init is reported once it settles, unless the element was unmounted first */
+      result.then(() => {
+        if (instance.elements?.has(element) !== false) mounted();
+      }, failed);
+    } catch (error) {
+      this.logger?.error(`Failed to mount ${name}`, { error, element });
+      failed(error);
     }
   }
 
   _unmountElement(name, instance, element) {
     try {
-      instance.unmount(element);
+      const unmounted = instance.unmount(element);
       element.removeAttribute('data-fragment-target');
-      this.eventBus.emit('page:component-unmounted', { componentName: name, element, instance });
+      if (unmounted !== false) {
+        this.eventBus.emit('page:component-unmounted', { componentName: name, element, instance });
+      }
     } catch (error) {
       this.logger?.error(`Failed to unmount ${name}`, { error, element });
     }
@@ -522,39 +583,44 @@ export class ComponentHost {
   }
 
   _onMutations(mutations) {
-    let removedSomething = false;
     const added = new Set();
+    const removed = new Set();
 
-    for (const mutation of mutations) {
-      mutation.addedNodes.forEach(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) added.add(node);
-      });
-      if (mutation.removedNodes.length > 0) removedSomething = true;
+    for (const { addedNodes, removedNodes } of mutations) {
+      addedNodes.forEach(node => added.add(node));
+      removedNodes.forEach(node => removed.add(node));
     }
 
-    if (removedSomething) {
-      this._unmountDisconnected();
+    /* An element moved within the page is connected again by now, so it stays mounted */
+    if (removed.size > 0) {
+      this._unmountWhere(element => !element.isConnected && isInside(element, removed));
     }
 
-    const connected = [...added].filter(node => node.isConnected);
-    const roots = connected.filter(
-      node => !connected.some(other => other !== node && other.contains(node))
+    const roots = [...added].filter(
+      node =>
+        node.nodeType === Node.ELEMENT_NODE && node.isConnected && !isInside(node.parentNode, added)
     );
     if (roots.length > 0 && this.root) {
       this.mountWithin(this.root, { nodes: roots });
     }
   }
 
-  _unmountDisconnected() {
+  /**
+   * Unmount components from, and stop waiting on, the tracked elements that pass a test
+   */
+  _unmountWhere(test) {
     for (const [name, record] of this.records) {
       if (record.instance) {
         for (const element of this._trackedElements(record.instance)) {
-          if (!element.isConnected) this._unmountElement(name, record.instance, element);
+          if (test(element)) this._unmountElement(name, record.instance, element);
         }
       }
 
       for (const element of [...record.pending.keys()]) {
-        if (!element.isConnected) record.pending.delete(element);
+        if (test(element)) {
+          record.pending.delete(element);
+          element.classList.remove('component-loading');
+        }
       }
     }
   }

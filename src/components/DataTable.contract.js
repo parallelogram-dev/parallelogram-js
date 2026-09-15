@@ -11,7 +11,7 @@ export default {
   summary: 'Sorting, filtering and pagination for an existing table',
   description: `Sortable headers get a button and \`aria-sort\`, following the WAI-ARIA sortable table example. Values are read once when the table mounts: numbers are the first number in the cell, ignoring currency symbols, units and group separators, using the decimal separator of the table's \`lang\`, and negative after a minus sign or inside parentheses, dates are parsed, text is compared in natural order ("Item 2" before "Item 10"), and blank values always sort last.
 
-Filtering keeps the current sort, pagination is a labelled navigation region with a window of page numbers, and a status message announces which rows are showing after each change. The original rows are moved rather than copied, and unmounting puts the table back as it was.`,
+Filtering keeps the current sort, pagination is a labelled navigation region with a window of page numbers, hidden while every row fits on one page, and a status message announces which rows are showing after each change. The pagination and status text can be translated through attributes. The original rows are moved rather than copied, and unmounting puts the table back as it was.`,
   states: STATES,
   attributes: [
     { name: 'data-datatable', type: 'flag', description: 'Marks the table' },
@@ -70,6 +70,56 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
       description: 'The row shown when nothing matches',
     },
     {
+      name: 'data-datatable-status-message',
+      type: 'string',
+      default: 'Showing {from}–{to} of {total} rows',
+      option: 'statusMessage',
+      description:
+        'The status shown and announced after each change, with {from}, {to} and {total}',
+    },
+    {
+      name: 'data-datatable-pagination-label',
+      type: 'string',
+      default: 'Table pagination',
+      option: 'paginationLabel',
+      description: "The pagination region's label",
+    },
+    {
+      name: 'data-datatable-previous-text',
+      type: 'string',
+      default: 'Previous',
+      option: 'previousText',
+      description: "The previous page button's text",
+    },
+    {
+      name: 'data-datatable-previous-label',
+      type: 'string',
+      default: 'Previous page',
+      option: 'previousLabel',
+      description: "The previous page button's label",
+    },
+    {
+      name: 'data-datatable-next-text',
+      type: 'string',
+      default: 'Next',
+      option: 'nextText',
+      description: "The next page button's text",
+    },
+    {
+      name: 'data-datatable-next-label',
+      type: 'string',
+      default: 'Next page',
+      option: 'nextLabel',
+      description: "The next page button's label",
+    },
+    {
+      name: 'data-datatable-page-label',
+      type: 'string',
+      default: 'Page {page}',
+      option: 'pageLabel',
+      description: "Each page number button's label, with {page}",
+    },
+    {
       name: 'data-sort',
       type: 'string',
       on: 'a header',
@@ -106,8 +156,30 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
   methods: [
     {
       name: 'loadData',
-      signature: '(element: HTMLTableElement, url: string) => Promise<void>',
-      description: 'Replace the rows with JSON rows fetched from a URL',
+      signature:
+        '(element: HTMLTableElement, url: string, rowMapper: (item: unknown) => HTMLTableRowElement) => Promise<void>',
+      description:
+        'Replace the rows with rows made from a JSON array fetched from a URL, one row per item',
+    },
+    {
+      name: 'sort',
+      signature: "(element: HTMLTableElement, column: string, direction?: 'asc' | 'desc') => void",
+      description: "Sort by the column with this data-sort key, ascending unless 'desc' is given",
+    },
+    {
+      name: 'filter',
+      signature: '(element: HTMLTableElement, searchTerm: string) => void',
+      description: 'Show only the rows containing the text, and put it in the search box',
+    },
+    {
+      name: 'goToPage',
+      signature: '(element: HTMLTableElement, page: number) => void',
+      description: 'Show a page, when the table paginates and the page exists',
+    },
+    {
+      name: 'clearError',
+      signature: '(element: HTMLTableElement) => void',
+      description: 'Clear a loadData() error and show the rows again',
     },
   ],
   events: [
@@ -146,13 +218,13 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     { name: '--datatable-border-color', default: '#d1d5db', description: 'Borders' },
     {
       name: '--datatable-button-bg',
-      default: '#ffffff',
+      default: 'transparent',
       description: 'Pagination button background',
     },
-    { name: '--datatable-button-color', default: '#374151', description: 'Pagination button text' },
+    { name: '--datatable-button-color', default: 'inherit', description: 'Pagination button text' },
     {
       name: '--datatable-button-hover-bg',
-      default: '#f3f4f6',
+      default: 'rgba(128, 128, 128, 0.15)',
       description: 'Pagination button background on hover',
     },
     {
@@ -164,7 +236,7 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     { name: '--datatable-current-color', default: '#ffffff', description: 'The current page text' },
     {
       name: '--datatable-header-hover-bg',
-      default: 'rgba(0, 0, 0, 0.05)',
+      default: 'rgba(128, 128, 128, 0.12)',
       description: 'Sortable header background on hover',
     },
     { name: '--datatable-muted-color', default: '#6b7280', description: 'Status and sort icons' },

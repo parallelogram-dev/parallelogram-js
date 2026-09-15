@@ -20,9 +20,17 @@
 
 /* Closed targets stay hidden whatever display page styles give them, including when the framework is
    imported into a cascade layer. Open targets keep their own display, such as flex or grid. */
-[data-toggle-state='closed'],
 [data-toggle-state][hidden] {
   display: none !important;
+}
+
+/* Markup can start a target closed with data-toggle-state="closed", which hides it before Toggle loads
+   so the page doesn't jump. Without scripts, or when Toggle fails to load and its triggers get
+   component-error, the target stays visible, as it does in browsers without :has(). */
+@media (scripting: enabled) {
+  :root:not(:has([data-toggle].component-error)) [data-toggle-state='closed'] {
+    display: none !important;
+  }
 }
 
 [data-toggle-state='closing'] {

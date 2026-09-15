@@ -5,9 +5,9 @@ export default {
   selector: 'data-videoplay',
   module: 'components/Videoplay',
   summary: 'Play videos as they scroll into view and pause them as they leave',
-  description: `Only videos with the \`autoplay\` attribute are managed. They play once enough of the video is visible and pause when it scrolls away or the page is hidden. A video the user pauses stays paused until the user plays it again. Managed videos play inline, so iPhone Safari doesn't open them full screen, and are muted for autoplay unless automute says otherwise.
+  description: `Only videos with the \`autoplay\` attribute are managed. Videoplay removes the attribute when it mounts and starts playback itself, so the browser neither downloads a video far below the fold nor plays it off screen; without JavaScript the attribute still autoplays the video. Managed videos play once enough of the video is visible and pause when it scrolls away or the page is hidden. A video the user pauses stays paused until the user plays it again. They play inline, so iPhone Safari doesn't open them full screen, and are muted for autoplay unless automute says otherwise.
 
-When the user prefers reduced motion, autoplay is left off and the video's controls are shown instead.`,
+When the user prefers reduced motion, the video isn't played and its controls are shown instead.`,
   attributes: [
     {
       name: 'data-videoplay',

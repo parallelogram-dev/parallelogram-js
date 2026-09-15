@@ -128,7 +128,22 @@ export class AlertManager {
   }
 
   /**
+   * Stop forwarding the `p-toasts` events to the event bus
+   *
+   * The `p-toasts` element stays on the page, because other managers, `AlertManager.notify()` and
+   * the Toast component share it, and the toasts already shown there close as usual.
+   */
+  destroy() {
+    this._forwarding?.abort();
+    this._forwarding = null;
+    this.toastElement = null;
+  }
+
+  /**
    * Show a toast through a shared AlertManager, created on first use
+   *
+   * The shared manager has no event bus and lasts as long as the page. It is never destroyed, and
+   * `destroy()` on another manager doesn't affect it.
    *
    * @param {string} message
    * @param {ToastType} [type='info']

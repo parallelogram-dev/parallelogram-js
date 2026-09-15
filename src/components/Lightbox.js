@@ -61,9 +61,13 @@ export class Lightbox extends BaseComponent {
     };
   }
 
+  /**
+   * @param {import('../core/BaseComponent.js').ComponentContext} [options]
+   */
   constructor(options = {}) {
     super(options);
     this.lightboxElement = null;
+    /** @type {HTMLElement|null} The gallery link the open viewer belongs to */
     this.currentTriggerElement = null;
   }
 
@@ -72,11 +76,13 @@ export class Lightbox extends BaseComponent {
    *
    * The overlay carries the deprecated `data-lightbox` state copy, so a page observer watching for
    * `[data-lightbox]` would otherwise mount it as another gallery link.
+   *
+   * @param {HTMLElement} element
    */
   mount(element) {
     if (
       element === this.lightboxElement ||
-      element.classList.contains(Lightbox.defaults.overlayClass)
+      element.classList.contains(this.constructor.defaults.overlayClass)
     ) {
       return undefined;
     }
@@ -117,62 +123,34 @@ export class Lightbox extends BaseComponent {
   }
 
   _getConfiguration(element) {
-    return {
-      closeOnEscape: this.getBoolAttr(element, 'close-escape', Lightbox.defaults.closeOnEscape),
-      closeOnBackdrop: this.getBoolAttr(
-        element,
-        'close-backdrop',
-        Lightbox.defaults.closeOnBackdrop
-      ),
-      showCounter: this.getBoolAttr(element, 'show-counter', Lightbox.defaults.showCounter),
-      showNavigation: this.getBoolAttr(element, 'show-nav', Lightbox.defaults.showNavigation),
-      keyNavigation: this.getBoolAttr(element, 'key-nav', Lightbox.defaults.keyNavigation),
-      useDirectionalTransitions: this.getBoolAttr(
-        element,
-        'directional-transitions',
-        Lightbox.defaults.useDirectionalTransitions
-      ),
-      preloadStrategy: this.getAttr(element, 'preload', Lightbox.defaults.preloadStrategy),
+    return this._getConfigFromAttrs(element, {
+      closeOnEscape: 'close-escape',
+      closeOnBackdrop: 'close-backdrop',
+      showCounter: 'show-counter',
+      showNavigation: 'show-nav',
+      keyNavigation: 'key-nav',
+      useDirectionalTransitions: 'directional-transitions',
+      preloadStrategy: 'preload',
       /* BEM class names */
-      baseClass: this.getAttr(element, 'base-class', Lightbox.defaults.baseClass),
-      overlayClass: this.getAttr(element, 'overlay-class', Lightbox.defaults.overlayClass),
-      containerClass: this.getAttr(element, 'container-class', Lightbox.defaults.containerClass),
-      closeClass: this.getAttr(element, 'close-class', Lightbox.defaults.closeClass),
-      prevClass: this.getAttr(element, 'prev-class', Lightbox.defaults.prevClass),
-      nextClass: this.getAttr(element, 'next-class', Lightbox.defaults.nextClass),
-      contentClass: this.getAttr(element, 'content-class', Lightbox.defaults.contentClass),
-      imageClass: this.getAttr(element, 'image-class', Lightbox.defaults.imageClass),
-      counterClass: this.getAttr(element, 'counter-class', Lightbox.defaults.counterClass),
-      /* State classes */
-      stateClosedClass: this.getAttr(
-        element,
-        'state-closed-class',
-        Lightbox.defaults.stateClosedClass
-      ),
-      stateOpeningClass: this.getAttr(
-        element,
-        'state-opening-class',
-        Lightbox.defaults.stateOpeningClass
-      ),
-      stateOpenClass: this.getAttr(element, 'state-open-class', Lightbox.defaults.stateOpenClass),
-      stateTransitioningClass: this.getAttr(
-        element,
-        'state-transitioning-class',
-        Lightbox.defaults.stateTransitioningClass
-      ),
-      stateClosingClass: this.getAttr(
-        element,
-        'state-closing-class',
-        Lightbox.defaults.stateClosingClass
-      ),
-      showClass: this.getAttr(element, 'show-class', Lightbox.defaults.showClass),
-      slideLeftClass: this.getAttr(element, 'slide-left-class', Lightbox.defaults.slideLeftClass),
-      slideRightClass: this.getAttr(
-        element,
-        'slide-right-class',
-        Lightbox.defaults.slideRightClass
-      ),
-    };
+      baseClass: 'base-class',
+      overlayClass: 'overlay-class',
+      containerClass: 'container-class',
+      closeClass: 'close-class',
+      prevClass: 'prev-class',
+      nextClass: 'next-class',
+      contentClass: 'content-class',
+      imageClass: 'image-class',
+      counterClass: 'counter-class',
+      /* State and utility classes */
+      stateClosedClass: 'state-closed-class',
+      stateOpeningClass: 'state-opening-class',
+      stateOpenClass: 'state-open-class',
+      stateTransitioningClass: 'state-transitioning-class',
+      stateClosingClass: 'state-closing-class',
+      showClass: 'show-class',
+      slideLeftClass: 'slide-left-class',
+      slideRightClass: 'slide-right-class',
+    });
   }
 
   _setState(element, newState) {
@@ -182,8 +160,14 @@ export class Lightbox extends BaseComponent {
     const oldState = state.lightboxState;
     state.lightboxState = newState;
 
-    /* Update lightbox element data attribute for state-based CSS */
+    /* Update the viewer's state attribute, and swap the previous state's class for the new one's */
     if (this.lightboxElement) {
+      const classesFor = value =>
+        (state.config[`state${value[0].toUpperCase()}${value.slice(1)}Class`] ?? '')
+          .split(' ')
+          .filter(Boolean);
+      this.lightboxElement.classList.remove(...classesFor(oldState));
+      this.lightboxElement.classList.add(...classesFor(newState));
       this.setState(this.lightboxElement, newState);
     }
 
@@ -376,7 +360,20 @@ export class Lightbox extends BaseComponent {
     const image = document.createElement('img');
     image.className = config.imageClass;
     image.alt = '';
-    content.append(image);
+    const error = document.createElement('p');
+    error.className = 'lightbox__error';
+    error.hidden = true;
+    image.addEventListener('error', () => {
+      if (!image.getAttribute('src')) return;
+      error.textContent = `${image.alt || 'The image'} couldn't be loaded`;
+      error.hidden = false;
+      image.hidden = true;
+    });
+    image.addEventListener('load', () => {
+      error.hidden = true;
+      image.hidden = false;
+    });
+    content.append(image, error);
     container.append(content);
     overlay.append(container);
 
@@ -583,22 +580,43 @@ export class Lightbox extends BaseComponent {
   }
 
   /* Public API */
+
+  /**
+   * Open the viewer at a gallery link's image
+   *
+   * @param {HTMLElement} triggerElement - A mounted gallery link
+   */
   open(triggerElement) {
     this._openLightbox(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   close(triggerElement) {
     this._closeLightbox(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   next(triggerElement) {
     this._nextImage(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   previous(triggerElement) {
     this._previousImage(triggerElement);
   }
 
+  /**
+   * Show the image at a position in the gallery while the viewer is open
+   *
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   * @param {number} index - The image's zero-based position in the gallery
+   */
   goTo(triggerElement, index) {
     const state = this.getState(triggerElement);
     if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
@@ -609,6 +627,12 @@ export class Lightbox extends BaseComponent {
     }
   }
 
+  /**
+   * The viewer's state for a gallery link, or null when the link isn't mounted
+   *
+   * @param {HTMLElement} triggerElement - A mounted gallery link
+   * @returns {{ lightboxState: 'closed'|'opening'|'open'|'transitioning'|'closing', currentIndex: number, gallerySize: number, gallery: string } | null}
+   */
   getStatus(triggerElement) {
     const state = this.getState(triggerElement);
     if (!state) return null;
@@ -621,6 +645,13 @@ export class Lightbox extends BaseComponent {
     };
   }
 
+  /**
+   * Create a Lightbox and mount it on every matching gallery link
+   *
+   * @param {string} [selector='[data-lightbox]']
+   * @param {import('../core/BaseComponent.js').ComponentContext} [options]
+   * @returns {Lightbox}
+   */
   static enhanceAll(selector = '[data-lightbox]', options) {
     const instance = new Lightbox(options);
     document.querySelectorAll(selector).forEach(el => instance.mount(el));

@@ -27,6 +27,8 @@ import { ComponentHost } from '../core/ComponentHost.js';
  *   name
  * @property {Record<string, FragmentTransition>} [targetGroupTransitions] - Transitions for each
  *   fragment, by its `data-view` name
+ * @property {boolean} [viewTransitions=false] - Swap fragments without their own transition inside
+ *   `document.startViewTransition()`, where the browser supports it and motion isn't reduced
  * @property {boolean} [fragmentFallbacks=false] - Also find a fragment without `data-view` by its id
  * @property {boolean} [runScripts=true] - Run the scripts in swapped fragments
  * @property {number} [assetTimeout=3000] - Milliseconds to wait for each stylesheet or script the
@@ -73,6 +75,7 @@ export class PageManager {
       observeRoot: null,
       /* Fragment target groups - define which fragments update together */
       targetGroups: {},
+      viewTransitions: false,
       fragmentFallbacks: false,
       runScripts: true,
       assetTimeout: 3000,
@@ -198,6 +201,9 @@ export class PageManager {
    * navigate do not download it. Options are described on FragmentSwapper#replaceFragments. The
    * swap stops before changing the page when `signal` aborts or this manager is destroyed.
    *
+   * @param {string} html - The fetched document's HTML
+   * @param {Parameters<import('../core/FragmentSwapper.js').FragmentSwapper['replaceFragments']>[1]} [options]
+   * @returns {Promise<void>}
    * @throws {Error} When a fragment is missing or tracked assets changed, before anything changes.
    */
   async replaceFragments(html, options = {}) {
@@ -269,6 +275,8 @@ export class PageManager {
 
   /**
    * Unmount every component within a root
+   *
+   * @param {Element} root
    */
   unmountAllWithin(root) {
     this.host.unmountWithin(root);

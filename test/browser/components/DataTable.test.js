@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DataTable from '../../../src/components/DataTable.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
+import datatableStyles from '../../../src/styles/framework/components/datatable.scss';
 
 const WAIT = { timeout: 2000 };
 
@@ -196,6 +197,33 @@ describe('DataTable', () => {
       nav.querySelector('[aria-current="page"]')?.textContent,
       column(table, 0),
     ]).toEqual([0, true, '2', ['Katherine', 'Radia']]);
+  });
+
+  it('hides the empty pagination region from layout and assistive technology', () => {
+    const style = document.createElement('style');
+    style.textContent = datatableStyles;
+    document.head.append(style);
+    mount(build(PEOPLE, 'data-datatable-paginate="10"'));
+    const nav = document.querySelector('.holder nav');
+    const display = getComputedStyle(nav).display;
+    style.remove();
+
+    expect([nav.hidden, display]).toEqual([true, 'none']);
+  });
+
+  it('draws pagination buttons in the colours of the page around them', () => {
+    const style = document.createElement('style');
+    style.textContent = datatableStyles;
+    document.head.append(style);
+    const table = build(PEOPLE, 'data-datatable-paginate="2"');
+    table.parentElement.style.cssText = 'background: rgb(17, 17, 17); color: rgb(240, 240, 240)';
+    mount(table);
+    const { color, backgroundColor } = getComputedStyle(
+      document.querySelector('.holder nav button[aria-label="Page 2"]')
+    );
+    style.remove();
+
+    expect([color, backgroundColor]).toEqual(['rgb(240, 240, 240)', 'rgba(0, 0, 0, 0)']);
   });
 
   it('shows a window of page numbers for long tables', () => {

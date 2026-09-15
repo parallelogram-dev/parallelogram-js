@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { BaseComponent } from '../../../src/core/BaseComponent.js';
 import { ComponentHost } from '../../../src/core/ComponentHost.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
 
@@ -180,6 +181,70 @@ describe('ComponentHost', () => {
     expect(document.getElementById('gallery').classList.contains('component-error')).toBe(true);
   });
 
+  it('marks elements added after a component failed to load for good', async () => {
+    const loader = vi.fn().mockRejectedValue(new Error('network error'));
+    host = new ComponentHost({
+      registry: [{ name: 'lightbox', selector: '[data-lightbox]', loader }],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    root.innerHTML = '<div id="gallery" data-lightbox></div>';
+    await vi.waitFor(() => expect(host.records.get('lightbox')?.status).toBe('failed'));
+
+    root.insertAdjacentHTML('beforeend', '<div id="later" data-lightbox></div>');
+    await flush();
+
+    expect(document.getElementById('later').classList.contains('component-error')).toBe(true);
+  });
+
+  it('mounts the elements of a failed component once it is retried', async () => {
+    root.innerHTML = '<div id="gallery" data-lightbox></div>';
+    const loader = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValue({ default: recorder.define('lightbox') });
+    host = new ComponentHost({
+      registry: [{ name: 'lightbox', selector: '[data-lightbox]', loader }],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    await flush();
+
+    const retried = host.retry('lightbox');
+    await flush();
+
+    expect([retried, recorder.log, root.firstElementChild.className]).toEqual([
+      true,
+      [['mount', 'lightbox', 'gallery']],
+      '',
+    ]);
+  });
+
+  it('retries a failed dependency along with the component that needs it', async () => {
+    root.innerHTML = '<div id="chart" data-chart></div>';
+    const loadCharts = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValue({ default: recorder.define('charts') });
+    host = new ComponentHost({
+      registry: [
+        { name: 'charts', selector: '[data-charts]', loader: loadCharts },
+        syncEntry('chart', { dependsOn: ['charts'] }),
+      ],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    await flush();
+
+    host.retry('chart');
+    await flush();
+
+    expect(recorder.log).toEqual([['mount', 'chart', 'chart']]);
+  });
+
   it('does not retry when the loaded module has no component class', async () => {
     root.innerHTML = '<div id="gallery" data-lightbox></div>';
     const loadError = vi.fn();
@@ -306,6 +371,58 @@ describe('ComponentHost', () => {
     await vi.waitFor(() => expect(recorder.log).toEqual([['mount', 'toggle', 'later']]));
   });
 
+  it('searches an added element once however many components are registered', async () => {
+    start(Array.from({ length: 20 }, (_, index) => syncEntry(`widget${index}`)));
+    const search = vi.spyOn(Element.prototype, 'querySelectorAll');
+
+    root.insertAdjacentHTML('beforeend', '<nav><button id="later" data-widget7></button></nav>');
+    await vi.waitFor(() => expect(recorder.log).toEqual([['mount', 'widget7', 'later']]));
+
+    expect(search).toHaveBeenCalledOnce();
+  });
+
+  it('reports an invalid selector for its component and still mounts the others', () => {
+    root.innerHTML = '<button id="menu" data-toggle></button>';
+    const mountError = vi.fn();
+    bus.on('page:component-mount-error', mountError);
+
+    start([
+      { name: 'broken', selector: '[data-broken', loader: () => recorder.define('broken') },
+      syncEntry('toggle'),
+    ]);
+
+    expect([mountError.mock.calls.map(([event]) => event.componentName), recorder.log]).toEqual([
+      ['broken'],
+      [['mount', 'toggle', 'menu']],
+    ]);
+  });
+
+  it('unmounts only the elements inside the removed nodes', async () => {
+    root.innerHTML =
+      '<nav id="nav"><button id="menu" data-toggle></button></nav><button id="help" data-toggle></button>';
+    const detached = document.createElement('button');
+    detached.id = 'detached';
+    start([syncEntry('toggle')]);
+    host.mount('toggle', detached);
+
+    document.getElementById('nav').remove();
+    await flush();
+
+    expect(recorder.log.filter(([action]) => action === 'unmount')).toEqual([
+      ['unmount', 'toggle', 'menu'],
+    ]);
+  });
+
+  it('keeps an element mounted when it is moved within the page', async () => {
+    root.innerHTML = '<nav id="nav"><button id="menu" data-toggle></button></nav><aside></aside>';
+    start([syncEntry('toggle')]);
+
+    root.querySelector('aside').append(document.getElementById('nav'));
+    await flush();
+
+    expect(recorder.log).toEqual([['mount', 'toggle', 'menu']]);
+  });
+
   it('unmounts components when their elements are removed from the page', async () => {
     root.innerHTML = '<nav id="nav"><button id="menu" data-toggle></button></nav>';
     start([syncEntry('toggle')]);
@@ -313,6 +430,108 @@ describe('ComponentHost', () => {
     document.getElementById('nav').remove();
 
     await vi.waitFor(() => expect(recorder.log.at(-1)).toEqual(['unmount', 'toggle', 'menu']));
+  });
+
+  it('reports an element unmounted once when its _init returned no state', async () => {
+    root.innerHTML = '<p id="first" data-note></p><p id="second"></p>';
+    const unmounted = vi.fn();
+    bus.on('page:component-unmounted', unmounted);
+    class Note extends BaseComponent {
+      _init(element) {
+        super._init(element);
+      }
+    }
+    host = new ComponentHost({
+      registry: [{ name: 'note', selector: '[data-note]', loader: () => Note }],
+      eventBus: bus,
+      logger: { warn() {}, error() {} },
+    });
+    host.start(root);
+
+    document.getElementById('first').remove();
+    await flush();
+    document.getElementById('second').remove();
+    await flush();
+
+    expect(unmounted).toHaveBeenCalledOnce();
+  });
+
+  it('does not report an unmount for an element the component was not mounted on', () => {
+    root.innerHTML = '<button id="menu" data-toggle></button>';
+    const unmounted = vi.fn();
+    bus.on('page:component-unmounted', unmounted);
+    const Toggle = recorder.define('toggle');
+    Toggle.prototype.unmount = () => false;
+    start([{ name: 'toggle', selector: '[data-toggle]', loader: () => Toggle }]);
+
+    host.unmountWithin(root);
+
+    expect(unmounted).not.toHaveBeenCalled();
+  });
+
+  it('reports an element mounted once when it is found again while its _init is running', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    const ready = deferred();
+    class MapView extends BaseComponent {
+      _init(element) {
+        const state = super._init(element);
+        return ready.promise.then(() => state);
+      }
+    }
+    start([{ name: 'map', selector: '[data-map]', loader: () => MapView }]);
+
+    host.mountWithin(root);
+    ready.resolve();
+    await flush();
+
+    expect(mounted).toHaveBeenCalledOnce();
+  });
+
+  it('reports an element mounted only once its asynchronous _init has finished', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    const ready = deferred();
+    class MapView extends BaseComponent {
+      _init(element) {
+        const state = super._init(element);
+        return ready.promise.then(() => state);
+      }
+    }
+    start([{ name: 'map', selector: '[data-map]', loader: () => MapView }]);
+
+    const whileInitialising = mounted.mock.calls.length;
+    ready.resolve();
+    await flush();
+
+    expect([whileInitialising, mounted.mock.calls.length]).toEqual([0, 1]);
+  });
+
+  it('reports a mount error instead of a mount when an asynchronous _init rejects', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    const mountError = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    bus.on('page:component-mount-error', mountError);
+    class MapView extends BaseComponent {
+      async _init() {
+        throw new Error('tiles unavailable');
+      }
+    }
+    host = new ComponentHost({
+      registry: [{ name: 'map', selector: '[data-map]', loader: () => MapView }],
+      eventBus: bus,
+      logger: { error() {} },
+    });
+    host.start(root);
+    await flush();
+
+    expect([mounted.mock.calls.length, mountError.mock.calls[0]?.[0].error.message]).toEqual([
+      0,
+      'tiles unavailable',
+    ]);
   });
 
   it('refuses two components with the same name', () => {

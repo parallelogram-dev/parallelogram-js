@@ -165,7 +165,17 @@ Registering two enhancement components with the same name throws `A component na
 
 Nothing downloads when you register a component. An enhancement component's loader runs the first time an element matching its selector is on the page, or is added to it later. The module loads once, and every matching element found while it loads mounts when it arrives, if the element is still on the page. Elements waiting for a module have the `component-loading` class.
 
-When a loader fails, it is retried after 1 second, then 2, then 4, up to `maxRetryAttempts`. After the last attempt the waiting elements get the `component-error` class and the event bus emits `page:component-load-error`. A module without a component class is not retried.
+When a loader fails, it is retried after 1 second, then 2, then 4, up to `maxRetryAttempts`. After the last attempt the waiting elements, and matching elements added later, get the `component-error` class and the event bus emits `page:component-load-error`. A module without a component class is not retried.
+
+To try a component that failed for good again, for example once the connection is back, call `app.pageManager.host.retry(name)` with its registered name. It returns `false` unless that component failed. Otherwise it starts a fresh set of retries, retries any failed dependencies first, and matching elements on the page wait for the new load.
+
+```js
+app.eventBus.on('page:component-load-error', ({ componentName }) => {
+  window.addEventListener('online', () => app.pageManager.host.retry(componentName), {
+    once: true,
+  });
+});
+```
 
 Removing an element unmounts its component. Adding matching markup, whether through the router or your own script, mounts it.
 
@@ -245,9 +255,25 @@ Enhancement components that need styles use a document stylesheet. Import the pa
 @import '@parallelogram-js/core/styles/tabs.css';
 ```
 
-The component stylesheets are `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and design tokens on `:root`: surface, form control, button and panel custom properties such as `--surface-dialog-color-bg` and `--button-primary-bg`. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
+The component stylesheets are `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and the design tokens below. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
 
-Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. Tabs' stylesheet shows only the first panel until Tabs mounts, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
+### Design tokens
+
+The package stylesheet declares these custom properties on `:root`. Set them in your own `:root` rule, after the package stylesheet, to change every component that reads them.
+
+| Properties                                                                                                                          | What they set                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--surface-<surface>-radius`, `-border-width`, `-border-color`, `-color-bg`, `-color-text`, `-shadow`                               | Each surface: `control` for form fields, `button`, `panel`, `dialog`, `dropdown`, `item`, `card` and `touch`. Buttons have only the radius, border width and shadow                                                                                                  |
+| `--surface-dropdown-item-hover-bg`, `-selected-bg`, `-current-bg`, `--surface-touch-hover-bg`, `--surface-touch-hover-border-color` | Dropdown option and touch area states                                                                                                                                                                                                                                |
+| `--form-control-*`                                                                                                                  | Form field padding and font size, with `-sm` and `-lg` variants, font family, placeholder colour, focus ring width and colour, focus and hover border colours, and disabled opacity and background. Borders, background and text colour follow the `control` surface |
+| `--button-*`                                                                                                                        | Button padding, font size and minimum height, with `-sm` and `-lg` variants, font weight, and `--button-<variant>-bg`, `-color`, `-border`, `-hover-bg` and `-hover-border` for `primary`, `secondary`, `danger` and `ghost`                                         |
+| `--panel-*`                                                                                                                         | Panel padding, with `-sm` and `-lg` variants, and header and footer padding and borders. Background, border, radius and shadow follow the `panel` surface                                                                                                            |
+| `--framework-focus-color`, `--framework-focus-width`, `--framework-focus-offset`                                                    | Focus outlines on framework components                                                                                                                                                                                                                               |
+| `--framework-transition-duration`, `--framework-transition-easing`                                                                  | How focus outlines transition                                                                                                                                                                                                                                        |
+
+When the user prefers a dark colour scheme, form fields, secondary button hovers and panels switch to dark values; set the same properties inside `@media (prefers-color-scheme: dark)` to change them. Properties for one component, such as `--modal-panel-bg` or `--toggle-transition-duration`, are listed under CSS custom properties on that component's page.
+
+Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. A target the markup marks `data-toggle-state="closed"` is hidden before Toggle mounts, but only while scripts are enabled. Tabs' stylesheet shows only the first panel until Tabs mounts, or the panel the markup marks `data-tab-panel="active"`, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
 
 ## A complete page
 

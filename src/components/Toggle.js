@@ -1,18 +1,15 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { ExtendedStates } from '../core/ComponentStates.js';
+import { deepActiveElement, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
-
-const deepActiveElement = () => {
-  let active = document.activeElement;
-  while (active?.shadowRoot?.activeElement) {
-    active = active.shadowRoot.activeElement;
-  }
-  return active;
-};
 
 /** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
 const INTERACTIVE =
   'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
+
+/** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
+const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
+const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state', 'data-toggle-target'];
 
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
@@ -38,7 +35,8 @@ const containsComposed = (container, node) => {
  * moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its
  * trigger; when focus rests on the page instead, as it does in Safari after clicking a button, Escape
  * closes the toggle opened last. Following a page link inside an open target closes it. Manual targets only close from
- * a trigger or their group.
+ * a trigger or their group. Unmounting a trigger puts back the attributes Toggle gave it, and
+ * unmounting the last trigger for a target does the same for the target.
  *
  * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions the
  * Accordion component, which animates `<details name="…">`; both work without JavaScript.
@@ -69,7 +67,8 @@ const containsComposed = (container, node) => {
  *   the page (default true)
  * - data-toggle-manual: on the trigger or target, close only from a trigger or group (default false)
  * - data-toggle-animate: "false" switches state without waiting for animations (default true)
- * - data-toggle-state: set on the target to closed, opening, open or closing
+ * - data-toggle-state: set on the target to closed, opening, open or closing. Write closed in the
+ *   markup to hide a target that starts closed before Toggle loads; it stays visible without scripts
  *
  * @events
  * - toggle:show: dispatched on the trigger with `{ target, trigger }`
@@ -101,11 +100,15 @@ export default class Toggle extends BaseComponent {
     /** A token per target, replaced by each transition so an older one cannot finish it */
     this._transitions = new WeakMap();
 
+    /** Each target's attributes as they were before its first trigger mounted */
+    this._originals = new WeakMap();
+
     this._documentListeners = null;
   }
 
   _init(element) {
     const state = super._init(element);
+    const { defaults } = this.constructor;
 
     const targetSelector = this.getAttr(element, 'target');
     if (!targetSelector) {
@@ -127,26 +130,28 @@ export default class Toggle extends BaseComponent {
     state.target = target;
     state.targetSelector = targetSelector;
     state.group = this.getAttr(element, 'group');
-    state.capture = this.getBoolAttr(element, 'capture', Toggle.defaults.capture);
+    state.capture = this.getBoolAttr(element, 'capture', defaults.capture);
     state.manual =
       this.getBoolAttr(target, 'manual', false) ||
-      this.getBoolAttr(element, 'manual', Toggle.defaults.manual);
-    state.animateToggle = this.getBoolAttr(element, 'animate', Toggle.defaults.animateToggle);
+      this.getBoolAttr(element, 'manual', defaults.manual);
+    state.animateToggle = this.getBoolAttr(element, 'animate', defaults.animateToggle);
     state.closeOnNavigation = this.getBoolAttr(
       element,
       'close-navigation',
-      Toggle.defaults.closeOnNavigation
+      defaults.closeOnNavigation
     );
-    state.closeOnEscape = this.getBoolAttr(element, 'close-escape', Toggle.defaults.closeOnEscape);
+    state.closeOnEscape = this.getBoolAttr(element, 'close-escape', defaults.closeOnEscape);
 
-    const isOpen = this._open.has(target) || target.classList.contains(Toggle.defaults.openClass);
+    const isOpen = this._open.has(target) || target.classList.contains(defaults.openClass);
     if (isOpen && !this._open.has(target)) {
       this._open.set(target, element);
     }
     state.isOpen = isOpen;
 
+    state.original = rememberAttributes(element, TRIGGER_ATTRIBUTES);
     const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
     if (firstTrigger) {
+      this._originals.set(target, rememberAttributes(target, TARGET_ATTRIBUTES));
       this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
     }
 
@@ -181,6 +186,17 @@ export default class Toggle extends BaseComponent {
         }
       }
       element.removeAttribute('data-toggle-enhanced');
+      restoreAttributes(element, state.original);
+
+      if (!this._triggersFor(target).some(trigger => trigger !== element)) {
+        this._transitions.delete(target);
+        restoreAttributes(target, this._originals.get(target));
+        this._originals.delete(target);
+      }
+      if (this.trackedElements().every(trigger => trigger === element)) {
+        this._documentListeners?.abort();
+        this._documentListeners = null;
+      }
       baseCleanup();
     };
 
@@ -325,7 +341,7 @@ export default class Toggle extends BaseComponent {
     this._open.delete(target);
     this._open.set(target, element);
     this._syncTriggers(target, true);
-    target.classList.add(Toggle.defaults.openClass);
+    target.classList.add(this.constructor.defaults.openClass);
     this._transition(target, state, ExtendedStates.OPENING, ExtendedStates.OPEN);
 
     this._dispatch(element, 'toggle:show', {
@@ -358,7 +374,7 @@ export default class Toggle extends BaseComponent {
 
     this._open.delete(target);
     this._syncTriggers(target, false);
-    target.classList.remove(Toggle.defaults.openClass);
+    target.classList.remove(this.constructor.defaults.openClass);
     this._transition(target, state, ExtendedStates.CLOSING, ExtendedStates.CLOSED);
 
     this._dispatch(element, 'toggle:hide', {
@@ -483,7 +499,7 @@ export default class Toggle extends BaseComponent {
       openCount: states.filter(state => this._isTargetOpen(state.target)).length,
       captureCount: states.filter(state => state.capture).length,
       manualCount: states.filter(state => state.manual).length,
-      defaults: Toggle.defaults,
+      defaults: this.constructor.defaults,
     };
   }
 

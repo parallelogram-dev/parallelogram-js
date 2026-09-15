@@ -750,6 +750,15 @@ describe('p-uploader ordering and replacing without dragging', () => {
     }).toEqual({ firstUp: true, firstDown: false, lastDown: true });
   });
 
+  it('offers no move buttons when allow-sort is "0"', async () => {
+    const uploader = await renderFiles({ 'sequence-action': '/api/sequence', 'allow-sort': '0' }, [
+      'first',
+      'second',
+    ]);
+
+    expect(control(uploader, 'first', 'move-down')).toBeFalsy();
+  });
+
   it('offers no move buttons without a sequence-action', async () => {
     const uploader = await renderFiles({}, ['first', 'second']);
 

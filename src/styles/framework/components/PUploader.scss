@@ -123,7 +123,7 @@ input {
     flex-direction: column;
     pointer-events: auto;
     height: $size-preview;
-    background: white;
+    background: var(--surface-card-color-bg, #ffffff);
     transform: translateY(-100%);
     transition: transform $duration-normal $ease-standard;
     will-change: transform;
@@ -144,8 +144,7 @@ input {
       }
     }
 
-    &[data-panel='delete'],
-    &[data-panel^='edit-'] {
+    &[data-panel='delete'] {
       transform: translateY(100%);
 
       &.uploader__panel--show {

@@ -90,6 +90,26 @@ describe('p-select', () => {
     expect(new FormData(form).get('country')).toBe('uk');
   });
 
+  it('restores its value attribute when the form is reset', () => {
+    const { form, select } = renderForm(`
+      <p-select name="country" value="us">
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+      </p-select>
+    `);
+    select.select('uk');
+
+    form.reset();
+
+    expect([select.value, new FormData(form).get('country')]).toEqual(['us', 'us']);
+  });
+
+  it('prefers its value attribute to a selected option', () => {
+    const { select } = renderForm(COUNTRIES.replace('name="country"', 'name="country" value="us"'));
+
+    expect(select.value).toBe('us');
+  });
+
   it('disables its text input inside a disabled fieldset', () => {
     const { select } = renderForm(`<fieldset disabled>${COUNTRIES}</fieldset>`);
 
@@ -118,12 +138,13 @@ const mountSelect = (markup, container = document.body) => {
 const inputOf = select => select.shadowRoot.querySelector('input');
 const listboxOf = select => select.shadowRoot.querySelector('[role="listbox"]');
 const optionsOf = select => [...select.shadowRoot.querySelectorAll('[role="option"]')];
-const press = (select, key) => {
+const press = (select, key, options = {}) => {
   const event = new KeyboardEvent('keydown', {
     key,
     bubbles: true,
     composed: true,
     cancelable: true,
+    ...options,
   });
   inputOf(select).dispatchEvent(event);
   return event;
@@ -211,6 +232,40 @@ describe('p-select combobox', () => {
     press(select, 'Home');
 
     expect([afterEnd, active()]).toEqual([optionsOf(select).at(-1).id, optionsOf(select)[0].id]);
+  });
+
+  it('moves ten options at a time with Page Down and Page Up', () => {
+    const many = Array.from(
+      { length: 30 },
+      (_, index) => `<option value="${index}">Seat ${index}</option>`
+    ).join('');
+    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    press(select, 'ArrowDown');
+    const active = () => inputOf(select).getAttribute('aria-activedescendant');
+
+    press(select, 'PageDown');
+    const afterPageDown = active();
+    press(select, 'PageUp');
+
+    expect([afterPageDown, active()]).toEqual([optionsOf(select)[10].id, optionsOf(select)[0].id]);
+  });
+
+  it('opens with Alt+Down Arrow and chooses the highlighted option with Alt+Up Arrow', () => {
+    const select = mountSelect(COUNTRIES);
+
+    press(select, 'ArrowDown', { altKey: true });
+    const opened = [
+      inputOf(select).getAttribute('aria-expanded'),
+      inputOf(select).getAttribute('aria-activedescendant'),
+    ];
+    press(select, 'Home');
+    press(select, 'ArrowUp', { altKey: true });
+
+    expect([opened, select.value, inputOf(select).getAttribute('aria-expanded')]).toEqual([
+      ['true', optionsOf(select)[1].id],
+      'us',
+      'false',
+    ]);
   });
 
   it('keeps the highlighted option scrolled into view', () => {
@@ -336,6 +391,36 @@ describe('p-select combobox', () => {
     optionsOf(select)[0].click();
 
     expect(seen).toEqual(['input', 'change', 'p-select:change']);
+  });
+
+  it('dispatches input and change events that cross an enclosing shadow root', () => {
+    const outer = document.createElement('div');
+    document.body.append(outer);
+    const root = outer.attachShadow({ mode: 'open' });
+    root.innerHTML = COUNTRIES;
+    const select = root.querySelector('p-select');
+    const seen = [];
+    for (const type of ['input', 'change']) {
+      outer.addEventListener(type, () => seen.push(type));
+    }
+    press(select, 'ArrowDown');
+
+    optionsOf(select)[0].click();
+
+    expect(seen).toEqual(['input', 'change']);
+  });
+
+  it('dispatches no change events when Tab leaves the option that was already chosen', () => {
+    const select = mountSelect(COUNTRIES);
+    const seen = [];
+    for (const type of ['input', 'change', 'p-select:change']) {
+      select.addEventListener(type, () => seen.push(type));
+    }
+    press(select, 'ArrowDown');
+
+    press(select, 'Tab');
+
+    expect(seen).toEqual([]);
   });
 
   it('announces how many options match inside its own shadow root', async () => {

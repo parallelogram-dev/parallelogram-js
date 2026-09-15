@@ -12,10 +12,6 @@
   box-sizing: border-box;
 
   /* Colors using surface-dialog tokens and design system variables */
-  --modal-text: currentColor;
-  --modal-muted: #{$color-text-muted};
-  --modal-accent: #{$primary};
-  --modal-hover: #{$color-bg-hover};
   --modal-backdrop-bg: #{$color-bg-overlay};
   --modal-panel-bg: var(--surface-dialog-color-bg, #ffffff);
   --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
@@ -102,8 +98,10 @@
   display: flex;
 }
 
+/* The panel only takes focus when it has nothing focusable, so show it like any other focus */
 .modal__panel:focus-visible {
-  outline: none;
+  outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+  outline-offset: var(--framework-focus-offset, 2px);
 }
 
 .modal__panel::backdrop {
@@ -286,6 +284,13 @@
       background-color var(--modal-transition),
       color var(--modal-transition),
       transform var(--modal-transition);
+  }
+}
+
+/* Forced colours replace the focus colour, so keep the panel's outline in a system colour */
+@media (forced-colors: active) {
+  .modal__panel:focus-visible {
+    outline-color: Highlight;
   }
 }
 

@@ -54,7 +54,7 @@ constructor(context = {}) {
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | `mount(element)`   | For each matching element, once the module has loaded. It calls `_init(element)` and stores the state it returns. |
 | `update(element)`  | When `mount()` runs for an element that is already mounted or still initialising. The base method does nothing.   |
-| `unmount(element)` | When the element leaves the page. It runs the state's `cleanup()`, then aborts the state's controller.            |
+| `unmount(element)` | When the element leaves. Runs `cleanup()`, aborts the controller, returns `false` if it wasn't mounted.           |
 | `destroy()`        | When the app is destroyed, after every element has been unmounted. The base method unmounts anything left.        |
 
 The framework skips elements that are already mounted, so in practice `update()` runs only for an element whose asynchronous `_init` hasn't finished, or when your own code calls `mount()` again. Override `destroy()` to release resources held by the instance, and call `super.destroy()`.
@@ -141,6 +141,12 @@ _init(element) {
 
 - If the element is unmounted first, its controller is aborted, and the resolved state's `cleanup()` runs as soon as it arrives.
 - If the Promise rejects, the element isn't tracked, its controller is aborted and the logger reports the error.
+
+`mount()` returns a Promise that settles with `_init`'s, and rejects when it does. The framework emits `page:component-mounted` once the state resolves, or `page:component-mount-error` if it rejects.
+
+### When `_init` returns no state
+
+An `_init` that returns nothing, or anything other than an object, is a mistake in the component, so the logger warns. The element is still tracked, with a state holding the controller from `super._init`, and unmounting it aborts that controller.
 
 ### When `_init` throws
 

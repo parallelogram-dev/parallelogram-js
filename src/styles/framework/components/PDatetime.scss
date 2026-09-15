@@ -10,6 +10,11 @@
   display: none !important;
 }
 
+/* Dimmed while the element or its fieldset is disabled */
+:host(:disabled) {
+  opacity: var(--datetime-disabled-opacity);
+}
+
 /* Host & Core Properties */
 /* Looks like a form control until page styles size and border the element */
 :host {

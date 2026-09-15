@@ -179,6 +179,21 @@ describe('p-toasts', () => {
     );
   });
 
+  it('returns to its place for the next toast when the modal it followed is removed', () => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = '<h2 slot="title">Checkout</h2><p>Card details</p>';
+    const host = mount();
+    document.body.append(modal);
+    modal.open();
+    host.toast({ message: 'Payment failed', type: 'error', timeout: 0 });
+    const insideModal = modal.contains(host);
+
+    modal.remove();
+    host.toast({ message: 'Booking saved', timeout: 0 });
+
+    expect([insideModal, host.parentNode, toasts(host).length]).toEqual([true, document.body, 2]);
+  });
+
   it('makes toasts at least 300 pixels wide when the screen allows', () => {
     const host = mount();
 

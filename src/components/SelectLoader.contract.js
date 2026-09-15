@@ -64,6 +64,30 @@ Fragments are inserted as HTML, through the \`parallelogram\` policy on pages th
       description: 'Class on the target after a failed load',
     },
   ],
+  methods: [
+    {
+      name: 'load',
+      signature: '(element: HTMLSelectElement, url: string) => void',
+      description: 'Choose a URL and load its fragment',
+    },
+    {
+      name: 'reload',
+      signature: '(element: HTMLSelectElement) => void',
+      description: 'Load the current choice again',
+    },
+    {
+      name: 'clear',
+      signature: '(element: HTMLSelectElement) => void',
+      description: 'Choose nothing, cancel a running load and show the empty message',
+    },
+    {
+      name: 'getLoadState',
+      signature:
+        '(element: HTMLSelectElement) => { isLoading: boolean; currentUrl: string | null; hasContent: boolean; hasError: boolean } | null',
+      description:
+        'Whether a load is running, the current URL, and whether the target has content or an error',
+    },
+  ],
   events: [
     {
       name: 'selectloader:before-change',

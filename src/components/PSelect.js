@@ -5,21 +5,26 @@ import { dispatchComponentEvent } from '../utils/events.js';
 
 const DEFAULT_PLACEHOLDER = 'Select…';
 
+/** How many options Page Up and Page Down move by */
+const PAGE_SIZE = 10;
+
 /**
  * PSelect - a select that can be searched, built as an editable combobox with a listbox popup
  *
  * Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox
  * role, `aria-expanded`, `aria-controls` and `aria-activedescendant`, and is named after the host's
  * `aria-label` or its `<label for>`. Typing filters the options and announces how many match; the
- * arrow keys, Home and End move through them; Enter or Tab chooses the highlighted option; Escape
- * closes the list and puts the chosen label back. Focus passes from the host to the input.
+ * arrow keys, Home and End move through them, and Page Up and Page Down move ten at a time; Enter
+ * or Tab chooses the highlighted option; Alt+Down Arrow opens the list without moving the highlight
+ * and Alt+Up Arrow chooses the highlighted option and closes it; Escape closes the list and puts the
+ * chosen label back. Focus passes from the host to the input.
  *
  * Options come from `<option>` and `<optgroup>` children, which are watched for changes, or from
  * `data-select-src`, a URL where `{q}` is replaced by the typed text. It must return JSON: an array
  * of `{ value, label, disabled?, group? }`, or an object with those in `options`.
  *
  * The element is form-associated: it submits its value under its `name`, supports `required`, and
- * restores its initially selected option when the form resets.
+ * restores its `value` attribute, or else its selected option, when the form resets.
  *
  * @example
  * <label for="country">Country</label>
@@ -40,8 +45,9 @@ const DEFAULT_PLACEHOLDER = 'Select…';
  * - data-select-open-on-focus: open the list when the input receives focus (default false)
  *
  * @events
- * - input, change: dispatched when the user chooses an option
- * - p-select:change: with `{ value, label }`, when an option is chosen
+ * - input, change: dispatched when the user chooses a different option; they bubble out of shadow
+ *   roots, as a native select's do
+ * - p-select:change: with `{ value, label }`, when a different option is chosen
  * - p-select:open, p-select:close: when the list opens or closes
  *
  * @csspart input - the text input
@@ -266,7 +272,7 @@ export default class PSelect extends HTMLElement {
     if (this.state.src) return;
 
     const options = [];
-    let defaultValue = null;
+    let selectedValue = null;
 
     for (const option of this.querySelectorAll('option')) {
       const parent = option.parentElement;
@@ -277,11 +283,16 @@ export default class PSelect extends HTMLElement {
         disabled: option.disabled || Boolean(parent?.disabled),
         group,
       });
-      if (option.hasAttribute('selected') && defaultValue === null) {
-        defaultValue = option.value;
+      if (option.hasAttribute('selected') && selectedValue === null) {
+        selectedValue = option.value;
       }
     }
 
+    /* The value attribute is the default when it names an option, as it does for a native input */
+    const attribute = this.getAttribute('value');
+    const defaultValue = options.some(option => option.value === attribute)
+      ? attribute
+      : selectedValue;
     this._defaultValue = defaultValue ?? '';
     const keep = options.some(option => option.value === this.state.value);
     if (!keep || (!this._selectedOption && defaultValue !== null)) {
@@ -313,10 +324,10 @@ export default class PSelect extends HTMLElement {
     const { key } = event;
 
     if (!this.state.open) {
-      if (key === 'ArrowDown' || key === 'ArrowUp') {
+      if (key === 'ArrowDown' || (key === 'ArrowUp' && !event.altKey)) {
         event.preventDefault();
         this.open();
-        if (this.state.highlightedIndex < 0) {
+        if (!event.altKey && this.state.highlightedIndex < 0) {
           this._setHighlight(key === 'ArrowDown' ? 0 : this.state.filtered.length - 1);
         }
       }
@@ -329,11 +340,24 @@ export default class PSelect extends HTMLElement {
     switch (key) {
       case 'ArrowDown':
         event.preventDefault();
-        this._setHighlight(Math.min(last, current + 1));
+        if (!event.altKey) this._setHighlight(Math.min(last, current + 1));
         break;
       case 'ArrowUp':
         event.preventDefault();
-        this._setHighlight(Math.max(0, current - 1));
+        if (event.altKey) {
+          this._chooseHighlighted();
+          this.close();
+        } else {
+          this._setHighlight(Math.max(0, current - 1));
+        }
+        break;
+      case 'PageDown':
+        event.preventDefault();
+        this._setHighlight(Math.min(last, current + PAGE_SIZE));
+        break;
+      case 'PageUp':
+        event.preventDefault();
+        this._setHighlight(Math.max(0, current - PAGE_SIZE));
         break;
       case 'Home':
         event.preventDefault();
@@ -534,7 +558,8 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
-   * Choose an option as the user would, dispatching input, change and p-select:change
+   * Choose an option as the user would, dispatching input, change and p-select:change when the
+   * value changes
    *
    * @param {string} value
    */
@@ -542,11 +567,13 @@ export default class PSelect extends HTMLElement {
     const option = this.state.options.find(item => String(item.value) === String(value));
     if (!option || option.disabled) return;
 
-    this._setValue(option.value);
+    if (option.value !== this.state.value) {
+      this._setValue(option.value);
 
-    this.dispatchEvent(new Event('input', { bubbles: true }));
-    this.dispatchEvent(new Event('change', { bubbles: true }));
-    dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
+      this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
+    }
 
     this.close();
   }

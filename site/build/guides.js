@@ -26,6 +26,7 @@ export const GUIDE_ORDER = [
   'pages-and-router',
   'writing-components',
   'events-and-alerts',
+  'trackers',
   'upgrading',
 ];
 

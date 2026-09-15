@@ -10,18 +10,21 @@ Development needs Node `^22.22.3`, `^24.15.0` or `>=26`.
 npm install
 ```
 
-| Command                 | What it does                                                                                                      |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `npm run site`          | Serves the documentation site at `localhost:3000`, rebuilding pages as contracts change                           |
-| `npm run build`         | Builds the library, stylesheets, TypeScript declarations and `custom-elements.json`                               |
-| `npm run test:unit`     | Runs the unit tests in happy-dom                                                                                  |
-| `npm run test:browser`  | Runs the browser tests in Chromium, Firefox and WebKit through Playwright                                         |
-| `npm run lint`          | Runs ESLint, including browser compatibility checks against Baseline 2023                                         |
-| `npm run format`        | Formats the repository with Prettier                                                                              |
-| `npm run check:exports` | Checks every public import path resolves, after a build                                                           |
-| `npm run check:package` | Runs publint on the packed package                                                                                |
-| `npm run check:types`   | Compiles the TypeScript consumer tests and runs arethetypeswrong                                                  |
-| `npm run check:size`    | Checks each entry's gzipped size, with everything it imports, against its budget in `package.json`, after a build |
+| Command                     | What it does                                                                                                      |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `npm run site`              | Serves the documentation site at `localhost:3000`, rebuilding pages as contracts change                           |
+| `npm run build`             | Builds the library, stylesheets, TypeScript declarations and `custom-elements.json`                               |
+| `npm run test:unit`         | Runs the unit tests in happy-dom                                                                                  |
+| `npm run coverage`          | Runs the unit tests with coverage, failing below the thresholds in `vitest.config.js`                             |
+| `npm run test:browser`      | Runs the browser tests in Chromium, Firefox and WebKit through Playwright                                         |
+| `npm run lint`              | Runs ESLint, including browser compatibility checks against Baseline 2023                                         |
+| `npm run format`            | Formats the repository with Prettier                                                                              |
+| `npm run check:exports`     | Checks every public import path resolves, after a build                                                           |
+| `npm run check:doc-imports` | Checks the imports in the guides, contracts and JSDoc examples resolve with the names they import, after a build  |
+| `npm run check:logger`      | Checks the production build has no debug, log, info or group logger calls, after a build                          |
+| `npm run check:package`     | Runs publint on the packed package                                                                                |
+| `npm run check:types`       | Compiles the TypeScript consumer tests and runs arethetypeswrong                                                  |
+| `npm run check:size`        | Checks each entry's gzipped size, with everything it imports, against its budget in `package.json`, after a build |
 
 CI runs all of these on every pull request. Budgets sit 5% above the sizes they were set at, so growth is a decision rather than an accident: when an increase is intended, run `npm run check:size -- --update` and commit the new budgets with the change.
 
@@ -77,7 +80,7 @@ Every component has a contract, `src/components/<Name>.contract.js`, describing 
 
 - Class names follow BEM: `block`, `block__element` and `block--modifier`.
 - Use `@use`, not `@import`, and design tokens as custom properties with fallbacks.
-- Sizes are `xs`, `sm`, `md`, `lg` and `xl`, in class modifiers and attribute values alike.
+- Graded sizes are `xs`, `sm`, `md`, `lg` and `xl`, in class modifiers and attribute values alike. A size outside that scale gets a descriptive name, such as `<p-modal>`'s `data-modal-size="fullscreen"`.
 - Focus stays visible with a solid outline, works in forced colours, and motion is skipped when the user prefers reduced motion.
 
 ## Accessibility

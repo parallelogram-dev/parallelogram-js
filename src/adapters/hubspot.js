@@ -8,12 +8,16 @@ import { injectScript } from './_script.js';
  * The tracking code records the first page view when it loads. `events` are other `_hsq` calls for
  * the page, queued before its page view, for example `[["setContentType", "blog-post"]]`; don't
  * include `trackPageView`. When the router shows a new page the adapter sets the path and records a
- * page view, as HubSpot requires for single-page sites.
+ * page view, as HubSpot requires for single-page sites, once however many HubSpot blocks the page
+ * has, because they share one `_hsq` queue.
  *
  * @param {{ id?: string|number, events?: Array<unknown[]> }} config
  * @param {{ nonce?: string }} [ctx]
  * @returns {Promise<unknown>} settles when the tracking code loads
  */
+/** The address a later page view was last recorded for */
+let recordedUrl;
+
 export default function hubspotAdapter(config, { nonce } = {}) {
   if (!config.id) {
     throw new Error('hubspot: no id in config');
@@ -31,9 +35,10 @@ export default function hubspotAdapter(config, { nonce } = {}) {
 hubspotAdapter.page = (config, ctx, { url = location.href, mounted } = {}) => {
   const { pathname, search, hash } = new URL(url, location.href);
   window._hsq = window._hsq || [];
-  window._hsq.push(['setPath', pathname + search + hash]);
   if (mounted) {
     (config.events || []).forEach(event => window._hsq.push(event));
   }
-  window._hsq.push(['trackPageView']);
+  if (url === recordedUrl) return;
+  recordedUrl = url;
+  window._hsq.push(['setPath', pathname + search + hash], ['trackPageView']);
 };

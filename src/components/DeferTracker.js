@@ -13,7 +13,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * The component mounts one instance per `[data-defer-tracker]` node, parses its
  * JSON config, and defers booting the named adapter until the first genuine user
- * interaction. Without interaction, trackers boot after a fallback: once the page
+ * interaction: a pointer press, touch, key press or click. Without interaction, trackers boot after a fallback: once the page
  * has loaded, then `idleTimeout` milliseconds (5 seconds by default), then the
  * browser's next idle period where `requestIdleCallback` is supported. Tracker
  * cost therefore stays off the main thread during page load, and out of cold lab
@@ -31,7 +31,8 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * Register adapters from the same module specifier the component is loaded from,
  * because the registry lives in that module. Blocks must sit inside the element the
- * framework observes (the body by default), not in `<head>`.
+ * framework observes (the body by default), not in `<head>`. Blocks elsewhere are never
+ * mounted, so the first tracker to start logs a warning listing them.
  *
  * A tracker is identified by its adapter name and its config's `id` (or `site`,
  * `domain` or `scriptId`), so two properties of the same kind both boot. A second
@@ -51,7 +52,12 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * @module @parallelogram-js/core/components/DeferTracker
  */
 
-const DEFAULT_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'mousemove', 'scroll', 'click'];
+/**
+ * Input that only a person can cause. Scroll and mousemove are left out: scroll restoration on
+ * reload or back and forward, a jump to a `#hash`, and a pointer resting over the page as it loads
+ * fire them without a gesture. Sites can add them back through `configureDeferTracker({ events })`.
+ */
+const DEFAULT_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'];
 
 /**
  * capture: see the gesture as early as possible. passive: never delay scroll.
@@ -85,8 +91,10 @@ class InteractionGate {
    * Override the gate's interaction events and idle fallback. Only effective
    * before the gate arms (i.e. before the first `until()` call).
    *
-   * `idleTimeout` is the minimum delay after the page's load event before
-   * trackers boot without interaction; `null` or `0` disables the fallback.
+   * `events` replaces the window events that count as interaction, which are
+   * pointerdown, touchstart, keydown and click by default. `idleTimeout` is the
+   * minimum delay after the page's load event before trackers boot without
+   * interaction; `null` or `0` disables the fallback.
    *
    * @param {{ events?: string[], idleTimeout?: number|null }} [options]
    */
@@ -183,6 +191,9 @@ class InteractionGate {
 /** Shared adapter registry: adapter name -> boot fn, which may carry `page` and `block` steps. */
 const adapters = new Map();
 
+/** The `ids` and `origins` each adapter was registered with, keyed by adapter name. */
+const allowlists = new Map();
+
 /** Trackers that have started loading this page session, keyed by name and id. */
 const trackers = new Map();
 
@@ -195,6 +206,8 @@ const waitingForConsent = new Set();
 let consentResolver = null;
 let requireConsentCategory = false;
 let trackerNonce;
+let placementChecked = false;
+let gtmWarned = false;
 
 /**
  * Register a tracker adapter under a name matching the `data-defer-tracker`
@@ -208,12 +221,26 @@ let trackerNonce;
  * from the blocks already there; without it, that block is marked `duplicate`. Leave
  * it out when a second block would only repeat the tracker's page view.
  *
+ * Tracker blocks are markup, so `options` limit what a block can load. With `ids`, a
+ * block whose tracker id (its `id`, `site`, `domain` or `scriptId`) isn't listed is
+ * marked `error` and its adapter isn't called; without it, any id is accepted. A block's
+ * `src` must be on the page's own origin, an origin the adapter declares as
+ * `boot.origins`, or one listed in `origins`; otherwise the block is marked `error` and
+ * nothing loads. Pass `ids` when registering Tag Manager, whose containers can run any
+ * script.
+ *
+ * @example
+ * registerTrackerAdapter('gtm', gtm, { ids: ['GTM-XXXXXX'] });
+ * registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] });
+ *
  * @param {string} name
  * @param {(config: object, ctx: { logger?: object, eventBus?: object, nonce?: string }) => void|Promise<unknown>} boot
+ * @param {{ ids?: string[], origins?: string[] }} [options]
  */
-export function registerTrackerAdapter(name, boot) {
+export function registerTrackerAdapter(name, boot, { ids, origins } = {}) {
   if (typeof name === 'string' && typeof boot === 'function') {
     adapters.set(name, boot);
+    allowlists.set(name, { ids, origins });
   }
 }
 
@@ -223,6 +250,11 @@ export function registerTrackerAdapter(name, boot) {
  * `consent:granted` event bus event or `reevaluateTrackerConsent()`. With
  * `requireCategory`, trackers without a category wait too, so a missing or
  * misspelt `consent` field fails closed.
+ *
+ * Consent is checked again before each page step, so a tracker whose consent is
+ * withdrawn stops recording later pages. A vendor script that has already loaded
+ * can't be unloaded, so also call the vendor's own consent update, such as
+ * `gtag('consent', 'update', …)` or `fbq('consent', 'revoke')`.
  *
  * @param {((category: string) => boolean)|null} fn
  * @param {{ requireCategory?: boolean }} [options]
@@ -262,14 +294,19 @@ export function configureDeferTracker({ nonce, ...options } = {}) {
 export function _resetTrackers() {
   trackers.clear();
   adapters.clear();
+  allowlists.clear();
   waitingForConsent.clear();
   consentResolver = null;
   requireConsentCategory = false;
   trackerNonce = undefined;
+  placementChecked = false;
+  gtmWarned = false;
 }
 
+const trackerId = config => config.id ?? config.site ?? config.domain ?? config.scriptId;
+
 const trackerKey = (name, config) => {
-  const id = config.id ?? config.site ?? config.domain ?? config.scriptId;
+  const id = trackerId(config);
   return id === undefined ? name : `${name}:${id}`;
 };
 
@@ -364,11 +401,17 @@ export default class DeferTracker extends BaseComponent {
    * Boot a tracker, or run its page step if it already loaded on an earlier page
    */
   _activate(element, state) {
+    this._checkPlacement();
     if (!this.getState(element)) return;
 
     const { name, config, key } = state;
     if (!adapters.has(name)) {
       this.logger?.warn('No tracker adapter registered', { name });
+      this.setAttr(element, 'status', 'error');
+      return;
+    }
+
+    if (!this._allowed(name, config)) {
       this.setAttr(element, 'status', 'error');
       return;
     }
@@ -399,6 +442,60 @@ export default class DeferTracker extends BaseComponent {
 
     tracker.elements.add(element);
     this.setAttr(element, 'status', tracker.status);
+  }
+
+  /**
+   * Warn once about blocks that were never mounted, such as blocks in `<head>` or outside the
+   * element the framework observes. Runs when trackers first start, after the page's blocks mount.
+   */
+  _checkPlacement() {
+    if (placementChecked) return;
+    placementChecked = true;
+
+    const selector = this._getSelector();
+    const unmounted = document.querySelectorAll(`[${selector}]:not([${selector}-status])`);
+    if (unmounted.length > 0) {
+      this.logger?.warn(
+        'Tracker blocks outside the element the framework observes, such as in <head>, never load',
+        { elements: [...unmounted] }
+      );
+    }
+  }
+
+  /**
+   * Check a block's tracker id and script address against its adapter's registration
+   *
+   * @returns {boolean} false, after logging why, when the block may not load
+   */
+  _allowed(name, config) {
+    const { ids, origins = [] } = allowlists.get(name);
+    const id = trackerId(config);
+
+    if (ids && (id === undefined || !ids.map(String).includes(String(id)))) {
+      this.logger?.warn('Tracker id not in the ids it was registered with', { name, id });
+      return false;
+    }
+
+    if (name === 'gtm' && !ids && !gtmWarned && this.logger) {
+      gtmWarned = true;
+      this.logger.warn('Register gtm with ids, or any container id in the page can load', {
+        name,
+      });
+    }
+
+    if (config.src === undefined) return true;
+
+    const allowed = [location.origin, ...(adapters.get(name).origins ?? []), ...origins];
+    let origin;
+    try {
+      origin = new URL(config.src, document.baseURI).origin;
+    } catch {
+      origin = null;
+    }
+    if (origin !== 'null' && allowed.includes(origin)) return true;
+
+    this.logger?.warn('Tracker src not on an allowed origin', { name, src: config.src });
+    return false;
   }
 
   _consentGranted(name, config) {
@@ -477,6 +574,8 @@ export default class DeferTracker extends BaseComponent {
     if (typeof page !== 'function') return;
 
     const config = this.getState(element)?.config ?? tracker.config;
+    if (!this._consentGranted(tracker.name, config)) return;
+
     try {
       page(config, this._context(element), { url, mounted });
     } catch (error) {
