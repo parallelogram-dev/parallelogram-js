@@ -1,4 +1,5 @@
-/* Toast theme tokens, read by the p-toasts web component through its shadow styles */
+/* Toast theme tokens, read by the p-toasts web component through its shadow styles. Colours follow
+   the panel surface and the status colour roles, so toasts follow the dark theme */
 :root {
   --toast-z-index: 2147483647;
   --toast-padding: 12px;
@@ -7,12 +8,12 @@
   --toast-max-width: 500px;
   --toast-item-padding: 10px 12px;
   --toast-border-radius: 8px;
-  --toast-text-color: #ffffff;
-  --toast-bg-info: #111827;
-  --toast-bg-success: #065f46;
-  --toast-bg-warning: #7c2d12;
-  --toast-bg-error: #7f1d1d;
-  --toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --toast-text-color: var(--surface-panel-color-text);
+  --toast-bg-info: var(--surface-panel-color-bg);
+  --toast-bg-success: var(--color-success-bg);
+  --toast-bg-warning: var(--color-warning-bg);
+  --toast-bg-error: var(--color-danger-bg);
+  --toast-shadow: 0 6px 20px var(--color-shadow);
   --toast-font: 14px/1.4 system-ui, -apple-system, sans-serif;
   --toast-animation-duration: 0.18s;
 }

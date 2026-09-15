@@ -54,25 +54,41 @@
   );
   max-width: var(--toast-max-width, 500px);
   padding: var(--toast-item-padding, #{$space-sm} #{$space-lg});
+  border: var(--surface-panel-border-width, 0) solid
+    var(--surface-panel-border-color, var(--color-border, transparent));
   border-radius: var(--toast-border-radius, var(--surface-panel-radius, #{$radius-md}));
-  background: var(--toast-bg-info, #{$neutral-900});
-  color: var(--toast-text-color, #fff);
-  box-shadow: var(--toast-shadow, var(--surface-panel-shadow, #{$shadow-md}));
+  /* Type tints sit over the panel surface, so translucent status backgrounds stay opaque */
+  --toast-tint: transparent;
+  background:
+    linear-gradient(var(--toast-tint), var(--toast-tint)),
+    var(--toast-bg-info, var(--surface-panel-color-bg, var(--color-surface, #{$neutral-900})));
+  color: var(--toast-text-color, var(--surface-panel-color-text, #fff));
+  box-shadow: var(
+    --toast-shadow,
+    var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
+  );
   font: var(--toast-font, #{$font-sm}/ 1.4 system-ui, -apple-system, sans-serif);
   pointer-events: auto;
 }
 
-/* Type backgrounds, intentionally dark for contrast with the white text */
+/* Types tint the surface with their status background and border it in the status colour. Without
+   the package stylesheet they fall back to solid fills behind the white text */
 .toast.success {
-  background: var(--toast-bg-success, #{$success-dark});
+  --toast-tint: var(--toast-bg-success, var(--color-success-bg, #{$success-dark}));
+  border-color: var(--color-success, #{$success-dark});
 }
 
 .toast.warning {
-  background: var(--toast-bg-warning, var(--toast-bg-warn, #{$warning-dark}));
+  --toast-tint: var(
+    --toast-bg-warning,
+    var(--toast-bg-warn, var(--color-warning-bg, #{$warning-dark}))
+  );
+  border-color: var(--color-warning, #{$warning-dark});
 }
 
 .toast.error {
-  background: var(--toast-bg-error, #{$error-dark});
+  --toast-tint: var(--toast-bg-error, var(--color-danger-bg, #{$error-dark}));
+  border-color: var(--color-danger, #{$error-dark});
 }
 
 .row {
