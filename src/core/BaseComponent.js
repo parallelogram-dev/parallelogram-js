@@ -1,17 +1,13 @@
 import {
-  camelCase,
-  getDataAttr,
   generateId,
   debounce,
   throttle,
   delay,
-  waitForTransition,
   fadeIn,
   fadeOut,
   getFocusableElements,
   trapFocus,
   restoreFocus,
-  createElement,
 } from '../utils/dom-utils.js';
 
 const classesWarnedAboutSelector = new WeakSet();
@@ -181,15 +177,6 @@ export class BaseComponent {
     return [...this.elements.keys(), ...this._initializing.keys()];
   }
 
-  /**
-   * @deprecated 0.5.0 Use trackedElements() instead. Will be removed in 0.6.0.
-   * @protected
-   * @returns {Set<HTMLElement>}
-   */
-  _elementsKeys() {
-    return new Set(this.trackedElements());
-  }
-
   /** @internal */
   _store(element, state) {
     if (state && typeof state === 'object') {
@@ -282,28 +269,6 @@ export class BaseComponent {
    */
   getState(element) {
     return this.elements.get(element);
-  }
-
-  /**
-   * @deprecated 0.5.0 Reads an unprefixed `data-<attr>` and guesses its type. Use getAttr(),
-   * getBoolAttr() or getNumberAttr(), which read `data-<component>-<attr>`. Removed in 0.6.0.
-   * @protected
-   * @param {HTMLElement} element
-   * @param {string} attr
-   * @param {unknown} [defaultValue]
-   * @returns {unknown}
-   */
-  _getDataAttr(element, attr, defaultValue) {
-    return getDataAttr(element, attr, defaultValue);
-  }
-
-  /**
-   * @protected
-   * @param {string} str
-   * @returns {string}
-   */
-  _camelCase(str) {
-    return camelCase(str);
   }
 
   /**
@@ -452,16 +417,6 @@ export class BaseComponent {
   /**
    * @protected
    * @param {HTMLElement} element
-   * @param {number} [timeout=2000] - Longest wait in milliseconds
-   * @returns {Promise<void>}
-   */
-  async _waitForTransition(element, timeout = 2000) {
-    return waitForTransition(element, timeout);
-  }
-
-  /**
-   * @protected
-   * @param {HTMLElement} element
    * @param {number} [duration=300] - Milliseconds
    * @returns {Promise<void>}
    */
@@ -505,17 +460,6 @@ export class BaseComponent {
    */
   _restoreFocus(element) {
     return restoreFocus(element);
-  }
-
-  /**
-   * @protected
-   * @param {string} tag
-   * @param {Record<string, string>} [attributes]
-   * @param {string|HTMLElement} [content] - Text content or a child element
-   * @returns {HTMLElement}
-   */
-  _createElement(tag, attributes = {}, content = '') {
-    return createElement(tag, attributes, content);
   }
 
   /**
@@ -576,30 +520,23 @@ export class BaseComponent {
   /**
    * Set an element's state in `data-<component>-state`
    *
-   * The value is also copied to the component's own `data-<component>` attribute, as before 0.5.0.
-   * That copy is deprecated and stops in 0.6.0; style and query the `-state` attribute instead.
-   *
    * @param {HTMLElement} element
    * @param {string} state
    * @example
-   * this.setState(element, ExtendedStates.OPEN); // <div data-datatable-state="open">
+   * this.setState(element, 'open'); // <div data-datatable-state="open">
    */
   setState(element, state) {
-    const attribute = this._getSelector();
-    element.setAttribute(`${attribute}-state`, state);
-    element.setAttribute(attribute, state);
+    element.setAttribute(`${this._getSelector()}-state`, state);
   }
 
   /**
-   * An element's state from `data-<component>-state`, or from the deprecated copy in
-   * `data-<component>` when the state attribute is missing
+   * An element's state from `data-<component>-state`
    *
    * @param {HTMLElement} element
    * @returns {string|null}
    */
   getElementState(element) {
-    const attribute = this._getSelector();
-    return element.getAttribute(`${attribute}-state`) ?? element.getAttribute(attribute);
+    return element.getAttribute(`${this._getSelector()}-state`);
   }
 
   /**

@@ -6,50 +6,6 @@
 import { prefersReducedMotion } from './motion.js';
 
 /**
- * Convert kebab-case to camelCase
- * @param {string} str - String to convert
- * @returns {string} Camel-cased string
- */
-export function camelCase(str) {
-  return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
-}
-
-/**
- * Get data attribute with type conversion
- * @param {HTMLElement} element - Element to read from
- * @param {string} attr - Attribute name (kebab-case or camelCase)
- * @param {*} defaultValue - Default value if not found
- * @returns {*} Converted value
- */
-export function getDataAttr(element, attr, defaultValue) {
-  const key = attr.includes('-') ? camelCase(attr) : attr;
-  const value = element.dataset[key];
-  if (value === undefined) return defaultValue;
-
-  /* Convert string values to appropriate types */
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  if (!isNaN(value) && value !== '') return Number(value);
-  return value;
-}
-
-/**
- * Parse multiple data attributes into configuration object
- * @param {HTMLElement} element - Element with data attributes
- * @param {Object} mapping - Map of config keys to data attribute names
- * @param {Object} defaults - Default values
- * @returns {Object} Configuration object
- */
-export function getConfigFromAttrs(element, mapping, defaults = {}) {
-  const config = {};
-  for (const [key, attrName] of Object.entries(mapping)) {
-    const defaultValue = defaults[key];
-    config[key] = getDataAttr(element, attrName, defaultValue);
-  }
-  return config;
-}
-
-/**
  * Generate unique ID with optional prefix
  * @param {string} prefix - Prefix for the ID
  * @returns {string} Unique ID
@@ -102,31 +58,6 @@ export function throttle(func, limit = 100) {
  */
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Wait for CSS transition or animation to complete
- * @param {HTMLElement} element - Element with transition/animation
- * @param {number} timeout - Maximum time to wait in milliseconds
- * @returns {Promise} Promise that resolves when transition ends
- */
-export async function waitForTransition(element, timeout = 2000) {
-  return new Promise(resolve => {
-    const handleEnd = () => {
-      element.removeEventListener('animationend', handleEnd);
-      element.removeEventListener('transitionend', handleEnd);
-      resolve();
-    };
-
-    element.addEventListener('animationend', handleEnd, { once: true });
-    element.addEventListener('transitionend', handleEnd, { once: true });
-
-    setTimeout(() => {
-      element.removeEventListener('animationend', handleEnd);
-      element.removeEventListener('transitionend', handleEnd);
-      resolve();
-    }, timeout);
-  });
 }
 
 /**
@@ -290,48 +221,4 @@ export function createElement(tag, attributes = {}, content = '') {
   }
 
   return element;
-}
-
-/**
- * Get target element from data attribute with validation
- * Supports both CSS selectors and data-view lookups
- *
- * @param {HTMLElement} element - Element containing the data attribute
- * @param {string} dataAttr - Data attribute name (without 'data-' prefix)
- * @param {Object} options - Options for validation
- * @param {boolean} options.required - Whether to warn if not found
- * @param {Function} options.logger - Logger function for warnings
- * @returns {HTMLElement|null} Target element or null
- */
-export function getTargetElement(element, dataAttr, options = {}) {
-  /* Check for data-view based target first (e.g., data-toggle-target-view) */
-  const viewAttr = `${dataAttr}-view`;
-  const viewName = getDataAttr(element, viewAttr);
-
-  if (viewName) {
-    const target = document.querySelector(`[data-view="${viewName}"]`);
-    if (!target && options.required && options.logger) {
-      options.logger.warn(`Target element with data-view="${viewName}" not found`, {
-        viewName,
-        element,
-        attribute: viewAttr,
-      });
-    }
-    return target;
-  }
-
-  /* Fallback to CSS selector approach (e.g., data-toggle-target="#id") */
-  const selector = getDataAttr(element, dataAttr);
-  if (!selector) {
-    if (options.required && options.logger) {
-      options.logger.warn(`No ${dataAttr} or ${viewAttr} attribute found`, element);
-    }
-    return null;
-  }
-
-  const target = document.querySelector(selector);
-  if (!target && options.required && options.logger) {
-    options.logger.warn(`Target element not found`, { selector, element });
-  }
-  return target;
 }
