@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-09-15
+
+### Fixed
+
+- `<p-datetime>`'s panel no longer closes when picking a month in the month view, or when another click inside it re-renders the grid before the outside-click check runs.
+- `<p-datetime>`'s quick-date buttons were unreadable in a dark operating system theme, because only the muted text and hover colours switched to white while the panel stayed white. The picker now always uses its light palette; set the `--datetime-*` custom properties to theme it.
+- `<p-uploader>`'s hint text set `opacity` to a colour, which browsers ignored; it now uses the muted opacity token.
+
 ## [0.5.4] - 2026-09-15
 
 ### Added
