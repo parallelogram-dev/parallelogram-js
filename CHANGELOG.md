@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- SelectLoader no longer shows "RouterManager not available" when it mounts on the first page before the on-demand router has loaded; it loads its fragment once the router starts.
+
 ## [0.6.0] - 2026-09-15
 
 0.6.0 removes everything 0.5 deprecated. The [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) lists each change and what to use instead.
