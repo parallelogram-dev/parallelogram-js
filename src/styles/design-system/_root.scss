@@ -24,6 +24,7 @@
   --color-shadow: #{$color-shadow};
   --color-danger: #{$error-dark};
   --color-danger-bg: #{$color-error-bg};
+  --color-danger-contrast: #ffffff;
   --color-success: #{$success-dark};
   --color-success-bg: #{$color-success-bg};
   --color-warning: #{$warning-dark};
@@ -44,6 +45,7 @@
   --color-shadow: rgba(0, 0, 0, 0.5);
   --color-danger: #f87171;
   --color-danger-bg: rgba(248, 113, 113, 0.16);
+  --color-danger-contrast: #1a0a0a;
   --color-success: #4ade80;
   --color-success-bg: rgba(74, 222, 128, 0.16);
   --color-warning: #fb923c;
@@ -196,7 +198,7 @@
 
   /* Danger button */
   --button-danger-bg: var(--color-danger);
-  --button-danger-color: white;
+  --button-danger-color: var(--color-danger-contrast);
   --button-danger-border: var(--color-danger);
   --button-danger-hover-bg: color-mix(in srgb, var(--color-danger) 85%, black);
   --button-danger-hover-border: color-mix(in srgb, var(--color-danger) 85%, black);
