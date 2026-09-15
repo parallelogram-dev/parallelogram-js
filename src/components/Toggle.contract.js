@@ -13,7 +13,7 @@ export default {
 
 Toggles are independent unless they share a group, in which case opening one closes the others. A capture toggle, such as a dropdown, also closes when the user clicks or moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its trigger, and following a page link inside an open target closes it.
 
-For new dropdowns consider \`<button popovertarget>\` with \`popover\`, and for accordions \`<details name="…">\`; both work without JavaScript.`,
+For new dropdowns consider \`<button popovertarget>\` with \`popover\`, and for accordions Accordion, which animates \`<details name="…">\`; both work without JavaScript.`,
   states: STATES,
   attributes: [
     { name: 'data-toggle', type: 'flag', description: 'Marks a button as a trigger' },
