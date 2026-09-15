@@ -196,13 +196,13 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     { name: '--datatable-border-color', default: '#d1d5db', description: 'Borders' },
     {
       name: '--datatable-button-bg',
-      default: '#ffffff',
+      default: 'transparent',
       description: 'Pagination button background',
     },
-    { name: '--datatable-button-color', default: '#374151', description: 'Pagination button text' },
+    { name: '--datatable-button-color', default: 'inherit', description: 'Pagination button text' },
     {
       name: '--datatable-button-hover-bg',
-      default: '#f3f4f6',
+      default: 'rgba(128, 128, 128, 0.15)',
       description: 'Pagination button background on hover',
     },
     {
@@ -214,7 +214,7 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     { name: '--datatable-current-color', default: '#ffffff', description: 'The current page text' },
     {
       name: '--datatable-header-hover-bg',
-      default: 'rgba(0, 0, 0, 0.05)',
+      default: 'rgba(128, 128, 128, 0.12)',
       description: 'Sortable header background on hover',
     },
     { name: '--datatable-muted-color', default: '#6b7280', description: 'Status and sort icons' },
