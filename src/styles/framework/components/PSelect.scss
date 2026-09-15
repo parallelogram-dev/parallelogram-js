@@ -91,8 +91,8 @@
 }
 
 .input::placeholder {
-  color: inherit;
-  opacity: 0.6;
+  color: var(--select-placeholder);
+  opacity: 1;
 }
 
 .arrow {

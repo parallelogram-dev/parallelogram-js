@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The default light values are unchanged except where tokens now share a role: the danger button is `#dc2626` instead of `#ef4444`, and 15% darker on hover instead of `#dc2626`, with its label in `--color-danger-contrast`, which stays white in light mode and is near-black on the lighter dark-theme red; hovered dropdown options use a 5% black tint instead of `#f5f5f5`; selected dropdown options use 12% of the accent instead of 10%; and the dialog shadow uses the 12% black shadow colour instead of 50% black.
 - `<p-select>` and `<p-datetime>` take their colours from the colour roles and follow the dark theme, including `data-theme`; their own `--select-*`, `--menu-*` and `--datetime-*` properties still override them. `<p-select>` no longer has its own `prefers-color-scheme` rules for the placeholder and hovered options, which ignored `data-theme`.
 
+### Fixed
+
+- Placeholder text meets 4.5:1 contrast. `--color-text-muted` is `rgba(0, 0, 0, 0.55)` instead of 50% black in light mode, 4.76:1 on white and 4.63:1 on the hover tint (3.98:1 and 3.89:1 before), and it also colours secondary text in `<p-datetime>`. Form field placeholders, `<p-datetime>` placeholders and `<p-select>` placeholders no longer dim it with a further 60% opacity, so they go from 2.11:1 to 4.76:1 in light mode and from 3.32:1 to 6.82:1 in dark mode. `<p-select>` placeholders now use `--select-placeholder`, which they ignored, instead of the text colour at 60%.
+
 ## [0.6.1] - 2026-09-15
 
 ### Fixed
