@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The DataTable reference gives `loadData()` its `rowMapper` argument and lists `sort()`, `filter()`, `goToPage()` and `clearError()`, and the SelectLoader reference lists `load()`, `reload()`, `clear()` and `getLoadState()`. A contract test checks every method a component's reference lists exists on its class.
 - SelectLoader no longer reports a load that a newer choice replaced while its content was fading or sliding in. The older load dispatched `selectloader:loaded`, emitted `selectloader:content-loaded`, announced its content and cleared the inline styles of the newer load's transition.
 - DataTable's pagination buttons take the text colour of the page around them on a transparent background, and hover backgrounds are a translucent grey, so a dark page no longer gets a white pager. The `--datatable-*` custom properties still override them.
 - DataTable hides its pagination region while every row fits on one page, so screen readers no longer list an empty "Table pagination" landmark.

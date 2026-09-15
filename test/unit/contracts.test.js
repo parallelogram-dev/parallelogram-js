@@ -33,6 +33,15 @@ const inertSelector = selector => selector.replace(/(^|[\s,>+~])p-/g, '$1x-inert
 const withoutPlaceholder = name => name.replace(/<[a-z-]+>$/, '');
 const itemsOf = contract => [contract, ...(contract.elements ?? [])];
 
+/** A prototype chain's own value for a name, read without running any getter */
+const valueOf = (prototype, name) => {
+  for (let current = prototype; current; current = Object.getPrototypeOf(current)) {
+    const descriptor = Object.getOwnPropertyDescriptor(current, name);
+    if (descriptor) return descriptor.value;
+  }
+  return undefined;
+};
+
 async function componentOf(contract) {
   const module = await modules[`../../src/${contract.module}.js`]();
   return module.default ?? module[contract.name];
@@ -138,14 +147,6 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
       'declares properties and methods its elements have',
       async () => {
         await componentOf(contract);
-        /** A prototype chain's own value for a name, read without running any getter */
-        const valueOf = (prototype, name) => {
-          for (let current = prototype; current; current = Object.getPrototypeOf(current)) {
-            const descriptor = Object.getOwnPropertyDescriptor(current, name);
-            if (descriptor) return descriptor.value;
-          }
-          return undefined;
-        };
 
         const problems = [];
         for (const item of itemsOf(contract)) {
@@ -165,6 +166,16 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
         expect(problems).toEqual([]);
       }
     );
+
+    it.runIf(contract.kind === 'enhancement')('declares methods its class has', async () => {
+      const { prototype } = await componentOf(contract);
+
+      expect(
+        (contract.methods ?? [])
+          .map(method => method.name)
+          .filter(name => typeof valueOf(prototype, name) !== 'function')
+      ).toEqual([]);
+    });
 
     it.runIf(contract.kind === 'element')(
       'names its child element classes after their tags',

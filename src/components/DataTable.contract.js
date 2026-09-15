@@ -156,8 +156,30 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
   methods: [
     {
       name: 'loadData',
-      signature: '(element: HTMLTableElement, url: string) => Promise<void>',
-      description: 'Replace the rows with JSON rows fetched from a URL',
+      signature:
+        '(element: HTMLTableElement, url: string, rowMapper: (item: unknown) => HTMLTableRowElement) => Promise<void>',
+      description:
+        'Replace the rows with rows made from a JSON array fetched from a URL, one row per item',
+    },
+    {
+      name: 'sort',
+      signature: "(element: HTMLTableElement, column: string, direction?: 'asc' | 'desc') => void",
+      description: "Sort by the column with this data-sort key, ascending unless 'desc' is given",
+    },
+    {
+      name: 'filter',
+      signature: '(element: HTMLTableElement, searchTerm: string) => void',
+      description: 'Show only the rows containing the text, and put it in the search box',
+    },
+    {
+      name: 'goToPage',
+      signature: '(element: HTMLTableElement, page: number) => void',
+      description: 'Show a page, when the table paginates and the page exists',
+    },
+    {
+      name: 'clearError',
+      signature: '(element: HTMLTableElement) => void',
+      description: 'Clear a loadData() error and show the rows again',
     },
   ],
   events: [
