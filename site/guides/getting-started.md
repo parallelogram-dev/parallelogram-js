@@ -10,7 +10,7 @@ npm install @parallelogram-js/core
 
 The package is ESM only. Load it with `import`, or with `await import()` from CommonJS code. There is no `require` export condition.
 
-It targets Baseline 2023: Chrome and Edge 120, Firefox 121, and Safari 17.2 on macOS and iOS, or later. It ships modern JavaScript without transpiling it, so a bundler only needs to resolve and bundle it. Older browsers aren't tested or supported.
+It targets Baseline 2023: Chrome and Edge 120, Firefox 121, and Safari 17.2 on macOS and iOS, or later. It ships modern JavaScript without transpiling it, so a bundler only needs to resolve and bundle it. Older browsers aren't tested or supported. The [versioning and security policy](https://github.com/parallelogram-dev/parallelogram-js#versions-and-browser-support) covers which releases may break things and which get fixes.
 
 ## Import paths
 
