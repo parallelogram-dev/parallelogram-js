@@ -195,7 +195,7 @@ export default {
     { name: '--datetime-animation-duration', description: 'Length of the panel animation' },
   ],
   accessibility:
-    'In the day grid the arrow keys move by day and week, Home and End go to the start and end of the week, Page Up and Page Down change month (with Shift, year), Enter or Space picks the focused day, and Escape closes the dialog and returns focus.',
+    'In the day grid the arrow keys move by day and week, Home and End go to the start and end of the week, Page Up and Page Down change month (with Shift, year), Enter or Space picks the focused day, and Escape closes the dialog and returns focus. In the month and year views the arrow keys move between months or years, and Home and End go to the start and end of the row. Moving focus outside the picker closes the dialog.',
   examples: [
     {
       id: 'date',

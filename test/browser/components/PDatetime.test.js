@@ -353,6 +353,71 @@ describe('p-datetime', () => {
       ]).toEqual([true, true, 'false']);
     });
 
+    it('closes when focus moves past its panel to the next control, leaving focus there', async () => {
+      const picker = renderPicker({ mode: 'date' });
+      const next = document.createElement('button');
+      next.textContent = 'Continue';
+      document.body.append(next);
+      const field = shadow(picker, '[data-datetime-input]');
+      field.focus();
+      field.click();
+      await settle();
+
+      shadow(picker, '[data-datetime-action="apply"]').focus();
+      next.focus();
+
+      expect([field.getAttribute('aria-expanded'), document.activeElement === next]).toEqual([
+        'false',
+        true,
+      ]);
+    });
+
+    it('stays open while focus moves between its panel controls and its field', async () => {
+      const picker = renderPicker({ mode: 'date' });
+      const field = shadow(picker, '[data-datetime-input]');
+      field.focus();
+      field.click();
+      await settle();
+
+      shadow(picker, '[data-datetime-action="clear"]').focus();
+      shadow(picker, '[data-datetime-action="apply"]').focus();
+      trigger(picker).focus();
+      field.focus();
+
+      expect([field.getAttribute('aria-expanded'), panel(picker).hidden]).toEqual(['true', false]);
+    });
+
+    it('stays open when focus leaves without a new target, as when the window loses focus', async () => {
+      const picker = renderPicker({ mode: 'date' });
+      picker.open();
+      await settle();
+
+      focused(picker).dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, composed: true, relatedTarget: null })
+      );
+
+      expect(trigger(picker).getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('moves between months with arrow keys, Home and End in the month view', async () => {
+      const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+      picker.open();
+      await settle();
+      shadow(picker, '[data-datetime-month-year]').click();
+      shadow(picker, '[data-month][tabindex="0"]').focus();
+
+      const visited = [focused(picker)?.dataset.month];
+      for (const key of ['ArrowDown', 'ArrowRight', 'Home', 'End', 'ArrowUp']) {
+        press(picker, key);
+        visited.push(focused(picker)?.dataset.month);
+      }
+
+      expect({
+        grid: shadow(picker, '[data-datetime-grid]').getAttribute('role'),
+        visited,
+      }).toEqual({ grid: 'grid', visited: ['6', '9', '10', '9', '11', '8'] });
+    });
+
     it('describes the day grid, each day, today and the selection', () => {
       const now = new Date();
       const selectedDay = now.getDate() === 15 ? 16 : 15;
