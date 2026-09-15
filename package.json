@@ -158,6 +158,10 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.0"
   },
+  "homepage": "https://dev.parallelogram.com.au",
+  "bugs": {
+    "url": "https://github.com/parallelogram-dev/parallelogram-js/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/parallelogram-dev/parallelogram-js.git"
