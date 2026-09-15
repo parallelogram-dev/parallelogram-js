@@ -1,8 +1,18 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { propertiesOf } from '../../../scripts/types/members.mjs';
 import '../../../src/components/PModal.js';
 import '../../../src/components/PToasts.js';
 import '../../../src/components/PSelect.js';
 import '../../../src/components/PDatetime.js';
+import '../../../src/components/PUploader.js';
+
+/** Every custom element a contract describes, with its contract entry */
+const elements = Object.values(
+  import.meta.glob('../../../src/components/*.contract.js', { eager: true, import: 'default' })
+)
+  .filter(contract => contract.kind === 'element')
+  .flatMap(contract => [contract, ...(contract.elements ?? [])])
+  .map(item => [item.tag, item]);
 
 /**
  * Put an element inside another element's shadow root, where only composed events reach the page
@@ -96,4 +106,17 @@ describe('web component contract', () => {
 
     expect([picker.getAttribute('range'), picker.range]).toEqual(['', true]);
   });
+
+  it.each(elements)(
+    '%s starts out null only in properties whose declared type allows null',
+    (tag, item) => {
+      const element = document.createElement(tag);
+
+      expect(
+        propertiesOf(item)
+          .filter(property => element[property.name] === null && !/\bnull\b/.test(property.type))
+          .map(property => `${property.name}: ${property.type}`)
+      ).toEqual([]);
+    }
+  );
 });

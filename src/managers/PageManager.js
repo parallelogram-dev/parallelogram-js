@@ -1,6 +1,40 @@
 import { ComponentHost } from '../core/ComponentHost.js';
 
 /**
+ * @typedef {Object} FragmentTransition
+ * @property {string} [out] - The transition that hides the old content
+ * @property {string} [in] - The transition that shows the new content
+ * @property {number} [duration=300] - Milliseconds
+ * @property {string} [easing='ease']
+ */
+
+/**
+ * @typedef {Object} PageManagerOptions
+ * @property {number} [mountDelay=1200] - Milliseconds before components that aren't critical mount
+ *   after a fragment swap
+ * @property {'top'|'preserve'|'element'} [scrollPosition='top'] - Where the page scrolls after a
+ *   navigation
+ * @property {string|null} [scrollElement=null] - The selector scrolled to when scrollPosition is
+ *   `element`
+ * @property {string|false} [focusTarget='h1'] - The selector focused in the new page after a
+ *   navigation, or false to leave focus alone
+ * @property {boolean} [announce=true] - Announce the new page's title after a navigation
+ * @property {boolean} [retryFailedLoads=true] - Retry a component whose module fails to load
+ * @property {number} [maxRetryAttempts=3]
+ * @property {Element|string|null} [observeRoot=null] - The element, or its selector, whose subtree
+ *   components mount in and are watched; the container by default
+ * @property {boolean} [trackPerformance=false]
+ * @property {Record<string, string[]>} [targetGroups={}] - Fragments that update together, by target
+ *   name
+ * @property {Record<string, FragmentTransition>} [targetGroupTransitions] - Transitions for each
+ *   fragment, by its `data-view` name
+ * @property {boolean} [fragmentFallbacks=false] - Also find a fragment without `data-view` by its id
+ * @property {boolean} [runScripts=true] - Run the scripts in swapped fragments
+ * @property {number} [assetTimeout=3000] - Milliseconds to wait for each stylesheet or script the
+ *   new page's head adds
+ */
+
+/**
  * PageManager - page lifecycle and component management
  *
  * Mounts components through a ComponentHost (`pageManager.host`), replaces page fragments after
@@ -8,6 +42,15 @@ import { ComponentHost } from '../core/ComponentHost.js';
  * demo's performance dashboard.
  */
 export class PageManager {
+  /**
+   * @param {Object} config
+   * @param {string} config.containerSelector - The element whose fragments are managed
+   * @param {import('../core/ComponentHost.js').RegistryEntry[]} [config.registry]
+   * @param {import('./EventManager.js').EventManager} config.eventBus
+   * @param {import('../core/DevLogger.js').DevLogger} [config.logger]
+   * @param {import('./RouterManager.js').RouterManager | null} [config.router]
+   * @param {PageManagerOptions} [config.options]
+   */
   constructor({ containerSelector, registry, eventBus, logger, router, options = {} }) {
     this.eventBus = eventBus;
     this.logger = logger;

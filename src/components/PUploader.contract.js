@@ -78,7 +78,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
   properties: [
     {
       name: 'requestHeaders',
-      type: 'Record<string, string> | (() => Record<string, string>)',
+      type: 'Record<string, string> | (() => Record<string, string>) | null',
       description: 'Headers sent with every request',
     },
   ],
