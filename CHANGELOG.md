@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A Deferred trackers guide documents DeferTracker's set-up: each adapter's config keys, `configureDeferTracker()` with its `events`, `idleTimeout` and `nonce` options, consent through `setTrackerConsent()`, `requireCategory` and `reevaluateTrackerConsent()`, and the adapter API with its optional `page` and `block` steps, which were only described in JSDoc.
 - `<p-select>` follows more of the WAI-ARIA combobox keyboard pattern: Page Up and Page Down move the highlight ten options at a time, Alt+Down Arrow opens the list without moving the highlight, and Alt+Up Arrow chooses the highlighted option and closes the list.
 - `ComponentHost#retry(name)` loads an enhancement component that failed to load for good again, with a fresh set of retries, retrying its failed dependencies too. Call it as `app.pageManager.host.retry(name)`, for example once the connection is back. It returns `false` when that component hasn't failed.
+- `AlertManager#destroy()` removes the listeners that forward `p-toasts:show` and `p-toasts:close` to the event bus, which couldn't be removed before. The `<p-toasts>` element stays, and the shared manager behind `AlertManager.notify()` is unchanged.
 
 ### Fixed
 
