@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { BaseComponent } from '../../../src/core/BaseComponent.js';
 import { ComponentHost } from '../../../src/core/ComponentHost.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
 
@@ -313,6 +314,43 @@ describe('ComponentHost', () => {
     document.getElementById('nav').remove();
 
     await vi.waitFor(() => expect(recorder.log.at(-1)).toEqual(['unmount', 'toggle', 'menu']));
+  });
+
+  it('reports an element unmounted once when its _init returned no state', async () => {
+    root.innerHTML = '<p id="first" data-note></p><p id="second"></p>';
+    const unmounted = vi.fn();
+    bus.on('page:component-unmounted', unmounted);
+    class Note extends BaseComponent {
+      _init(element) {
+        super._init(element);
+      }
+    }
+    host = new ComponentHost({
+      registry: [{ name: 'note', selector: '[data-note]', loader: () => Note }],
+      eventBus: bus,
+      logger: { warn() {}, error() {} },
+    });
+    host.start(root);
+
+    document.getElementById('first').remove();
+    await flush();
+    document.getElementById('second').remove();
+    await flush();
+
+    expect(unmounted).toHaveBeenCalledOnce();
+  });
+
+  it('does not report an unmount for an element the component was not mounted on', () => {
+    root.innerHTML = '<button id="menu" data-toggle></button>';
+    const unmounted = vi.fn();
+    bus.on('page:component-unmounted', unmounted);
+    const Toggle = recorder.define('toggle');
+    Toggle.prototype.unmount = () => false;
+    start([{ name: 'toggle', selector: '[data-toggle]', loader: () => Toggle }]);
+
+    host.unmountWithin(root);
+
+    expect(unmounted).not.toHaveBeenCalled();
   });
 
   it('refuses two components with the same name', () => {

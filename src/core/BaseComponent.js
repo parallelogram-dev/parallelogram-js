@@ -74,7 +74,9 @@ export class BaseComponent {
    *
    * If _init throws, the element is not tracked and its abort signal is aborted
    * before the error is rethrown. An _init that returns a Promise is tracked
-   * straight away, and its state is stored once the Promise resolves.
+   * straight away, and its state is stored once the Promise resolves. An _init
+   * that returns no state object logs a warning, and a state with the element's
+   * controller is stored instead, so unmount() still releases it.
    *
    * @param {HTMLElement} element
    * @returns {void}
@@ -93,7 +95,7 @@ export class BaseComponent {
     }
 
     if (typeof state?.then !== 'function') {
-      this.elements.set(element, state);
+      this._store(element, state);
       return;
     }
 
@@ -104,7 +106,7 @@ export class BaseComponent {
           return;
         }
         this._initializing.delete(element);
-        this.elements.set(element, resolved);
+        this._store(element, resolved);
       },
       error => {
         if (this._initializing.get(element) === pending) {
@@ -134,21 +136,25 @@ export class BaseComponent {
    * afterwards, even if cleanup throws.
    *
    * @param {HTMLElement} element
-   * @returns {void}
+   * @returns {boolean} False when the component was not mounted on the element
    */
   unmount(element) {
     if (this._initializing.has(element)) {
       this._initializing.delete(element);
       this._abortController(element);
-      return;
+      return true;
     }
 
-    const state = this.elements.get(element);
-    if (!state) return;
+    if (!this.elements.has(element)) return false;
 
+    const state = this.elements.get(element);
     this.elements.delete(element);
-    this._controllers.delete(element);
-    this._runCleanup(state);
+    try {
+      this._runCleanup(state);
+    } finally {
+      this._abortController(element);
+    }
+    return true;
   }
 
   /**
@@ -178,6 +184,22 @@ export class BaseComponent {
    */
   _elementsKeys() {
     return new Set(this.trackedElements());
+  }
+
+  /** @internal */
+  _store(element, state) {
+    if (state && typeof state === 'object') {
+      this.elements.set(element, state);
+      return;
+    }
+
+    this.logger?.warn(
+      `${this.constructor.name || 'A component'}'s _init returned no state object. Return the state from super._init(element).`,
+      { element }
+    );
+    const controller = this._controllers.get(element) ?? new AbortController();
+    this._controllers.set(element, controller);
+    this.elements.set(element, { controller, cleanup() {} });
   }
 
   /** @internal */

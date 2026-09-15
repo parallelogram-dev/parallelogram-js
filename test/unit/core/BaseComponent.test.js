@@ -68,6 +68,43 @@ describe('BaseComponent', () => {
       expect(widget.trackedElements()).toEqual([]);
     });
 
+    it('releases an element whose _init returned no state when it is unmounted', () => {
+      let signal;
+      class NoState extends Widget {
+        _init(element) {
+          signal = super._init(element).controller.signal;
+        }
+      }
+      const widget = new NoState({ logger: { warn() {} } });
+      const element = widgetElement();
+      widget.mount(element);
+
+      widget.unmount(element);
+
+      expect([signal.aborted, widget.trackedElements()]).toEqual([true, []]);
+    });
+
+    it('warns when _init returns no state object', () => {
+      class NoState extends Widget {
+        _init(element) {
+          super._init(element);
+        }
+      }
+      const logger = { warn: vi.fn() };
+
+      new NoState({ logger }).mount(widgetElement());
+
+      expect(logger.warn).toHaveBeenCalledOnce();
+    });
+
+    it('reports whether an element was unmounted', () => {
+      const widget = new Widget();
+      const element = widgetElement();
+      widget.mount(element);
+
+      expect([widget.unmount(element), widget.unmount(element)]).toEqual([true, false]);
+    });
+
     it('does not track an element whose _init throws, and aborts its signal', () => {
       let signal;
       class BrokenInit extends Widget {
