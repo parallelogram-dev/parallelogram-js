@@ -44,6 +44,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 ### Removed
 
+- `docs/` from the published package. Its guides predate 0.5 and are marked superseded; the documentation site and its upgrade guide replace them.
 - The demo pages and their build (`npm run demo`, `npm run build:demo`, `demo/`, `src/demo/` and the demo stylesheets). The documentation site in `site/` replaces them, and GitHub Pages now deploys it.
 - `QueuedComponentProxy` (`@parallelogram-js/core/core/QueuedComponentProxy`), PageManager's internal loading methods (`_ensureInstance`, `_handleAsyncLoading`, `_createInstance`, `unmountRemoved`) and its unused `batchUpdates`, `updateThrottleMs`, `lazyLoadThreshold` and `scrollRestoration` options.
 - `p-datetime`'s theme handling, which set `theme="inherit"` and inline `--datetime-input-*` properties on the host element that its stylesheet never read. `theme` is no longer an observed attribute.
@@ -190,6 +191,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 ### Changed
 
+- The README starts from `Parallelogram.create()`, states the Baseline 2023 browser floor, and lists every component in tables generated from the contracts by `npm run readme`, which a unit test keeps current.
 - Router history entries store `key`, `position`, `viewTarget` and `scroll` in `history.state`, and the router adds a `key` and `position` to entries it did not create (the first page and native hash navigations).
 - Fragment swapping moved out of PageManager into `FragmentSwapper` (`@parallelogram-js/core/core/FragmentSwapper`), which can also be used on its own. PageManager loads it when a router is present or on the first `replaceFragments()` call, so pages without a router no longer download the swapping, head and transition code. A PageManager destroyed while a navigation is under way no longer changes the page afterwards.
 - The library builds as one production and one development Rollup graph. Code shared between entries (BaseComponent, DOM helpers, state helpers) lives once in `dist/shared/` instead of being copied into every component bundle.

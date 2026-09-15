@@ -1,5 +1,7 @@
 # Component System
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 The Parallelogram-JS component system is built around the `BaseComponent` class, which provides a consistent foundation for all interactive components. This document explains the component architecture, lifecycle, and patterns.
 
 ## BaseComponent Architecture

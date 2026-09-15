@@ -1,5 +1,7 @@
 # Tabs State Management
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 ## Overview
 
 The Tabs component uses state-based CSS with data attributes to manage tab panel visibility and transitions. Individual tab buttons use standard ARIA attributes for accessibility.
