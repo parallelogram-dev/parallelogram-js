@@ -283,6 +283,7 @@ Colours come from a small set of roles, and the surface, form control, button an
 | `--color-overlay`, `--color-shadow`                                       | Modal backdrops and shadows                                                  |
 | `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg` | Status colours and their backgrounds                                         |
 | `--color-danger-contrast`                                                 | Text on a danger fill, such as the danger button                             |
+| `--color-inverse-surface`, `--color-inverse-text`                         | Toasts, which stand out from the page as a darker surface in both themes     |
 
 Text colour isn't a role: surfaces inherit it from the page.
 
