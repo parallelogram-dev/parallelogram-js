@@ -189,6 +189,18 @@ export function getFocusableElements(container = document) {
 }
 
 /**
+ * The element that has focus, following open shadow roots down to the focused element inside them
+ * @returns {Element|null} Focused element
+ */
+export function deepActiveElement() {
+  let active = document.activeElement;
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement;
+  }
+  return active;
+}
+
+/**
  * Trap focus within a container (for modals, dialogs, etc.)
  * @param {HTMLElement} container - Container to trap focus within
  * @param {KeyboardEvent} event - Tab key event
