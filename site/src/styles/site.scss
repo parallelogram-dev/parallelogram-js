@@ -1,20 +1,20 @@
 @use 'framework/index';
 
-/* Matter SQ by Displaay, licensed for the Parallelogram websites */
+/* Haffer by Displaay, licensed to PeptoLab for web use (invoice DP15764) */
 @font-face {
-  font-family: 'Matter SQ';
+  font-family: Haffer;
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/MatterSQ-Regular.woff2') format('woff2');
+  src: url('/fonts/Haffer-Regular.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Matter SQ';
+  font-family: Haffer;
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/MatterSQ-Medium.woff2') format('woff2');
+  src: url('/fonts/Haffer-Medium.woff2') format('woff2');
 }
 
 :root {
@@ -28,8 +28,8 @@
   --site-code-bg: #eceef3;
   --site-code-ink: #262c38;
   --site-warn: #9a3412;
-  --site-font: 'Matter SQ', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --site-display: 'Matter SQ', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --site-font: Haffer, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --site-display: Haffer, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --site-mono: 'IBM Plex Mono', ui-monospace, sfmono-regular, menlo, monospace;
   --site-header: 3.5rem;
 
