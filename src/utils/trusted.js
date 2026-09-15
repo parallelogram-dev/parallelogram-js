@@ -5,41 +5,43 @@
  * policy named `parallelogram`, and scripts and script URLs through one named
  * `parallelogram-scripts`. Both pass values through unchanged: they only mark what the library
  * already inserts, so the page's `trusted-types` directive must list them. Each policy is created
- * once, on first use. Where Trusted Types aren't supported, or a policy can't be created, the
+ * once, on first use, and the module does nothing when it loads, so bundles that only need one
+ * helper leave the rest out. Where Trusted Types aren't supported, or a policy can't be created, the
  * helpers return the string they are given.
  */
 
 const pass = value => value;
 
-const RULES = {
-  parallelogram: { createHTML: pass },
-  'parallelogram-scripts': { createScript: pass, createScriptURL: pass },
-};
-
-/** Policies by name, null when unavailable */
-const policies = {};
-
-const policy = name => {
-  if (!(name in policies)) {
-    policies[name] = null;
-    try {
-      policies[name] = globalThis.trustedTypes?.createPolicy(name, RULES[name]) ?? null;
-    } catch {
-      console.warn(
-        `Allow the Trusted Types policy "${name}": trusted-types parallelogram parallelogram-scripts, with 'allow-duplicates' if the library loads twice`
-      );
-    }
+/**
+ * Create a policy, or return false when Trusted Types are unsupported or the page blocks the name
+ */
+const create = (name, rules) => {
+  let policy = false;
+  try {
+    /* eslint-disable-next-line compat/compat -- detected: undefined where Trusted Types are missing */
+    policy = globalThis.trustedTypes?.createPolicy(name, rules) ?? false;
+  } catch {
+    console.warn(`Trusted Types policy "${name}" was blocked; add it to trusted-types`);
   }
-  return policies[name];
+  return policy;
 };
+
+/** The policies once created, false when unavailable */
+let htmlPolicy;
+let scriptPolicy;
+
+const html = () => (htmlPolicy ??= create('parallelogram', { createHTML: pass }));
+
+const scripts = () =>
+  (scriptPolicy ??= create('parallelogram-scripts', { createScript: pass, createScriptURL: pass }));
 
 /**
  * HTML the library inserts, as TrustedHTML where the `parallelogram` policy is available
  *
- * @param {string} html
+ * @param {string} markup
  * @returns {string|TrustedHTML}
  */
-export const trustedHTML = html => policy('parallelogram')?.createHTML(html) ?? html;
+export const trustedHTML = markup => (html() ? htmlPolicy.createHTML(markup) : markup);
 
 /**
  * Script code the library runs, as TrustedScript where the `parallelogram-scripts` policy is
@@ -48,7 +50,7 @@ export const trustedHTML = html => policy('parallelogram')?.createHTML(html) ?? 
  * @param {string} code
  * @returns {string|TrustedScript}
  */
-export const trustedScript = code => policy('parallelogram-scripts')?.createScript(code) ?? code;
+export const trustedScript = code => (scripts() ? scriptPolicy.createScript(code) : code);
 
 /**
  * A script address the library loads, as TrustedScriptURL where the `parallelogram-scripts`
@@ -57,4 +59,4 @@ export const trustedScript = code => policy('parallelogram-scripts')?.createScri
  * @param {string} url
  * @returns {string|TrustedScriptURL}
  */
-export const trustedScriptURL = url => policy('parallelogram-scripts')?.createScriptURL(url) ?? url;
+export const trustedScriptURL = url => (scripts() ? scriptPolicy.createScriptURL(url) : url);
