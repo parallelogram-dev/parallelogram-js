@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `<p-toasts>` that moved inside an open modal returns to its place when the next toast is shown after that modal was removed from the page without closing. It was removed along with the modal, so a page keeping its own reference to the element showed later toasts nowhere.
 - `<p-datetime>` in datetime or time mode no longer throws while rendering a value it can't read, such as `value="14:30"` in datetime mode; the time selects are left at their first options. Time mode reads a plain `HH:mm` or `HH:mm:ss` value as that time today.
 - `<p-uploader-file>` panels take their background from `--surface-card-color-bg`, like the card around them, instead of always being white, so they follow a dark theme.
+- `<p-uploader>`'s `allow-edit` and `allow-sort`, and `<p-uploader-file>`'s `allow-edit`, read `"0"` as false, as enhancement components' boolean attributes do, where only `"false"` turned them off.
 
 ## [0.5.3] - 2026-09-15
 
