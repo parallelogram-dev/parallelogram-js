@@ -130,10 +130,26 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
   cssProperties: [
     { name: '--puploader-radius', description: 'Corner radius' },
     { name: '--puploader-border-width', description: 'Border width' },
-    { name: '--puploader-border-color', description: 'Border colour' },
-    { name: '--puploader-bg', description: 'Background' },
-    { name: '--puploader-color', description: 'Text colour' },
-    { name: '--puploader-shadow', description: 'Shadow' },
+    {
+      name: '--puploader-border-color',
+      default: 'var(--surface-panel-border-color)',
+      description: 'Border colour: the panel border colour',
+    },
+    {
+      name: '--puploader-bg',
+      default: 'var(--surface-panel-color-bg)',
+      description: 'Background: the panel surface',
+    },
+    {
+      name: '--puploader-color',
+      default: 'var(--surface-panel-color-text)',
+      description: "Text colour: the panel text colour, which is the page's text colour",
+    },
+    {
+      name: '--puploader-shadow',
+      default: 'var(--surface-panel-shadow)',
+      description: 'Shadow: the panel shadow',
+    },
     { name: '--puploader-padding', description: 'Padding' },
     { name: '--puploader-files-gap', description: 'Space between files' },
     { name: '--uploader-file-radius-start', description: 'Top corners of a file card' },
