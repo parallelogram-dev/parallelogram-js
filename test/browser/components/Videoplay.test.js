@@ -84,6 +84,32 @@ describe('Videoplay', () => {
     expect(video.playsInline).toBe(true);
   });
 
+  it('takes over from the native autoplay attribute so the browser only fetches metadata', () => {
+    const video = mountVideo();
+
+    expect([video.hasAttribute('autoplay'), video.preload]).toEqual([false, 'metadata']);
+  });
+
+  it('gives the autoplay attribute back when it is unmounted', () => {
+    const video = mountVideo();
+
+    videoplay.unmount(video);
+
+    expect(video.hasAttribute('autoplay')).toBe(true);
+  });
+
+  it('does not play a video that starts below the fold', async () => {
+    document.body.innerHTML = `
+      <div style="height: 4000px"></div>
+      <video data-videoplay autoplay muted loop style="display: block; width: 320px; height: 180px"></video>`;
+    const video = document.querySelector('video');
+    videoplay = new Videoplay();
+    videoplay.mount(video);
+    await pause(400);
+
+    expect(play).not.toHaveBeenCalled();
+  });
+
   it('leaves autoplay off and offers controls when the user prefers reduced motion', async () => {
     vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
 

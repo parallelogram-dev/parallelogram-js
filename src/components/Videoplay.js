@@ -4,12 +4,14 @@ import { prefersReducedMotion } from '../utils/motion.js';
 /**
  * Videoplay - play videos as they scroll into view and pause them as they leave
  *
- * Only videos with the `autoplay` attribute are managed. They play once enough of the video is
- * visible and pause when it scrolls away or the page is hidden. A video the user pauses stays paused
- * until the user plays it again. Managed videos play inline, so iPhone Safari doesn't open them full
- * screen, and are muted for autoplay unless automute says otherwise. When the user prefers reduced
- * motion, autoplay is left off and the video's controls are shown instead. Videos with the same
- * thresholds share one IntersectionObserver.
+ * Only videos with the `autoplay` attribute are managed. Videoplay removes the attribute when it
+ * mounts and starts playback itself, so the browser neither downloads a video far below the fold nor
+ * plays it off screen; without JavaScript the attribute still autoplays the video. Managed videos
+ * play once enough of the video is visible and pause when it scrolls away or the page is hidden. A
+ * video the user pauses stays paused until the user plays it again. Managed videos play inline, so
+ * iPhone Safari doesn't open them full screen, and are muted for autoplay unless automute says
+ * otherwise. When the user prefers reduced motion, the video isn't played and its controls are shown
+ * instead. Videos with the same thresholds share one IntersectionObserver.
  *
  * @example
  * <!-- Managed: plays when a third of it is visible -->
@@ -152,6 +154,11 @@ export default class Videoplay extends BaseComponent {
 
   _setupVideo(video, state) {
     const { signal } = state.controller;
+
+    /* The browser ignores preload and starts playback wherever the video is while autoplay is set */
+    if (state.hasAutoplay) {
+      video.removeAttribute('autoplay');
+    }
 
     if (state.preloadOnMount && !video.getAttribute('preload')) {
       video.preload = 'metadata';
@@ -417,6 +424,9 @@ export default class Videoplay extends BaseComponent {
     video.volume = state.originalVolume;
     video.controls = state.originalControls;
     video.playsInline = state.originalPlaysInline;
+    if (state.hasAutoplay) {
+      video.setAttribute('autoplay', '');
+    }
   }
 
   getStatus() {
