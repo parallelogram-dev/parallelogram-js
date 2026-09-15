@@ -65,7 +65,8 @@ const cssUrl = url =>
  * - lazysrc:loading-start: sources were handed to the browser, or a background image started loading
  * - lazysrc:loaded: with `{ element, loadTime }`; loadTime is the download time in milliseconds from
  *   Resource Timing, or null when the browser has no entry for it
- * - lazysrc:error: every retry failed, with `{ element, error }`
+ * - lazysrc:error: every retry failed, or the element has no source to load, with
+ *   `{ element, error }`
  * - lazysrc:detached: a loaded element's listeners have been released
  * - lazysrc:forceLoad: dispatch this on an element to load it straight away
  *
@@ -149,7 +150,9 @@ export default class Lazysrc extends BaseComponent {
     } else if (state.image) {
       this._prepareImage(element, state);
     } else {
-      this.logger?.warn('Lazysrc needs an <img>, a <picture> or data-lazysrc-bg', { element });
+      /* Nothing to load, so the error is final and loadElement() resolves straight away */
+      state.noSource = true;
+      this._fail(element, state, 'Lazysrc needs an <img>, a <picture> or data-lazysrc-bg');
     }
 
     return state;
@@ -184,7 +187,8 @@ export default class Lazysrc extends BaseComponent {
     const applied = this._applySources(image);
 
     if (!applied && !image.hasAttribute('src') && !image.hasAttribute('srcset')) {
-      this.logger?.warn('Lazysrc image has no sources', { element });
+      state.noSource = true;
+      this._fail(element, state, 'Lazysrc image has no sources');
       return;
     }
 
@@ -373,7 +377,7 @@ export default class Lazysrc extends BaseComponent {
       timestamp: performance.now(),
     });
     state.resolveSettled();
-    this.logger?.warn('Element failed to load after retries', { element, error: message });
+    this.logger?.warn('Element failed to load', { element, error: message });
   }
 
   _settleLoaded(element, state, url) {
@@ -436,7 +440,7 @@ export default class Lazysrc extends BaseComponent {
    */
   loadElement(element) {
     const state = this.getState(element);
-    if (!state) return Promise.resolve();
+    if (!state || state.noSource) return Promise.resolve();
 
     if (state.status === 'error') {
       state.attempts = 0;
