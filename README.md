@@ -1,4 +1,9 @@
-# Parallelogram
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://dev.parallelogram.com.au/brand/logo-dark.svg">
+    <img src="https://dev.parallelogram.com.au/brand/logo.svg" alt="Parallelogram" width="320">
+  </picture>
+</h1>
 
 `@parallelogram-js/core` adds behaviour to server-rendered HTML through data attributes and a small set of web components. Components load the first time a page uses them, and links swap the page in place instead of reloading it.
 

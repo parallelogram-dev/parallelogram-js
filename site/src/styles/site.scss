@@ -1,18 +1,35 @@
 @use 'framework/index';
 
+/* Haffer by Displaay, licensed to PeptoLab for web use (invoice DP15764) */
+@font-face {
+  font-family: Haffer;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Haffer-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Haffer;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Haffer-SemiBold.woff2') format('woff2');
+}
+
 :root {
   --site-ground: #f4f5f8;
   --site-surface: #ffffff;
   --site-ink: #161b24;
   --site-muted: #586273;
   --site-line: #dce0e7;
-  --site-accent: #4453c4;
-  --site-accent-soft: #e8eafb;
+  --site-accent: #0000ff;
+  --site-accent-soft: #e6e6ff;
   --site-code-bg: #eceef3;
   --site-code-ink: #262c38;
   --site-warn: #9a3412;
-  --site-font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --site-display: 'Schibsted Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  --site-font: Haffer, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --site-display: Haffer, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --site-mono: 'IBM Plex Mono', ui-monospace, sfmono-regular, menlo, monospace;
   --site-header: 3.5rem;
 
@@ -26,8 +43,8 @@
     --site-ink: #e4e8ee;
     --site-muted: #9aa3b1;
     --site-line: #29313d;
-    --site-accent: #9aa6ff;
-    --site-accent-soft: #232a48;
+    --site-accent: #8f8fff;
+    --site-accent-soft: #1d1f4d;
     --site-code-bg: #1e2531;
     --site-code-ink: #d7dce5;
     --site-warn: #fdba74;
@@ -40,6 +57,11 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+strong,
+b {
+  font-weight: 600;
 }
 
 body {
@@ -115,16 +137,14 @@ pre {
   align-items: center;
   gap: 0.65rem;
   color: var(--site-ink);
-  font: 700 1.1rem/1 var(--site-display);
+  font: 600 1.1rem/1 var(--site-display);
   text-decoration: none;
 }
 
 .brand__mark {
-  width: 1.4rem;
-  height: 0.85rem;
-  border-radius: 2px;
-  background: var(--site-accent);
-  transform: skewX(-24deg);
+  flex: none;
+  width: auto;
+  height: 1.6rem;
 }
 
 .site-header__version {
@@ -204,7 +224,7 @@ pre {
 
   h1 {
     margin: 0.35rem 0 0.75rem;
-    font: 700 clamp(2rem, 4vw, 2.75rem) / 1.1 var(--site-display);
+    font: 600 clamp(2rem, 4vw, 2.75rem) / 1.1 var(--site-display);
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
@@ -276,7 +296,7 @@ pre {
   border-radius: 6px;
   background: var(--site-surface);
   color: var(--site-ink);
-  font: 500 0.8rem var(--site-font);
+  font: 400 0.8rem var(--site-font);
   cursor: pointer;
 
   &:hover {
@@ -432,7 +452,7 @@ pre {
 
     label {
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 400;
     }
 
     input {
@@ -553,7 +573,7 @@ pre {
 
   dd {
     margin: 0;
-    font-weight: 500;
+    font-weight: 400;
   }
 }
 
@@ -646,7 +666,7 @@ tbody tr:last-child > * {
 }
 
 tbody th {
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
 }
 
