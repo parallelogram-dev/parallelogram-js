@@ -1,209 +1,294 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 import { ExtendedStates } from '../core/ComponentStates.js';
+import { whenAnimationsFinish } from '../utils/motion.js';
+
+const deepActiveElement = () => {
+  let active = document.activeElement;
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement;
+  }
+  return active;
+};
+
+/** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
+const INTERACTIVE =
+  'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
+
+/** Whether a node sits inside a container, following shadow roots out to their hosts */
+const containsComposed = (container, node) => {
+  for (let current = node; current; current = current.parentNode ?? current.host) {
+    if (current === container) return true;
+  }
+  return false;
+};
+
 /**
- * Toggle Component
+ * Toggle - show and hide a target element from one or more trigger buttons
  *
- * Progressive enhancement for toggle functionality with show/hide states.
- * Supports dropdowns, modals, accordion panels, and other toggleable content.
- * Includes auto-close functionality for navigation links.
+ * This is the disclosure pattern: triggers get `aria-expanded` and an `aria-controls` link to the
+ * target, which is given an id when it has none. The target's state is written to
+ * `data-toggle-state` (closed, opening, open or closing) and it has the `open` class while open. The
+ * shipped stylesheet hides closed targets and animates the change, and Toggle waits for those
+ * animations instead of a fixed delay, so the duration lives only in CSS.
+ *
+ * Toggles are independent unless they share a `data-toggle-group`, in which case opening one closes
+ * the others in the group. A capture toggle, such as a dropdown, also closes when the user clicks or
+ * moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its
+ * trigger; when focus rests on the page instead, as it does in Safari after clicking a button, Escape
+ * closes the toggle opened last. Following a page link inside an open target closes it. Manual targets only close from
+ * a trigger or their group.
+ *
+ * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions
+ * `<details name="…">`; both work without JavaScript.
  *
  * @example
- * HTML:
- * <button data-toggle data-toggle-target="#dropdown-menu">Toggle Menu</button>
- * <div id="dropdown-menu" class="dropdown hidden">
- *   <p>Dropdown content here</p>
- * </div>
- *
- * <!-- Dropdown with outside click capture -->
- * <button data-toggle
- *         data-toggle-target="#dropdown"
- *         data-toggle-capture="true">Dropdown</button>
- * <div id="dropdown" class="dropdown">Menu items</div>
- *
- * <!-- Navigation menu that auto-closes when links are clicked -->
- * <button data-toggle data-toggle-target="#navbar-navigation">Menu</button>
- * <nav id="navbar-navigation">
- *   <a href="/page1">Page 1</a>
- *   <a href="/page2">Page 2</a>
- *   <a href="#section">Anchor link (won't close)</a>
- *   <a href="https://external.com" target="_blank">External (won't close)</a>
+ * <button data-toggle data-toggle-target="#site-menu">Menu</button>
+ * <nav id="site-menu">
+ *   <a href="/pricing">Pricing</a>
  * </nav>
  *
- * <!-- Disable navigation auto-close -->
- * <button data-toggle
- *         data-toggle-target="#persistent-nav"
- *         data-toggle-close-navigation="false">Persistent Nav</button>
- * <nav id="persistent-nav">Navigation links won't auto-close this</nav>
+ * <!-- Dropdown that closes on an outside click or when focus leaves it -->
+ * <button data-toggle data-toggle-target="#account-menu" data-toggle-capture>Account</button>
+ * <div id="account-menu">…</div>
  *
- * <!-- Manual toggle (won't auto-close at all) -->
- * <button data-toggle data-toggle-target="#persistent">Persistent Toggle</button>
- * <div id="persistent" data-toggle-manual="true">This won't auto-close</div>
+ * <!-- Accordion with one answer open at a time -->
+ * <button data-toggle data-toggle-target="#refunds" data-toggle-group="faq">Refunds</button>
+ * <div id="refunds">…</div>
+ * <button data-toggle data-toggle-target="#delivery" data-toggle-group="faq">Delivery</button>
+ * <div id="delivery">…</div>
  *
- * <!-- Accordion panel -->
- * <button data-toggle data-toggle-target="#panel-1" aria-expanded="false">Panel 1</button>
- * <div id="panel-1" class="panel">Panel 1 content</div>
+ * @attributes
+ * - data-toggle: on the trigger
+ * - data-toggle-target: selector for the element the trigger shows and hides
+ * - data-toggle-group: toggles that share a group name close each other
+ * - data-toggle-capture: close on a click or focus outside the trigger and target (default false)
+ * - data-toggle-close-navigation: close when a page link inside the target is followed (default true)
+ * - data-toggle-close-escape: close with Escape while focus is in the trigger or target, or rests on
+ *   the page (default true)
+ * - data-toggle-manual: on the trigger or target, close only from a trigger or group (default false)
+ * - data-toggle-animate: "false" switches state without waiting for animations (default true)
+ * - data-toggle-state: set on the target to closed, opening, open or closing
  *
- * JavaScript (standalone):
- * import { Toggle } from './components/Toggle.js';
- * const toggles = new Toggle();
- * document.querySelectorAll('[data-toggle]')
- *   .forEach(trigger => toggles.mount(trigger));
+ * @events
+ * - toggle:show: dispatched on the trigger with `{ target, trigger }`
+ * - toggle:hide: dispatched on the trigger with `{ target, trigger }`
+ *
+ * @cssprop --toggle-transition-duration - length of the open and close animations (default 0.75s)
+ * @cssprop --toggle-transition-easing - easing of the open and close animations
  */
 export default class Toggle extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-toggle';
-  }
+  static selector = 'data-toggle';
 
-  /**
-   * Default configuration for toggle component
-   * @returns {Object} Default config
-   */
   static get defaults() {
     return {
       openClass: 'open',
-      transitioningClass: 'transitioning',
-      transitionDuration: 750,
-      capture: false, // Whether to capture outside clicks
-      manual: false, // Whether to prevent auto-closing
-      multiple: false, // Allow multiple toggles open at once
+      capture: false,
+      manual: false,
       animateToggle: true,
       closeOnEscape: true,
-      closeOnNavigation: true, // Auto-close when navigation links are clicked
+      closeOnNavigation: true,
     };
   }
 
-  /**
-   * Initialize the toggle functionality on a trigger element
-   * @param {HTMLElement} element - Trigger element with data-toggle attribute
-   * @returns {Object} State object for this element
-   */
+  constructor(options = {}) {
+    super(options);
+
+    /** Open targets in the order they opened, each with the trigger that opened it */
+    this._open = new Map();
+
+    /** A token per target, replaced by each transition so an older one cannot finish it */
+    this._transitions = new WeakMap();
+
+    this._documentListeners = null;
+  }
+
   _init(element) {
     const state = super._init(element);
 
-    // Get target element
     const targetSelector = this.getAttr(element, 'target');
     if (!targetSelector) {
       this.logger?.warn('Toggle: No data-toggle-target attribute found', element);
       return state;
     }
 
-    const target = document.querySelector(targetSelector);
+    let target = null;
+    try {
+      target = document.querySelector(targetSelector);
+    } catch {
+      target = null;
+    }
     if (!target) {
       this.logger?.warn('Toggle: Target element not found', { selector: targetSelector, element });
       return state;
     }
 
-    // Get configuration from data attributes
-    const capture = this.getAttr(element, 'capture', Toggle.defaults.capture);
-    const manual =
-      target.hasAttribute('data-toggle-manual') ||
-      this.getAttr(element, 'manual', Toggle.defaults.manual);
-    const multiple = this.getAttr(element, 'multiple', Toggle.defaults.multiple);
-    const animateToggle = this.getAttr(
-      element,
-      'animate',
-      Toggle.defaults.animateToggle
-    );
-    const closeOnNavigation = this.getAttr(
+    state.target = target;
+    state.targetSelector = targetSelector;
+    state.group = this.getAttr(element, 'group');
+    state.capture = this.getBoolAttr(element, 'capture', Toggle.defaults.capture);
+    state.manual =
+      this.getBoolAttr(target, 'manual', false) ||
+      this.getBoolAttr(element, 'manual', Toggle.defaults.manual);
+    state.animateToggle = this.getBoolAttr(element, 'animate', Toggle.defaults.animateToggle);
+    state.closeOnNavigation = this.getBoolAttr(
       element,
       'close-navigation',
       Toggle.defaults.closeOnNavigation
     );
+    state.closeOnEscape = this.getBoolAttr(element, 'close-escape', Toggle.defaults.closeOnEscape);
 
-    // Store state
-    state.target = target;
-    state.targetSelector = targetSelector;
-    state.capture = capture;
-    state.manual = manual;
-    state.multiple = multiple;
-    state.animateToggle = animateToggle;
-    state.closeOnNavigation = closeOnNavigation;
-    state.isOpen = target.classList.contains(Toggle.defaults.openClass);
-    state.transitionTimer = null;
+    const isOpen = this._open.has(target) || target.classList.contains(Toggle.defaults.openClass);
+    if (isOpen && !this._open.has(target)) {
+      this._open.set(target, element);
+    }
+    state.isOpen = isOpen;
 
-    // Set initial state attribute on target
-    const initialState = state.isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED;
-    this.setAttr(target, 'target', initialState);
+    const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
+    if (firstTrigger) {
+      this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
+    }
 
-    // Set up click handler
-    const clickHandler = e => this._handleClick(e, element, state);
-    element.addEventListener('click', clickHandler);
-
-    // Mark as enhanced for status tracking
+    if (!target.id) {
+      target.id = this._generateId('toggle-target');
+    }
+    if (!element.getAttribute('aria-controls')) {
+      element.setAttribute('aria-controls', target.id);
+    }
+    element.setAttribute('aria-expanded', String(isOpen));
     element.setAttribute('data-toggle-enhanced', 'true');
 
-    // Set up ARIA attributes
-    element.setAttribute('aria-expanded', String(state.isOpen));
-    if (!element.getAttribute('aria-controls')) {
-      element.setAttribute('aria-controls', targetSelector.replace('#', ''));
-    }
+    element.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        this.toggle(element);
+      },
+      { signal: state.controller.signal }
+    );
 
-    // Set up escape key handler if enabled
-    if (Toggle.defaults.closeOnEscape) {
-      const escapeHandler = e => this._handleEscape(e, element, state);
-      document.addEventListener('keydown', escapeHandler);
-      state.escapeHandler = escapeHandler;
-    }
+    this._listenToDocument();
 
-    // Setup cleanup
-    const originalCleanup = state.cleanup;
+    const baseCleanup = state.cleanup;
     state.cleanup = () => {
-      element.removeEventListener('click', clickHandler);
-      if (state.escapeHandler) {
-        document.removeEventListener('keydown', state.escapeHandler);
+      if (this._open.get(target) === element) {
+        const other = this._triggersFor(target).find(trigger => trigger !== element);
+        if (other) {
+          this._open.set(target, other);
+        } else {
+          this._open.delete(target);
+        }
       }
-      this._clearTransitionTimer(state);
-      this._removeGlobalListeners(state);
-      originalCleanup();
+      element.removeAttribute('data-toggle-enhanced');
+      baseCleanup();
     };
 
     this.eventBus?.emit('toggle:mount', {
       element,
       target,
-      isOpen: state.isOpen,
+      isOpen,
       timestamp: performance.now(),
-    });
-
-    this.logger?.info('Toggle initialized', {
-      element,
-      target: targetSelector,
-      capture,
-      manual,
-      isOpen: state.isOpen,
     });
 
     return state;
   }
 
   /**
-   * Handle click events on toggle triggers
-   * @private
-   * @param {Event} event - Click event
-   * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
+   * Listen once, at the document, for the clicks, keys and focus changes that close toggles
    */
-  _handleClick(event, element, state) {
-    event.preventDefault();
-    event.stopPropagation();
+  _listenToDocument() {
+    if (this._documentListeners) return;
 
-    this.toggle(element);
+    this._documentListeners = new AbortController();
+    const { signal } = this._documentListeners;
+
+    document.addEventListener('click', event => this._onDocumentClick(event), {
+      capture: true,
+      signal,
+    });
+    document.addEventListener('keydown', event => this._onKeydown(event), { signal });
+    document.addEventListener('focusout', event => this._onFocusOut(event), { signal });
+  }
+
+  _triggersFor(target) {
+    return this.trackedElements().filter(trigger => this.getState(trigger)?.target === target);
+  }
+
+  _touches(target, path) {
+    return (
+      path.includes(target) || this._triggersFor(target).some(trigger => path.includes(trigger))
+    );
   }
 
   /**
-   * Handle escape key to close toggles
-   * @private
-   * @param {Event} event - Keydown event
-   * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
+   * Close capture toggles on a click outside them, and any toggle when a page link inside it is
+   * followed
    */
-  _handleEscape(event, element, state) {
-    if (event.key === 'Escape' && state.isOpen && !state.manual) {
-      this.hide(element);
+  _onDocumentClick(event) {
+    const path = event.composedPath();
+
+    for (const [target, opener] of [...this._open]) {
+      const state = this.getState(opener);
+      if (!state || state.manual) continue;
+
+      if (path.includes(target)) {
+        if (state.closeOnNavigation && this._isNavigationLink(path)) {
+          this.hide(opener, { returnFocus: false });
+        }
+      } else if (state.capture && !this._touches(target, path)) {
+        this.hide(opener, { returnFocus: false });
+      }
+    }
+  }
+
+  /**
+   * Close the most recently opened toggle that holds focus, unless something else handled Escape
+   *
+   * When focus rests on the page rather than a control, the most recently opened toggle closes
+   * instead, since Safari doesn't focus a button when it is clicked.
+   */
+  _onKeydown(event) {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+
+    const path = event.composedPath();
+    const closable = [...this._open].reverse().filter(([, opener]) => {
+      const state = this.getState(opener);
+      return state && !state.manual && state.closeOnEscape;
+    });
+
+    const holdingFocus = closable.find(([target]) => this._touches(target, path));
+    const [target, opener] = holdingFocus ?? (this._focusRests() ? (closable[0] ?? []) : []);
+    if (!opener) return;
+
+    event.preventDefault();
+    this.hide(opener, { returnFocus: !holdingFocus || path.includes(target) });
+  }
+
+  /**
+   * Whether focus is on the page itself rather than on something that may use Escape
+   */
+  _focusRests() {
+    const active = deepActiveElement();
+    return !active || active === document.body || !active.matches(INTERACTIVE);
+  }
+
+  /**
+   * Close capture toggles when focus moves from inside them to somewhere outside
+   */
+  _onFocusOut(event) {
+    const next = event.relatedTarget;
+    if (!next) return;
+
+    const path = event.composedPath();
+    for (const [target, opener] of [...this._open]) {
+      const state = this.getState(opener);
+      if (!state || state.manual || !state.capture || !this._touches(target, path)) continue;
+
+      const stays =
+        containsComposed(target, next) ||
+        this._triggersFor(target).some(trigger => containsComposed(trigger, next));
+      if (!stays) {
+        this.hide(opener, { returnFocus: false });
+      }
     }
   }
 
@@ -213,12 +298,9 @@ export default class Toggle extends BaseComponent {
    */
   toggle(element) {
     const state = this.getState(element);
-    if (!state) return;
+    if (!state?.target) return;
 
-    // Check the actual target state, not just this trigger's stored state
-    const isActuallyOpen = state.target.classList.contains(Toggle.defaults.openClass);
-
-    if (isActuallyOpen) {
+    if (this._isTargetOpen(state.target)) {
       this.hide(element);
     } else {
       this.show(element);
@@ -231,139 +313,69 @@ export default class Toggle extends BaseComponent {
    */
   show(element) {
     const state = this.getState(element);
-    if (!state) return;
+    if (!state?.target || this._isTargetOpen(state.target)) return;
 
-    // Check current state to prevent transitions during animation
-    const currentState = this.getAttr(state.target, 'target');
-    if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
-      return;
+    const { target } = state;
+    if (state.group) {
+      this._closeGroup(state.group, target);
     }
 
-    // Close other toggles if multiple is not allowed
-    if (!state.multiple) {
-      this._closeOtherToggles(element);
-    }
+    this._open.delete(target);
+    this._open.set(target, element);
+    this._syncTriggers(target, true);
+    target.classList.add(Toggle.defaults.openClass);
+    this._transition(target, state, ExtendedStates.OPENING, ExtendedStates.OPEN);
 
-    // Update internal state for this trigger
-    state.isOpen = true;
-
-    // Update state for all triggers targeting the same element
-    this._syncTriggerStates(state.targetSelector, true);
-
-    // Update ARIA attributes
-    element.setAttribute('aria-expanded', 'true');
-    this._updateRelatedTriggers(state.targetSelector, true);
-
-    // Set up global listeners for outside click capture or navigation link detection
-    if (state.capture || state.closeOnNavigation) {
-      this._setupGlobalListeners(element, state);
-    }
-
-    // Handle state transitions with animation
-    if (state.animateToggle) {
-      // Set opening state
-      this.setAttr(state.target, 'target', ExtendedStates.OPENING);
-      state.target.classList.add(Toggle.defaults.openClass);
-
-      // Transition to fully open after animation
-      state.transitionTimer = setTimeout(() => {
-        this.setAttr(state.target, 'target', ExtendedStates.OPEN);
-        state.transitionTimer = null;
-      }, Toggle.defaults.transitionDuration);
-    } else {
-      // No animation - set open state immediately
-      this.setAttr(state.target, 'target', ExtendedStates.OPEN);
-      state.target.classList.add(Toggle.defaults.openClass);
-    }
-
-    // Dispatch events
     this._dispatch(element, 'toggle:show', {
-      target: state.target,
+      target,
       trigger: element,
-    });
-
-    this.eventBus?.emit('toggle:show', {
-      element,
-      target: state.target,
       timestamp: performance.now(),
     });
-
-    this.logger?.debug('Toggle shown', { element, target: state.targetSelector });
   }
 
   /**
    * Hide/close the toggle target
+   *
    * @param {HTMLElement} element - Trigger element
+   * @param {Object} [options]
+   * @param {boolean} [options.returnFocus=true] Move focus to the trigger when it was inside the
+   *   target, so it isn't lost when the target is hidden
    */
-  hide(element) {
+  hide(element, { returnFocus = true } = {}) {
     const state = this.getState(element);
-    if (!state) return;
+    if (!state?.target || !this._isTargetOpen(state.target)) return;
 
-    // Check current state to prevent transitions during animation
-    const currentState = this.getAttr(state.target, 'target');
-    if (currentState === ExtendedStates.CLOSING || currentState === ExtendedStates.CLOSED) {
-      return;
+    const { target } = state;
+    if (returnFocus && containsComposed(target, deepActiveElement())) {
+      const opener = this._open.get(target) ?? element;
+      const trigger = [opener, ...this._triggersFor(target)].find(
+        candidate => candidate.isConnected && !containsComposed(target, candidate)
+      );
+      trigger?.focus({ preventScroll: true });
     }
 
-    // Update internal state for this trigger
-    state.isOpen = false;
+    this._open.delete(target);
+    this._syncTriggers(target, false);
+    target.classList.remove(Toggle.defaults.openClass);
+    this._transition(target, state, ExtendedStates.CLOSING, ExtendedStates.CLOSED);
 
-    // Update state for all triggers targeting the same element
-    this._syncTriggerStates(state.targetSelector, false);
-
-    // Update ARIA attributes
-    element.setAttribute('aria-expanded', 'false');
-    this._updateRelatedTriggers(state.targetSelector, false);
-
-    // Remove global listeners
-    this._removeGlobalListeners(state);
-
-    // Remove open class immediately
-    state.target.classList.remove(Toggle.defaults.openClass);
-
-    // Handle state transitions with animation
-    if (state.animateToggle) {
-      // Set closing state
-      this.setAttr(state.target, 'target', ExtendedStates.CLOSING);
-
-      // Wait for animation before setting closed state
-      state.transitionTimer = setTimeout(() => {
-        this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
-        state.transitionTimer = null;
-      }, Toggle.defaults.transitionDuration);
-    } else {
-      // No animation - set closed state immediately
-      this.setAttr(state.target, 'target', ExtendedStates.CLOSED);
-    }
-
-    // Dispatch events
     this._dispatch(element, 'toggle:hide', {
-      target: state.target,
+      target,
       trigger: element,
-    });
-
-    this.eventBus?.emit('toggle:hide', {
-      element,
-      target: state.target,
       timestamp: performance.now(),
     });
-
-    this.logger?.debug('Toggle hidden', { element, target: state.targetSelector });
   }
 
   /**
    * Hide all non-manual toggles
    */
   hideAll() {
-    // Get all mounted elements
-    const elements = document.querySelectorAll('[data-toggle-enhanced="true"]');
-
-    elements.forEach(element => {
-      const state = this.getState(element);
-      if (state && state.isOpen && !state.manual) {
-        this.hide(element);
+    for (const [, opener] of [...this._open]) {
+      const state = this.getState(opener);
+      if (state && !state.manual) {
+        this.hide(opener, { returnFocus: false });
       }
-    });
+    }
   }
 
   /**
@@ -373,150 +385,84 @@ export default class Toggle extends BaseComponent {
    */
   isOpen(element) {
     const state = this.getState(element);
-    return state ? state.isOpen : false;
+    return state?.target ? this._isTargetOpen(state.target) : false;
   }
 
-  /**
-   * Update ARIA attributes for related triggers
-   * @private
-   * @param {string} targetSelector - Target selector
-   * @param {boolean} isOpen - Whether the toggle is open
-   */
-  _updateRelatedTriggers(targetSelector, isOpen) {
-    const relatedTriggers = document.querySelectorAll(
-      `[data-toggle-target="${targetSelector}"]`
-    );
-    relatedTriggers.forEach(trigger => {
+  _isTargetOpen(target) {
+    const value = this._getTargetState(target);
+    return value === ExtendedStates.OPEN || value === ExtendedStates.OPENING;
+  }
+
+  _closeGroup(group, except) {
+    for (const [target, opener] of [...this._open]) {
+      if (target !== except && this.getState(opener)?.group === group) {
+        this.hide(opener, { returnFocus: false });
+      }
+    }
+  }
+
+  _syncTriggers(target, isOpen) {
+    for (const trigger of this._triggersFor(target)) {
       trigger.setAttribute('aria-expanded', String(isOpen));
-    });
-  }
-
-  /**
-   * Set up global event listeners for outside click capture
-   * @private
-   * @param {HTMLElement} element - Trigger element
-   * @param {Object} state - Component state
-   */
-  _setupGlobalListeners(element, state) {
-    // Handle clicks inside the target
-    const targetClickHandler = e => {
-      // Check for navigation links if closeOnNavigation is enabled
-      if (state.closeOnNavigation && !state.manual && this._isNavigationLink(e.target)) {
-        this.hide(element);
-        return;
-      }
-      // Otherwise prevent clicks inside the target from closing
-      e.stopPropagation();
-    };
-
-    // Close on outside click (only if not manual mode)
-    const documentClickHandler = e => {
-      if (!state.manual && !element.contains(e.target) && !state.target.contains(e.target)) {
-        this.hide(element);
-      }
-    };
-
-    state.target.addEventListener('click', targetClickHandler);
-    document.addEventListener('click', documentClickHandler);
-
-    // Store handlers for cleanup
-    state.targetClickHandler = targetClickHandler;
-    state.documentClickHandler = documentClickHandler;
-  }
-
-  /**
-   * Remove global event listeners
-   * @private
-   * @param {Object} state - Component state
-   */
-  _removeGlobalListeners(state) {
-    if (state.targetClickHandler) {
-      state.target.removeEventListener('click', state.targetClickHandler);
-      state.targetClickHandler = null;
-    }
-
-    if (state.documentClickHandler) {
-      document.removeEventListener('click', state.documentClickHandler);
-      state.documentClickHandler = null;
+      this.getState(trigger).isOpen = isOpen;
     }
   }
 
   /**
-   * Check if an element is a navigation link that should trigger toggle closure
-   * @private
-   * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether the element is a navigation link
+   * Move a target into a transitional state, then into its final state once its animations finish
+   *
+   * A later transition on the same target replaces the token, so an earlier one never overwrites it.
    */
-  _isNavigationLink(element) {
-    // Walk up the DOM tree to find a link element
-    let current = element;
-    while (current && current !== document.body) {
-      if (current.tagName === 'A') {
-        const href = current.getAttribute('href');
-        // Check if it's a navigation link (has href and causes page navigation)
-        if (href &&
-            !href.startsWith('#') &&
-            !href.startsWith('javascript:') &&
-            !href.startsWith('mailto:') &&
-            !href.startsWith('tel:') &&
-            !current.hasAttribute('download') &&
-            current.getAttribute('target') !== '_blank') {
-          return true;
-        }
-        break;
-      }
-      current = current.parentElement;
+  _transition(target, state, during, after) {
+    const token = {};
+    this._transitions.set(target, token);
+
+    if (!state.animateToggle) {
+      this._setTargetState(target, after);
+      return;
     }
-    return false;
-  }
 
-  /**
-   * Clear transition timer
-   * @private
-   * @param {Object} state - Component state
-   */
-  _clearTransitionTimer(state) {
-    if (state.transitionTimer) {
-      clearTimeout(state.transitionTimer);
-      state.transitionTimer = null;
-    }
-  }
-
-  /**
-   * Close other open toggles when multiple is disabled
-   * @private
-   * @param {HTMLElement} currentElement - Current trigger element
-   */
-  _closeOtherToggles(currentElement) {
-    const elements = document.querySelectorAll('[data-toggle-enhanced="true"]');
-
-    elements.forEach(element => {
-      if (element !== currentElement) {
-        const state = this.getState(element);
-        if (state && state.isOpen && !state.manual) {
-          this.hide(element);
-        }
+    this._setTargetState(target, during);
+    whenAnimationsFinish(target).then(() => {
+      if (this._transitions.get(target) === token) {
+        this._setTargetState(target, after);
       }
     });
   }
 
   /**
-   * Sync state for all triggers targeting the same element
-   * @private
-   * @param {string} targetSelector - Target selector to sync
-   * @param {boolean} isOpen - Whether the target is open
+   * Record a target's open state in `data-toggle-state`
+   *
+   * A target that is not a toggle itself also gets the deprecated copy in `data-toggle-target`, which
+   * stops in 0.6.0. On a toggle that attribute holds its own target selector, so it is left alone.
    */
-  _syncTriggerStates(targetSelector, isOpen) {
-    const triggers = document.querySelectorAll(
-      `[data-toggle-target="${targetSelector}"][data-toggle-enhanced="true"]`
+  _setTargetState(target, value) {
+    this.setAttr(target, 'state', value);
+    if (!target.hasAttribute(this._getSelector())) {
+      this.setAttr(target, 'target', value);
+    }
+  }
+
+  _getTargetState(target) {
+    return this.getAttr(target, 'state') ?? this.getAttr(target, 'target');
+  }
+
+  /**
+   * Whether a click path went through a link that leaves the current view
+   */
+  _isNavigationLink(path) {
+    const link = path.find(node => node.localName === 'a' && node.hasAttribute('href'));
+    if (!link) return false;
+
+    const href = link.getAttribute('href');
+    return (
+      !href.startsWith('#') &&
+      !href.startsWith('javascript:') &&
+      !href.startsWith('mailto:') &&
+      !href.startsWith('tel:') &&
+      !link.hasAttribute('download') &&
+      link.getAttribute('target') !== '_blank'
     );
-
-    triggers.forEach(trigger => {
-      const triggerState = this.getState(trigger);
-      if (triggerState) {
-        triggerState.isOpen = isOpen;
-      }
-    });
   }
 
   /**
@@ -524,27 +470,24 @@ export default class Toggle extends BaseComponent {
    * @returns {Object} Component status
    */
   getStatus() {
-    const triggers = document.querySelectorAll('[data-toggle-enhanced="true"]');
-    let openCount = 0;
-    let captureCount = 0;
-    let manualCount = 0;
-
-    triggers.forEach(trigger => {
-      const state = this.getState(trigger);
-      if (state) {
-        if (state.isOpen) openCount++;
-        if (state.capture) captureCount++;
-        if (state.manual) manualCount++;
-      }
-    });
+    const states = this.trackedElements()
+      .map(trigger => this.getState(trigger))
+      .filter(state => state?.target);
 
     return {
-      totalTriggers: triggers.length,
-      openCount,
-      captureCount,
-      manualCount,
+      totalTriggers: states.length,
+      openCount: states.filter(state => this._isTargetOpen(state.target)).length,
+      captureCount: states.filter(state => state.capture).length,
+      manualCount: states.filter(state => state.manual).length,
       defaults: Toggle.defaults,
     };
+  }
+
+  destroy() {
+    super.destroy();
+    this._documentListeners?.abort();
+    this._documentListeners = null;
+    this._open.clear();
   }
 
   /**
@@ -555,12 +498,7 @@ export default class Toggle extends BaseComponent {
    */
   static enhanceAll(selector = '[data-toggle]', options) {
     const instance = new Toggle(options);
-    const elements = document.querySelectorAll(selector);
-
-    elements.forEach(element => {
-      instance.mount(element);
-    });
-
+    document.querySelectorAll(selector).forEach(element => instance.mount(element));
     return instance;
   }
 }

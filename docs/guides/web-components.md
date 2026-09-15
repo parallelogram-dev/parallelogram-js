@@ -1,5 +1,7 @@
 # Web Components Guide
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 ## Overview
 
 Parallelogram-JS includes two distinct types of components that serve different purposes:
@@ -20,6 +22,7 @@ Regular components **enhance existing HTML** elements using progressive enhancem
 **Examples:** Modal, Toast, Lazysrc, Toggle, Carousel, DataTable, Lightbox
 
 **Characteristics:**
+
 - Extend `BaseComponent` class
 - Must be registered in `ComponentRegistry`
 - Enhance elements matching CSS selectors
@@ -28,13 +31,14 @@ Regular components **enhance existing HTML** elements using progressive enhancem
 - Can have dependencies on other components
 
 **Usage Pattern:**
+
 ```javascript
 import { Modal } from '@parallelogram-js/core';
 import { ComponentRegistry } from '@parallelogram-js/core';
 
 const registry = ComponentRegistry.create()
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('./components/Modal.js')
+    loader: () => import('./components/Modal.js'),
   })
   .build();
 ```
@@ -53,6 +57,7 @@ Web Components are **custom HTML elements** that work standalone without framewo
 **Examples:** PModal, PDatetime, PSelect, PToasts, PUploader
 
 **Characteristics:**
+
 - Extend native `HTMLElement` class
 - Self-register using `customElements.define()`
 - Used as custom HTML tags: `<p-modal>`, `<p-datetime>`
@@ -61,6 +66,7 @@ Web Components are **custom HTML elements** that work standalone without framewo
 - Auto-register when imported
 
 **Usage Pattern:**
+
 ```javascript
 // Just import - they register automatically!
 import './components/PModal.js';
@@ -86,17 +92,17 @@ import './components/PSelect.js';
 
 ```javascript
 // WRONG: Don't register Web Components in ComponentRegistry
-const registry = ComponentRegistry.create()
-  .component('p-modal', 'p-modal', {  // NO!
-    loader: () => import('./components/PModal.js')
-  });
+const registry = ComponentRegistry.create().component('p-modal', 'p-modal', {
+  // NO!
+  loader: () => import('./components/PModal.js'),
+});
 
 // WRONG: Don't try to enhance Web Components
-PModal.enhanceAll('[data-modal]');  // NO!
+PModal.enhanceAll('[data-modal]'); // NO!
 
 // WRONG: Don't import both if you only need one
-import { Modal } from './Modal.js';  // Regular component
-import PModal from './PModal.js';    // Web component
+import { Modal } from './Modal.js'; // Regular component
+import PModal from './PModal.js'; // Web component
 // Pick ONE approach per use case!
 ```
 
@@ -111,10 +117,10 @@ import './components/PSelect.js';
 // CORRECT: Register ONLY regular components
 const registry = ComponentRegistry.create()
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('./components/Modal.js')  // Regular Modal
+    loader: () => import('./components/Modal.js'), // Regular Modal
   })
   .component('lazysrc', '[data-lazysrc]', {
-    loader: () => import('./components/Lazysrc.js')
+    loader: () => import('./components/Lazysrc.js'),
   })
   .build();
 ```
@@ -124,6 +130,7 @@ const registry = ComponentRegistry.create()
 ## Available Web Components
 
 ### PModal - Modal Dialog
+
 Custom modal dialog with slots for title, content, and actions.
 
 ```html
@@ -140,23 +147,27 @@ Custom modal dialog with slots for title, content, and actions.
 ```
 
 **Attributes:**
+
 - `data-modal-size`: xs | sm | md | lg | xl | fullscreen
 - `data-modal-closable`: true | false
 - `data-modal-backdrop-close`: true | false
 - `data-modal-keyboard`: true | false
 
 **Methods:**
+
 - `modal.open()` - Open the modal
 - `modal.close()` - Close the modal
 - `modal.toggle()` - Toggle open/closed state
 
 **Events:**
-- `modal:open` - Fired when modal opens
-- `modal:close` - Fired when modal closes
+
+- `p-modal:open` - Fired when modal opens
+- `p-modal:close` - Fired when modal closes
 
 ---
 
 ### PDatetime - Date/Time Picker
+
 Comprehensive datetime picker with calendar, time selection, and ranges.
 
 ```html
@@ -173,7 +184,8 @@ Comprehensive datetime picker with calendar, time selection, and ranges.
   range-to="endDate"
   from-label="Check-in"
   to-label="Check-out"
-  mode="date">
+  mode="date"
+>
 </p-datetime>
 
 <!-- Time only -->
@@ -181,6 +193,7 @@ Comprehensive datetime picker with calendar, time selection, and ranges.
 ```
 
 **Attributes:**
+
 - `mode`: date | datetime | time
 - `name`: Form field name (creates hidden input)
 - `value`: ISO date string (initial value)
@@ -195,6 +208,7 @@ Comprehensive datetime picker with calendar, time selection, and ranges.
 - `format`: Custom output format (e.g., 'yyyy-mm-dd', 'iso-tz', 'us-date')
 
 **Format Presets:**
+
 - `iso`: yyyy-mm-dd
 - `iso-tz`: yyyy-mm-ddThh:ii:sstzz
 - `iso-datetime`: yyyy-mm-dd hh:ii:ss
@@ -203,16 +217,19 @@ Comprehensive datetime picker with calendar, time selection, and ranges.
 - `mysql`: yyyy-mm-dd hh:ii:ss
 
 **Methods:**
+
 - `picker.open()` - Open the picker
 - `picker.close()` - Close the picker
 - `picker.toggle()` - Toggle open/closed state
 
 **Events:**
+
 - `change` - Fired when date/time changes (detail contains `{ value }` or `{ value, toValue }` for ranges)
 
 ---
 
 ### PSelect - Enhanced Select
+
 Custom select component with search and accessibility.
 
 ```html
@@ -237,6 +254,7 @@ Custom select component with search and accessibility.
 ```
 
 **Attributes:**
+
 - `name`: Form field name
 - `placeholder`: Placeholder text
 - `required`: Boolean attribute
@@ -245,15 +263,18 @@ Custom select component with search and accessibility.
 - `theme`: inherit (inherits parent styles)
 
 **Methods:**
+
 - `select.open()` - Open the dropdown
 - `select.close()` - Close the dropdown
 
 **Events:**
+
 - `change` - Fired when selection changes
 
 ---
 
 ### PToasts - Toast Notifications
+
 Toast notification container.
 
 ```html
@@ -262,15 +283,18 @@ Toast notification container.
 ```
 
 **Attributes:**
+
 - `placement`: top-left | top-right | bottom-left | bottom-right | top-center | bottom-center
 
 **Methods:**
+
 - `toasts.show(message, type, duration)` - Show a toast
   - `message`: string - Toast message
   - `type`: success | info | warn | error
   - `duration`: number - Duration in ms (default: 3000)
 
 **Usage with AlertManager:**
+
 ```javascript
 import { AlertManager } from '@parallelogram-js/core';
 
@@ -282,6 +306,7 @@ alerts.error('Something went wrong');
 ---
 
 ### PUploader - File Uploader
+
 Drag-and-drop file uploader with preview and progress.
 
 ```html
@@ -291,11 +316,13 @@ Drag-and-drop file uploader with preview and progress.
   max-files="5"
   max-size="10485760"
   upload-url="/api/upload"
-  multiple>
+  multiple
+>
 </p-uploader>
 ```
 
 **Attributes:**
+
 - `name`: Form field name
 - `accept`: Accepted file types (MIME types or extensions)
 - `max-files`: Maximum number of files
@@ -304,11 +331,12 @@ Drag-and-drop file uploader with preview and progress.
 - `multiple`: Allow multiple files
 
 **Events:**
+
 - `files:added` - Fired when files are added
 - `files:removed` - Fired when file is removed
 - `upload:progress` - Fired during upload progress
 - `upload:complete` - Fired when upload completes
-- `upload:error` - Fired on upload error
+- `p-uploader:upload-error` - Fired on upload error
 
 ---
 
@@ -379,6 +407,7 @@ Promise.all([
 #### Issue: "Element not found" or components not rendering
 
 **Cause:** Web components not imported
+
 ```javascript
 // Forgot to import
 // <p-modal id="test">...</p-modal>  // Won't work!
@@ -391,6 +420,7 @@ import './components/PModal.js';
 #### Issue: "customElements.define failed"
 
 **Cause:** Trying to register the same component twice
+
 ```javascript
 // Check if already registered before importing again
 if (!customElements.get('p-modal')) {
@@ -401,15 +431,16 @@ if (!customElements.get('p-modal')) {
 #### Issue: Modal/Datetime methods not available
 
 **Cause:** Trying to use before custom element is defined
+
 ```javascript
 // Too early
 const modal = document.querySelector('p-modal');
-modal.open();  // Might fail if not defined yet
+modal.open(); // Might fail if not defined yet
 
 // Wait for definition
 await customElements.whenDefined('p-modal');
 const modal = document.querySelector('p-modal');
-modal.open();  // Safe!
+modal.open(); // Safe!
 ```
 
 ---
@@ -427,7 +458,7 @@ import './components/PModal.js';
 // 2. Register the Modal enhancement component
 const registry = ComponentRegistry.create()
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => import('./components/Modal.js')
+    loader: () => import('./components/Modal.js'),
   })
   .build();
 ```
@@ -444,6 +475,7 @@ const registry = ComponentRegistry.create()
 ```
 
 **What happens:**
+
 1. `PModal.js` registers the `<p-modal>` custom element
 2. `Modal.js` enhances `[data-modal]` trigger buttons
 3. Clicking the button tells the PModal instance to open
@@ -452,9 +484,7 @@ const registry = ComponentRegistry.create()
 **You can also use PModal directly without Modal.js:**
 
 ```html
-<button onclick="document.getElementById('my-modal').open()">
-  Open Modal
-</button>
+<button onclick="document.getElementById('my-modal').open()">Open Modal</button>
 
 <p-modal id="my-modal">
   <h2 slot="title">Direct Usage</h2>
@@ -536,18 +566,21 @@ The hidden inputs are automatically updated when values change, ensuring seamles
 ## Summary: Quick Decision Guide
 
 **Use Regular Components when:**
+
 - Enhancing existing HTML elements progressively
 - Need framework lifecycle management
 - Building complex interactions with dependencies
 - Want PageManager to handle mounting/unmounting
 
 **Use Web Components when:**
+
 - Need self-contained, reusable UI elements
 - Want components that work without framework
 - Building form controls (select, datetime, file upload)
 - Need Shadow DOM encapsulation
 
 **Import Pattern:**
+
 ```javascript
 // Web Components: Just import, they auto-register
 import './components/PModal.js';
@@ -558,7 +591,7 @@ import Modal from './components/Modal.js';
 
 const registry = ComponentRegistry.create()
   .component('modal', '[data-modal][data-modal-target]', {
-    loader: () => Promise.resolve({ default: Modal })
+    loader: () => Promise.resolve({ default: Modal }),
   })
   .build();
 ```

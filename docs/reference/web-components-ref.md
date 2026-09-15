@@ -1,5 +1,7 @@
 # Web Components Quick Reference
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 One-page reference for Parallelogram-JS Web Components.
 
 ---
@@ -37,30 +39,30 @@ import '@parallelogram-js/core/components/PUploader.js';
 
 ### Attributes
 
-| Attribute | Values | Default |
-|-----------|--------|---------|
-| `data-modal-size` | xs, sm, md, lg, xl, fullscreen | md |
-| `data-modal-closable` | true, false | true |
-| `data-modal-backdrop-close` | true, false | true |
-| `data-modal-keyboard` | true, false | true |
+| Attribute                   | Values                         | Default |
+| --------------------------- | ------------------------------ | ------- |
+| `data-modal-size`           | xs, sm, md, lg, xl, fullscreen | md      |
+| `data-modal-closable`       | true, false                    | true    |
+| `data-modal-backdrop-close` | true, false                    | true    |
+| `data-modal-keyboard`       | true, false                    | true    |
 
 ### Methods
 
 ```javascript
 const modal = document.getElementById('modal1');
-modal.open();     // Open modal
-modal.close();    // Close modal
-modal.toggle();   // Toggle open/close
+modal.open(); // Open modal
+modal.close(); // Close modal
+modal.toggle(); // Toggle open/close
 ```
 
 ### Events
 
 ```javascript
-modal.addEventListener('modal:open', (e) => {
+modal.addEventListener('p-modal:open', e => {
   console.log('Modal opened:', e.detail.modal);
 });
 
-modal.addEventListener('modal:close', (e) => {
+modal.addEventListener('p-modal:close', e => {
   console.log('Modal closed:', e.detail.modal);
 });
 ```
@@ -88,51 +90,53 @@ modal.addEventListener('modal:close', (e) => {
   range-to="endDate"
   from-label="Check-in"
   to-label="Check-out"
-  mode="date">
+  mode="date"
+>
 </p-datetime>
 ```
 
 ### Attributes
 
-| Attribute | Values | Default | Description |
-|-----------|--------|---------|-------------|
-| `mode` | date, datetime, time | date | Picker type |
-| `name` | string | - | Form field name |
-| `value` | ISO string | - | Initial value |
-| `time-format` | 12, 24 | 24 | Time format |
-| `show-quick-dates` | boolean | false | Show preset buttons |
-| `quick-dates` | string | yesterday,today,tomorrow | Comma-separated presets |
-| `range` | boolean | false | Enable range mode |
-| `range-to` | string | - | End date field name |
-| `from-label` | string | From | Start label |
-| `to-label` | string | To | End label |
-| `format` | string | - | Custom output format |
+| Attribute          | Values               | Default                  | Description             |
+| ------------------ | -------------------- | ------------------------ | ----------------------- |
+| `mode`             | date, datetime, time | date                     | Picker type             |
+| `name`             | string               | -                        | Form field name         |
+| `value`            | ISO string           | -                        | Initial value           |
+| `time-format`      | 12, 24               | 24                       | Time format             |
+| `show-quick-dates` | boolean              | false                    | Show preset buttons     |
+| `quick-dates`      | string               | yesterday,today,tomorrow | Comma-separated presets |
+| `range`            | boolean              | false                    | Enable range mode       |
+| `range-to`         | string               | -                        | End date field name     |
+| `from-label`       | string               | From                     | Start label             |
+| `to-label`         | string               | To                       | End label               |
+| `format`           | string               | -                        | Custom output format    |
 
 ### Format Presets
 
-| Preset | Output Example |
-|--------|----------------|
-| `iso` | 2025-10-20 |
-| `iso-tz` | 2025-10-20T14:30:00-0700 |
-| `iso-datetime` | 2025-10-20 14:30:00 |
-| `us-date` | 10/20/2025 |
-| `eu-date` | 20/10/2025 |
-| `mysql` | 2025-10-20 14:30:00 |
+| Preset         | Output Example           |
+| -------------- | ------------------------ |
+| `iso`          | 2025-10-20               |
+| `iso-tz`       | 2025-10-20T14:30:00-0700 |
+| `iso-datetime` | 2025-10-20 14:30:00      |
+| `us-date`      | 10/20/2025               |
+| `eu-date`      | 20/10/2025               |
+| `mysql`        | 2025-10-20 14:30:00      |
 
 ### Custom Format Tokens
 
-| Token | Meaning | Example |
-|-------|---------|---------|
-| `yyyy` | 4-digit year | 2025 |
-| `mm` | 2-digit month | 10 |
-| `dd` | 2-digit day | 20 |
-| `hh` | 2-digit hour | 14 |
-| `ii` | 2-digit minute | 30 |
-| `ss` | 2-digit second | 00 |
-| `tz` | Timezone offset | -07:00 |
-| `tzz` | Timezone offset (no colon) | -0700 |
+| Token  | Meaning                    | Example |
+| ------ | -------------------------- | ------- |
+| `yyyy` | 4-digit year               | 2025    |
+| `mm`   | 2-digit month              | 10      |
+| `dd`   | 2-digit day                | 20      |
+| `hh`   | 2-digit hour               | 14      |
+| `ii`   | 2-digit minute             | 30      |
+| `ss`   | 2-digit second             | 00      |
+| `tz`   | Timezone offset            | -07:00  |
+| `tzz`  | Timezone offset (no colon) | -0700   |
 
 **Example:**
+
 ```html
 <p-datetime name="date" format="yyyy-mm-dd hh:ii:ss tz"></p-datetime>
 <!-- Output: 2025-10-20 14:30:00 -07:00 -->
@@ -142,15 +146,15 @@ modal.addEventListener('modal:close', (e) => {
 
 ```javascript
 const picker = document.querySelector('p-datetime');
-picker.open();     // Open picker
-picker.close();    // Close picker
-picker.toggle();   // Toggle open/close
+picker.open(); // Open picker
+picker.close(); // Close picker
+picker.toggle(); // Toggle open/close
 ```
 
 ### Events
 
 ```javascript
-picker.addEventListener('change', (e) => {
+picker.addEventListener('change', e => {
   console.log('Date changed:', e.detail.value);
   /* Range mode: e.detail = { value, toValue, from, to } */
 });
@@ -183,27 +187,27 @@ picker.addEventListener('change', (e) => {
 
 ### Attributes
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `name` | string | Form field name |
-| `placeholder` | string | Placeholder text |
-| `required` | boolean | Required field |
-| `disabled` | boolean | Disabled state |
-| `value` | string | Selected value |
-| `theme` | inherit | Inherit parent styles |
+| Attribute     | Type    | Description           |
+| ------------- | ------- | --------------------- |
+| `name`        | string  | Form field name       |
+| `placeholder` | string  | Placeholder text      |
+| `required`    | boolean | Required field        |
+| `disabled`    | boolean | Disabled state        |
+| `value`       | string  | Selected value        |
+| `theme`       | inherit | Inherit parent styles |
 
 ### Methods
 
 ```javascript
 const select = document.querySelector('p-select');
-select.open();     // Open dropdown
-select.close();    // Close dropdown
+select.open(); // Open dropdown
+select.close(); // Close dropdown
 ```
 
 ### Events
 
 ```javascript
-select.addEventListener('change', (e) => {
+select.addEventListener('change', e => {
   console.log('Selection changed:', e.detail.value);
 });
 ```
@@ -221,8 +225,8 @@ select.addEventListener('change', (e) => {
 
 ### Attributes
 
-| Attribute | Values |
-|-----------|--------|
+| Attribute   | Values                                                                    |
+| ----------- | ------------------------------------------------------------------------- |
 | `placement` | top-left, top-right, top-center, bottom-left, bottom-right, bottom-center |
 
 ### Using with AlertManager
@@ -241,7 +245,7 @@ alerts.warn('Warning message');
 
 ```javascript
 const toasts = document.querySelector('p-toasts');
-toasts.show('Message', 'success', 3000);  // message, type, duration
+toasts.show('Message', 'success', 3000); // message, type, duration
 ```
 
 ---
@@ -257,43 +261,44 @@ toasts.show('Message', 'success', 3000);  // message, type, duration
   max-files="5"
   max-size="10485760"
   upload-url="/api/upload"
-  multiple>
+  multiple
+>
 </p-uploader>
 ```
 
 ### Attributes
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `name` | string | Form field name |
-| `accept` | string | Accepted file types |
-| `max-files` | number | Max number of files |
-| `max-size` | number | Max size in bytes |
-| `upload-url` | string | Upload endpoint |
-| `multiple` | boolean | Allow multiple files |
+| Attribute    | Type    | Description          |
+| ------------ | ------- | -------------------- |
+| `name`       | string  | Form field name      |
+| `accept`     | string  | Accepted file types  |
+| `max-files`  | number  | Max number of files  |
+| `max-size`   | number  | Max size in bytes    |
+| `upload-url` | string  | Upload endpoint      |
+| `multiple`   | boolean | Allow multiple files |
 
 ### Events
 
 ```javascript
 const uploader = document.querySelector('p-uploader');
 
-uploader.addEventListener('files:added', (e) => {
+uploader.addEventListener('files:added', e => {
   console.log('Files added:', e.detail.files);
 });
 
-uploader.addEventListener('files:removed', (e) => {
+uploader.addEventListener('files:removed', e => {
   console.log('File removed:', e.detail.file);
 });
 
-uploader.addEventListener('upload:progress', (e) => {
+uploader.addEventListener('upload:progress', e => {
   console.log('Progress:', e.detail.progress);
 });
 
-uploader.addEventListener('upload:complete', (e) => {
+uploader.addEventListener('upload:complete', e => {
   console.log('Upload complete:', e.detail.response);
 });
 
-uploader.addEventListener('upload:error', (e) => {
+uploader.addEventListener('p-uploader:upload-error', e => {
   console.error('Upload error:', e.detail.error);
 });
 ```
@@ -311,7 +316,7 @@ p-modal {
   --modal-text: #1f2937;
   --modal-accent: #3b82f6;
   --modal-radius-lg: 12px;
-  --modal-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* PDatetime */
@@ -419,14 +424,14 @@ console.log('Registered:', {
   PDatetime: customElements.get('p-datetime'),
   PSelect: customElements.get('p-select'),
   PToasts: customElements.get('p-toasts'),
-  PUploader: customElements.get('p-uploader')
+  PUploader: customElements.get('p-uploader'),
 });
 
 /* Wait for components to be ready */
 await Promise.all([
   customElements.whenDefined('p-modal'),
   customElements.whenDefined('p-datetime'),
-  customElements.whenDefined('p-select')
+  customElements.whenDefined('p-select'),
 ]);
 
 console.log('All components ready!');
@@ -453,7 +458,7 @@ picker.value = '2025-10-20T14:30:00.000Z';
 
 ```javascript
 const select = document.querySelector('p-select');
-console.log(select.value);  // Selected value
+console.log(select.value); // Selected value
 ```
 
 ### Show Toast Notification
@@ -468,7 +473,7 @@ alerts.success('Operation completed!');
 
 ```javascript
 const uploader = document.querySelector('p-uploader');
-uploader.addEventListener('upload:progress', (e) => {
+uploader.addEventListener('upload:progress', e => {
   console.log(`Upload ${e.detail.progress}% complete`);
 });
 ```

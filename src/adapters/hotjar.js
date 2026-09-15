@@ -1,32 +1,32 @@
+import { injectScript } from './_script.js';
+
 /**
- * Hotjar (heatmaps + session recordings).
+ * Hotjar (heatmaps and session recordings)
  *
- * config: `{ id: 1234567, sv?: number }` — `sv` is the Hotjar snippet version
- * (defaults to 6).
+ * config: `{ id: 1234567, sv?: number }` — `sv` is the Hotjar snippet version (default 6)
  *
  * @param {{ id?: number|string, sv?: number }} config
- * @param {{ logger?: object }} [ctx]
+ * @param {{ nonce?: string }} [ctx]
+ * @returns {Promise<unknown>|undefined} settles when the script loads
  */
-export default function hotjarAdapter(config, { logger } = {}) {
+export default function hotjarAdapter(config, { nonce } = {}) {
   if (!config.id) {
-    logger?.warn('hotjar: no id in config');
-    return;
+    throw new Error('hotjar: no id in config');
   }
-  if (window.hj) return;
+  if (window._hjSettings) return;
 
-  /* eslint-disable */
-  (function (h, o, t, j, a, r) {
-    h.hj =
-      h.hj ||
-      function () {
-        (h.hj.q = h.hj.q || []).push(arguments);
-      };
-    h._hjSettings = { hjid: config.id, hjsv: config.sv || 6 };
-    a = o.getElementsByTagName('head')[0];
-    r = o.createElement('script');
-    r.async = 1;
-    r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-    a.appendChild(r);
-  })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
-  /* eslint-enable */
+  window.hj =
+    window.hj ||
+    function () {
+      (window.hj.q = window.hj.q || []).push(arguments);
+    };
+  window._hjSettings = { hjid: config.id, hjsv: config.sv || 6 };
+
+  const { hjid, hjsv } = window._hjSettings;
+  return injectScript(
+    `https://static.hotjar.com/c/hotjar-${encodeURIComponent(hjid)}.js?sv=${hjsv}`,
+    {
+      nonce,
+    }
+  );
 }

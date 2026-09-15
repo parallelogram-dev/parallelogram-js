@@ -1,38 +1,43 @@
+import { injectScript } from './_script.js';
+
 /**
- * Pinterest Tag.
+ * Pinterest Tag
  *
- * config: `{ id: "2612345678901", email?: string }` — `email` enables enhanced
- * match when available.
+ * config: `{ id: "2612345678901", em?: string }`
  *
- * @param {{ id?: string, email?: string }} config
- * @param {{ logger?: object }} [ctx]
+ * `em` turns on enhanced match. The config is written into the page, so give it the customer's
+ * email already hashed: lowercase, trimmed, then SHA-256 as hex. A plain address still works but
+ * logs a warning. The tag records a page visit when it starts and each time the router shows a new
+ * page.
+ *
+ * @param {{ id?: string|number, em?: string, email?: string }} config
+ * @param {{ logger?: object, nonce?: string }} [ctx]
+ * @returns {Promise<unknown>} settles when core.js loads
  */
-export default function pinterestTagAdapter(config, { logger } = {}) {
+export default function pinterestTagAdapter(config, { logger, nonce } = {}) {
   if (!config.id) {
-    logger?.warn('pinterest-tag: no id in config');
-    return;
+    throw new Error('pinterest-tag: no id in config');
   }
-  if (window.pintrk) return;
 
-  /* eslint-disable */
-  !(function (e) {
-    if (!window.pintrk) {
-      window.pintrk = function () {
-        window.pintrk.queue.push(Array.prototype.slice.call(arguments));
-      };
-      var n = window.pintrk;
-      n.queue = [];
-      n.version = '3.0';
-      var t = document.createElement('script');
-      t.async = !0;
-      t.src = e;
-      var r = document.getElementsByTagName('script')[0];
-      if (r && r.parentNode) r.parentNode.insertBefore(t, r);
-      else document.head.appendChild(t);
-    }
-  })('https://s.pinimg.com/ct/core.js');
-  /* eslint-enable */
+  const em = config.em ?? config.email;
+  if (typeof em === 'string' && em.includes('@')) {
+    logger?.warn('pinterest-tag: hash the email with SHA-256 before putting it in the page');
+  }
 
-  window.pintrk('load', config.id, config.email ? { em: config.email } : undefined);
+  if (!window.pintrk) {
+    window.pintrk = function () {
+      window.pintrk.queue.push(Array.prototype.slice.call(arguments));
+    };
+    window.pintrk.queue = [];
+    window.pintrk.version = '3.0';
+  }
+
+  window.pintrk('load', String(config.id), em ? { em } : undefined);
   window.pintrk('page');
+
+  return injectScript('https://s.pinimg.com/ct/core.js', { nonce });
 }
+
+pinterestTagAdapter.page = () => {
+  window.pintrk?.('page');
+};

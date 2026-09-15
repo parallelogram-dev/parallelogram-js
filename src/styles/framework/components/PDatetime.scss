@@ -11,10 +11,16 @@
 }
 
 /* Host & Core Properties */
+/* Looks like a form control until page styles size and border the element */
 :host {
   display: inline-block;
   position: relative;
   box-sizing: border-box;
+  min-width: 12rem;
+  min-height: 2.5rem;
+  border: var(--datetime-border-width) solid var(--datetime-border);
+  border-radius: var(--datetime-radius);
+  background: var(--datetime-bg);
 
   /* Colors — concrete defaults; override at the host with --datetime-*. */
   --datetime-text: currentColor;
@@ -24,7 +30,6 @@
   --datetime-bg: #fff;
   --datetime-border: rgba(0, 0, 0, 0.1);
   --datetime-shadow-color: rgba(0, 0, 0, 0.12);
-  --datetime-focus-shadow: rgba(59, 130, 246, 0.1);
   --datetime-btn-hover-bg: rgba(0, 0, 0, 0.05);
 
   /* Opacity */
@@ -484,11 +489,11 @@ button:disabled {
   min-width: 4em;
 }
 
-.time-select:focus,
-.ampm:focus {
-  outline: none;
+.time-select:focus-visible,
+.ampm:focus-visible {
+  outline: 2px solid var(--datetime-accent);
+  outline-offset: 1px;
   border-color: var(--datetime-accent);
-  box-shadow: 0 0 0 3px var(--datetime-focus-shadow);
 }
 
 /* Quick Dates & Presets */
@@ -538,4 +543,82 @@ button:disabled {
   background: var(--datetime-hover);
   color: var(--datetime-muted);
   text-align: center;
+}
+
+/* Day grid rows share the grid's columns */
+.row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  justify-self: stretch;
+  justify-items: center;
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* The value fields are buttons */
+.input {
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.month-year {
+  display: inline-flex;
+  align-items: center;
+}
+
+.input:focus-visible,
+.calendar-btn:focus-visible,
+.nav button:focus-visible,
+.month-year:focus-visible,
+.day:focus-visible,
+.month:focus-visible,
+.year:focus-visible,
+.preset:focus-visible,
+.btn:focus-visible {
+  outline: var(--datetime-focus-ring-width) solid var(--datetime-accent);
+  outline-offset: 2px;
+}
+
+.input:focus-visible {
+  outline-offset: calc(var(--datetime-focus-ring-width) * -1);
+}
+
+/* Arrow keys move focus between days from script, which Safari doesn't count as keyboard focus */
+.day:focus {
+  outline: var(--datetime-focus-ring-width) solid var(--datetime-accent);
+  outline-offset: 2px;
+}
+
+/* Forced colours drop cell backgrounds, so mark selected and in-range dates with system colours */
+@media (forced-colors: active) {
+  .day.selected,
+  .month.selected,
+  .year.selected,
+  .day.range-start,
+  .day.range-end {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .day.in-range {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+    opacity: 1;
+  }
+
+  .day.today,
+  .month.today,
+  .year.today {
+    border-color: CanvasText;
+  }
 }

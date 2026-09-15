@@ -1,5 +1,7 @@
 # Web Component Lazy Loading
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 This guide explains how to lazy-load Parallelogram web components to prevent webpack tree-shaking and enable code splitting.
 
 ## The Problem
@@ -14,10 +16,7 @@ The package is configured with proper `sideEffects` to prevent tree-shaking:
 
 ```json
 {
-  "sideEffects": [
-    "./dist/components/*.js",
-    "*.css"
-  ]
+  "sideEffects": ["./dist/components/*.js", "*.css"]
 }
 ```
 
@@ -83,7 +82,7 @@ const loader = new WebComponentLoader(
     rootElement: document.body,
 
     // Callback when component loads
-    onLoad: (tagName) => {
+    onLoad: tagName => {
       console.log(`Component ${tagName} loaded`);
     },
 
@@ -116,7 +115,7 @@ document.querySelector('[data-modal-trigger]').addEventListener('click', () => {
   loader.loadComponent('p-modal').then(() => {
     // Component is now loaded and registered
     const modal = document.querySelector('#my-modal');
-    modal.open = true;
+    modal.open();
   });
 });
 ```
@@ -130,9 +129,7 @@ const loader = new WebComponentLoader();
 loader.init();
 
 // Later, register a new component
-loader.register('p-uploader', () =>
-  import('@peptolab/parallelogram/components/PUploader')
-);
+loader.register('p-uploader', () => import('@peptolab/parallelogram/components/PUploader'));
 
 // Manually trigger load
 loader.loadComponent('p-uploader');
@@ -222,7 +219,7 @@ export const componentLoader = new WebComponentLoader(
   },
   {
     observeDOM: true,
-    onLoad: (tagName) => console.log(`[Components] Loaded ${tagName}`),
+    onLoad: tagName => console.log(`[Components] Loaded ${tagName}`),
   }
 );
 

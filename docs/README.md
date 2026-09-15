@@ -1,5 +1,7 @@
 # Parallelogram-JS Framework Documentation
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 A comprehensive guide to the Parallelogram-JS progressive enhancement framework architecture, component system, and JavaScript workflow.
 
 ## 📖 Documentation Structure

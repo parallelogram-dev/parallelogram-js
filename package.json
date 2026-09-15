@@ -1,23 +1,31 @@
 {
   "name": "@parallelogram-js/core",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.esm.js",
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "customElements": "./dist/custom-elements.json",
   "scripts": {
-    "build": "rollup -c && npm run build-css",
-    "build-css": "npm run compile-scss && npm run minify-css",
-    "compile-scss": "sass src/styles/framework/index.scss:dist/styles/index.css --no-source-map --style=expanded",
-    "compile-scss-components": "sass src/styles/framework/components:dist/styles/components --no-source-map --style=expanded",
-    "minify-css": "cleancss -o dist/styles/index.min.css dist/styles/index.css",
-    "build-all-css": "npm run compile-scss && npm run compile-scss-components && npm run minify-css",
-    "build-demo": "rollup -c rollup.demo.config.js",
-    "build-demo-css": "sass src/styles/demo/index.scss:demo/dist/parallelogram-demo.css --no-source-map --style=expanded && cleancss -o demo/dist/parallelogram-demo.min.css demo/dist/parallelogram-demo.css",
-    "demo": "npm run build-demo && npm run build-demo-css && serve demo -l 3000",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && rollup -c && node scripts/build-css.mjs && npm run build:types",
+    "build:types": "tsc -p tsconfig.types.json && node scripts/build-types.mjs",
+    "readme": "node scripts/readme.mjs",
+    "site": "vite --config site/vite.config.js",
+    "build:site": "vite build --config site/vite.config.js",
+    "preview:site": "vite preview --config site/vite.config.js",
+    "check:exports": "node scripts/check-exports.mjs",
+    "check:package": "publint --strict",
+    "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./dev/components/PModal ./custom-elements.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepublishOnly": "npm run build"
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
+    "test:watch": "vitest --project unit",
+    "coverage": "vitest run --project unit --coverage",
+    "prepack": "npm run build"
   },
   "keywords": [
     "parallelogram-js",
@@ -26,32 +34,89 @@
   ],
   "license": "MIT",
   "sideEffects": [
-    "./dist/components/*.js",
+    "./src/components/P*.js",
+    "./dist/components/P*.js",
+    "./dist/dev/components/P*.js",
     "*.css"
   ],
   "exports": {
     ".": {
-      "import": {
-        "development": "./dist/dev/index.esm.js",
-        "default": "./dist/index.esm.js"
-      },
-      "require": {
-        "development": "./dist/dev/index.cjs",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/types/index.d.ts",
+      "development": "./dist/dev/index.js",
+      "default": "./dist/index.js"
     },
-    "./components/*": "./dist/components/*.js",
-    "./dev/components/*": "./dist/dev/components/*.js",
-    "./adapters/*": "./dist/adapters/*.js",
-    "./dev/adapters/*": "./dist/dev/adapters/*.js",
-    "./core/*": "./dist/core/*.js",
-    "./dev/core/*": "./dist/dev/core/*.js",
-    "./styles": "./dist/styles/index.min.css"
+    "./components/*.js": {
+      "types": "./dist/types/components/*.d.ts",
+      "development": "./dist/dev/components/*.js",
+      "default": "./dist/components/*.js"
+    },
+    "./components/*": {
+      "types": "./dist/types/components/*.d.ts",
+      "development": "./dist/dev/components/*.js",
+      "default": "./dist/components/*.js"
+    },
+    "./adapters/*.js": {
+      "types": "./dist/types/adapters/*.d.ts",
+      "development": "./dist/dev/adapters/*.js",
+      "default": "./dist/adapters/*.js"
+    },
+    "./adapters/*": {
+      "types": "./dist/types/adapters/*.d.ts",
+      "development": "./dist/dev/adapters/*.js",
+      "default": "./dist/adapters/*.js"
+    },
+    "./core/*.js": {
+      "types": "./dist/types/core/*.d.ts",
+      "development": "./dist/dev/core/*.js",
+      "default": "./dist/core/*.js"
+    },
+    "./core/*": {
+      "types": "./dist/types/core/*.d.ts",
+      "development": "./dist/dev/core/*.js",
+      "default": "./dist/core/*.js"
+    },
+    "./managers/*.js": {
+      "types": "./dist/types/managers/*.d.ts",
+      "development": "./dist/dev/managers/*.js",
+      "default": "./dist/managers/*.js"
+    },
+    "./managers/*": {
+      "types": "./dist/types/managers/*.d.ts",
+      "development": "./dist/dev/managers/*.js",
+      "default": "./dist/managers/*.js"
+    },
+    "./dev/components/*.js": {
+      "types": "./dist/types/components/*.d.ts",
+      "default": "./dist/dev/components/*.js"
+    },
+    "./dev/components/*": {
+      "types": "./dist/types/components/*.d.ts",
+      "default": "./dist/dev/components/*.js"
+    },
+    "./dev/adapters/*.js": {
+      "types": "./dist/types/adapters/*.d.ts",
+      "default": "./dist/dev/adapters/*.js"
+    },
+    "./dev/adapters/*": {
+      "types": "./dist/types/adapters/*.d.ts",
+      "default": "./dist/dev/adapters/*.js"
+    },
+    "./dev/core/*.js": {
+      "types": "./dist/types/core/*.d.ts",
+      "default": "./dist/dev/core/*.js"
+    },
+    "./dev/core/*": {
+      "types": "./dist/types/core/*.d.ts",
+      "default": "./dist/dev/core/*.js"
+    },
+    "./styles": "./dist/styles/index.min.css",
+    "./styles/*.css": "./dist/styles/components/*.css",
+    "./custom-elements.json": "./dist/custom-elements.json",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "src",
-    "docs",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -59,6 +124,9 @@
   "directories": {
     "test": "test"
   },
+  "browserslist": [
+    "baseline 2023"
+  ],
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -67,22 +135,35 @@
     }
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@babel/core": "^7.29.7",
+    "@eslint/js": "^10.0.1",
     "@rollup/plugin-babel": "^7.1.0",
-    "@rollup/plugin-commonjs": "^29.0.3",
-    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
-    "clean-css-cli": "^5.6.3",
+    "@vitest/browser-playwright": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "cssnano": "^9.0.4",
+    "eslint": "^10.10.0",
+    "eslint-plugin-compat": "^7.0.2",
+    "globals": "^17.12.0",
+    "happy-dom": "^20.14.5",
+    "marked": "^18.0.13",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.28",
     "prettier": "^3.9.6",
+    "publint": "^0.3.24",
     "rollup": "^4.63.2",
     "sass": "^1.104.1",
-    "serve": "^14.2.6"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/parallelogram-dev/parallelogram-js.git"
   },
-  "author": "PeptoLab"
+  "author": "PeptoLab",
+  "allowScripts": {
+    "@parcel/watcher@2.5.1": true
+  }
 }

@@ -1,5 +1,7 @@
 # Toggle Component - State Management Guide
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 **Component**: `Toggle.js`
 **Status**: ✅ Complete with State-Based CSS
 **Last Updated**: 2025-11-19
@@ -58,27 +60,17 @@ stateDiagram-v2
 
 ```html
 <!-- Basic toggle -->
-<button data-toggle data-toggle-target="#dropdown-menu">
-  Toggle Menu
-</button>
+<button data-toggle data-toggle-target="#dropdown-menu">Toggle Menu</button>
 <div id="dropdown-menu" class="dropdown">
   <p>Dropdown content here</p>
 </div>
 
 <!-- Toggle with outside click capture -->
-<button data-toggle
-        data-toggle-target="#dropdown"
-        data-toggle-capture="true">
-  Dropdown
-</button>
-<div id="dropdown" class="dropdown">
-  Menu items
-</div>
+<button data-toggle data-toggle-target="#dropdown" data-toggle-capture="true">Dropdown</button>
+<div id="dropdown" class="dropdown">Menu items</div>
 
 <!-- Navigation menu that auto-closes on link clicks -->
-<button data-toggle data-toggle-target="#navbar-navigation">
-  Menu
-</button>
+<button data-toggle data-toggle-target="#navbar-navigation">Menu</button>
 <nav id="navbar-navigation">
   <a href="/page1">Page 1</a>
   <a href="/page2">Page 2</a>
@@ -86,12 +78,8 @@ stateDiagram-v2
 </nav>
 
 <!-- Manual toggle (no auto-close) -->
-<button data-toggle data-toggle-target="#persistent">
-  Persistent Toggle
-</button>
-<div id="persistent" data-toggle-manual="true">
-  This won't auto-close
-</div>
+<button data-toggle data-toggle-target="#persistent">Persistent Toggle</button>
+<div id="persistent" data-toggle-manual="true">This won't auto-close</div>
 ```
 
 ### State Attributes
@@ -122,8 +110,8 @@ const toggle = new Toggle();
 toggle.mount(document.querySelector('[data-toggle]'));
 
 // Programmatic control
-toggle.show(triggerElement);   // Open toggle
-toggle.hide(triggerElement);   // Close toggle
+toggle.show(triggerElement); // Open toggle
+toggle.hide(triggerElement); // Close toggle
 toggle.toggle(triggerElement); // Toggle state
 toggle.isOpen(triggerElement); // Check if open
 
@@ -151,15 +139,15 @@ const status = toggle.getStatus();
 
 ```javascript
 Toggle.defaults = {
-  openClass: 'open',              // Class added to target when open
+  openClass: 'open', // Class added to target when open
   transitioningClass: 'transitioning',
-  transitionDuration: 750,        // Animation duration in ms
-  capture: false,                 // Outside click to close
-  manual: false,                  // Prevent auto-closing
-  multiple: false,                // Allow multiple toggles
-  animateToggle: true,            // Enable animations
-  closeOnEscape: true,            // Close on Escape key
-  closeOnNavigation: true         // Close on navigation link clicks
+  transitionDuration: 750, // Animation duration in ms
+  capture: false, // Outside click to close
+  manual: false, // Prevent auto-closing
+  multiple: false, // Allow multiple toggles
+  animateToggle: true, // Enable animations
+  closeOnEscape: true, // Close on Escape key
+  closeOnNavigation: true, // Close on navigation link clicks
 };
 ```
 
@@ -171,14 +159,14 @@ Toggle.defaults = {
 
 ```scss
 /* Toggle target states */
-[data-toggle-target="closed"] {
+[data-toggle-target='closed'] {
   display: none;
   opacity: 0;
   max-height: 0;
   visibility: hidden;
 }
 
-[data-toggle-target="opening"] {
+[data-toggle-target='opening'] {
   display: block;
   opacity: 0;
   max-height: 0;
@@ -187,14 +175,14 @@ Toggle.defaults = {
   will-change: opacity, max-height, transform;
 }
 
-[data-toggle-target="open"] {
+[data-toggle-target='open'] {
   display: block;
   opacity: 1;
   max-height: none;
   visibility: visible;
 }
 
-[data-toggle-target="closing"] {
+[data-toggle-target='closing'] {
   display: block;
   opacity: 1;
   visibility: visible;
@@ -254,13 +242,13 @@ The SCSS includes reduced motion support:
     animation: none !important;
   }
 
-  [data-toggle-target="opening"] {
+  [data-toggle-target='opening'] {
     opacity: 1;
     max-height: none;
     transform: none;
   }
 
-  [data-toggle-target="closing"] {
+  [data-toggle-target='closing'] {
     opacity: 0;
     max-height: 0;
     transform: none;
@@ -276,17 +264,18 @@ The Toggle component dispatches custom events:
 
 ```javascript
 // Show event
-element.addEventListener('toggle:show', (event) => {
+element.addEventListener('toggle:show', event => {
   console.log('Toggle shown', event.detail.target);
 });
 
 // Hide event
-element.addEventListener('toggle:hide', (event) => {
+element.addEventListener('toggle:hide', event => {
   console.log('Toggle hidden', event.detail.target);
 });
 ```
 
 Event detail includes:
+
 - `target` - The toggle target element
 - `trigger` - The trigger element
 
@@ -300,12 +289,11 @@ Multiple triggers can control the same target. The component synchronizes state 
 <button data-toggle data-toggle-target="#menu">Open Menu</button>
 <button data-toggle data-toggle-target="#menu">Also Opens Menu</button>
 
-<div id="menu" data-toggle-target="closed">
-  Menu content
-</div>
+<div id="menu" data-toggle-target="closed">Menu content</div>
 ```
 
 All triggers targeting `#menu` will:
+
 - Have synchronized `aria-expanded` attributes
 - Receive the same internal state updates
 - Trigger the same state transitions
@@ -319,11 +307,7 @@ All triggers targeting `#menu` will:
 When `data-toggle-capture="true"` is set, clicks outside both the trigger and target will close the toggle:
 
 ```html
-<button data-toggle
-        data-toggle-target="#dropdown"
-        data-toggle-capture="true">
-  Dropdown
-</button>
+<button data-toggle data-toggle-target="#dropdown" data-toggle-capture="true">Dropdown</button>
 <div id="dropdown">Content</div>
 ```
 
@@ -334,6 +318,7 @@ By default, clicking navigation links inside a toggle target will close it. Link
 - Internal page navigation: `<a href="/page">Page</a>`
 
 Links that **won't** trigger closure:
+
 - Anchor links: `<a href="#section">Section</a>`
 - External links with target: `<a href="https://..." target="_blank">External</a>`
 - mailto/tel links: `<a href="mailto:...">Email</a>`
@@ -349,14 +334,13 @@ Press `Escape` to close any open non-manual toggle. Disable by setting `Toggle.d
 ### Manual Mode
 
 Manual toggles won't auto-close on:
+
 - Outside clicks
 - Escape key
 - Navigation link clicks
 
 ```html
-<div id="persistent" data-toggle-manual="true">
-  This won't auto-close
-</div>
+<div id="persistent" data-toggle-manual="true">This won't auto-close</div>
 ```
 
 ---
@@ -378,10 +362,7 @@ Manual toggles won't auto-close on:
 The component automatically manages `aria-expanded` and `aria-controls`, but you should provide initial values:
 
 ```html
-<button data-toggle
-        data-toggle-target="#menu"
-        aria-expanded="false"
-        aria-controls="menu">
+<button data-toggle data-toggle-target="#menu" aria-expanded="false" aria-controls="menu">
   Menu
 </button>
 <div id="menu" role="menu">...</div>
@@ -392,7 +373,7 @@ The component automatically manages `aria-expanded` and `aria-controls`, but you
 Style triggers based on their expanded state:
 
 ```scss
-[data-toggle][aria-expanded="true"] {
+[data-toggle][aria-expanded='true'] {
   background-color: var(--color-active);
 }
 ```
@@ -416,8 +397,7 @@ Toggle.defaults.transitionDuration = 750; // ms
 The component prevents state changes during transitions by checking current state:
 
 ```javascript
-if (currentState === ExtendedStates.OPENING ||
-    currentState === ExtendedStates.OPEN) {
+if (currentState === ExtendedStates.OPENING || currentState === ExtendedStates.OPEN) {
   return; // Prevent show() during opening/open
 }
 ```
@@ -436,8 +416,8 @@ console.log('Current state:', target.getAttribute('data-toggle-target'));
 ### Monitor State Changes
 
 ```javascript
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
+const observer = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
     if (mutation.attributeName === 'data-toggle-target') {
       console.log('State changed:', mutation.target.getAttribute('data-toggle-target'));
     }
@@ -470,8 +450,8 @@ console.log('Toggle status:', status);
 The CSS uses `will-change` only during transitions:
 
 ```scss
-[data-toggle-target="opening"],
-[data-toggle-target="closing"] {
+[data-toggle-target='opening'],
+[data-toggle-target='closing'] {
   will-change: opacity, max-height, transform;
 }
 ```
@@ -483,7 +463,7 @@ This optimizes animation performance without constantly consuming GPU resources.
 Interactions are disabled during closing animation:
 
 ```scss
-[data-toggle-target="closing"] {
+[data-toggle-target='closing'] {
   pointer-events: none;
 }
 ```
@@ -501,6 +481,7 @@ All event listeners are properly cleaned up when component is unmounted via Abor
 If you're upgrading from an older version:
 
 ### Before (Class-Based)
+
 ```html
 <div class="dropdown">Content</div>
 ```
@@ -512,6 +493,7 @@ target.classList.add('transitioning');
 ```
 
 ### After (State-Based)
+
 ```html
 <div id="dropdown" data-toggle-target="closed">Content</div>
 ```
@@ -526,10 +508,14 @@ toggle.show(triggerElement);
 
 ```scss
 /* Before */
-.dropdown.open { display: block; }
+.dropdown.open {
+  display: block;
+}
 
 /* After */
-[data-toggle-target="open"] { display: block; }
+[data-toggle-target='open'] {
+  display: block;
+}
 ```
 
 ---

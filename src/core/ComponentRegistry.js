@@ -31,10 +31,14 @@ export class ComponentRegistry {
    * @param {string} [options.path] - Custom import path (overrides convention)
    * @param {string} [options.filename] - Custom filename (overrides convention)
    * @returns {ComponentRegistry} This instance for chaining
+   * @throws {Error} If no loader is given or the name is already registered.
    */
   component(name, selector, options = {}) {
     if (!options.loader) {
       throw new Error(`Component '${name}' must provide a loader function`);
+    }
+    if (this.registry.some(entry => entry.name === name)) {
+      throw new Error(`A component named '${name}' is already registered`);
     }
 
     const config = {
@@ -42,6 +46,7 @@ export class ComponentRegistry {
       selector,
       priority: options.priority || this.defaultPriority,
       dependsOn: options.dependsOn,
+      exportName: options.exportName,
       loader: options.loader,
     };
 

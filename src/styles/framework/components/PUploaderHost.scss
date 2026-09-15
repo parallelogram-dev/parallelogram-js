@@ -8,20 +8,20 @@
   position: relative;
 
   /* Overridable via --puploader-* custom properties */
-  border-radius: var(--puploader-radius, var(--surface-panel-radius));
+  border-radius: var(--puploader-radius, var(--surface-panel-radius, #{$radius-md}));
   border-width: var(--puploader-border-width, #{$border-width-thick});
   border-style: solid;
-  border-color: var(--puploader-border-color, black);
-  background: var(--puploader-bg, var(--surface-panel-color-bg));
-  color: var(--puploader-color, var(--surface-panel-color-text));
-  box-shadow: var(--puploader-shadow, var(--surface-panel-shadow));
+  border-color: var(--puploader-border-color, var(--surface-panel-border-color, #{$color-border}));
+  background: var(--puploader-bg, var(--surface-panel-color-bg, #ffffff));
+  color: var(--puploader-color, var(--surface-panel-color-text, #{$color-text}));
+  box-shadow: var(--puploader-shadow, var(--surface-panel-shadow, #{$shadow-md}));
   padding: var(--puploader-padding, #{$space-sm});
 }
 
 .uploader {
   &__files {
     display: grid;
-    gap: $space-sm;
+    gap: var(--puploader-files-gap, #{$space-sm});
 
     & + & {
       margin-top: $space-sm;
@@ -30,13 +30,13 @@
 
   &__selector {
     /* Use surface-touch tokens for interactive area with hover feedback */
-    border-radius: var(--surface-touch-radius);
-    border-width: var(--surface-touch-border-width);
+    border-radius: var(--surface-touch-radius, #{$radius-xs});
+    border-width: var(--surface-touch-border-width, #{$border-width});
     border-style: solid;
-    border-color: var(--surface-touch-border-color);
-    background: var(--surface-touch-color-bg);
-    color: var(--surface-touch-color-text);
-    box-shadow: var(--surface-touch-shadow);
+    border-color: var(--surface-touch-border-color, #{$neutral-300});
+    background: var(--surface-touch-color-bg, #{$neutral-100});
+    color: var(--surface-touch-color-text, #{$color-text});
+    box-shadow: var(--surface-touch-shadow, none);
 
     /* Customize for file upload area */
     padding: $space-xxl;
@@ -46,12 +46,13 @@
     cursor: pointer;
 
     /* Slower transitions for touch feedback */
-    transition: border-color $duration-slow $ease-smooth,
-                background-color $duration-slow $ease-smooth;
+    transition:
+      border-color $duration-slow $ease-smooth,
+      background-color $duration-slow $ease-smooth;
 
     @include hover {
-      border-color: var(--surface-touch-hover-border-color);
-      background: var(--surface-touch-hover-bg);
+      border-color: var(--surface-touch-hover-border-color, rgba(59, 130, 246, 0.5));
+      background: var(--surface-touch-hover-bg, #{$neutral-100});
     }
 
     &.dragover {
@@ -61,12 +62,41 @@
   }
 
   &__fileinput {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  &__label {
+  &__add {
+    font: inherit;
     font-size: $font-base;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
     cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:focus-visible {
+      outline: 2px solid $primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__hint {
+    margin-left: 0.25em;
+  }
+
+  &__message {
+    margin: $space-sm 0 0;
+    font-size: $font-sm;
+
+    &:empty {
+      display: none;
+    }
   }
 }
 
@@ -76,4 +106,29 @@
 
 ::slotted(p-uploader-fields) {
   display: none;
+}
+
+:host([full]) .uploader__selector {
+  display: none;
+}
+
+:host([stacked]) .uploader__files {
+  gap: 0;
+}
+
+:host([stacked]) ::slotted(p-uploader-file) {
+  --uploader-file-radius-start: 0;
+  --uploader-file-radius-end: 0;
+}
+
+:host([stacked]) ::slotted(p-uploader-file:not(:first-of-type)) {
+  margin-top: calc(var(--surface-card-border-width, 1px) * -1);
+}
+
+:host([stacked]) ::slotted(p-uploader-file:first-of-type) {
+  --uploader-file-radius-start: var(--surface-card-radius, #{$radius-xs});
+}
+
+:host([stacked]) ::slotted(p-uploader-file:last-of-type) {
+  --uploader-file-radius-end: var(--surface-card-radius, #{$radius-xs});
 }
