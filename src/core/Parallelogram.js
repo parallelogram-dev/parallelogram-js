@@ -310,17 +310,17 @@ class ComponentRegistrationHelper {
    *
    * @example
    * // Web component (tag name + loader)
-   * .add('p-modal', () => import('./PModal'))
+   * .add('p-modal', () => import('@parallelogram-js/core/components/PModal'))
    *
    * @example
    * // Enhancement component (selector + loader)
-   * .add('[data-toggle]', () => import('./Toggle'))
+   * .add('[data-toggle]', () => import('@parallelogram-js/core/components/Toggle'))
    *
    * @example
    * // Enhancement component with options
    * .add('[data-toggle]', {
    *   name: 'toggle',
-   *   loader: () => import('./Toggle'),
+   *   loader: () => import('@parallelogram-js/core/components/Toggle'),
    *   priority: 'critical'
    * })
    */
