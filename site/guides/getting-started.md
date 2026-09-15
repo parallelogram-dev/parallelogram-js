@@ -370,5 +370,6 @@ Module scripts are deferred, so `run()` starts the framework once the document h
 - [Pages and the router](pages-and-router.html): swapping pages in place, fragments, scrolling and focus.
 - [Writing components](writing-components.html): building your own enhancement components on `BaseComponent`.
 - [Events and alerts](events-and-alerts.html): the event bus and the events components emit.
-- [Upgrading from 0.4 to 0.5](upgrading.html): changes to imports, markup and events.
+- [Upgrading from 0.5 to 0.6](upgrading.html): removed names and what replaces them.
+- [Upgrading from 0.4 to 0.5](upgrading-from-0-4.html): changes to imports, markup and events.
 - Component pages, with attributes, events and live examples: [Toggle](toggle.html), [Tabs](tabs.html), [Modal](modal.html) and [`<p-modal>`](p-modal.html).

@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+0.6.0 removes everything 0.5 deprecated. The [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) lists each change and what to use instead.
+
+### Changed
+
+- `Parallelogram` loads `RouterManager` with a dynamic `import()`, and only when `router` options are given, so pages without the router don't download its code. The promise `run()` returns resolves once the router has loaded and started, with `app.router` set. After calling `init()` directly, `app.router` is `null` until then, `router:initialized` is emitted when it starts, and links followed in the meantime load pages normally. Components that mounted before it loaded are given the router. `RouterManager` is still exported from the package root.
+- `PageManager` no longer subscribes to router events or mounts components in its constructor. Call the new `pageManager.start()` after creating it. A second call does nothing, a destroyed manager can't be started again, and `destroy()` works whether or not it started. `Parallelogram` calls `start()` for you.
+- `setState()` writes state only to `data-<component>-state`, and `getElementState()` reads only that attribute.
+
+### Removed
+
+- The `@parallelogram-js/core/dev/components/*`, `dev/core/*` and `dev/adapters/*` import paths. Use the normal paths; bundlers that resolve the `development` export condition pick the development build.
+- The state copies in `data-<component>`, in `data-toggle-target` on Toggle targets and in `data-modal` on `<p-modal>`. Read `data-<component>-state`, `data-toggle-state` and `data-modal-state`.
+- The `modal:open`, `modal:close`, `toast:show` and `toast:close` events. Listen for `p-modal:open`, `p-modal:close`, `p-toasts:show` and `p-toasts:close`.
+- The `upload:success`, `upload:error`, `sequence:update`, `file:update` and `file:delete` events. Listen for the `p-uploader:*` and `p-uploader-file:*` events.
+- FormEnhancer's `data-form-validator`, `data-validate` and `data-validate-message`, and the `form-validator:mounted`, `form-validator:submit-blocked` and `form-validator:submit-valid` events. Use `data-form-enhancer`, native validation attributes, `data-form-enhancer-message` and the `form-enhancer:*` events.
+- CopyToClipboard's `data-copy-target` and `data-copy-text`. Use `data-copytoclipboard-target` and `data-copytoclipboard-text`.
+- Lightbox's `data-lightbox-state-closed-class`, which was never applied. Listen for `lightbox:closed`.
+- `<p-datetime>`'s `isRange` property. Use `range`.
+- `core/ComponentStates` with `ComponentStates` and `ExtendedStates`. Use plain strings such as `'open'` and `'loading'`.
+- BaseComponent's deprecated `_elementsKeys()` and `_getDataAttr()`, and the unused `_camelCase()`, `_waitForTransition()` and `_createElement()`. Use `trackedElements()`, `getAttr()`, `getBoolAttr()` and `getNumberAttr()`.
+- ComponentRegistry's unused `validate()`, `detectCycles()`, `toPascalCase()` and `fork()`. Use `ComponentRegistry.create()` instead of `fork()`.
+- The legacy design-system variables module (`design-system/variables`), with names such as `$spacing-*`, `$font-size-*`, `$transition-*`, `$legacy-color-*` and `$size-*`, and the unused `$color-focus-shadow` token. Use the tokens from `design-system`.
+- The `legacy` option of the internal `dispatchComponentEvent()`.
+
+### Fixed
+
+- `<p-uploader>`'s hint text set `opacity` to a colour, which browsers ignored; it now uses the muted opacity token.
+
 ## [0.5.4] - 2026-09-15
 
 ### Added
@@ -28,7 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `Parallelogram` loads `RouterManager` with a dynamic `import()`, and only when `router` options are given, so pages without the router don't download its code. The promise `run()` returns resolves once the router has loaded and started, with `app.router` set. After calling `init()` directly, `app.router` is `null` until then, `router:initialized` is emitted when it starts, and links followed in the meantime load pages normally. Components that mounted before it loaded are given the router. `RouterManager` is still exported from the package root.
 - DeferTracker loads a block's `src`, such as Fathom's or Plausible's custom script address, only from the page's own origin or the vendor's origin the adapter declares; any other `src` marks the block `error` and nothing loads, so a block injected into a page can't load its own script with the site's nonce. To allow a proxy or self-hosted copy on another origin, pass it at registration, such as `registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] })`.
 - The package no longer includes `src`. The development build's source maps embed their sources; the production build's maps name the source files without including them.
 
