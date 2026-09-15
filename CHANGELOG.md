@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-09-15
+
 ### Added
 
 - `registerTrackerAdapter()` takes an optional third argument, `{ ids, origins }`, limiting what DeferTracker's blocks can load. With `ids`, a block whose tracker id (`id`, `site`, `domain` or `scriptId`) isn't listed is marked `error`, logs a warning and its adapter isn't called. Register Tag Manager with `ids`, since a container's Custom HTML tags run any script; DeferTracker warns once when `gtm` starts without them. Calls without options behave as before.
