@@ -30,6 +30,7 @@
   --datetime-text: currentColor;
   --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.55));
   --datetime-accent: var(--color-accent, #3b82f6);
+  --datetime-accent-strong: var(--color-accent-hover, #2563eb);
   --datetime-hover: var(--color-hover, rgba(0, 0, 0, 0.05));
   --datetime-bg: var(--surface-dropdown-color-bg, var(--color-surface, #fff));
   --datetime-border: var(--color-border, rgba(0, 0, 0, 0.1));
@@ -203,9 +204,9 @@ button:disabled {
   }
 
   .preset:hover {
-    background: var(--datetime-accent);
+    background: var(--datetime-accent-strong);
     color: var(--datetime-bg);
-    border-color: var(--datetime-accent);
+    border-color: var(--datetime-accent-strong);
   }
 
   .btn:hover {
@@ -448,9 +449,7 @@ button:disabled {
 }
 
 .day.in-range {
-  background: var(--datetime-accent);
-  color: var(--datetime-bg);
-  opacity: 0.6;
+  background: color-mix(in srgb, var(--datetime-accent) 16%, transparent);
 }
 
 .day.selected,
@@ -458,9 +457,8 @@ button:disabled {
 .year.selected,
 .day.range-start,
 .day.range-end {
-  background: var(--datetime-accent);
+  background: var(--datetime-accent-strong);
   color: var(--datetime-bg);
-  opacity: 1;
 }
 
 .month,
@@ -537,9 +535,9 @@ button:disabled {
 }
 
 .btn.primary {
-  background: var(--datetime-accent);
+  background: var(--datetime-accent-strong);
   color: var(--datetime-bg);
-  border-color: var(--datetime-accent);
+  border-color: var(--datetime-accent-strong);
 }
 
 /* Range Info */
@@ -619,7 +617,6 @@ button:disabled {
     forced-color-adjust: none;
     background: Mark;
     color: MarkText;
-    opacity: 1;
   }
 
   .day.today,

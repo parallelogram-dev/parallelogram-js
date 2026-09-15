@@ -186,7 +186,12 @@ export default {
     {
       name: '--datetime-accent',
       default: 'var(--color-accent)',
-      description: 'Selected days, focus rings and primary buttons',
+      description: 'Focus rings, today, hovered buttons and the tint behind days in a range',
+    },
+    {
+      name: '--datetime-accent-strong',
+      default: 'var(--color-accent-hover)',
+      description: 'Selected days and primary buttons, which carry text',
     },
     {
       name: '--datetime-bg',
