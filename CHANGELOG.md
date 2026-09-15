@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<p-datetime>` in datetime or time mode no longer throws while rendering a value it can't read, such as `value="14:30"` in datetime mode; the time selects are left at their first options. Time mode reads a plain `HH:mm` or `HH:mm:ss` value as that time today.
 - `<p-uploader-file>` panels take their background from `--surface-card-color-bg`, like the card around them, instead of always being white, so they follow a dark theme.
 - `<p-uploader>`'s `allow-edit` and `allow-sort`, and `<p-uploader-file>`'s `allow-edit`, read `"0"` as false, as enhancement components' boolean attributes do, where only `"false"` turned them off.
+- `custom-elements.json` and the documentation list `<p-uploader-file>`'s default slot, which holds its `<p-uploader-data>` elements.
 
 ## [0.5.3] - 2026-09-15
 
