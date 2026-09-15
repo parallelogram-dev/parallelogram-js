@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With `fullLoadOnError: false`, a navigation whose page fails to swap in after the address changed can be tried again straight away. The router skipped it as a navigation to the current URL.
 - A navigation replaced by a newer one before its head assets are merged no longer adds the new page's stylesheets and scripts to the head. The Pages and the router guide describes what a replaced navigation leaves.
 - Going back or forward over more than one history entry at once replaces the `main` target instead of only the target of the entry arrived at or left, so fragments changed by the entries in between no longer keep another page's content.
+- The Pages and the router guide explains why a Content Security Policy that allows scripts by nonce without `'strict-dynamic'` blocks the scripts the router runs from a fetched page, and what to change.
 
 ## [0.5.3] - 2026-09-15
 
