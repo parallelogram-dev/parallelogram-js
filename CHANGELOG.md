@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - DeferTracker passes a second block for a tracker already on the page to the adapter's new optional `block(config, ctx)` step when its config differs from the blocks there, instead of marking it `duplicate`. A Google Ads conversion block on an order confirmation page is now sent when the layout also has a remarketing block with the same id. Identical blocks, and blocks for adapters without a `block` step, such as Pinterest and HubSpot, are still marked `duplicate`, so page views aren't counted twice.
 - DataTable number columns sort by the first number in each cell, so values followed by words such as "12 users" or "5 minutes" sort numerically instead of last. Numbers in parentheses or after a minus sign, including "−", sort as negative, and the decimal separator comes from the table's `lang`, so "1.234,56" reads as 1234.56 in a German table. A cell's `data-sort-value` always uses "." as its decimal separator.
+- A `<p-modal>` with several Modal triggers dispatches `modal:opened` and `modal:closed` once per open and close, on the trigger that opened it, instead of on every trigger. When a script opens the modal, they go to its first mounted trigger. Every trigger's `aria-expanded` still follows the modal.
 
 ## [0.5.2] - 2026-09-15
 
