@@ -104,10 +104,13 @@ const addMonths = (date, months) => {
  * months or years and Home and End go to the start and end of the row. Moving focus outside the
  * component closes the dialog and leaves focus where it went.
  *
- * @cssprop --datetime-accent - selected days, focus rings and primary buttons
- * @cssprop --datetime-bg, --datetime-text, --datetime-muted - panel background, text and muted text
- * @cssprop --datetime-border, --datetime-radius, --datetime-shadow - field and panel surface
- * @cssprop --datetime-hover - background of hovered days and buttons
+ * @cssprop --datetime-accent - selected days, focus rings and primary buttons (default
+ *   `var(--color-accent)`)
+ * @cssprop --datetime-bg, --datetime-text, --datetime-muted - field and panel background, text and
+ *   muted text (defaults `var(--surface-dropdown-color-bg)`, `currentColor`, `var(--color-text-muted)`)
+ * @cssprop --datetime-border, --datetime-radius, --datetime-shadow - field and panel surface (colours
+ *   default to `var(--color-border)` and `var(--color-shadow)`)
+ * @cssprop --datetime-hover - background of hovered days and buttons (default `var(--color-hover)`)
  * @cssprop --datetime-cell-size - size of each day in the grid
  * @cssprop --datetime-panel-min-width - narrowest the panel gets
  * @cssprop --datetime-animation-duration - length of the panel animation
