@@ -56,31 +56,41 @@ Where popovers are supported the element shows itself as a manual popover and mo
   cssProperties: [
     {
       name: '--toast-bg-info',
-      default: 'var(--surface-panel-color-bg)',
-      description: 'Background of every toast, under the tint of success, warning and error toasts',
+      default: 'var(--color-inverse-surface)',
+      description: 'Background of info toasts',
     },
     {
       name: '--toast-bg-success',
-      default: 'var(--color-success-bg)',
-      description: 'Tint of success toasts',
+      default: 'var(--color-inverse-surface)',
+      description: 'Background of success toasts',
     },
     {
       name: '--toast-bg-warning',
-      default: 'var(--color-warning-bg)',
-      description: 'Tint of warning toasts',
+      default: 'var(--color-inverse-surface)',
+      description: 'Background of warning toasts',
     },
     {
       name: '--toast-bg-error',
-      default: 'var(--color-danger-bg)',
-      description: 'Tint of error toasts',
+      default: 'var(--color-inverse-surface)',
+      description: 'Background of error toasts',
+    },
+    {
+      name: '--toast-accent-width',
+      default: '4px',
+      description:
+        'Width of the strip in --color-success, --color-warning or --color-danger at the start of success, warning and error toasts',
     },
     {
       name: '--toast-text-color',
-      default: 'var(--surface-panel-color-text)',
+      default: 'var(--color-inverse-text)',
       description: 'Text colour',
     },
     { name: '--toast-border-radius', description: 'Corner radius' },
-    { name: '--toast-shadow', default: '0 6px 20px var(--color-shadow)', description: 'Shadow' },
+    {
+      name: '--toast-shadow',
+      default: '0 6px 20px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--color-border)',
+      description: 'Shadow, including the inset ring that edges the toast',
+    },
     { name: '--toast-padding', description: 'Space around the stack' },
     { name: '--toast-gap', description: 'Space between toasts' },
     { name: '--toast-item-padding', description: 'Padding inside each toast' },

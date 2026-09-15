@@ -54,15 +54,9 @@
   );
   max-width: var(--toast-max-width, 500px);
   padding: var(--toast-item-padding, #{$space-sm} #{$space-lg});
-  border: var(--surface-panel-border-width, 0) solid
-    var(--surface-panel-border-color, var(--color-border, transparent));
   border-radius: var(--toast-border-radius, var(--surface-panel-radius, #{$radius-md}));
-  /* Type tints sit over the panel surface, so translucent status backgrounds stay opaque */
-  --toast-tint: transparent;
-  background:
-    linear-gradient(var(--toast-tint), var(--toast-tint)),
-    var(--toast-bg-info, var(--surface-panel-color-bg, var(--color-surface, #{$neutral-900})));
-  color: var(--toast-text-color, var(--surface-panel-color-text, #fff));
+  background: var(--toast-bg-info, var(--color-inverse-surface, #{$neutral-900}));
+  color: var(--toast-text-color, var(--color-inverse-text, #fff));
   box-shadow: var(
     --toast-shadow,
     var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
@@ -71,24 +65,30 @@
   pointer-events: auto;
 }
 
-/* Types tint the surface with their status background and border it in the status colour. Without
-   the package stylesheet they fall back to solid fills behind the white text */
+/* Types keep the inverse surface and mark it with a strip in the status colour. Without the package
+   stylesheet the strip has no width and they fall back to solid fills behind the white text */
+.toast.success,
+.toast.warning,
+.toast.error {
+  border-inline-start: var(--toast-accent-width, 0) solid var(--toast-accent);
+}
+
 .toast.success {
-  --toast-tint: var(--toast-bg-success, var(--color-success-bg, #{$success-dark}));
-  border-color: var(--color-success, #{$success-dark});
+  --toast-accent: var(--color-success, #{$success-dark});
+  background: var(--toast-bg-success, var(--color-inverse-surface, #{$success-dark}));
 }
 
 .toast.warning {
-  --toast-tint: var(
+  --toast-accent: var(--color-warning, #{$warning-dark});
+  background: var(
     --toast-bg-warning,
-    var(--toast-bg-warn, var(--color-warning-bg, #{$warning-dark}))
+    var(--toast-bg-warn, var(--color-inverse-surface, #{$warning-dark}))
   );
-  border-color: var(--color-warning, #{$warning-dark});
 }
 
 .toast.error {
-  --toast-tint: var(--toast-bg-error, var(--color-danger-bg, #{$error-dark}));
-  border-color: var(--color-danger, #{$error-dark});
+  --toast-accent: var(--color-danger, #{$error-dark});
+  background: var(--toast-bg-error, var(--color-inverse-surface, #{$error-dark}));
 }
 
 .row {

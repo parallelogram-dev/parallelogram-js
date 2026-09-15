@@ -1,5 +1,6 @@
-/* Toast theme tokens, read by the p-toasts web component through its shadow styles. Colours follow
-   the panel surface and the status colour roles, so toasts follow the dark theme */
+/* Toast theme tokens, read by the p-toasts web component through its shadow styles. Toasts use the
+   inverse surface in both themes, with a strip in the status colour; the inset ring gives them an
+   edge against a dark page */
 :root {
   --toast-z-index: 2147483647;
   --toast-padding: 12px;
@@ -8,12 +9,13 @@
   --toast-max-width: 500px;
   --toast-item-padding: 10px 12px;
   --toast-border-radius: 8px;
-  --toast-text-color: var(--surface-panel-color-text);
-  --toast-bg-info: var(--surface-panel-color-bg);
-  --toast-bg-success: var(--color-success-bg);
-  --toast-bg-warning: var(--color-warning-bg);
-  --toast-bg-error: var(--color-danger-bg);
-  --toast-shadow: 0 6px 20px var(--color-shadow);
+  --toast-accent-width: 4px;
+  --toast-text-color: var(--color-inverse-text);
+  --toast-bg-info: var(--color-inverse-surface);
+  --toast-bg-success: var(--color-inverse-surface);
+  --toast-bg-warning: var(--color-inverse-surface);
+  --toast-bg-error: var(--color-inverse-surface);
+  --toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--color-border);
   --toast-font: 14px/1.4 system-ui, -apple-system, sans-serif;
   --toast-animation-duration: 0.18s;
 }
