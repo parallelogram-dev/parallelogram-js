@@ -37,6 +37,7 @@ app.eventBus.on('router:navigate-end', ({ url, status }) => {
 | `errorClass`            | `string`   | `'router-error'`   | Class on the body and the followed link after a navigation fails.                                                               |
 | `fullLoadOnError`       | `boolean`  | `true`             | Load the page normally when a request or swap fails.                                                                            |
 | `historyCache`          | `number`   | `5`                | Pages kept in memory for Back and Forward to show without fetching. `0` fetches every time. See History and scroll restoration. |
+| `prefetch`              | `boolean`  | `false`            | Prefetch every link the router follows, as `data-router-prefetch` does. See Prefetching.                                        |
 | `nonRoutableExtensions` | `string[]` | See below          | Lowercase file extensions, without the dot, that links open natively. Setting it replaces the whole list.                       |
 
 The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`, `xls`, `xlsx`, `ppt`, `pptx`, `csv`, `rtf`, `txt`, `dmg`, `exe`, `pkg`, `apk`, `mp3`, `mp4`, `wav`, `avi`, `mov`, `mkv`, `webm`, `jpg`, `jpeg`, `png`, `gif`, `svg`, `webp`, `avif`, `xml`, `rss` and `ics`.
@@ -118,8 +119,27 @@ These attributes change what a followed link does:
 | `data-router-immutable-url` | Link or ancestor | Leave the address bar and history untouched. Set it to `"false"` on a link inside a marked ancestor to opt out. |
 | `data-router-skip`          | Link or ancestor | Leave the click to the browser.                                                                                 |
 | `data-router-enhance`       | Link             | Route a link to a file type in `nonRoutableExtensions`.                                                         |
+| `data-router-prefetch`      | Link or ancestor | Fetch the page before the link is followed, as described under Prefetching. Set it to `"false"` to opt out.     |
 
-Page requests are `GET` requests with `credentials: 'same-origin'`, and send `X-Requested-With: XMLHttpRequest` and `Accept: text/html,application/json,*/*`. The server should still return the full page.
+Page requests are `GET` requests with `credentials: 'same-origin'`, and send `X-Requested-With: XMLHttpRequest` and `Accept: text/html,application/json,*/*`. The server should still return the full page. If the server, or a cache in front of it, changes the response for requests with that header, send `Vary: X-Requested-With`, so a copy cached for one kind of request isn't served for the other.
+
+### Prefetching
+
+A link with `data-router-prefetch`, or every link the router follows when the `prefetch` option is on, starts fetching its page before it is followed: once the pointer has rested on it for 65 milliseconds, or straight away when it is pressed or focused. Moving the pointer off the link sooner fetches nothing. Set `data-router-prefetch="false"` on a link or ancestor to leave it out.
+
+The router keeps the most recent prefetch only, and prefetching another link cancels one still loading. The next navigation to that address within 30 seconds of the request starting shows the prefetched page, waiting for it when it is still loading, instead of fetching again. When the prefetch failed or is older than that, following the link fetches the page as usual.
+
+Links the router doesn't follow, as `router.handlesLink(link)` decides, are never prefetched: links to other origins, with `download`, `data-router-skip` or another `target`, and file types in `nonRoutableExtensions`. Nor are links to the page already shown, or links inside shadow roots.
+
+A prefetch is the same `GET` request as a navigation, with an extra `Purpose: prefetch` header, so the server can leave it out of page view counts. The page may never be visited, so only prefetch links whose `GET` requests have no side effects. A sign-out, unsubscribe or add-to-basket link must never be prefetched.
+
+```html
+<nav data-router-prefetch>
+  <a href="/tents">Tents</a>
+  <a href="/stoves">Stoves</a>
+  <a href="/logout" data-router-skip>Sign out</a>
+</nav>
+```
 
 ## When the page loads normally
 

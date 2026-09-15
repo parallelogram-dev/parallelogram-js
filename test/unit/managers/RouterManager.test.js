@@ -328,6 +328,159 @@ describe('RouterManager', () => {
     });
   });
 
+  describe('prefetching', () => {
+    const addLink = (attributes = 'data-router-prefetch', href = '/pricing') => {
+      document.body.innerHTML = `<a href="${href}" ${attributes}>Pricing</a>`;
+      return document.querySelector('a');
+    };
+
+    const intent = (element, type, init = {}) =>
+      element.dispatchEvent(
+        type === 'focusin'
+          ? new FocusEvent(type, { bubbles: true })
+          : new PointerEvent(type, { bubbles: true, ...init })
+      );
+
+    it("fetches a marked link's page once the pointer has rested on it", () => {
+      vi.useFakeTimers();
+      start();
+      const link = addLink();
+
+      intent(link, 'pointerover');
+      vi.advanceTimersByTime(64);
+      const beforeDelay = server.fetch.mock.calls.length;
+      vi.advanceTimersByTime(1);
+
+      expect([beforeDelay, server.fetch.mock.calls.length]).toEqual([0, 1]);
+    });
+
+    it('fetches nothing when the pointer leaves the link before the delay', () => {
+      vi.useFakeTimers();
+      start();
+      const link = addLink();
+
+      intent(link, 'pointerover');
+      vi.advanceTimersByTime(30);
+      intent(link, 'pointerout', { relatedTarget: document.body });
+      vi.advanceTimersByTime(100);
+
+      expect(server.fetch).not.toHaveBeenCalled();
+    });
+
+    it.each(['pointerdown', 'focusin'])(
+      "fetches a marked link's page straight away on %s",
+      type => {
+        start();
+
+        intent(addLink(), type);
+
+        expect(server.fetch).toHaveBeenCalledOnce();
+      }
+    );
+
+    it.each([
+      ['a download attribute', 'data-router-prefetch download', '/pricing'],
+      ['another origin', 'data-router-prefetch', 'https://elsewhere.example/pricing'],
+      ['data-router-skip', 'data-router-prefetch data-router-skip', '/pricing'],
+      ['a file type the browser opens', 'data-router-prefetch', '/catalogue.pdf'],
+    ])('never prefetches a link with %s', (_case, attributes, href) => {
+      start();
+
+      intent(addLink(attributes, href), 'pointerdown');
+
+      expect(server.fetch).not.toHaveBeenCalled();
+    });
+
+    it('leaves links without data-router-prefetch to be fetched when followed', () => {
+      start();
+
+      intent(addLink(''), 'pointerdown');
+
+      expect(server.fetch).not.toHaveBeenCalled();
+    });
+
+    it('prefetches every link the router follows with the prefetch option', () => {
+      start({ prefetch: true });
+
+      intent(addLink(''), 'pointerdown');
+
+      expect(server.fetch).toHaveBeenCalledOnce();
+    });
+
+    it('leaves a link marked data-router-prefetch="false" alone with the prefetch option', () => {
+      start({ prefetch: true });
+
+      intent(addLink('data-router-prefetch="false"'), 'pointerdown');
+
+      expect(server.fetch).not.toHaveBeenCalled();
+    });
+
+    it('marks prefetch requests so the server can tell them apart', () => {
+      start();
+
+      intent(addLink(), 'pointerdown');
+
+      expect(server.fetch.mock.calls[0]?.[1].headers).toMatchObject({
+        Purpose: 'prefetch',
+        'X-Requested-With': 'XMLHttpRequest',
+      });
+    });
+
+    it('shows the prefetched page when the link is followed without fetching it again', async () => {
+      start();
+      const success = record('router:navigate-success');
+      const link = addLink();
+      intent(link, 'pointerdown');
+      server.requests[0].respond(htmlResponse('<main>Pricing</main>'));
+
+      click(link);
+
+      await vi.waitFor(() => expect(success).toHaveBeenCalledOnce());
+      expect([server.fetch.mock.calls.length, success.mock.calls[0][0].html]).toEqual([
+        1,
+        '<main>Pricing</main>',
+      ]);
+    });
+
+    it('fetches the page when the link is followed after its prefetch failed', async () => {
+      start({ fullLoadOnError: false });
+      const link = addLink();
+      intent(link, 'pointerdown');
+
+      click(link);
+      server.requests[0].fail(new TypeError('Failed to fetch'));
+
+      await vi.waitFor(() => expect(server.fetch).toHaveBeenCalledTimes(2));
+    });
+
+    it('fetches the page again when its prefetched copy is too old to show', async () => {
+      vi.useFakeTimers();
+      start();
+      const link = addLink();
+      intent(link, 'pointerdown');
+      server.requests[0].respond(htmlResponse('<main>Pricing</main>'));
+      await vi.advanceTimersByTimeAsync(30001);
+
+      click(link);
+
+      expect(server.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('cancels the prefetch a navigation is waiting on when a newer navigation starts', () => {
+      start();
+      const link = addLink();
+      intent(link, 'pointerdown');
+      click(link);
+
+      router.navigate('/contact');
+
+      expect([
+        server.fetch.mock.calls.map(([, init]) => init.headers.Purpose ?? null),
+        server.requests[0].signal.aborted,
+      ]).toEqual([['prefetch', null], true]);
+    });
+  });
+
   describe('history', () => {
     it('loads the page for the history entry the user moves to without adding another', async () => {
       start();
