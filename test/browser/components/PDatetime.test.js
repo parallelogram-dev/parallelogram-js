@@ -157,6 +157,32 @@ describe('p-datetime', () => {
     ]);
   });
 
+  it('keeps its time options and quick dates when a day is picked', () => {
+    const picker = renderPicker({ mode: 'datetime', 'show-quick-dates': '' });
+    picker.open();
+    const hour = shadow(picker, '[data-datetime-hour] option');
+    const preset = shadow(picker, '.preset');
+
+    day(picker, 10).click();
+
+    expect([
+      shadow(picker, '[data-datetime-hour] option') === hour,
+      shadow(picker, '.preset') === preset,
+    ]).toEqual([true, true]);
+  });
+
+  it('shows the first hour and minute again when the value is cleared', () => {
+    const picker = renderPicker({ mode: 'datetime', value: '2023-07-12T14:30:00' });
+    picker.open();
+
+    shadow(picker, '[data-datetime-action="clear"]').click();
+
+    expect([
+      shadow(picker, '[data-datetime-hour]').value,
+      shadow(picker, '[data-datetime-minute]').value,
+    ]).toEqual(['0', '0']);
+  });
+
   it('leaves the host element’s attributes and styles alone', async () => {
     const picker = renderPicker({ mode: 'date' });
 
