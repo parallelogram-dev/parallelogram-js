@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - DeferTracker loads a block's `src`, such as Fathom's or Plausible's custom script address, only from the page's own origin or the vendor's origin the adapter declares; any other `src` marks the block `error` and nothing loads, so a block injected into a page can't load its own script with the site's nonce. To allow a proxy or self-hosted copy on another origin, pass it at registration, such as `registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] })`.
 
+### Changed
+
+- The package no longer includes `src`. Source maps in `dist` embed their sources instead of pointing to those files.
+
 ### Fixed
 
 - DataTable sorts the right column when a header before it in the sortable header row spans several columns with `colspan`. Column positions count each header cell's `colspan`, where they counted cells, so sorting read the values of an earlier column. The message row shown when nothing matches spans every column too.
