@@ -51,14 +51,6 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       readonly: true,
       description: "The modal's state",
     },
-    {
-      name: 'data-modal',
-      type: 'enum',
-      options: STATES,
-      readonly: true,
-      description: 'A copy of data-modal-state',
-      deprecated: 'Read data-modal-state. Removed in 0.6.0.',
-    },
   ],
   methods: [
     {

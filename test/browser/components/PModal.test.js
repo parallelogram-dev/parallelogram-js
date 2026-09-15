@@ -18,10 +18,7 @@ describe('p-modal', () => {
     const modal = document.createElement('p-modal');
     document.body.append(modal);
 
-    expect([modal.getAttribute('data-modal-state'), modal.getAttribute('data-modal')]).toEqual([
-      ExtendedStates.CLOSED,
-      ExtendedStates.CLOSED,
-    ]);
+    expect(modal.getAttribute('data-modal-state')).toBe(ExtendedStates.CLOSED);
   });
 
   it('handles its close button once after being moved to another container', () => {
