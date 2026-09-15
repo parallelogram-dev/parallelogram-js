@@ -19,6 +19,7 @@ npm install
 | `npm run lint`          | Runs ESLint, including browser compatibility checks against Baseline 2023                                         |
 | `npm run format`        | Formats the repository with Prettier                                                                              |
 | `npm run check:exports` | Checks every public import path resolves, after a build                                                           |
+| `npm run check:logger`  | Checks the production build has no debug, log, info or group logger calls, after a build                          |
 | `npm run check:package` | Runs publint on the packed package                                                                                |
 | `npm run check:types`   | Compiles the TypeScript consumer tests and runs arethetypeswrong                                                  |
 | `npm run check:size`    | Checks each entry's gzipped size, with everything it imports, against its budget in `package.json`, after a build |

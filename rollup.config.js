@@ -40,6 +40,7 @@ const build = ({ dir, production }) => ({
       ? [
           babel({ babelHelpers: 'bundled', plugins: [stripLogger] }),
           terser({
+            ecma: 2022,
             compress: { drop_debugger: true },
             mangle: { keep_classnames: true },
             format: { comments: false },
