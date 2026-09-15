@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<p-select>` dispatches `input`, `change` and `p-select:change` only when the chosen option changes. Opening a select and pressing Tab or Enter on the option already chosen, or calling `select()` with the current value, dispatched all three.
 - `<p-select>`'s `input` and `change` events are composed, like a native select's, so a page hears them outside a shadow root the select is in.
 - A `<p-select>` given its value in its `value` attribute, such as one rendered by a server, keeps that value when a form resets, where it cleared it, and shows it when an `<option selected>` names a different option. The attribute is the default when it names an option; otherwise the selected option is.
+- A disabled `<p-datetime>`, or one in a disabled fieldset, disables its value fields as well as its calendar button, so they can't be focused or open the panel, and looks dimmed through `--datetime-disabled-opacity`.
 
 ## [0.5.3] - 2026-09-15
 
