@@ -71,7 +71,7 @@ describe('web component tokens', () => {
     expect(surfaces).toEqual(Array(4).fill('rgb(23, 29, 38)'));
   });
 
-  it('draws the modal panel and toasts with the dark surface and status colours when data-theme is dark', () => {
+  it('draws the modal panel and toasts with the dark surface, inverse surface and status strip when data-theme is dark', () => {
     const style = document.createElement('style');
     style.textContent = frameworkStyles;
     document.head.append(style);
@@ -88,11 +88,11 @@ describe('web component tokens', () => {
     const colours = [
       shadowStyle(modal, 'dialog').backgroundColor,
       shadowStyle(toasts, '.toast.info').backgroundColor,
-      shadowStyle(toasts, '.toast.error').borderTopColor,
+      shadowStyle(toasts, '.toast.error').borderInlineStartColor,
     ];
     delete document.documentElement.dataset.theme;
     style.remove();
 
-    expect(colours).toEqual(['rgb(23, 29, 38)', 'rgb(23, 29, 38)', 'rgb(248, 113, 113)']);
+    expect(colours).toEqual(['rgb(23, 29, 38)', 'rgb(42, 51, 66)', 'rgb(248, 113, 113)']);
   });
 });
