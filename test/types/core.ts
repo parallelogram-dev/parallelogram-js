@@ -17,6 +17,7 @@ export function configure(): Parallelogram {
     pageManager: {
       containerSelector: 'main',
       focusTarget: false,
+      viewTransitions: true,
       targetGroups: { main: ['main', 'navbar'] },
       targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in', duration: 200 } },
     },

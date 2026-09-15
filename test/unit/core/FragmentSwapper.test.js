@@ -99,6 +99,153 @@ describe('FragmentSwapper', () => {
     expect(document.head.querySelector('link[href$="/pricing.css"]')).toBeNull();
   });
 
+  describe('view transitions', () => {
+    const stubViewTransition = ({ beforeUpdate = () => {} } = {}) => {
+      const skipTransition = vi.fn();
+      const startViewTransition = vi.fn(update => {
+        const updateCallbackDone = Promise.resolve()
+          .then(beforeUpdate)
+          .then(update)
+          .then(() => {});
+        return { updateCallbackDone, skipTransition };
+      });
+      document.startViewTransition = startViewTransition;
+      return { startViewTransition, skipTransition };
+    };
+
+    const swapperWith = options =>
+      new FragmentSwapper({
+        options,
+        eventBus: new EventManager(),
+        mountWithin: vi.fn(),
+        unmountWithin: vi.fn(),
+      });
+
+    afterEach(() => {
+      delete document.startViewTransition;
+    });
+
+    it('swaps the page inside a view transition when they are turned on', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      const { startViewTransition } = stubViewTransition();
+
+      await swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'] }
+      );
+
+      expect([startViewTransition.mock.calls.length, document.body.textContent]).toEqual([
+        1,
+        'Pricing',
+      ]);
+    });
+
+    it('swaps the page without a view transition unless they are turned on', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      const { startViewTransition } = stubViewTransition();
+
+      await swapperWith({}).replaceFragments('<main data-view="main">Pricing</main>', {
+        viewTargets: ['main'],
+      });
+
+      expect([startViewTransition.mock.calls.length, document.body.textContent]).toEqual([
+        0,
+        'Pricing',
+      ]);
+    });
+
+    it('swaps the page straight away in a browser without view transitions', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+
+      await swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'] }
+      );
+
+      expect(document.body.textContent).toBe('Pricing');
+    });
+
+    it('skips the view transition when the user prefers reduced motion', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce') }));
+      const { startViewTransition } = stubViewTransition();
+
+      await swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'] }
+      );
+
+      expect(startViewTransition).not.toHaveBeenCalled();
+    });
+
+    it('leaves a fragment with its own transition out of view transitions', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      const { startViewTransition } = stubViewTransition();
+
+      await swapperWith({
+        viewTransitions: true,
+        targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in', duration: 10 } },
+      }).replaceFragments('<main data-view="main">Pricing</main>', { viewTargets: ['main'] });
+
+      expect(startViewTransition).not.toHaveBeenCalled();
+    });
+
+    it('starts no view transition for a navigation that was already cancelled', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      const { startViewTransition } = stubViewTransition();
+      const navigation = new AbortController();
+      navigation.abort();
+
+      await swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'], signal: navigation.signal }
+      );
+
+      expect(startViewTransition).not.toHaveBeenCalled();
+    });
+
+    it('skips the view transition and keeps the page when the navigation is cancelled during it', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      const navigation = new AbortController();
+      const { skipTransition } = stubViewTransition({ beforeUpdate: () => navigation.abort() });
+
+      await swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'], signal: navigation.signal }
+      );
+
+      expect([skipTransition.mock.calls.length, document.body.textContent]).toEqual([1, 'Home']);
+    });
+
+    it('finishes a swap inside a view transition without waiting for a frame', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      stubViewTransition();
+      vi.stubGlobal('requestAnimationFrame', () => 0);
+
+      const swap = swapperWith({ viewTransitions: true }).replaceFragments(
+        '<main data-view="main">Pricing</main>',
+        { viewTargets: ['main'] }
+      );
+
+      await expect(
+        Promise.race([swap.then(() => 'finished'), new Promise(r => setTimeout(r, 200, 'waiting'))])
+      ).resolves.toBe('finished');
+    });
+
+    it('moves focus to the new page once when it swaps inside a view transition', async () => {
+      document.body.innerHTML = '<main data-view="main">Home</main>';
+      stubViewTransition();
+      const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+
+      await swapperWith({ viewTransitions: true, announce: false }).replaceFragments(
+        '<main data-view="main"><h1>Pricing</h1></main>',
+        { viewTargets: ['main'], fromNavigation: true }
+      );
+
+      expect(focus.mock.contexts.map(element => element.textContent)).toEqual(['Pricing']);
+    });
+  });
+
   it('moves the parsed content into the fragment without setting its HTML', async () => {
     document.body.innerHTML = '<main data-view="main">Home</main>';
     const setInnerHTML = vi.spyOn(ownerOf(HTMLElement.prototype, 'innerHTML'), 'innerHTML', 'set');
