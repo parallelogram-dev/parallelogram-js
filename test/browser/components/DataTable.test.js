@@ -326,6 +326,29 @@ describe('DataTable', () => {
     ]);
   });
 
+  it('keeps a darker red for the load error on light pages and takes the danger role on dark pages', async () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    const table = mount(build(PEOPLE));
+    vi.spyOn(window, 'fetch').mockResolvedValue(new Response('Nope', { status: 503 }));
+
+    try {
+      await dataTable.loadData(table, '/guests', () => document.createElement('tr'));
+      const cell = table.tBodies[0].rows[0].cells[0];
+      const light = getComputedStyle(cell).color;
+      document.documentElement.dataset.theme = 'dark';
+
+      expect([light, getComputedStyle(cell).color]).toEqual([
+        'rgb(185, 28, 28)',
+        'rgb(248, 113, 113)',
+      ]);
+    } finally {
+      delete document.documentElement.dataset.theme;
+      style.remove();
+    }
+  });
+
   it('puts the table back as it was when unmounted', () => {
     const table = build(PEOPLE, 'data-datatable-filterable data-datatable-paginate="2"');
     const holder = table.parentElement;
