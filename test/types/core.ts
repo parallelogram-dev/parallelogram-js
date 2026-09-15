@@ -1,5 +1,11 @@
-import Parallelogram, { BaseComponent, EventManager, RouterManager } from '@parallelogram-js/core';
+import Parallelogram, {
+  BaseComponent,
+  DevLogger,
+  EventManager,
+  RouterManager,
+} from '@parallelogram-js/core';
 import type { ComponentState } from '@parallelogram-js/core/core/BaseComponent';
+import Lightbox from '@parallelogram-js/core/components/Lightbox';
 import { AlertManager } from '@parallelogram-js/core/managers/AlertManager';
 import Toggle from '@parallelogram-js/core/components/Toggle';
 
@@ -87,4 +93,22 @@ export function alerts(manager: AlertManager): void {
 
   /* @ts-expect-error notify takes a toast type */
   AlertManager.notify('Could not save', 'fatal');
+}
+
+export function logging(logger: DevLogger): void {
+  logger.debug('Mounted', { count: 2 });
+  logger.warn('Missing target');
+
+  /* @ts-expect-error setEnabled takes a boolean */
+  logger.setEnabled('yes');
+}
+
+export function lightbox(viewer: Lightbox, link: HTMLElement): number {
+  viewer.goTo(link, 2);
+
+  /* @ts-expect-error goTo takes the image's position as a number */
+  viewer.goTo(link, '2');
+
+  const status = viewer.getStatus(link);
+  return status?.lightboxState === 'open' ? status.gallerySize : 0;
 }

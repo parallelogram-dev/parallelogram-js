@@ -1,6 +1,12 @@
 const noop = () => {};
 
 /**
+ * A console method bound to the logger's prefix
+ *
+ * @typedef {(...args: unknown[]) => void} LogMethod
+ */
+
+/**
  * Console logger used across the framework
  *
  * Messages are prefixed with the namespace, such as `[parallelogram]`. debug, log, info and group
@@ -26,11 +32,17 @@ export class DevLogger {
     this._bind();
   }
 
+  /**
+   * @param {boolean} enabled - Show debug, log, info and group output
+   */
   setEnabled(enabled) {
     this.enabled = Boolean(enabled);
     this._bind();
   }
 
+  /**
+   * @param {boolean} silent - Hide all output, including warnings and errors
+   */
   setSilent(silent) {
     this.silent = Boolean(silent);
     this._bind();
@@ -49,6 +61,12 @@ export class DevLogger {
     return child;
   }
 
+  /**
+   * Start a collapsed console group, while the logger is enabled
+   *
+   * @param {string} label
+   * @param {unknown} [data] - Logged inside the group when it is an object
+   */
   group(label, data) {
     if (this.silent || !this.enabled || !console.groupCollapsed) return;
 
@@ -67,10 +85,15 @@ export class DevLogger {
     const prefix = `[${this.namespace}]`;
     const verbose = this.enabled && !this.silent;
 
+    /** @type {LogMethod} */
     this.debug = verbose ? console.debug.bind(console, prefix) : noop;
+    /** @type {LogMethod} */
     this.log = verbose ? console.log.bind(console, prefix) : noop;
+    /** @type {LogMethod} */
     this.info = verbose ? console.info.bind(console, prefix) : noop;
+    /** @type {LogMethod} */
     this.warn = this.silent ? noop : console.warn.bind(console, prefix);
+    /** @type {LogMethod} */
     this.error = this.silent ? noop : console.error.bind(console, prefix);
 
     for (const child of this._children) {
@@ -81,6 +104,14 @@ export class DevLogger {
   }
 }
 
+/**
+ * A logger enabled by `forceEnabled`, or otherwise by `?debug=1` in the address or `app:debug` set
+ * to `1` in localStorage
+ *
+ * @param {string} [namespace]
+ * @param {boolean} [forceEnabled]
+ * @returns {DevLogger}
+ */
 export function createLogger(namespace, forceEnabled) {
   if (forceEnabled !== undefined) {
     return new DevLogger(namespace, forceEnabled);

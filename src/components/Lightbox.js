@@ -61,9 +61,13 @@ export class Lightbox extends BaseComponent {
     };
   }
 
+  /**
+   * @param {import('../core/BaseComponent.js').ComponentContext} [options]
+   */
   constructor(options = {}) {
     super(options);
     this.lightboxElement = null;
+    /** @type {HTMLElement|null} The gallery link the open viewer belongs to */
     this.currentTriggerElement = null;
   }
 
@@ -72,6 +76,8 @@ export class Lightbox extends BaseComponent {
    *
    * The overlay carries the deprecated `data-lightbox` state copy, so a page observer watching for
    * `[data-lightbox]` would otherwise mount it as another gallery link.
+   *
+   * @param {HTMLElement} element
    */
   mount(element) {
     if (
@@ -602,22 +608,43 @@ export class Lightbox extends BaseComponent {
   }
 
   /* Public API */
+
+  /**
+   * Open the viewer at a gallery link's image
+   *
+   * @param {HTMLElement} triggerElement - A mounted gallery link
+   */
   open(triggerElement) {
     this._openLightbox(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   close(triggerElement) {
     this._closeLightbox(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   next(triggerElement) {
     this._nextImage(triggerElement);
   }
 
+  /**
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   */
   previous(triggerElement) {
     this._previousImage(triggerElement);
   }
 
+  /**
+   * Show the image at a position in the gallery while the viewer is open
+   *
+   * @param {HTMLElement} triggerElement - The gallery link the viewer was opened from
+   * @param {number} index - The image's zero-based position in the gallery
+   */
   goTo(triggerElement, index) {
     const state = this.getState(triggerElement);
     if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
@@ -628,6 +655,12 @@ export class Lightbox extends BaseComponent {
     }
   }
 
+  /**
+   * The viewer's state for a gallery link, or null when the link isn't mounted
+   *
+   * @param {HTMLElement} triggerElement - A mounted gallery link
+   * @returns {{ lightboxState: 'closed'|'opening'|'open'|'transitioning'|'closing', currentIndex: number, gallerySize: number, gallery: string } | null}
+   */
   getStatus(triggerElement) {
     const state = this.getState(triggerElement);
     if (!state) return null;
@@ -640,6 +673,13 @@ export class Lightbox extends BaseComponent {
     };
   }
 
+  /**
+   * Create a Lightbox and mount it on every matching gallery link
+   *
+   * @param {string} [selector='[data-lightbox]']
+   * @param {import('../core/BaseComponent.js').ComponentContext} [options]
+   * @returns {Lightbox}
+   */
   static enhanceAll(selector = '[data-lightbox]', options) {
     const instance = new Lightbox(options);
     document.querySelectorAll(selector).forEach(el => instance.mount(el));

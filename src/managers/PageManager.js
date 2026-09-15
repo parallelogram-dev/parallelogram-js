@@ -198,6 +198,9 @@ export class PageManager {
    * navigate do not download it. Options are described on FragmentSwapper#replaceFragments. The
    * swap stops before changing the page when `signal` aborts or this manager is destroyed.
    *
+   * @param {string} html - The fetched document's HTML
+   * @param {Parameters<import('../core/FragmentSwapper.js').FragmentSwapper['replaceFragments']>[1]} [options]
+   * @returns {Promise<void>}
    * @throws {Error} When a fragment is missing or tracked assets changed, before anything changes.
    */
   async replaceFragments(html, options = {}) {
@@ -269,6 +272,8 @@ export class PageManager {
 
   /**
    * Unmount every component within a root
+   *
+   * @param {Element} root
    */
   unmountAllWithin(root) {
     this.host.unmountWithin(root);
