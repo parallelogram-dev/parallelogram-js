@@ -12,10 +12,6 @@
   box-sizing: border-box;
 
   /* Colors using surface-dialog tokens and design system variables */
-  --modal-text: currentColor;
-  --modal-muted: #{$color-text-muted};
-  --modal-accent: #{$primary};
-  --modal-hover: #{$color-bg-hover};
   --modal-backdrop-bg: #{$color-bg-overlay};
   --modal-panel-bg: var(--surface-dialog-color-bg, #ffffff);
   --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
