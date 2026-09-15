@@ -255,14 +255,8 @@ export default class Modal extends BaseComponent {
     /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'true');
 
-    /* Dispatch enhancement event */
+    /* Dispatches on the trigger and emits on the event bus */
     this._dispatch(triggerElement, 'modal:opened', {
-      trigger: triggerElement,
-      modal: event.detail.modal,
-    });
-
-    /* Emit to event bus if available */
-    this.eventBus?.emit('modal:opened', {
       trigger: triggerElement,
       modal: event.detail.modal,
     });
@@ -280,14 +274,8 @@ export default class Modal extends BaseComponent {
     /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'false');
 
-    /* Dispatch enhancement event */
+    /* Dispatches on the trigger and emits on the event bus */
     this._dispatch(triggerElement, 'modal:closed', {
-      trigger: triggerElement,
-      modal: event.detail.modal,
-    });
-
-    /* Emit to event bus if available */
-    this.eventBus?.emit('modal:closed', {
       trigger: triggerElement,
       modal: event.detail.modal,
     });

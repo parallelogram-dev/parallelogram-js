@@ -60,6 +60,7 @@ export class ComponentHost {
     this.timers = new Set();
     this.observer = null;
     this.root = null;
+    this.stopped = false;
 
     registry.forEach(entry => this._register(entry));
   }
@@ -71,6 +72,7 @@ export class ComponentHost {
    * @returns {ComponentHost}
    */
   start(root = document.body) {
+    this.stopped = false;
     this.root = root;
     this.mountWithin(root);
 
@@ -104,6 +106,7 @@ export class ComponentHost {
 
     this.records.clear();
     this.root = null;
+    this.stopped = true;
   }
 
   /**
@@ -123,7 +126,8 @@ export class ComponentHost {
   }
 
   /**
-   * Mount components on matching elements within a root.
+   * Mount components on matching elements within a root. Does nothing once the host is stopped,
+   * until it starts again.
    *
    * @param {Element} root
    * @param {Object} [options]
@@ -132,6 +136,10 @@ export class ComponentHost {
    * @param {string|null} [options.fragmentTarget] - Fragment being mounted, written to data-fragment-target
    */
   mountWithin(root, { priority = 'all', nodes = null, fragmentTarget = null } = {}) {
+    if (this.stopped) {
+      return;
+    }
+
     const scopes = nodes ?? [root];
 
     for (const entry of this._entriesFor(priority)) {

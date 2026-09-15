@@ -36,6 +36,26 @@ describe('framework stylesheet', () => {
     expect([displayOf('#shipping'), displayOf('#returns')]).toEqual(['block', 'none']);
   });
 
+  it('shows every tab panel when Tabs fails to load', () => {
+    document.body.innerHTML = `
+      <div data-tabs class="component-error">
+        <div data-tabs-panels>
+          <section id="shipping" data-tab-panel>Shipping</section>
+          <section id="returns" data-tab-panel>Returns</section>
+        </div>
+      </div>`;
+
+    expect([displayOf('#shipping'), displayOf('#returns')]).toEqual(['block', 'block']);
+  });
+
+  it('shows content Scrollreveal was going to reveal when it fails to load', () => {
+    document.body.innerHTML = `
+      <p id="waiting" data-reveal>Later</p>
+      <p id="failed" data-reveal class="component-error">Now</p>`;
+
+    expect([opacityOf('#waiting'), opacityOf('#failed')]).toEqual(['0', '1']);
+  });
+
   it('keeps revealed content visible and hides content Scrollreveal is waiting to reveal', () => {
     document.body.innerHTML = `
       <p id="waiting" data-reveal data-reveal-enhanced="true" data-reveal-state="hidden">Later</p>

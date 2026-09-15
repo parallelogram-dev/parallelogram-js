@@ -247,7 +247,7 @@ Enhancement components that need styles use a document stylesheet. Import the pa
 
 The component stylesheets are `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and design tokens on `:root`: surface, form control, button and panel custom properties such as `--surface-dialog-color-bg` and `--button-primary-bg`. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
 
-Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. Tabs' stylesheet shows only the first panel until Tabs mounts. Load them for pages that use those components.
+Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. Tabs' stylesheet shows only the first panel until Tabs mounts, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
 
 ## A complete page
 

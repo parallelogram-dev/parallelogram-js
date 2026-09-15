@@ -9,7 +9,7 @@ export default {
   module: 'components/Scrollreveal',
   stylesheet: 'styles/reveal.css',
   summary: 'Reveal elements as they scroll into view, one after another',
-  description: `Each element moves through \`data-reveal-state\` and the stylesheet draws the fade and slide, so nothing is written to its inline styles. Elements that come into view together are revealed in order, the stagger apart. \`data-reveal-class\` animates with a class instead. Under reduced motion elements are shown at once, and without JavaScript the stylesheet never hides them.`,
+  description: `Each element moves through \`data-reveal-state\` and the stylesheet draws the fade and slide, so nothing is written to its inline styles. Elements that come into view together are revealed in order, the stagger apart. \`data-reveal-class\` animates with a class instead. Under reduced motion elements are shown at once. While scripts run, the stylesheet hides elements until Scrollreveal mounts, and shows them again if it fails to load; with scripting off it never hides them. Register Scrollreveal on every page that uses the stylesheet, because an element whose component is never registered stays hidden.`,
   states: STATES,
   attributes: [
     { name: 'data-reveal', type: 'flag', description: 'Marks an element to reveal' },
