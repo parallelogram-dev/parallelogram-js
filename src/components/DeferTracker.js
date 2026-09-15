@@ -34,8 +34,10 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * framework observes (the body by default), not in `<head>`.
  *
  * A tracker is identified by its adapter name and its config's `id` (or `site`,
- * `domain` or `scriptId`), so two properties of the same kind both boot, and a
- * second identical block on the same page is marked `duplicate`. An adapter loads
+ * `domain` or `scriptId`), so two properties of the same kind both boot. A second
+ * block for a tracker already on the page is passed to the adapter's optional
+ * `block` step when its config differs, such as a conversion alongside a
+ * remarketing tag, and is otherwise marked `duplicate`. An adapter loads
  * once per page session. When the router shows a new page, or a block for a
  * tracker that has already loaded mounts on a later page, the adapter's optional
  * `page` step runs instead, for page views and conversions that the vendor script
@@ -178,7 +180,7 @@ class InteractionGate {
   }
 }
 
-/** Shared adapter registry: adapter name -> boot fn, which may carry a `page` step. */
+/** Shared adapter registry: adapter name -> boot fn, which may carry `page` and `block` steps. */
 const adapters = new Map();
 
 /** Trackers that have started loading this page session, keyed by name and id. */
@@ -201,7 +203,10 @@ let trackerNonce;
  * The adapter loads the vendor script and runs the first page's tracking. It can
  * return a Promise that settles when the script loads, so the tracker reports
  * `loading` until then and `error` if it fails. An optional `boot.page(config, ctx,
- * { url, mounted })` step runs for later pages.
+ * { url, mounted })` step runs for later pages. An optional `boot.block(config, ctx)`
+ * step runs for a second block for the tracker on the same page whose config differs
+ * from the blocks already there; without it, that block is marked `duplicate`. Leave
+ * it out when a second block would only repeat the tracker's page view.
  *
  * @param {string} name
  * @param {(config: object, ctx: { logger?: object, eventBus?: object, nonce?: string }) => void|Promise<unknown>} boot
@@ -382,8 +387,8 @@ export default class DeferTracker extends BaseComponent {
     }
 
     if (tracker.pageUrl === url) {
-      const duplicate = [...tracker.elements].some(other => other !== element && other.isConnected);
-      if (duplicate) {
+      const others = [...tracker.elements].filter(other => other !== element && other.isConnected);
+      if (others.length > 0 && !this._runBlock(tracker, element, config, others)) {
         this.logger?.warn('Duplicate tracker block ignored', { name, key });
         this.setAttr(element, 'status', 'duplicate');
         return;
@@ -477,6 +482,29 @@ export default class DeferTracker extends BaseComponent {
     } catch (error) {
       this.logger?.error('Tracker page step failed', { name: tracker.name, error });
     }
+  }
+
+  /**
+   * Hand a second block for a tracker already on this page to the adapter's block step
+   *
+   * @returns {boolean} false when the adapter has no block step or the block repeats one on the page
+   */
+  _runBlock(tracker, element, config, others) {
+    const block = adapters.get(tracker.name)?.block;
+    if (typeof block !== 'function') return false;
+
+    const json = JSON.stringify(config);
+    const repeated = others.some(
+      other => JSON.stringify(this.getState(other)?.config ?? tracker.config) === json
+    );
+    if (repeated) return false;
+
+    try {
+      block(config, this._context(element));
+    } catch (error) {
+      this.logger?.error('Tracker block step failed', { name: tracker.name, error });
+    }
+    return true;
   }
 
   _failed(tracker, element, error) {
