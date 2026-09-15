@@ -1,6 +1,6 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { ExtendedStates } from '../core/ComponentStates.js';
-import { deepActiveElement } from '../utils/dom-utils.js';
+import { deepActiveElement, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 
 /** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
@@ -10,18 +10,6 @@ const INTERACTIVE =
 /** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
 const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
 const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state', 'data-toggle-target'];
-
-const remember = (element, names) => new Map(names.map(name => [name, element.getAttribute(name)]));
-
-const restore = (element, attributes) => {
-  for (const [name, value] of attributes ?? []) {
-    if (value === null) {
-      element.removeAttribute(name);
-    } else {
-      element.setAttribute(name, value);
-    }
-  }
-};
 
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
@@ -160,10 +148,10 @@ export default class Toggle extends BaseComponent {
     }
     state.isOpen = isOpen;
 
-    state.original = remember(element, TRIGGER_ATTRIBUTES);
+    state.original = rememberAttributes(element, TRIGGER_ATTRIBUTES);
     const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
     if (firstTrigger) {
-      this._originals.set(target, remember(target, TARGET_ATTRIBUTES));
+      this._originals.set(target, rememberAttributes(target, TARGET_ATTRIBUTES));
       this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
     }
 
@@ -198,11 +186,11 @@ export default class Toggle extends BaseComponent {
         }
       }
       element.removeAttribute('data-toggle-enhanced');
-      restore(element, state.original);
+      restoreAttributes(element, state.original);
 
       if (!this._triggersFor(target).some(trigger => trigger !== element)) {
         this._transitions.delete(target);
-        restore(target, this._originals.get(target));
+        restoreAttributes(target, this._originals.get(target));
         this._originals.delete(target);
       }
       if (this.trackedElements().every(trigger => trigger === element)) {

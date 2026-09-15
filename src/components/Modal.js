@@ -35,7 +35,7 @@
 
 import { BaseComponent } from '../core/BaseComponent.js';
 import './PModal.js';
-import { generateId, createElement } from '../utils/dom-utils.js';
+import { generateId, createElement, restoreAttributes } from '../utils/dom-utils.js';
 import { trustedHTML } from '../utils/trusted.js';
 
 /* The trigger whose open() call is opening each modal */
@@ -261,7 +261,8 @@ export default class Modal extends BaseComponent {
 
     const previous = new Map();
     for (const [name, value] of Object.entries(state.overrides)) {
-      previous.set(name, this.getAttr(modal, name));
+      const attribute = `${this._getSelector()}-${name}`;
+      previous.set(attribute, modal.getAttribute(attribute));
       this.setAttr(modal, name, value);
     }
     if (previous.size > 0) {
@@ -279,13 +280,7 @@ export default class Modal extends BaseComponent {
     if (!entry) return;
 
     replaced.delete(modal);
-    for (const [name, value] of entry.previous) {
-      if (value === null) {
-        this.removeAttr(modal, name);
-      } else {
-        this.setAttr(modal, name, value);
-      }
-    }
+    restoreAttributes(modal, entry.previous);
   }
 
   /**

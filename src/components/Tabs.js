@@ -1,5 +1,5 @@
 import { BaseComponent } from '../core/BaseComponent.js';
-import { generateId } from '../utils/dom-utils.js';
+import { generateId, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 
 const FOCUSABLE =
@@ -117,7 +117,10 @@ export default class Tabs extends BaseComponent {
     state.keyboardNavigation = this.getBoolAttr(element, 'keyboard', defaults.keyboardNavigation);
     state.activation =
       this.getAttr(element, 'activation', defaults.activation) === 'manual' ? 'manual' : 'auto';
-    state.original = this._remember([tabsList, ...tabs, ...panels]);
+    state.original = [tabsList, ...tabs, ...panels].map(item => [
+      item,
+      rememberAttributes(item, MANAGED_ATTRIBUTES),
+    ]);
     state.originalClass = element.getAttribute('class');
 
     this._setupTabs(state);
@@ -154,7 +157,7 @@ export default class Tabs extends BaseComponent {
     state.cleanup = () => {
       baseCleanup();
       state.transition = null;
-      this._restore(state.original);
+      state.original.forEach(([item, attributes]) => restoreAttributes(item, attributes));
       this.removeAttr(element, 'enhanced');
       element.classList.remove('tabs--enhanced');
       if (state.originalClass === null && element.classList.length === 0) {
@@ -170,32 +173,6 @@ export default class Tabs extends BaseComponent {
     });
 
     return state;
-  }
-
-  /**
-   * Record the managed attributes of each element as they were before Tabs changed them
-   *
-   * @returns {Map<Element, Map<string, string|null>>}
-   */
-  _remember(elements) {
-    return new Map(
-      elements.map(element => [
-        element,
-        new Map(MANAGED_ATTRIBUTES.map(name => [name, element.getAttribute(name)])),
-      ])
-    );
-  }
-
-  _restore(original) {
-    for (const [element, attributes] of original) {
-      for (const [name, value] of attributes) {
-        if (value === null) {
-          element.removeAttribute(name);
-        } else {
-          element.setAttribute(name, value);
-        }
-      }
-    }
   }
 
   /**
