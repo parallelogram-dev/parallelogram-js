@@ -70,6 +70,8 @@ describe('form control contrast', () => {
       range.setAttribute(name, value);
     }
     document.body.append(select, empty, range);
+    /* The day grid for the chosen month renders when the calendar opens */
+    range.open();
 
     const surface = over(getComputedStyle(empty).backgroundColor, [255, 255, 255]);
     const panel = over(shadowStyle(range, '.panel').backgroundColor, surface);
