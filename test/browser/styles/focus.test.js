@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import '../../../src/components/PSelect.js';
 import '../../../src/components/PDatetime.js';
+import '../../../src/components/PModal.js';
 import datatableStyles from '../../../src/styles/framework/components/datatable.scss';
 import mixinStyles from '../fixtures/focus-mixins.scss';
 
@@ -46,6 +47,22 @@ describe('focus indicators', () => {
     hour.focus();
 
     expect(visible(outlineOf(hour))).toBe(true);
+  });
+
+  it('outlines a p-modal panel that takes focus because nothing inside it can', () => {
+    const modal = document.createElement('p-modal');
+    modal.setAttribute('data-modal-closable', 'false');
+    modal.innerHTML = '<h2 slot="title">Saving</h2><p>Please wait.</p>';
+    document.body.append(modal);
+    cleanups.push(() => {
+      modal.remove();
+      document.body.style.overflow = '';
+    });
+
+    modal.open();
+
+    const panel = modal.shadowRoot.querySelector('dialog');
+    expect([modal.shadowRoot.activeElement, visible(outlineOf(panel))]).toEqual([panel, true]);
   });
 
   it('outlines the DataTable search box on focus', () => {
