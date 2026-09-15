@@ -12,7 +12,7 @@ export default defineConfig({
       include: ['src/**/*.js'],
       exclude: ['src/**/*.contract.js'],
       /* The unit project's coverage when these were set, rounded down; raise them as it grows */
-      thresholds: { statements: 37, branches: 31, functions: 37, lines: 38 },
+      thresholds: { statements: 51, branches: 44, functions: 50, lines: 53 },
     },
     projects: [
       {
