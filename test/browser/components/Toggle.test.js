@@ -37,6 +37,28 @@ describe('Toggle', () => {
     document.body.replaceChildren();
   });
 
+  it('hides a target the markup starts closed before Toggle has loaded', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu" data-toggle-state="closed">Links</nav>`
+    );
+
+    expect(getComputedStyle($('#site-menu')).display).toBe('none');
+  });
+
+  it('shows a target the markup starts closed when Toggle fails to load', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu" data-toggle-state="closed">Links</nav>`
+    );
+
+    $('#menu-button').classList.add('component-error');
+
+    expect(getComputedStyle($('#site-menu')).display).not.toBe('none');
+  });
+
   it('closes on an outside click only when capture is on', async () => {
     build(`
       <button id="file" data-toggle data-toggle-target="#file-menu" data-toggle-capture>File</button>

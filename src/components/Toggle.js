@@ -79,7 +79,8 @@ const containsComposed = (container, node) => {
  *   the page (default true)
  * - data-toggle-manual: on the trigger or target, close only from a trigger or group (default false)
  * - data-toggle-animate: "false" switches state without waiting for animations (default true)
- * - data-toggle-state: set on the target to closed, opening, open or closing
+ * - data-toggle-state: set on the target to closed, opening, open or closing. Write closed in the
+ *   markup to hide a target that starts closed before Toggle loads; it stays visible without scripts
  *
  * @events
  * - toggle:show: dispatched on the trigger with `{ target, trigger }`
