@@ -31,7 +31,8 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * Register adapters from the same module specifier the component is loaded from,
  * because the registry lives in that module. Blocks must sit inside the element the
- * framework observes (the body by default), not in `<head>`.
+ * framework observes (the body by default), not in `<head>`. Blocks elsewhere are never
+ * mounted, so the first tracker to start logs a warning listing them.
  *
  * A tracker is identified by its adapter name and its config's `id` (or `site`,
  * `domain` or `scriptId`), so two properties of the same kind both boot. A second
@@ -202,6 +203,7 @@ const waitingForConsent = new Set();
 let consentResolver = null;
 let requireConsentCategory = false;
 let trackerNonce;
+let placementChecked = false;
 
 /**
  * Register a tracker adapter under a name matching the `data-defer-tracker`
@@ -273,6 +275,7 @@ export function _resetTrackers() {
   consentResolver = null;
   requireConsentCategory = false;
   trackerNonce = undefined;
+  placementChecked = false;
 }
 
 const trackerKey = (name, config) => {
@@ -371,6 +374,7 @@ export default class DeferTracker extends BaseComponent {
    * Boot a tracker, or run its page step if it already loaded on an earlier page
    */
   _activate(element, state) {
+    this._checkPlacement();
     if (!this.getState(element)) return;
 
     const { name, config, key } = state;
@@ -406,6 +410,24 @@ export default class DeferTracker extends BaseComponent {
 
     tracker.elements.add(element);
     this.setAttr(element, 'status', tracker.status);
+  }
+
+  /**
+   * Warn once about blocks that were never mounted, such as blocks in `<head>` or outside the
+   * element the framework observes. Runs when trackers first start, after the page's blocks mount.
+   */
+  _checkPlacement() {
+    if (placementChecked) return;
+    placementChecked = true;
+
+    const selector = this._getSelector();
+    const unmounted = document.querySelectorAll(`[${selector}]:not([${selector}-status])`);
+    if (unmounted.length > 0) {
+      this.logger?.warn(
+        'Tracker blocks outside the element the framework observes, such as in <head>, never load',
+        { elements: [...unmounted] }
+      );
+    }
   }
 
   _consentGranted(name, config) {

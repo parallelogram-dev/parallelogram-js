@@ -126,6 +126,27 @@ describe('DeferTracker trackers', () => {
     history.replaceState(null, '', '/');
   });
 
+  describe('with a block in the head', () => {
+    afterEach(() => {
+      document.head.replaceChildren();
+    });
+
+    it('warns that a block outside the observed element never loads', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      registerTrackerAdapter('ga4', vi.fn());
+      const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
+      const stray = block('ga4', { id: 'G-HEAD' });
+      document.head.append(stray);
+      new DeferTracker({ logger }).mount(block('ga4', { id: 'G-SHOP' }));
+
+      interact();
+
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('<head>'), {
+        elements: [stray],
+      });
+    });
+  });
+
   it('boots a second tracker of the same kind with a different id', async () => {
     const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
     const boot = vi.fn();
