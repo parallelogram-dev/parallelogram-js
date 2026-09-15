@@ -242,7 +242,11 @@ export class DataTable extends BaseComponent {
       );
       const number = Number(digits.replace(decimal, '.'));
       if (!Number.isFinite(number)) return null;
-      return /[-\u2212(]/.test(raw.slice(0, match.index)) ? -number : number;
+      /* A minus sign or opening parenthesis counts unless it joins a word, as in "Item-5" */
+      const negative = /(^|[^\p{L}\p{N}])[-\u2212(][^\p{L}\p{N}]*$/u.test(
+        raw.slice(0, match.index)
+      );
+      return negative ? -number : number;
     }
     if (type === 'date') {
       const time = Date.parse(raw);

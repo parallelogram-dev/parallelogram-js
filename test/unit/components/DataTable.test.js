@@ -94,6 +94,10 @@ describe('DataTable', () => {
     ]);
   });
 
+  it('reads a hyphen joined to a word as part of the word rather than a minus sign', () => {
+    expect(sortNumbers(['Item-5', 'Item-2', '-1'])).toEqual(['-1', 'Item-2', 'Item-5']);
+  });
+
   it.each([
     ['de', ['1.234,56', '99,5', '1.000'], ['99,5', '1.000', '1.234,56']],
     ['en', ['1,234.56', '99.5', '1,000'], ['99.5', '1,000', '1,234.56']],
