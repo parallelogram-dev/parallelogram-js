@@ -11,7 +11,15 @@
  *   links open natively instead of loading as a page
  * @property {number} [historyCache=5] - Pages kept in memory for Back and Forward to show without
  *   fetching them again, most recently shown first; 0 fetches every history move
+ * @property {boolean} [prefetch=false] - Prefetch every link the router follows, as
+ *   [data-router-prefetch] does
  */
+
+/* Milliseconds the pointer rests on a link before its page is prefetched */
+const PREFETCH_DELAY = 65;
+
+/* Milliseconds a prefetched page can be shown for after its request started */
+const PREFETCH_LIFETIME = 30000;
 
 /**
  * Client-side navigation for server-rendered pages
@@ -37,6 +45,7 @@ export class RouterManager {
       errorClass: 'router-error',
       fullLoadOnError: true,
       historyCache: 5,
+      prefetch: false,
       /* File extensions that are never loaded as an HTML fragment, unless the link is marked
          [data-router-enhance]. The browser downloads or opens them natively. */
       nonRoutableExtensions: [
@@ -91,6 +100,9 @@ export class RouterManager {
     this._scrollPositions = new Map();
     /* Pages shown in place, by address without the hash, for history moves to show again */
     this._pages = new Map();
+    /* The latest prefetch, { key, page, controller, time }, and the timer waiting to start one */
+    this._prefetched = null;
+    this._prefetchTimer = null;
     this._previousScrollRestoration = history.scrollRestoration;
 
     /* Aborted in destroy() to remove every window and document listener */
@@ -112,6 +124,12 @@ export class RouterManager {
     window.addEventListener('scroll', () => this._rememberScroll(), { passive: true, signal });
     window.addEventListener('popstate', event => this._onPopState(event), { signal });
     document.addEventListener('click', event => this._onClick(event), { signal });
+    for (const type of ['pointerover', 'pointerout', 'pointerdown', 'focusin']) {
+      document.addEventListener(type, event => this._onPrefetchIntent(event), {
+        passive: true,
+        signal,
+      });
+    }
     window.addEventListener(
       'pageshow',
       event => {
@@ -503,7 +521,9 @@ export class RouterManager {
     try {
       const { signal } = navigation.controller;
       const kept = fromHistory && this._pages.get(this._pageKey(targetUrl));
-      const { response, data } = kept || (await this.get(targetUrl, { signal }));
+      const { response, data } =
+        kept ||
+        (await (this._takePrefetched(targetUrl, signal) ?? this.get(targetUrl, { signal })));
       const finalUrl = this._responseUrl(response, targetUrl);
       const contentType = response.headers.get('content-type') || '';
 
@@ -648,6 +668,90 @@ export class RouterManager {
     return key.href;
   }
 
+  /**
+   * Prefetch a link's page once the pointer rests on it, or straight away when it is pressed or
+   * focused, cancelling the wait when the pointer leaves the link first
+   */
+  _onPrefetchIntent(event) {
+    const link = event.target.closest?.('a[href], area[href]');
+    if (!link) {
+      return;
+    }
+
+    if (event.type === 'pointerout') {
+      if (!link.contains(event.relatedTarget)) {
+        clearTimeout(this._prefetchTimer);
+      }
+      return;
+    }
+
+    if (!this._prefetches(link)) {
+      return;
+    }
+
+    clearTimeout(this._prefetchTimer);
+    if (event.type === 'pointerover') {
+      this._prefetchTimer = setTimeout(() => this._prefetch(link), PREFETCH_DELAY);
+    } else {
+      this._prefetch(link);
+    }
+  }
+
+  _prefetches(link) {
+    const source = link.closest('[data-router-prefetch]');
+    const wanted = source
+      ? source.getAttribute('data-router-prefetch') !== 'false'
+      : this.options.prefetch;
+    return Boolean(wanted) && this.handlesLink(link);
+  }
+
+  /**
+   * Start fetching a link's page for the next navigation to it, cancelling an earlier prefetch
+   */
+  _prefetch(link) {
+    const url = new URL(link.getAttribute('href'), document.baseURI);
+    const key = this._pageKey(url);
+    const current = this._prefetched;
+    if (
+      key === this._pageKey(this.currentUrl) ||
+      (current?.key === key && Date.now() - current.time < PREFETCH_LIFETIME)
+    ) {
+      return;
+    }
+
+    current?.controller.abort();
+    const controller = new AbortController();
+    const page = this.get(url, { signal: controller.signal, headers: { Purpose: 'prefetch' } });
+    /* A failed prefetch is fetched again when the link is followed */
+    page.catch(() => {});
+    this._prefetched = { key, page, controller, time: Date.now() };
+  }
+
+  /**
+   * The prefetched page for a navigation, when one started recently enough
+   *
+   * The navigation takes over the request, so a newer navigation cancels it, and fetches the page
+   * itself when the prefetch failed.
+   */
+  _takePrefetched(url, signal) {
+    const prefetched = this._prefetched;
+    if (prefetched?.key !== this._pageKey(url)) {
+      return null;
+    }
+
+    this._prefetched = null;
+    if (Date.now() - prefetched.time >= PREFETCH_LIFETIME) {
+      prefetched.controller.abort();
+      return null;
+    }
+
+    signal.addEventListener('abort', () => prefetched.controller.abort(), { once: true });
+    return prefetched.page.catch(() => {
+      signal.throwIfAborted();
+      return this.get(url, { signal });
+    });
+  }
+
   _fullLoad(url, replaceEntry) {
     if (replaceEntry) {
       window.location.replace(url.href);
@@ -735,6 +839,8 @@ export class RouterManager {
 
     this._listeners.abort();
     this._abortInFlight();
+    clearTimeout(this._prefetchTimer);
+    this._prefetched?.controller.abort();
     history.scrollRestoration = this._previousScrollRestoration;
 
     this.eventBus.emit('router:destroyed', {});

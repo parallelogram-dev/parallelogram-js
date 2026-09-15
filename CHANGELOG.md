@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AlertManager#destroy()` removes the listeners that forward `p-toasts:show` and `p-toasts:close` to the event bus, which couldn't be removed before. The `<p-toasts>` element stays, and the shared manager behind `AlertManager.notify()` is unchanged.
 - The `viewTransitions` page manager option swaps a navigation's fragments inside `document.startViewTransition()`, styled with `::view-transition-*` CSS and `view-transition-name`. It is off by default. Browsers without view transitions, users who prefer reduced motion and fragments with a `targetGroupTransitions` entry swap straight away as before.
 - The router keeps the last 5 pages it showed in memory, and Back and Forward show them again without fetching them. Following a link still fetches. Set the `historyCache` router option to the number of pages to keep, or to `0` for pages that must always be fresh on Back.
+- Links with `data-router-prefetch`, or every link the router follows with the `prefetch` router option, start fetching their page once the pointer rests on them for 65 milliseconds, or when they are pressed or focused, and the next navigation to that page within 30 seconds shows the response. Links the router leaves to the browser are never prefetched. Prefetch requests send `Purpose: prefetch`; only prefetch links whose `GET` requests have no side effects.
+- The Pages and the router guide recommends `Vary: X-Requested-With` for servers or caches that change the response for router requests.
 
 ### Changed
 
