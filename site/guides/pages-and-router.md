@@ -196,6 +196,8 @@ The fragment element itself stays in the page, and its content is replaced. Its 
 
 With `runScripts`, scripts inside a swapped fragment run again on every visit, as on a full page load. Scripts with `data-router-skip` and data blocks, such as `type="application/json"`, don't run. Only an empty type, `module`, or a JavaScript or ECMAScript type runs.
 
+Under a Content Security Policy that allows scripts by nonce without `'strict-dynamic'`, the browser blocks the scripts the router recreates, in fragments and in the head. Each copy keeps the nonce from the fetched page, and a server that sends a fresh nonce with every response gave that page a different nonce from the one the current page's policy allows. Add `'strict-dynamic'` to `script-src`, so scripts added by the page's allowed scripts can run, or render pages requested by the router with the nonce of the page that first loaded. Mark scripts that don't need to run again with `data-router-skip`.
+
 ## The head
 
 Before any fragment changes, and only when the fetched page has head content:
