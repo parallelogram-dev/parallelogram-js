@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import DataTable from '../../../src/components/DataTable.js';
 
 const mountTable = (attributes = {}) => {
@@ -20,8 +20,10 @@ const mountTable = (attributes = {}) => {
 
   const dataTable = new DataTable();
   dataTable.mount(table);
-  return dataTable.getState(table).config;
+  return { dataTable, table, config: dataTable.getState(table).config };
 };
+
+const paginationOf = table => table.nextElementSibling.nextElementSibling;
 
 const sortNumbers = (values, { lang, sortValues = false } = {}) => {
   const wrapper = document.createElement('div');
@@ -62,14 +64,70 @@ describe('DataTable', () => {
       { paginate: true, pageSize: 3 },
     ],
   ])('reads data-datatable-paginate set to %s', (_case, attributes, expected) => {
-    expect(mountTable(attributes)).toMatchObject(expected);
+    expect(mountTable(attributes).config).toMatchObject(expected);
   });
 
   it('turns features on and off from "true" and "false"', () => {
-    expect(mountTable({ sortable: 'false', filterable: 'true' })).toMatchObject({
+    expect(mountTable({ sortable: 'false', filterable: 'true' }).config).toMatchObject({
       sortable: false,
       filterable: true,
     });
+  });
+
+  it('labels its pagination from the translation attributes', () => {
+    const { table } = mountTable({
+      paginate: '3',
+      'pagination-label': 'Seiten',
+      'previous-text': 'Zurück',
+      'previous-label': 'Vorherige Seite',
+      'next-text': 'Weiter',
+      'next-label': 'Nächste Seite',
+      'page-label': 'Seite {page}',
+    });
+    const nav = paginationOf(table);
+
+    expect([
+      nav.getAttribute('aria-label'),
+      ...[...nav.querySelectorAll('button')].map(button => [
+        button.textContent,
+        button.getAttribute('aria-label'),
+      ]),
+    ]).toEqual([
+      'Seiten',
+      ['Zurück', 'Vorherige Seite'],
+      ['1', 'Seite 1'],
+      ['2', 'Seite 2'],
+      ['3', 'Seite 3'],
+      ['Weiter', 'Nächste Seite'],
+    ]);
+  });
+
+  it('announces the status message with its placeholders filled in', async () => {
+    const { dataTable, table } = mountTable({
+      paginate: '3',
+      'status-message': 'Zeilen {from} bis {to} von {total}',
+    });
+
+    dataTable.goToPage(table, 3);
+
+    await vi.waitFor(() =>
+      expect(table.nextElementSibling.textContent).toBe('Zeilen 7 bis 7 von 7')
+    );
+  });
+
+  it('hides the pagination region while every row fits on one page', () => {
+    const { table } = mountTable({ paginate: '10' });
+
+    expect(paginationOf(table).hidden).toBe(true);
+  });
+
+  it('shows the pagination region again when the rows need more than one page', () => {
+    const { dataTable, table } = mountTable({ paginate: '5', filterable: 'true' });
+    dataTable.filter(table, 'zzz');
+
+    dataTable.filter(table, '');
+
+    expect(paginationOf(table).hidden).toBe(false);
   });
 
   it.each([

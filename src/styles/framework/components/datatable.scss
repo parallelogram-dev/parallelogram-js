@@ -55,7 +55,8 @@
   color: currentColor;
 }
 
-:where(.datatable__pagination) {
+/* Pagination is hidden while every row fits on one page */
+:where(.datatable__pagination:not([hidden])) {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
