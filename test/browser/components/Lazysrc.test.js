@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Lazysrc from '../../../src/components/Lazysrc.js';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const WAIT = { timeout: 4000 };
 
@@ -205,5 +206,36 @@ describe('Lazysrc', () => {
       '',
       'lazysrc--loaded',
     ]);
+  });
+
+  it('takes the placeholder and error colours from the dark roles when data-theme is dark', () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    const loading = document.createElement('div');
+    const failed = document.createElement('div');
+    loading.setAttribute('data-lazysrc-state', 'loading');
+    failed.setAttribute('data-lazysrc-state', 'error');
+    document.body.append(loading, failed);
+    const colours = () => [
+      getComputedStyle(loading).backgroundColor,
+      getComputedStyle(failed).backgroundColor,
+      getComputedStyle(failed).outlineColor,
+    ];
+
+    try {
+      const light = colours();
+      document.documentElement.dataset.theme = 'dark';
+
+      expect([light, colours()]).toEqual([
+        ['rgb(245, 245, 245)', 'rgb(254, 226, 226)', 'rgb(220, 38, 38)'],
+        ['rgb(32, 39, 51)', 'rgba(248, 113, 113, 0.16)', 'rgb(248, 113, 113)'],
+      ]);
+    } finally {
+      delete document.documentElement.dataset.theme;
+      loading.remove();
+      failed.remove();
+      style.remove();
+    }
   });
 });
