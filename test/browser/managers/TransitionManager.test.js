@@ -43,6 +43,27 @@ describe('TransitionManager', () => {
     expect(outcome).toBe('finished');
   });
 
+  it('finishes and keeps the end styles when an animation never completes', async () => {
+    const panel = renderPanel('data-transition-duration="50"');
+    const animate = panel.animate.bind(panel);
+    vi.spyOn(panel, 'animate').mockImplementation((keyframes, options) => {
+      const animation = animate(keyframes, options);
+      animation.pause();
+      return animation;
+    });
+
+    const outcome = await Promise.race([
+      new TransitionManager().exit(panel).then(() => 'finished'),
+      wait(1500).then(() => 'still waiting'),
+    ]);
+
+    expect([outcome, panel.getAnimations().length, getComputedStyle(panel).opacity]).toEqual([
+      'finished',
+      0,
+      '0',
+    ]);
+  });
+
   it('skips motion when the user prefers reduced motion', async () => {
     vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
     const panel = renderPanel('data-transition-duration="2000"');
