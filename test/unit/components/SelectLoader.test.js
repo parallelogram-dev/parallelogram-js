@@ -172,6 +172,35 @@ describe('SelectLoader', () => {
     await vi.waitFor(() => expect(target.textContent).toBe('Laptop details'), { timeout: 150 });
   });
 
+  it('reports only the newer load when the choice changes while content fades in', async () => {
+    const router = stubRouter();
+    document.body.innerHTML = `
+      <select data-selectloader data-selectloader-target="#product-details"
+              data-selectloader-transition="fade" data-selectloader-transition-duration="150">
+        <option value="">Choose a product</option>
+        <option value="/fragments/laptop.html">Laptop</option>
+        <option value="/fragments/phone.html">Phone</option>
+      </select>
+      <div id="product-details"></div>`;
+    const select = document.querySelector('select');
+    const target = document.querySelector('#product-details');
+    const loaded = [];
+    select.addEventListener('selectloader:loaded', event => loaded.push(event.detail.url));
+    const complete = new Promise(resolve =>
+      select.addEventListener('selectloader:complete', event => resolve(event.detail.url))
+    );
+    new SelectLoader({ eventBus: new EventManager(), router }).mount(select);
+
+    choose(select, '/fragments/laptop.html');
+    router.requests[0].respond('<p>Laptop</p>');
+    await vi.waitFor(() => expect(target.textContent).toBe('Laptop'), { interval: 5 });
+    choose(select, '/fragments/phone.html');
+    router.requests[1].respond('<p>Phone</p>');
+    await complete;
+
+    expect(loaded).toEqual(['/fragments/phone.html']);
+  });
+
   it('leaves no inline styles behind after a slide', async () => {
     const router = { get: vi.fn(async () => ({ data: '<p>Laptop details</p>' })) };
     document.body.innerHTML = `

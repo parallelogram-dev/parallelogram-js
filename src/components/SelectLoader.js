@@ -206,6 +206,8 @@ export default class SelectLoader extends BaseComponent {
       if (animate) {
         await this._transitionIn(state);
       }
+      /* A newer choice started during the transition, so leave the target and reporting to it */
+      if (request.signal.aborted || state.request !== request) return;
       this._clearTransitionStyles(targetElement);
 
       this._dispatch(element, 'selectloader:loaded', { url, targetElement, html });
