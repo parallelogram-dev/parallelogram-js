@@ -130,6 +130,27 @@ describe('DataTable', () => {
     expect(paginationOf(table).hidden).toBe(false);
   });
 
+  it('sorts the column under its header when an earlier header spans several columns', () => {
+    const table = document.createElement('table');
+    table.setAttribute('data-datatable', '');
+    table.innerHTML = `
+      <thead><tr><th colspan="2">Name</th><th data-sort="score" data-sort-type="number">Score</th></tr></thead>
+      <tbody>
+        <tr><td>Grace</td><td>Hopper</td><td>30</td></tr>
+        <tr><td>Ada</td><td>Lovelace</td><td>12</td></tr>
+        <tr><td>Alan</td><td>Turing</td><td>21</td></tr>
+      </tbody>`;
+    document.body.append(table);
+    const dataTable = new DataTable();
+    dataTable.mount(table);
+
+    dataTable.sort(table, 'score');
+
+    expect(
+      Array.from(table.querySelectorAll('tbody td:nth-child(3)'), cell => cell.textContent)
+    ).toEqual(['12', '21', '30']);
+  });
+
   it.each([
     [
       'words after them',
