@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Toggle from '../../../src/components/Toggle.js';
 
 const mountToggle = (attributes = {}) => {
@@ -19,6 +19,7 @@ const mountToggle = (attributes = {}) => {
 
 describe('Toggle', () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     document.body.replaceChildren();
   });
 
@@ -94,5 +95,92 @@ describe('Toggle', () => {
       menu.getAttribute('data-toggle-state'),
       menu.getAttribute('data-toggle-target'),
     ]).toEqual(['open', 'open']);
+  });
+
+  it('puts back the markup it changed once its only trigger unmounts', () => {
+    document.body.innerHTML = `
+      <button id="menu-button" data-toggle data-toggle-target=".site-menu">Menu</button>
+      <nav class="site-menu">Links</nav>
+    `;
+    const before = document.body.innerHTML;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#menu-button');
+    toggle.mount(trigger);
+
+    toggle.unmount(trigger);
+
+    expect(document.body.innerHTML).toBe(before);
+  });
+
+  it('keeps the attributes the markup gave the trigger and target when it unmounts', () => {
+    document.body.innerHTML = `
+      <button id="menu-button" data-toggle data-toggle-target="#site-menu" aria-controls="site-menu" aria-expanded="false">Menu</button>
+      <nav id="site-menu" data-toggle-state="closed" hidden>Links</nav>
+    `;
+    const before = document.body.innerHTML;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#menu-button');
+    toggle.mount(trigger);
+
+    toggle.unmount(trigger);
+
+    expect(document.body.innerHTML).toBe(before);
+  });
+
+  it('leaves a target set up while another of its triggers is still mounted', () => {
+    document.body.innerHTML = `
+      <button id="open-menu" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu">Links</nav>
+      <button id="close-menu" data-toggle data-toggle-target="#site-menu">Close</button>
+    `;
+    const toggle = new Toggle();
+    const menu = document.querySelector('#site-menu');
+    toggle.mount(document.querySelector('#open-menu'));
+    toggle.mount(document.querySelector('#close-menu'));
+
+    toggle.unmount(document.querySelector('#open-menu'));
+
+    expect([menu.getAttribute('data-toggle-state'), menu.hidden]).toEqual(['closed', true]);
+  });
+
+  it('stops listening to the document once its last trigger unmounts', () => {
+    const addEventListener = vi.spyOn(document, 'addEventListener');
+    document.body.innerHTML = `
+      <button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu">Links</nav>
+    `;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#menu-button');
+    toggle.mount(trigger);
+
+    toggle.unmount(trigger);
+
+    expect(
+      addEventListener.mock.calls.map(([type, , options]) => [type, options.signal.aborted])
+    ).toEqual([
+      ['click', true],
+      ['keydown', true],
+      ['focusout', true],
+    ]);
+  });
+
+  it('closes on an outside click again when a trigger mounts after the last one unmounted', () => {
+    document.body.innerHTML = `
+      <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-capture data-toggle-animate="false">Account</button>
+      <div id="account-menu">Profile</div>
+      <p id="results">Results</p>
+    `;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#account');
+    toggle.mount(trigger);
+    toggle.unmount(trigger);
+    toggle.mount(trigger);
+    toggle.show(trigger);
+
+    document.querySelector('#results').click();
+
+    expect(document.querySelector('#account-menu').getAttribute('data-toggle-state')).toBe(
+      'closed'
+    );
   });
 });

@@ -7,6 +7,22 @@ import { whenAnimationsFinish } from '../utils/motion.js';
 const INTERACTIVE =
   'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
+/** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
+const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
+const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state', 'data-toggle-target'];
+
+const remember = (element, names) => new Map(names.map(name => [name, element.getAttribute(name)]));
+
+const restore = (element, attributes) => {
+  for (const [name, value] of attributes ?? []) {
+    if (value === null) {
+      element.removeAttribute(name);
+    } else {
+      element.setAttribute(name, value);
+    }
+  }
+};
+
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
   for (let current = node; current; current = current.parentNode ?? current.host) {
@@ -31,7 +47,8 @@ const containsComposed = (container, node) => {
  * moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its
  * trigger; when focus rests on the page instead, as it does in Safari after clicking a button, Escape
  * closes the toggle opened last. Following a page link inside an open target closes it. Manual targets only close from
- * a trigger or their group.
+ * a trigger or their group. Unmounting a trigger puts back the attributes Toggle gave it, and
+ * unmounting the last trigger for a target does the same for the target.
  *
  * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions the
  * Accordion component, which animates `<details name="…">`; both work without JavaScript.
@@ -94,6 +111,9 @@ export default class Toggle extends BaseComponent {
     /** A token per target, replaced by each transition so an older one cannot finish it */
     this._transitions = new WeakMap();
 
+    /** Each target's attributes as they were before its first trigger mounted */
+    this._originals = new WeakMap();
+
     this._documentListeners = null;
   }
 
@@ -138,8 +158,10 @@ export default class Toggle extends BaseComponent {
     }
     state.isOpen = isOpen;
 
+    state.original = remember(element, TRIGGER_ATTRIBUTES);
     const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
     if (firstTrigger) {
+      this._originals.set(target, remember(target, TARGET_ATTRIBUTES));
       this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
     }
 
@@ -174,6 +196,17 @@ export default class Toggle extends BaseComponent {
         }
       }
       element.removeAttribute('data-toggle-enhanced');
+      restore(element, state.original);
+
+      if (!this._triggersFor(target).some(trigger => trigger !== element)) {
+        this._transitions.delete(target);
+        restore(target, this._originals.get(target));
+        this._originals.delete(target);
+      }
+      if (this.trackedElements().every(trigger => trigger === element)) {
+        this._documentListeners?.abort();
+        this._documentListeners = null;
+      }
       baseCleanup();
     };
 

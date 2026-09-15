@@ -238,6 +238,6 @@ describe('Toggle', () => {
     $('#results').click();
     await pause(150);
 
-    expect(stateOf('#account-menu')).toBe('open');
+    expect($('#account-menu').classList.contains('open')).toBe(true);
   });
 });
