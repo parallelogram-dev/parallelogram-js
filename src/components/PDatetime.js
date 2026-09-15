@@ -257,6 +257,8 @@ export default class PDatetime extends HTMLElement {
     this._connection = new AbortController();
     const { signal } = this._connection;
 
+    /* Checked while capturing, before the panel's own click handlers re-render and detach the
+       clicked control, so a click inside the panel is never mistaken for one outside it */
     document.addEventListener(
       'click',
       event => {
@@ -264,7 +266,7 @@ export default class PDatetime extends HTMLElement {
           this.close();
         }
       },
-      { signal }
+      { capture: true, signal }
     );
 
     /* Close when focus moves to something outside the component. A focusout without a new target,
