@@ -631,15 +631,6 @@ export default class PDatetime extends HTMLElement {
   set range(v) {
     this.toggleAttribute('range', Boolean(v));
   }
-  /**
-   * @deprecated 0.5.0 Use range instead. Removed in 0.6.0.
-   */
-  get isRange() {
-    return this.range;
-  }
-  set isRange(v) {
-    this.range = v;
-  }
   get rangeTo() {
     return this.getAttribute('range-to');
   }
