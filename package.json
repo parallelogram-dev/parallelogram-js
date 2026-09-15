@@ -188,7 +188,7 @@
     "components/Toast.js": 6283,
     "components/Toggle.js": 4835,
     "components/Videoplay.js": 4766,
-    "adapters/bing-uet.js": 720,
+    "adapters/bing-uet.js": 824,
     "adapters/clarity.js": 593,
     "adapters/fathom.js": 571,
     "adapters/ga4.js": 782,
