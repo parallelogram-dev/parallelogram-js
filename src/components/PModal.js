@@ -57,7 +57,10 @@ let lockedOverflow = null;
  * @csspart footer - the actions row
  *
  * @cssprop --modal-animation-duration - length of the opening and closing animations (default 0.2s)
- * @cssprop --modal-backdrop-bg - colour of the dimmed page behind the modal
+ * @cssprop --modal-backdrop-bg - colour of the page behind the modal (default the page surface at
+ *   95%, `color-mix(in srgb, var(--color-surface) 95%, transparent)`)
+ * @cssprop --modal-panel-bg, --modal-panel-color - panel background and text (defaults
+ *   `var(--surface-dialog-color-bg)` and `var(--surface-dialog-color-text)`)
  */
 export default class PModal extends HTMLElement {
   static get observedAttributes() {

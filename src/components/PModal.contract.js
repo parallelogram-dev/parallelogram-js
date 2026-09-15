@@ -108,11 +108,28 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       description: 'Length of the opening and closing animations',
     },
     { name: '--modal-animation-easing', description: 'Easing of the animations' },
-    { name: '--modal-backdrop-bg', description: 'Colour of the dimmed page behind the modal' },
-    { name: '--modal-panel-bg', description: 'Panel background' },
-    { name: '--modal-panel-color', description: 'Panel text colour' },
+    {
+      name: '--modal-backdrop-bg',
+      default: 'color-mix(in srgb, var(--color-surface) 95%, transparent)',
+      description:
+        'Colour of the page behind the modal; the page surface at 95%, so white in light mode and the dark surface in dark mode',
+    },
+    {
+      name: '--modal-panel-bg',
+      default: 'var(--surface-dialog-color-bg)',
+      description: 'Panel background',
+    },
+    {
+      name: '--modal-panel-color',
+      default: 'var(--surface-dialog-color-text)',
+      description: 'Panel text colour',
+    },
     { name: '--modal-radius', description: 'Panel corner radius' },
-    { name: '--modal-shadow', description: 'Panel shadow' },
+    {
+      name: '--modal-shadow',
+      default: 'var(--surface-dialog-shadow)',
+      description: 'Panel shadow',
+    },
     { name: '--modal-padding-x', description: 'Horizontal padding' },
     { name: '--modal-padding-y', description: 'Vertical padding' },
     {

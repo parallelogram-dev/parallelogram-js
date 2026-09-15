@@ -11,25 +11,30 @@
   display: contents;
   box-sizing: border-box;
 
-  /* Colors using surface-dialog tokens and design system variables */
-  --modal-backdrop-bg: rgba(255, 255, 255, 0.95);
-  --modal-panel-bg: var(--surface-dialog-color-bg, #ffffff);
+  /* Colours default to the dialog surface tokens, then the colour roles, then light values. The
+     backdrop is the page surface at 95%: white in light mode, the dark surface in dark mode */
+  --modal-backdrop-bg: color-mix(in srgb, var(--color-surface, #ffffff) 95%, transparent);
+  --modal-panel-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
   --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
-  --modal-panel-border: var(--surface-dialog-border-color, #{$color-border});
-  --modal-header-bg: var(--surface-dialog-color-bg, #ffffff);
-  --modal-header-border: var(--surface-dialog-border-color, #{$color-border});
-  --modal-footer-bg: var(--surface-dialog-color-bg, #ffffff);
-  --modal-footer-border: var(--surface-dialog-border-color, #{$color-border});
-  --modal-close-hover-bg: #{$color-bg-hover};
-  --modal-btn-primary-bg: #{$primary};
-  --modal-btn-primary-color: #ffffff;
-  --modal-btn-primary-hover-bg: #{$primary-dark};
-  --modal-btn-danger-bg: #{$error-dark};
-  --modal-btn-danger-color: #ffffff;
-  --modal-btn-danger-hover-bg: #{$error-dark};
-  --modal-btn-bg: #{$neutral-100};
-  --modal-btn-color: #{$neutral-900};
-  --modal-btn-hover-bg: #{$neutral-300};
+  --modal-panel-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
+  --modal-header-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
+  --modal-header-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
+  --modal-footer-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
+  --modal-footer-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
+  --modal-close-hover-bg: var(--color-hover, #{$color-bg-hover});
+  --modal-btn-primary-bg: var(--color-accent-hover, #{$primary-dark});
+  --modal-btn-primary-color: var(--color-accent-contrast, #ffffff);
+  --modal-btn-primary-hover-bg: color-mix(
+    in srgb,
+    var(--color-accent-hover, #{$primary-dark}) 85%,
+    black
+  );
+  --modal-btn-danger-bg: var(--color-danger, #{$error-dark});
+  --modal-btn-danger-color: var(--color-danger-contrast, #ffffff);
+  --modal-btn-danger-hover-bg: var(--color-danger, #{$error-dark});
+  --modal-btn-bg: var(--color-surface-muted, #{$neutral-100});
+  --modal-btn-color: var(--surface-dialog-color-text, #{$neutral-900});
+  --modal-btn-hover-bg: var(--color-border-strong, #{$neutral-300});
 
   /* Opacity */
   --modal-placeholder-opacity: #{$opacity-muted};
@@ -54,7 +59,7 @@
   --modal-border-width: var(--surface-dialog-border-width, 1px);
 
   /* Shadows using surface-dialog tokens */
-  --modal-shadow-color: rgba(0, 0, 0, 0.5);
+  --modal-shadow-color: var(--color-shadow, rgba(0, 0, 0, 0.5));
   --modal-shadow: var(--surface-dialog-shadow, 0 1.25em 3.75em var(--modal-shadow-color));
 
   /* Timing */
@@ -100,7 +105,8 @@
 
 /* The panel only takes focus when it has nothing focusable, so show it like any other focus */
 .modal__panel:focus-visible {
-  outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+  outline: var(--framework-focus-width, 2px) solid
+    var(--framework-focus-color, var(--color-accent, #3b82f6));
   outline-offset: var(--framework-focus-offset, 2px);
 }
 
