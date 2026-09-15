@@ -6,7 +6,7 @@ export default {
   module: 'components/Tabs',
   stylesheet: 'styles/tabs.css',
   summary: 'Tabbed panels built from a list of tab buttons or in-page links',
-  description: `Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them. While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first panel, so the page doesn't jump when it does.
+  description: `Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them. While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first panel, so the page doesn't jump when it does. If Tabs fails to load, every panel shows again; if it is never registered, the other panels stay hidden.
 
 Once mounted, Tabs follows the WAI-ARIA tabs pattern: arrow keys, Home and End move focus between tabs, inactive panels get the \`hidden\` attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting puts the markup back as it was.`,
   attributes: [
