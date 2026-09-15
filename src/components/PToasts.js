@@ -46,8 +46,10 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * @csspart title - a toast's title
  * @csspart close - a toast's dismiss button
  *
- * @cssprop --toast-bg-info, --toast-bg-success, --toast-bg-warning, --toast-bg-error - backgrounds
- * @cssprop --toast-text-color - text colour
+ * @cssprop --toast-bg-info - background of every toast (default `var(--surface-panel-color-bg)`)
+ * @cssprop --toast-bg-success, --toast-bg-warning, --toast-bg-error - tints over the background
+ *   (defaults `var(--color-success-bg)`, `var(--color-warning-bg)`, `var(--color-danger-bg)`)
+ * @cssprop --toast-text-color - text colour (default `var(--surface-panel-color-text)`)
  * @cssprop --toast-border-radius, --toast-shadow - toast surface
  * @cssprop --toast-padding, --toast-gap, --toast-item-padding - spacing around and between toasts
  * @cssprop --toast-min-width, --toast-max-width - toast width limits
