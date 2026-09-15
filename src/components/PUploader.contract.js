@@ -55,13 +55,13 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
       name: 'allow-edit',
       type: 'boolean',
       default: true,
-      description: 'false turns off editing and deleting',
+      description: 'false or 0 turns off editing and deleting',
     },
     {
       name: 'allow-sort',
       type: 'boolean',
       default: true,
-      description: 'false turns off reordering',
+      description: 'false or 0 turns off reordering',
     },
     {
       name: 'full',
@@ -180,7 +180,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
           name: 'allow-edit',
           type: 'boolean',
           default: true,
-          description: 'false turns off editing and deleting for this file',
+          description: 'false or 0 turns off editing and deleting for this file',
         },
         {
           name: 'data-current-panel',

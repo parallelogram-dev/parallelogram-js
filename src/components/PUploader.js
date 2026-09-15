@@ -65,6 +65,20 @@ const formatBytes = bytes => {
   return `${Number(size.toFixed(1))} ${units[unit]}`;
 };
 
+/**
+ * A boolean attribute read as BaseComponent.getBoolAttr() reads one: missing gives the default,
+ * and "false" or "0" give false
+ *
+ * @param {Element} element
+ * @param {string} name
+ * @param {boolean} defaultValue
+ * @returns {boolean}
+ */
+const boolAttr = (element, name, defaultValue) => {
+  const value = element.getAttribute(name);
+  return value === null ? defaultValue : !['false', '0'].includes(value.trim().toLowerCase());
+};
+
 let fileTemplate;
 
 /**
@@ -164,8 +178,8 @@ const getFileTemplate = () => {
  *   (default any type)
  * - max-file-size: largest accepted file in bytes (default 10 MB)
  * - input-name: form data name each uploaded file is sent under (default `file`)
- * - allow-edit: `"false"` turns off editing and deleting
- * - allow-sort: `"false"` turns off reordering
+ * - allow-edit: `"false"` or `"0"` turns off editing and deleting
+ * - allow-sort: `"false"` or `"0"` turns off reordering
  * - full: set by the component while it holds `max-files` files; the drop zone is hidden meanwhile
  * - stacked: joins the files into one list with no gap, rounding only its outer corners
  *
@@ -277,7 +291,6 @@ export default class PUploader extends HTMLElement {
   get config() {
     const getAttr = (name, defaultValue) => this.getAttribute(name) || defaultValue;
     const getIntAttr = (name, defaultValue) => parseInt(this.getAttribute(name)) || defaultValue;
-    const getBoolAttr = name => this.getAttribute(name) !== 'false';
 
     return {
       maxFiles: getIntAttr('max-files', 5),
@@ -288,8 +301,8 @@ export default class PUploader extends HTMLElement {
       inputName: getAttr('input-name', 'file'),
       acceptTypes: getAttr('accept-types', '*/*'),
       maxFileSize: getIntAttr('max-file-size', 10 * 1024 * 1024),
-      allowEdit: getBoolAttr('allow-edit'),
-      allowSort: getBoolAttr('allow-sort'),
+      allowEdit: boolAttr(this, 'allow-edit', true),
+      allowSort: boolAttr(this, 'allow-sort', true),
     };
   }
 
@@ -1226,10 +1239,10 @@ export class PUploaderFile extends HTMLElement {
 
   /**
    * What the owning uploader lets this file offer: editing needs an update-action and deleting a
-   * delete-action, and allow-edit="false" turns both off
+   * delete-action, and allow-edit="false" or "0" turns both off
    */
   _permissions() {
-    const allowEdit = this.getAttribute('allow-edit') !== 'false';
+    const allowEdit = boolAttr(this, 'allow-edit', true);
     const config = this.closest('p-uploader')?.config ?? {};
     return {
       edit: allowEdit && Boolean(config.updateAction),
