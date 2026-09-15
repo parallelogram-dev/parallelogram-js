@@ -202,11 +202,16 @@ export class RouterManager {
       return;
     }
 
-    const link = event
-      .composedPath()
-      .find(node => node instanceof Element && node.matches('a[href], area[href]'));
+    const path = event.composedPath().filter(node => node instanceof Element);
+    const index = path.findIndex(node => node.matches('a[href], area[href]'));
+    const link = path[index];
 
-    if (!link || !this.handlesLink(link)) {
+    /* closest() stops at a shadow root, so ancestors outside it are checked through the path */
+    if (
+      !link ||
+      path.slice(index).some(node => node.matches('[data-router-skip]')) ||
+      !this.handlesLink(link)
+    ) {
       return;
     }
 

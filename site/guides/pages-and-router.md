@@ -99,7 +99,7 @@ The router listens for clicks on the document, so links added later are handled 
 
 - The event isn't already cancelled, it is the primary button, and no modifier key (Meta, Ctrl, Shift or Alt) is held.
 - The `href` is present and doesn't start with `#`.
-- Neither the link nor an ancestor has `data-router-skip`.
+- Neither the link nor an ancestor has `data-router-skip`, including ancestors outside a shadow root the link is in.
 - The link has no `download` attribute, no `rel="external"`, and no `target` other than `_self`.
 - The URL is on the same origin as the page.
 - The path doesn't end in an extension from `nonRoutableExtensions`, unless the link has `data-router-enhance`.
