@@ -40,8 +40,8 @@ const containsComposed = (container, node) => {
  * closes the toggle opened last. Following a page link inside an open target closes it. Manual targets only close from
  * a trigger or their group.
  *
- * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions
- * `<details name="…">`; both work without JavaScript.
+ * For new dropdowns consider `<button popovertarget>` with `popover`, and for accordions the
+ * Accordion component, which animates `<details name="…">`; both work without JavaScript.
  *
  * @example
  * <button data-toggle data-toggle-target="#site-menu">Menu</button>
