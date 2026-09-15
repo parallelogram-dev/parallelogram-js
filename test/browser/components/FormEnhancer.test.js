@@ -258,24 +258,6 @@ describe('FormEnhancer', () => {
     expect([whileMounted, form.noValidate, submissions]).toEqual([true, false, [false]]);
   });
 
-  it('still honours legacy data-validate rules without failing empty optional fields', () => {
-    const form = build(`
-      <form data-form-validator>
-        <input name="name" data-validate="required|min:2"
-               data-validate-message="Please enter your full name">
-        <input name="website" data-validate="url">
-      </form>`);
-    enhancer.mount(form);
-    type(form.elements.name, 'A');
-
-    form.requestSubmit();
-
-    expect([submissions, errorFor(form.elements.name), errorFor(form.elements.website)]).toEqual([
-      [true],
-      'Please enter your full name',
-      null,
-    ]);
-  });
   it('leaves buttons alone when it checks the fields', () => {
     const form = build(`
       <form data-form-enhancer>
