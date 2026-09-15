@@ -81,6 +81,7 @@ export default class Tabs extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
+    const { defaults } = this.constructor;
 
     const tabsList = element.querySelector('[data-tabs-list]');
     const tabsContainer = element.querySelector('[data-tabs-panels]');
@@ -113,21 +114,15 @@ export default class Tabs extends BaseComponent {
     state.activeTab = null;
     state.activePanel = null;
     state.transition = null;
-    state.keyboardNavigation = this.getBoolAttr(
-      element,
-      'keyboard',
-      Tabs.defaults.keyboardNavigation
-    );
+    state.keyboardNavigation = this.getBoolAttr(element, 'keyboard', defaults.keyboardNavigation);
     state.activation =
-      this.getAttr(element, 'activation', Tabs.defaults.activation) === 'manual'
-        ? 'manual'
-        : 'auto';
+      this.getAttr(element, 'activation', defaults.activation) === 'manual' ? 'manual' : 'auto';
     state.original = this._remember([tabsList, ...tabs, ...panels]);
     state.originalClass = element.getAttribute('class');
 
     this._setupTabs(state);
 
-    const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
+    const defaultTab = this.getAttr(element, 'default-tab', defaults.defaultTab);
     const linkedTab = this._getLinkedTab(state);
     const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab, panels);
     if (initialTab) {
@@ -439,7 +434,7 @@ export default class Tabs extends BaseComponent {
       totalTabs: states.reduce((total, state) => total + state.tabs.length, 0),
       totalPanels: states.reduce((total, state) => total + state.panels.length, 0),
       keyboardNavigationSupported: true,
-      defaults: Tabs.defaults,
+      defaults: this.constructor.defaults,
     };
   }
 

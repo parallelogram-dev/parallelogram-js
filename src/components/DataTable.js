@@ -102,7 +102,7 @@ export class DataTable extends BaseComponent {
 
   constructor(options = {}) {
     super(options);
-    this.sortIcons = { ...DataTable.defaults.sortIcons, ...options.sortIcons };
+    this.sortIcons = { ...this.constructor.defaults.sortIcons, ...options.sortIcons };
   }
 
   _init(element) {
@@ -172,7 +172,7 @@ export class DataTable extends BaseComponent {
     /* data-datatable-paginate accepts a page size ("10") or a flag ("true") */
     const paginatePageSize = Number.parseInt(this.getAttr(element, 'paginate'), 10);
     const hasPaginatePageSize = Number.isInteger(paginatePageSize);
-    const defaults = DataTable.defaults;
+    const { defaults } = this.constructor;
 
     return {
       sortable: this.getBoolAttr(element, 'sortable', defaults.sortable),
