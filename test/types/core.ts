@@ -94,6 +94,7 @@ export function alerts(manager: AlertManager): void {
   const close = manager.success('Saved', { timeout: 3000 });
   close();
   AlertManager.notify('Could not save', 'error');
+  manager.destroy();
 
   /* @ts-expect-error notify takes a toast type */
   AlertManager.notify('Could not save', 'fatal');
