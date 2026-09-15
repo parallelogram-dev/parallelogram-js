@@ -596,39 +596,57 @@ export class ComponentHost {
   }
 
   _onMutations(mutations) {
-    let removedSomething = false;
     const added = new Set();
+    const removed = [];
 
     for (const mutation of mutations) {
       mutation.addedNodes.forEach(node => {
         if (node.nodeType === Node.ELEMENT_NODE) added.add(node);
       });
-      if (mutation.removedNodes.length > 0) removedSomething = true;
+      mutation.removedNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE) removed.push(node);
+      });
     }
 
-    if (removedSomething) {
-      this._unmountDisconnected();
-    }
+    this._unmountRemoved(removed);
 
-    const connected = [...added].filter(node => node.isConnected);
-    const roots = connected.filter(
-      node => !connected.some(other => other !== node && other.contains(node))
-    );
+    const roots = [...added].filter(node => {
+      if (!node.isConnected) return false;
+      for (let parent = node.parentNode; parent; parent = parent.parentNode) {
+        if (added.has(parent)) return false;
+      }
+      return true;
+    });
     if (roots.length > 0 && this.root) {
       this.mountWithin(this.root, { nodes: roots });
     }
   }
 
-  _unmountDisconnected() {
+  /**
+   * Unmount components from removed elements and the elements inside them. An element moved within
+   * the page is connected again by the time the records arrive, so it stays mounted.
+   */
+  _unmountRemoved(nodes) {
+    const removed = new Set(nodes.filter(node => !node.isConnected));
+    if (removed.size === 0) return;
+
+    const wasRemoved = element => {
+      if (element.isConnected) return false;
+      for (let node = element; node; node = node.parentNode) {
+        if (removed.has(node)) return true;
+      }
+      return false;
+    };
+
     for (const [name, record] of this.records) {
       if (record.instance) {
         for (const element of this._trackedElements(record.instance)) {
-          if (!element.isConnected) this._unmountElement(name, record.instance, element);
+          if (wasRemoved(element)) this._unmountElement(name, record.instance, element);
         }
       }
 
       for (const element of [...record.pending.keys()]) {
-        if (!element.isConnected) record.pending.delete(element);
+        if (wasRemoved(element)) record.pending.delete(element);
       }
     }
   }

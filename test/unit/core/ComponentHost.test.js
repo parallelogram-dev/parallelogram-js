@@ -397,6 +397,32 @@ describe('ComponentHost', () => {
     ]);
   });
 
+  it('unmounts only the elements inside the removed nodes', async () => {
+    root.innerHTML =
+      '<nav id="nav"><button id="menu" data-toggle></button></nav><button id="help" data-toggle></button>';
+    const detached = document.createElement('button');
+    detached.id = 'detached';
+    start([syncEntry('toggle')]);
+    host.mount('toggle', detached);
+
+    document.getElementById('nav').remove();
+    await flush();
+
+    expect(recorder.log.filter(([action]) => action === 'unmount')).toEqual([
+      ['unmount', 'toggle', 'menu'],
+    ]);
+  });
+
+  it('keeps an element mounted when it is moved within the page', async () => {
+    root.innerHTML = '<nav id="nav"><button id="menu" data-toggle></button></nav><aside></aside>';
+    start([syncEntry('toggle')]);
+
+    root.querySelector('aside').append(document.getElementById('nav'));
+    await flush();
+
+    expect(recorder.log).toEqual([['mount', 'toggle', 'menu']]);
+  });
+
   it('unmounts components when their elements are removed from the page', async () => {
     root.innerHTML = '<nav id="nav"><button id="menu" data-toggle></button></nav>';
     start([syncEntry('toggle')]);
