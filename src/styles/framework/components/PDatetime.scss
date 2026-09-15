@@ -620,3 +620,10 @@ button:disabled {
     border-color: CanvasText;
   }
 }
+
+/* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
+:host([data-focus-source='pointer']) :focus,
+:host([data-focus-source='pointer']) .input.is-focused {
+  outline: none;
+  box-shadow: none;
+}

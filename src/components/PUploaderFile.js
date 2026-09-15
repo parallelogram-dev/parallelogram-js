@@ -3,6 +3,7 @@ import fileStyles from '../styles/framework/components/PUploader.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
+import { followFocusSource } from '../utils/focus-source.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -96,6 +97,7 @@ export class PUploaderFile extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    followFocusSource(this);
     this._fieldSchema = null;
     this._fieldData = new Map();
     this._build();
