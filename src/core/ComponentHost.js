@@ -57,6 +57,8 @@ export class ComponentHost {
     this.entries = new Map();
     /** @type {Map<string, Object>} Load record per entry name */
     this.records = new Map();
+    /** @type {Map<string, Object>} Entries and combined selector per mount priority */
+    this.passes = new Map();
     this.timers = new Set();
     this.observer = null;
     this.root = null;
@@ -120,7 +122,7 @@ export class ComponentHost {
   add(entry) {
     this._register(entry);
     if (this.root) {
-      this._mountEntry(entry, this._matching(entry, [this.root]), null);
+      this._mountEntry(entry, this._matching(entry.selector, [this.root]), null);
     }
     return this;
   }
@@ -141,11 +143,15 @@ export class ComponentHost {
     }
 
     const scopes = nodes ?? [root];
+    const pass = this._pass(priority);
+    const found = pass.selector ? this._matching(pass.selector, scopes) : [];
 
-    for (const entry of this._entriesFor(priority)) {
+    for (const { entry, valid } of pass.entries) {
       let elements;
       try {
-        elements = this._matching(entry, scopes);
+        elements = valid
+          ? found.filter(element => element.matches(entry.selector))
+          : this._matching(entry.selector, scopes);
       } catch (error) {
         this.logger?.error(`Invalid selector for component ${entry.name}`, { error, entry });
         this.eventBus.emit('page:component-mount-error', { componentName: entry.name, error });
@@ -212,7 +218,7 @@ export class ComponentHost {
     (entry.dependsOn ?? []).forEach(dependency => this.retry(dependency));
     this.records.delete(name);
     if (this.root) {
-      this._mountEntry(entry, this._matching(entry, [this.root]), null);
+      this._mountEntry(entry, this._matching(entry.selector, [this.root]), null);
     }
     return true;
   }
@@ -261,6 +267,7 @@ export class ComponentHost {
       throw new Error(`Components can't depend on each other in a cycle: ${cycle.join(' → ')}`);
     }
     this.entries.set(entry.name, entry);
+    this.passes.clear();
   }
 
   /**
@@ -296,11 +303,41 @@ export class ComponentHost {
     return [...critical, ...normal];
   }
 
-  _matching(entry, scopes) {
+  /**
+   * The entries a mount pass covers, and one selector joining the valid selectors among them so
+   * each scope is searched once
+   */
+  _pass(priority) {
+    let pass = this.passes.get(priority);
+    if (!pass) {
+      const entries = this._entriesFor(priority).map(entry => ({
+        entry,
+        valid: this._isValidSelector(entry.selector),
+      }));
+      const selector = entries
+        .filter(({ valid }) => valid)
+        .map(({ entry }) => entry.selector)
+        .join(',');
+      pass = { entries, selector };
+      this.passes.set(priority, pass);
+    }
+    return pass;
+  }
+
+  _isValidSelector(selector) {
+    try {
+      document.createDocumentFragment().querySelector(selector);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  _matching(selector, scopes) {
     const elements = new Set();
     for (const scope of scopes) {
-      if (scope.matches?.(entry.selector)) elements.add(scope);
-      scope.querySelectorAll?.(entry.selector).forEach(element => elements.add(element));
+      if (scope.matches?.(selector)) elements.add(scope);
+      scope.querySelectorAll?.(selector).forEach(element => elements.add(element));
     }
     return [...elements];
   }

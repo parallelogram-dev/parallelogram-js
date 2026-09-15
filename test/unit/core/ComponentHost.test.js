@@ -371,6 +371,32 @@ describe('ComponentHost', () => {
     await vi.waitFor(() => expect(recorder.log).toEqual([['mount', 'toggle', 'later']]));
   });
 
+  it('searches an added element once however many components are registered', async () => {
+    start(Array.from({ length: 20 }, (_, index) => syncEntry(`widget${index}`)));
+    const search = vi.spyOn(Element.prototype, 'querySelectorAll');
+
+    root.insertAdjacentHTML('beforeend', '<nav><button id="later" data-widget7></button></nav>');
+    await vi.waitFor(() => expect(recorder.log).toEqual([['mount', 'widget7', 'later']]));
+
+    expect(search).toHaveBeenCalledOnce();
+  });
+
+  it('reports an invalid selector for its component and still mounts the others', () => {
+    root.innerHTML = '<button id="menu" data-toggle></button>';
+    const mountError = vi.fn();
+    bus.on('page:component-mount-error', mountError);
+
+    start([
+      { name: 'broken', selector: '[data-broken', loader: () => recorder.define('broken') },
+      syncEntry('toggle'),
+    ]);
+
+    expect([mountError.mock.calls.map(([event]) => event.componentName), recorder.log]).toEqual([
+      ['broken'],
+      [['mount', 'toggle', 'menu']],
+    ]);
+  });
+
   it('unmounts components when their elements are removed from the page', async () => {
     root.innerHTML = '<nav id="nav"><button id="menu" data-toggle></button></nav>';
     start([syncEntry('toggle')]);
