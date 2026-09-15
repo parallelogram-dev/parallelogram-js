@@ -111,6 +111,51 @@ describe('p-datetime day grid', () => {
     );
   });
 
+  it.each([
+    ['the next month button', '[data-datetime-nav-btn="next"]'],
+    ['the month and year button', '[data-datetime-month-year]'],
+    ['a quick date', '.preset'],
+    ['a day', '[data-date="2023-07-20"]'],
+  ])('stays open in datetime mode after a click on %s', (_, selector) => {
+    const picker = renderPicker({
+      mode: 'datetime',
+      'show-quick-dates': '',
+      value: '2023-07-12T09:00',
+    });
+    picker.open();
+
+    picker.shadowRoot.querySelector(selector).click();
+
+    expect(
+      picker.shadowRoot.querySelector('[data-datetime-trigger]').getAttribute('aria-expanded')
+    ).toBe('true');
+  });
+
+  it('stays open after a month is picked in the month view, which replaces the clicked button', () => {
+    const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+    picker.open();
+    picker.shadowRoot.querySelector('[data-datetime-month-year]').click();
+
+    picker.shadowRoot.querySelector('[data-month="9"]').click();
+
+    expect(
+      picker.shadowRoot.querySelector('[data-datetime-trigger]').getAttribute('aria-expanded')
+    ).toBe('true');
+  });
+
+  it('closes after a click outside it', () => {
+    const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    picker.open();
+
+    outside.click();
+
+    expect(
+      picker.shadowRoot.querySelector('[data-datetime-trigger]').getAttribute('aria-expanded')
+    ).toBe('false');
+  });
+
   it('shows the day grid again after choosing the same month in the month view', () => {
     const picker = renderPicker({ mode: 'date', value: '2023-07-12' });
     picker.open();
