@@ -1,7 +1,8 @@
 /* DataTable Component Styles
  *
  * Selectors are wrapped in :where() so page styles override them easily; focus outlines keep normal
- * specificity so a page reset can't remove them by accident.
+ * specificity so a page reset can't remove them by accident. Colours that fill an area follow the
+ * page's own text and background, so a dark page gets a dark pager without a colour scheme query.
  */
 
 :where(.datatable-filter) {
@@ -29,7 +30,7 @@
 }
 
 :where(th.sortable):hover {
-  background-color: var(--datatable-header-hover-bg, rgba(0, 0, 0, 0.05));
+  background-color: var(--datatable-header-hover-bg, rgba(128, 128, 128, 0.12));
 }
 
 :where(.datatable__sort) {
@@ -55,7 +56,8 @@
   color: currentColor;
 }
 
-:where(.datatable__pagination) {
+/* Pagination is hidden while every row fits on one page */
+:where(.datatable__pagination:not([hidden])) {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -69,15 +71,15 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--datatable-border-color, #d1d5db);
   border-radius: 4px;
-  background: var(--datatable-button-bg, #ffffff);
-  color: var(--datatable-button-color, #374151);
+  background: var(--datatable-button-bg, transparent);
+  color: var(--datatable-button-color, inherit);
   font: inherit;
   font-size: 0.875rem;
   cursor: pointer;
 }
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
-  background: var(--datatable-button-hover-bg, #f3f4f6);
+  background: var(--datatable-button-hover-bg, rgba(128, 128, 128, 0.15));
   border-color: var(--datatable-button-hover-border-color, #9ca3af);
 }
 

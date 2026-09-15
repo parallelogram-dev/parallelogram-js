@@ -10,7 +10,8 @@ import { injectScript } from './_script.js';
  * `scriptId` is the part of the snippet's address after `/js/`, without `.js`, and `options` are
  * passed to `plausible.init()`. `src` points at a proxied or self-hosted copy of either script, and
  * `api` sets the older script's events endpoint. Plausible records page views after router
- * navigation itself.
+ * navigation itself. DeferTracker loads a `src` only from Plausible's origin, the page's own, or an
+ * origin passed to `registerTrackerAdapter()`'s `origins`.
  *
  * @param {{ scriptId?: string, domain?: string, src?: string, api?: string, options?: object }} config
  * @param {{ nonce?: string }} [ctx]
@@ -50,3 +51,6 @@ export default function plausibleAdapter(config, { nonce } = {}) {
   }
   return injectScript(config.src || 'https://plausible.io/js/script.js', { nonce, attrs });
 }
+
+/** Origins DeferTracker lets a block's `src` load from */
+plausibleAdapter.origins = ['https://plausible.io'];

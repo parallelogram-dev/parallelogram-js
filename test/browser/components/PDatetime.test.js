@@ -129,6 +129,60 @@ describe('p-datetime', () => {
     expect([picker.value, picker.rangeToValue]).toEqual(['', '']);
   });
 
+  it.each([
+    ['date', 'someday'],
+    ['datetime', '14:30'],
+    ['time', 'half past two'],
+  ])('opens in %s mode with a value it cannot read, %s', (mode, value) => {
+    const picker = renderPicker({ mode, value });
+
+    expect(() => picker.open()).not.toThrow();
+  });
+
+  it('reads a plain HH:mm value in time mode as that time today', () => {
+    const picker = renderPicker({ mode: 'time', value: '14:30' });
+
+    picker.open();
+
+    expect([
+      shadow(picker, '[data-datetime-hour]').value,
+      shadow(picker, '[data-datetime-minute]').value,
+      shadow(picker, '[data-datetime-input]').textContent,
+    ]).toEqual([
+      '14',
+      '30',
+      new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(
+        new Date(2020, 0, 1, 14, 30)
+      ),
+    ]);
+  });
+
+  it('keeps its time options and quick dates when a day is picked', () => {
+    const picker = renderPicker({ mode: 'datetime', 'show-quick-dates': '' });
+    picker.open();
+    const hour = shadow(picker, '[data-datetime-hour] option');
+    const preset = shadow(picker, '.preset');
+
+    day(picker, 10).click();
+
+    expect([
+      shadow(picker, '[data-datetime-hour] option') === hour,
+      shadow(picker, '.preset') === preset,
+    ]).toEqual([true, true]);
+  });
+
+  it('shows the first hour and minute again when the value is cleared', () => {
+    const picker = renderPicker({ mode: 'datetime', value: '2023-07-12T14:30:00' });
+    picker.open();
+
+    shadow(picker, '[data-datetime-action="clear"]').click();
+
+    expect([
+      shadow(picker, '[data-datetime-hour]').value,
+      shadow(picker, '[data-datetime-minute]').value,
+    ]).toEqual(['0', '0']);
+  });
+
   it('leaves the host element’s attributes and styles alone', async () => {
     const picker = renderPicker({ mode: 'date' });
 
@@ -229,6 +283,34 @@ describe('p-datetime', () => {
       await wait(50);
 
       expect(panel(picker).hidden).toBe(true);
+    });
+
+    it('disables every control that opens the panel inside a disabled fieldset', () => {
+      const { picker } = renderForm(
+        '<fieldset disabled><p-datetime name="checkIn" range range-to="checkOut" mode="date"></p-datetime></fieldset>'
+      );
+
+      const openers = [...picker.shadowRoot.querySelectorAll('[aria-haspopup="dialog"]')];
+      expect(openers.map(control => control.disabled)).toEqual([true, true, true]);
+    });
+
+    it('closes its open panel when its fieldset becomes disabled', () => {
+      const { form, picker } = renderForm(
+        '<fieldset><p-datetime name="eventDate" mode="date"></p-datetime></fieldset>'
+      );
+      picker.open();
+
+      form.querySelector('fieldset').disabled = true;
+
+      expect(trigger(picker).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('looks dimmed while disabled', () => {
+      const { picker } = renderForm(
+        '<p-datetime name="eventDate" mode="date" disabled></p-datetime>'
+      );
+
+      expect(getComputedStyle(picker).opacity).toBe('0.3');
     });
 
     it('does not add hidden inputs to the page', () => {

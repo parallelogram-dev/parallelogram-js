@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fadeIn, fadeOut } from '../../../src/utils/dom-utils.js';
+import { deepActiveElement, fadeIn, fadeOut } from '../../../src/utils/dom-utils.js';
 
 const preferReducedMotion = () =>
   vi.stubGlobal('matchMedia', query => ({ matches: query.includes('reduce'), media: query }));
@@ -23,5 +23,22 @@ describe('fade helpers', () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(finished).toBe(true);
+  });
+});
+
+describe('deepActiveElement', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('returns the focused element inside an open shadow root', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const button = document.createElement('button');
+    host.attachShadow({ mode: 'open' }).append(button);
+
+    button.focus();
+
+    expect(deepActiveElement()).toBe(button);
   });
 });

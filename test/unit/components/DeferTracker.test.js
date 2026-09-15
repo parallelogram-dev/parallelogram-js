@@ -39,6 +39,25 @@ describe('DeferTracker', () => {
     expect(boot).toHaveBeenCalledOnce();
   });
 
+  it('does not boot on scrolling or pointer movement alone', async () => {
+    const boot = await armTracker();
+
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('mousemove'));
+
+    expect(boot).not.toHaveBeenCalled();
+  });
+
+  it('boots on scrolling when a site adds scroll to the interaction events', async () => {
+    const { configureDeferTracker } = await import('../../../src/components/DeferTracker.js');
+    configureDeferTracker({ events: ['scroll'] });
+    const boot = await armTracker();
+
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(boot).toHaveBeenCalledOnce();
+  });
+
   it('does not boot before the idle delay has passed', async () => {
     const boot = await armTracker();
 
@@ -105,6 +124,27 @@ describe('DeferTracker trackers', () => {
     vi.useRealTimers();
     document.body.replaceChildren();
     history.replaceState(null, '', '/');
+  });
+
+  describe('with a block in the head', () => {
+    afterEach(() => {
+      document.head.replaceChildren();
+    });
+
+    it('warns that a block outside the observed element never loads', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      registerTrackerAdapter('ga4', vi.fn());
+      const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
+      const stray = block('ga4', { id: 'G-HEAD' });
+      document.head.append(stray);
+      new DeferTracker({ logger }).mount(block('ga4', { id: 'G-SHOP' }));
+
+      interact();
+
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('<head>'), {
+        elements: [stray],
+      });
+    });
   });
 
   it('boots a second tracker of the same kind with a different id', async () => {
@@ -407,6 +447,26 @@ describe('DeferTracker trackers', () => {
     expect(boot).toHaveBeenCalledOnce();
   });
 
+  it('skips the page step on a later page once consent is withdrawn', async () => {
+    const { default: DeferTracker, registerTrackerAdapter, setTrackerConsent } = await loadModule();
+    const { EventManager } = await import('../../../src/managers/EventManager.js');
+    const eventBus = new EventManager();
+    const boot = vi.fn();
+    boot.page = vi.fn();
+    registerTrackerAdapter('meta-pixel', boot);
+    let granted = true;
+    setTrackerConsent(category => category === 'marketing' && granted);
+    new DeferTracker({ eventBus }).mount(block('meta-pixel', { id: '123', consent: 'marketing' }));
+    interact();
+    await vi.advanceTimersByTimeAsync(0);
+
+    granted = false;
+    history.pushState(null, '', '/menu');
+    eventBus.emit('router:navigate-end', { url: '/menu', status: 'success' });
+
+    expect(boot.page).not.toHaveBeenCalled();
+  });
+
   it('treats a consent resolver that throws as not granted and logs it', async () => {
     const { default: DeferTracker, registerTrackerAdapter, setTrackerConsent } = await loadModule();
     registerTrackerAdapter('hotjar', vi.fn());
@@ -420,6 +480,124 @@ describe('DeferTracker trackers', () => {
     interact();
 
     expect([statusOf(node), logger.warn.mock.calls.length > 0]).toEqual(['awaiting-consent', true]);
+  });
+
+  describe('with an allowlist of tracker ids', () => {
+    const logger = () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() });
+
+    it('marks a block whose id is not listed as an error without calling its adapter', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const boot = vi.fn();
+      registerTrackerAdapter('gtm', boot, { ids: ['GTM-SITE'] });
+      const node = block('gtm', { id: 'GTM-EVIL' });
+      new DeferTracker({ logger: logger() }).mount(node);
+
+      interact();
+
+      expect([boot.mock.calls.length, statusOf(node)]).toEqual([0, 'error']);
+    });
+
+    it('warns with the tracker name and id of a block whose id is not listed', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      registerTrackerAdapter('gtm', vi.fn(), { ids: ['GTM-SITE'] });
+      const log = logger();
+      new DeferTracker({ logger: log }).mount(block('gtm', { id: 'GTM-EVIL' }));
+
+      interact();
+
+      expect(log.warn).toHaveBeenCalledWith(expect.any(String), { name: 'gtm', id: 'GTM-EVIL' });
+    });
+
+    it('boots a block whose id is listed', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const boot = vi.fn();
+      registerTrackerAdapter('hotjar', boot, { ids: ['1234567'] });
+      new DeferTracker().mount(block('hotjar', { id: 1234567 }));
+
+      interact();
+
+      expect(boot).toHaveBeenCalledOnce();
+    });
+
+    it('boots a block with any id when the adapter was registered without options', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const boot = vi.fn();
+      registerTrackerAdapter('ga4', boot);
+      const node = block('ga4', { id: 'G-ANY', src: '/stats.js' });
+      new DeferTracker().mount(node);
+
+      interact();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect([boot.mock.calls.length, statusOf(node)]).toEqual([1, 'booted']);
+    });
+
+    it('warns once when gtm is registered without ids', async () => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      registerTrackerAdapter('gtm', vi.fn());
+      const log = logger();
+      const tracker = new DeferTracker({ logger: log });
+      tracker.mount(block('gtm', { id: 'GTM-1' }));
+      tracker.mount(block('gtm', { id: 'GTM-2' }));
+
+      interact();
+
+      expect(log.warn.mock.calls.filter(([message]) => message.includes('gtm'))).toHaveLength(1);
+    });
+  });
+
+  describe('with a block that sets its script address', () => {
+    afterEach(() => {
+      window.happyDOM.settings.handleDisabledFileLoadingAsSuccess = false;
+      delete window.fathom;
+      delete window.plausible;
+      document.head.replaceChildren();
+    });
+
+    const loadWith = async (adapterName, config, options) => {
+      window.happyDOM.settings.handleDisabledFileLoadingAsSuccess = true;
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const { default: adapter } = await import(`../../../src/adapters/${adapterName}.js`);
+      registerTrackerAdapter(adapterName, adapter, options);
+      const node = block(adapterName, config);
+      new DeferTracker({
+        logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+      }).mount(node);
+      interact();
+      await vi.advanceTimersByTimeAsync(0);
+      return [document.head.querySelectorAll('script[src]').length, statusOf(node)];
+    };
+
+    it.each([
+      ['fathom', { site: 'ABC', src: 'https://evil.example/script.js' }],
+      ['plausible', { domain: 'shop.example', src: 'https://evil.example/script.js' }],
+      ['plausible', { scriptId: 'pa-abc', src: '//evil.example/pa-abc.js' }],
+    ])('%s marks a src on another origin as an error and loads nothing', async (name, config) => {
+      expect(await loadWith(name, config)).toEqual([0, 'error']);
+    });
+
+    it.each([
+      ['fathom', 'its official origin', { site: 'ABC', src: 'https://cdn.usefathom.com/s.js' }],
+      ['fathom', "the page's origin", { site: 'ABC', src: '/fathom/script.js' }],
+      [
+        'plausible',
+        'its official origin',
+        { domain: 'a.example', src: 'https://plausible.io/js/s.js' },
+      ],
+      ['plausible', "the page's origin", { domain: 'a.example', src: '/stats/js/script.js' }],
+    ])('%s loads a src on %s', async (name, label, config) => {
+      expect(await loadWith(name, config)).toEqual([1, 'booted']);
+    });
+
+    it.each([
+      ['fathom', { site: 'ABC', src: 'https://stats.example.com/script.js' }],
+      ['plausible', { domain: 'a.example', src: 'https://stats.example.com/js/script.js' }],
+    ])('%s loads a src on an origin passed at registration', async (name, config) => {
+      expect(await loadWith(name, config, { origins: ['https://stats.example.com'] })).toEqual([
+        1,
+        'booted',
+      ]);
+    });
   });
 
   it('passes the configured CSP nonce to adapters', async () => {

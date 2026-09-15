@@ -1,5 +1,5 @@
 import { BaseComponent } from '../core/BaseComponent.js';
-import { generateId } from '../utils/dom-utils.js';
+import { generateId, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 
 const FOCUSABLE =
@@ -15,6 +15,7 @@ const MANAGED_ATTRIBUTES = [
   'aria-selected',
   'aria-controls',
   'aria-labelledby',
+  'aria-orientation',
   'data-tab-panel',
 ];
 
@@ -23,7 +24,7 @@ const MANAGED_ATTRIBUTES = [
  *
  * Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them.
  * While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first
- * panel, so the page doesn't jump when it does. Once mounted, Tabs follows the WAI-ARIA tabs
+ * panel, or the one the markup marks `data-tab-panel="active"`, so the page doesn't jump when it does. Once mounted, Tabs follows the WAI-ARIA tabs
  * pattern: arrow keys, Home and End move focus between tabs, inactive panels get the `hidden`
  * attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting
  * puts the markup back as it was.
@@ -46,10 +47,13 @@ const MANAGED_ATTRIBUTES = [
  *
  * @attributes
  * - data-tabs: on the container; Tabs adds data-tabs-enhanced and the tabs--enhanced class
- * - data-tabs-list: the element that holds the tabs
+ * - data-tabs-list: the element that holds the tabs; Tabs gives it aria-orientation="horizontal"
+ *   unless it has one, and the Up and Down arrow keys move between tabs only when it is "vertical"
  * - data-tab: on each tab button or link, the id of its panel
  * - data-tabs-panels: the element that holds the panels
- * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive
+ * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive. Write active on the
+ *   panel that starts selected to show it first, before and after Tabs loads, when no tab has
+ *   aria-selected="true"
  * - data-tabs-default-tab: id of the panel to show first when the address names no panel and no tab
  *   has aria-selected="true"
  * - data-tabs-keyboard: "false" turns off arrow key, Home and End navigation (default true)
@@ -77,6 +81,7 @@ export default class Tabs extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
+    const { defaults } = this.constructor;
 
     const tabsList = element.querySelector('[data-tabs-list]');
     const tabsContainer = element.querySelector('[data-tabs-panels]');
@@ -109,23 +114,20 @@ export default class Tabs extends BaseComponent {
     state.activeTab = null;
     state.activePanel = null;
     state.transition = null;
-    state.keyboardNavigation = this.getBoolAttr(
-      element,
-      'keyboard',
-      Tabs.defaults.keyboardNavigation
-    );
+    state.keyboardNavigation = this.getBoolAttr(element, 'keyboard', defaults.keyboardNavigation);
     state.activation =
-      this.getAttr(element, 'activation', Tabs.defaults.activation) === 'manual'
-        ? 'manual'
-        : 'auto';
-    state.original = this._remember([tabsList, ...tabs, ...panels]);
+      this.getAttr(element, 'activation', defaults.activation) === 'manual' ? 'manual' : 'auto';
+    state.original = [tabsList, ...tabs, ...panels].map(item => [
+      item,
+      rememberAttributes(item, MANAGED_ATTRIBUTES),
+    ]);
     state.originalClass = element.getAttribute('class');
 
     this._setupTabs(state);
 
-    const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
+    const defaultTab = this.getAttr(element, 'default-tab', defaults.defaultTab);
     const linkedTab = this._getLinkedTab(state);
-    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab);
+    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab, panels);
     if (initialTab) {
       this._activateTab(element, initialTab.dataset.tab, state, false);
     }
@@ -155,7 +157,7 @@ export default class Tabs extends BaseComponent {
     state.cleanup = () => {
       baseCleanup();
       state.transition = null;
-      this._restore(state.original);
+      state.original.forEach(([item, attributes]) => restoreAttributes(item, attributes));
       this.removeAttr(element, 'enhanced');
       element.classList.remove('tabs--enhanced');
       if (state.originalClass === null && element.classList.length === 0) {
@@ -171,32 +173,6 @@ export default class Tabs extends BaseComponent {
     });
 
     return state;
-  }
-
-  /**
-   * Record the managed attributes of each element as they were before Tabs changed them
-   *
-   * @returns {Map<Element, Map<string, string|null>>}
-   */
-  _remember(elements) {
-    return new Map(
-      elements.map(element => [
-        element,
-        new Map(MANAGED_ATTRIBUTES.map(name => [name, element.getAttribute(name)])),
-      ])
-    );
-  }
-
-  _restore(original) {
-    for (const [element, attributes] of original) {
-      for (const [name, value] of attributes) {
-        if (value === null) {
-          element.removeAttribute(name);
-        } else {
-          element.setAttribute(name, value);
-        }
-      }
-    }
   }
 
   /**
@@ -226,14 +202,21 @@ export default class Tabs extends BaseComponent {
     });
 
     state.tabsList.setAttribute('role', 'tablist');
+    if (!state.tabsList.hasAttribute('aria-orientation')) {
+      state.tabsList.setAttribute('aria-orientation', 'horizontal');
+    }
   }
 
   /**
    * Determine which tab should be active initially
    */
-  _getInitialTab(tabs, defaultTab) {
+  _getInitialTab(tabs, defaultTab, panels = []) {
     const selectedTab = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
     if (selectedTab) return selectedTab;
+
+    const activePanel = panels.find(panel => panel.getAttribute('data-tab-panel') === 'active');
+    const activeTab = activePanel && tabs.find(tab => tab.dataset.tab === activePanel.id);
+    if (activeTab) return activeTab;
 
     if (defaultTab) {
       const defaultTabElement = tabs.find(tab => tab.dataset.tab === defaultTab);
@@ -295,6 +278,10 @@ export default class Tabs extends BaseComponent {
   _handleKeyDown(event, element, state) {
     const currentIndex = state.tabs.findIndex(tab => tab === event.currentTarget);
     let targetIndex = -1;
+
+    /* Up and Down only move between tabs stacked vertically, and scroll the page otherwise */
+    const upOrDown = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+    if (upOrDown && state.tabsList.getAttribute('aria-orientation') !== 'vertical') return;
 
     switch (event.key) {
       case 'ArrowRight':
@@ -424,7 +411,7 @@ export default class Tabs extends BaseComponent {
       totalTabs: states.reduce((total, state) => total + state.tabs.length, 0),
       totalPanels: states.reduce((total, state) => total + state.panels.length, 0),
       keyboardNavigationSupported: true,
-      defaults: Tabs.defaults,
+      defaults: this.constructor.defaults,
     };
   }
 

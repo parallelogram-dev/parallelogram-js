@@ -9,7 +9,7 @@ export default {
   summary: 'A stack of toast notifications',
   description: `Toasts are announced through two live regions that exist from the moment the element is created: info and success messages politely, warnings and errors straight away. Toasts close after a timeout, except errors, which stay until dismissed, and every timer waits while the pointer or keyboard focus is on the stack.
 
-Where popovers are supported the element shows itself as a manual popover and moves to the top of the top layer with each new toast. While a \`<p-modal>\` or modal \`<dialog>\` is open, the element moves inside it to show a toast, because everything outside an open modal is inert, and returns to its place when the modal closes.`,
+Where popovers are supported the element shows itself as a manual popover and moves to the top of the top layer with each new toast. While a \`<p-modal>\` or modal \`<dialog>\` is open, the element moves inside it to show a toast, because everything outside an open modal is inert, and returns to its place when the modal closes, or with the next toast when the modal was removed without closing.`,
   attributes: [
     {
       name: 'placement',

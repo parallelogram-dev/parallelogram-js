@@ -43,7 +43,8 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
       type: 'boolean',
       default: true,
       option: 'closeOnEscape',
-      description: 'Close with Escape',
+      description:
+        "Close with Escape. When false, a second Escape without a click or other key press in between still closes the viewer, because browsers don't let a page keep a modal dialog open against it",
     },
     {
       name: 'data-lightbox-close-backdrop',
@@ -112,16 +113,35 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
     classAttribute('content-class', 'contentClass', 'lightbox__content', 'Class on the image area'),
     classAttribute('image-class', 'imageClass', 'lightbox__image', 'Class on the image'),
     classAttribute('counter-class', 'counterClass', 'lightbox__counter', 'Class on the counter'),
-    classAttribute('state-closed-class', 'stateClosedClass', 'is-closed', 'Class while closed'),
-    classAttribute('state-opening-class', 'stateOpeningClass', 'is-opening', 'Class while opening'),
-    classAttribute('state-open-class', 'stateOpenClass', 'is-open', 'Class while open'),
+    {
+      ...classAttribute('state-closed-class', 'stateClosedClass', 'is-closed', 'Never applied'),
+      deprecated:
+        'The viewer is removed when it closes, so the class is never applied; listen for lightbox:closed instead. Removed in 0.6.0.',
+    },
+    classAttribute(
+      'state-opening-class',
+      'stateOpeningClass',
+      'is-opening',
+      'Class on the viewer while opening'
+    ),
+    classAttribute(
+      'state-open-class',
+      'stateOpenClass',
+      'is-open',
+      'Class on the viewer while open'
+    ),
     classAttribute(
       'state-transitioning-class',
       'stateTransitioningClass',
       'is-transitioning',
-      'Class while changing image'
+      'Class on the viewer while changing image'
     ),
-    classAttribute('state-closing-class', 'stateClosingClass', 'is-closing', 'Class while closing'),
+    classAttribute(
+      'state-closing-class',
+      'stateClosingClass',
+      'is-closing',
+      'Class on the viewer while closing'
+    ),
     classAttribute('show-class', 'showClass', 'show', 'Class on a shown element'),
     classAttribute(
       'slide-left-class',

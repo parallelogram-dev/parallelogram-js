@@ -55,13 +55,13 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
       name: 'allow-edit',
       type: 'boolean',
       default: true,
-      description: 'false turns off editing and deleting',
+      description: 'false or 0 turns off editing and deleting',
     },
     {
       name: 'allow-sort',
       type: 'boolean',
       default: true,
-      description: 'false turns off reordering',
+      description: 'false or 0 turns off reordering',
     },
     {
       name: 'full',
@@ -162,6 +162,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
   elements: [
     {
       tag: 'p-uploader-file',
+      module: 'components/PUploaderFile',
       description: 'A file, uploaded or existing, with its preview, fields and actions',
       attributes: [
         { name: 'file-id', type: 'string', description: "The file's id on the server" },
@@ -180,7 +181,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
           name: 'allow-edit',
           type: 'boolean',
           default: true,
-          description: 'false turns off editing and deleting for this file',
+          description: 'false or 0 turns off editing and deleting for this file',
         },
         {
           name: 'data-current-panel',
@@ -226,6 +227,9 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
         { name: 'actions', description: 'Button rows in panels and the dialog' },
         { name: 'edit-button', description: 'The Edit button' },
         { name: 'dialog', description: 'The edit dialog' },
+      ],
+      slots: [
+        { name: '', description: "The <p-uploader-data> elements holding the file's values" },
       ],
     },
     {

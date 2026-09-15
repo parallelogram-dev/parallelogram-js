@@ -209,16 +209,28 @@ export const eventType = event => (event.detail ? `CustomEvent<${event.detail}>`
 export const isFrameworkEvent = event => event.name.includes(':');
 
 /**
- * An element contract followed by the child elements it defines, each with its class name
+ * An element contract followed by the child elements it defines, each with its class name and the
+ * module that defines it
  *
  * @param {import('../../src/contract.js').ComponentContract} contract
- * @returns {Array<{ name: string, item: import('../../src/contract.js').ComponentContract | import('../../src/contract.js').ElementContract, isDefault: boolean }>}
+ * @returns {Array<{ name: string, item: import('../../src/contract.js').ComponentContract | import('../../src/contract.js').ElementContract, isDefault: boolean, module: string }>}
  */
 export const elementsOf = contract => [
-  { name: contract.name, item: contract, isDefault: true },
+  { name: contract.name, item: contract, isDefault: true, module: contract.module },
   ...(contract.elements ?? []).map(element => ({
     name: classNameFor(element.tag),
     item: element,
     isDefault: false,
+    module: element.module ?? contract.module,
   })),
+];
+
+/**
+ * The modules that define an element contract's elements, its own first
+ *
+ * @param {import('../../src/contract.js').ComponentContract} contract
+ * @returns {string[]}
+ */
+export const modulesOf = contract => [
+  ...new Set(elementsOf(contract).map(element => element.module)),
 ];

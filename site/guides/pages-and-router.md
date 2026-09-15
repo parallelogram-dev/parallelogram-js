@@ -30,13 +30,15 @@ app.eventBus.on('router:navigate-end', ({ url, status }) => {
 
 ### Router options
 
-| Option                  | Type       | Default            | What it does                                                                                              |
-| ----------------------- | ---------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
-| `timeout`               | `number`   | `10000`            | Milliseconds before a page request is abandoned with a `TimeoutError`.                                    |
-| `loadingClass`          | `string`   | `'router-loading'` | Class on the body and the followed link while a navigation is in progress.                                |
-| `errorClass`            | `string`   | `'router-error'`   | Class on the body and the followed link after a navigation fails.                                         |
-| `fullLoadOnError`       | `boolean`  | `true`             | Load the page normally when a request or swap fails.                                                      |
-| `nonRoutableExtensions` | `string[]` | See below          | Lowercase file extensions, without the dot, that links open natively. Setting it replaces the whole list. |
+| Option                  | Type       | Default            | What it does                                                                                                                    |
+| ----------------------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout`               | `number`   | `10000`            | Milliseconds before a page request is abandoned with a `TimeoutError`.                                                          |
+| `loadingClass`          | `string`   | `'router-loading'` | Class on the body and the followed link while a navigation is in progress.                                                      |
+| `errorClass`            | `string`   | `'router-error'`   | Class on the body and the followed link after a navigation fails.                                                               |
+| `fullLoadOnError`       | `boolean`  | `true`             | Load the page normally when a request or swap fails.                                                                            |
+| `historyCache`          | `number`   | `5`                | Pages kept in memory for Back and Forward to show without fetching. `0` fetches every time. See History and scroll restoration. |
+| `prefetch`              | `boolean`  | `false`            | Prefetch every link the router follows, as `data-router-prefetch` does. See Prefetching.                                        |
+| `nonRoutableExtensions` | `string[]` | See below          | Lowercase file extensions, without the dot, that links open natively. Setting it replaces the whole list.                       |
 
 The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`, `xls`, `xlsx`, `ppt`, `pptx`, `csv`, `rtf`, `txt`, `dmg`, `exe`, `pkg`, `apk`, `mp3`, `mp4`, `wav`, `avi`, `mov`, `mkv`, `webm`, `jpg`, `jpeg`, `png`, `gif`, `svg`, `webp`, `avif`, `xml`, `rss` and `ics`.
 
@@ -48,6 +50,7 @@ The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`
 | `observeRoot`            | `Element \| string \| null`          | `document.body` | The element, or its selector, whose subtree components mount in and are watched.                                              |
 | `targetGroups`           | `Record<string, string[]>`           | `{}`            | Fragments that update together, by target name.                                                                               |
 | `targetGroupTransitions` | `Record<string, FragmentTransition>` | None            | Transitions for each fragment, by its `data-view` name.                                                                       |
+| `viewTransitions`        | `boolean`                            | `false`         | Swap fragments inside `document.startViewTransition()` where supported. See View transitions.                                 |
 | `fragmentFallbacks`      | `boolean`                            | `false`         | Also find a fragment without `data-view` by its id, common main-content selectors or class.                                   |
 | `runScripts`             | `boolean`                            | `true`          | Run the scripts in swapped fragments.                                                                                         |
 | `assetTimeout`           | `number`                             | `3000`          | Milliseconds to wait for each stylesheet or script the new page's head adds.                                                  |
@@ -99,7 +102,7 @@ The router listens for clicks on the document, so links added later are handled 
 
 - The event isn't already cancelled, it is the primary button, and no modifier key (Meta, Ctrl, Shift or Alt) is held.
 - The `href` is present and doesn't start with `#`.
-- Neither the link nor an ancestor has `data-router-skip`.
+- Neither the link nor an ancestor has `data-router-skip`, including ancestors outside a shadow root the link is in.
 - The link has no `download` attribute, no `rel="external"`, and no `target` other than `_self`.
 - The URL is on the same origin as the page.
 - The path doesn't end in an extension from `nonRoutableExtensions`, unless the link has `data-router-enhance`.
@@ -116,8 +119,27 @@ These attributes change what a followed link does:
 | `data-router-immutable-url` | Link or ancestor | Leave the address bar and history untouched. Set it to `"false"` on a link inside a marked ancestor to opt out. |
 | `data-router-skip`          | Link or ancestor | Leave the click to the browser.                                                                                 |
 | `data-router-enhance`       | Link             | Route a link to a file type in `nonRoutableExtensions`.                                                         |
+| `data-router-prefetch`      | Link or ancestor | Fetch the page before the link is followed, as described under Prefetching. Set it to `"false"` to opt out.     |
 
-Page requests are `GET` requests with `credentials: 'same-origin'`, and send `X-Requested-With: XMLHttpRequest` and `Accept: text/html,application/json,*/*`. The server should still return the full page.
+Page requests are `GET` requests with `credentials: 'same-origin'`, and send `X-Requested-With: XMLHttpRequest` and `Accept: text/html,application/json,*/*`. The server should still return the full page. If the server, or a cache in front of it, changes the response for requests with that header, send `Vary: X-Requested-With`, so a copy cached for one kind of request isn't served for the other.
+
+### Prefetching
+
+A link with `data-router-prefetch`, or every link the router follows when the `prefetch` option is on, starts fetching its page before it is followed: once the pointer has rested on it for 65 milliseconds, or straight away when it is pressed or focused. Moving the pointer off the link sooner fetches nothing. Set `data-router-prefetch="false"` on a link or ancestor to leave it out.
+
+The router keeps the most recent prefetch only, and prefetching another link cancels one still loading. The next navigation to that address within 30 seconds of the request starting shows the prefetched page, waiting for it when it is still loading, instead of fetching again. When the prefetch failed or is older than that, following the link fetches the page as usual.
+
+Links the router doesn't follow, as `router.handlesLink(link)` decides, are never prefetched: links to other origins, with `download`, `data-router-skip` or another `target`, and file types in `nonRoutableExtensions`. Nor are links to the page already shown, or links inside shadow roots.
+
+A prefetch is the same `GET` request as a navigation, with an extra `Purpose: prefetch` header, so the server can leave it out of page view counts. The page may never be visited, so only prefetch links whose `GET` requests have no side effects. A sign-out, unsubscribe or add-to-basket link must never be prefetched.
+
+```html
+<nav data-router-prefetch>
+  <a href="/tents">Tents</a>
+  <a href="/stoves">Stoves</a>
+  <a href="/logout" data-router-skip>Sign out</a>
+</nav>
+```
 
 ## When the page loads normally
 
@@ -163,7 +185,7 @@ Parallelogram.create({
 });
 ```
 
-Back and forward replace the target of whichever of the two history entries is newer, so going back undoes the navigation that created the entry being left.
+Back and forward replace the target of whichever of the two history entries is newer, so going back undoes the navigation that created the entry being left. A jump over more than one entry, such as from the browser's history menu, replaces the `main` target, because the entries in between may have changed other fragments.
 
 ### Transitions
 
@@ -173,6 +195,7 @@ Back and forward replace the target of whichever of the two history entries is n
 - A value containing `(` runs the built-in fade and 20px slide on inline styles, over `duration` with `easing`.
 - When both are classes, the `out` class stays on the fragment through the swap and is removed a frame after the `in` class is added. The `in` class is removed when it finishes.
 - Transitions are skipped when the user prefers reduced motion. A failing transition doesn't stop the swap.
+- In a hidden tab, where browsers pause animation frames, the frames the swap waits for fall back to a short timeout, so a navigation from code still finishes.
 
 ```js
 Parallelogram.create({
@@ -187,6 +210,32 @@ Parallelogram.create({
 
 Fragments in a group are replaced independently, so a slow transition on one doesn't hold up the others.
 
+### View transitions
+
+With `viewTransitions: true`, a navigation swaps its fragments inside `document.startViewTransition()`, so the browser cross-fades from the old page to the new one. It is off by default, so existing sites don't change.
+
+```js
+Parallelogram.create({
+  router: {},
+  pageManager: { viewTransitions: true },
+});
+```
+
+The swap runs without a view transition, straight away as it otherwise would, when the browser doesn't support `document.startViewTransition()`, when the user prefers reduced motion, or when any fragment being replaced has a `targetGroupTransitions` entry. Components mount, scroll is set, focus moves and the title is announced once, inside the transition's update, as they do without one. A navigation replaced by a newer one before its swap starts no transition, and one replaced during the transition skips its animation.
+
+Style the transition with CSS. Give a fragment a `view-transition-name` to animate it separately from the rest of the page, and use the `::view-transition-*` pseudo-elements to change the animation:
+
+```css
+[data-view='main'] {
+  view-transition-name: main;
+}
+
+::view-transition-old(main),
+::view-transition-new(main) {
+  animation-duration: 200ms;
+}
+```
+
 ### Root attributes
 
 The fragment element itself stays in the page, and its content is replaced. Its attributes are made to match the new page's fragment, so a page component selected by an attribute on the root matches the new content. `data-view` is left alone, and classes starting with `component-`, `router-` or `page-` are kept.
@@ -194,6 +243,8 @@ The fragment element itself stays in the page, and its content is replaced. Its 
 ### Scripts in fragments
 
 With `runScripts`, scripts inside a swapped fragment run again on every visit, as on a full page load. Scripts with `data-router-skip` and data blocks, such as `type="application/json"`, don't run. Only an empty type, `module`, or a JavaScript or ECMAScript type runs.
+
+Under a Content Security Policy that allows scripts by nonce without `'strict-dynamic'`, the browser blocks the scripts the router recreates, in fragments and in the head. Each copy keeps the nonce from the fetched page, and a server that sends a fresh nonce with every response gave that page a different nonce from the one the current page's policy allows. Add `'strict-dynamic'` to `script-src`, so scripts added by the page's allowed scripts can run, or render pages requested by the router with the nonce of the page that first loaded. Mark scripts that don't need to run again with `data-router-skip`.
 
 ## The head
 
@@ -203,7 +254,7 @@ Before any fragment changes, and only when the fetched page has head content:
 2. Stylesheets (`link[rel~="stylesheet"][href]`) and external scripts (`script[src]`) in the new head that the current page doesn't have are appended to the head. URLs are resolved against the new page's address, and scripts keep their order.
 3. The swap waits for each one to load or fail, for up to `assetTimeout` milliseconds each.
 
-Assets are never removed, and a head script already on the page doesn't run again.
+Assets are never removed, and a head script already on the page doesn't run again. A navigation that is replaced by a newer one before this step adds nothing to the head. Assets it had already added stay in the head and finish loading, and its scripts run, but none of its fragments are replaced.
 
 When the `main` fragment is replaced, the head is reconciled with the new page. The title is updated when the new one isn't empty, and `lang` and `dir` on the `html` element are copied or removed. These tags are replaced as sets, so tags the new page lacks are removed and repeated tags are all kept:
 
@@ -279,6 +330,10 @@ The router sets `history.scrollRestoration` to `'manual'` and restores the previ
 
 Moving through history within the same document, such as between hash entries, restores the saved position without fetching anything. `router:popstate` isn't emitted for those moves.
 
+The router keeps the HTML of the last `historyCache` pages it showed, 5 by default, in memory. Back and Forward to one of those pages shows it again without a request, and still emits the same events, scrolls and moves focus. Following a link or calling `navigate()` always fetches. Only pages that were shown in place are kept, so failed requests, error statuses and pages that failed to swap in are fetched again. Kept pages last until the visitor leaves the site or reloads.
+
+Pages that must always be fresh on Back, such as a basket or an account page that changes after a form is sent, should turn it off with `historyCache: 0`.
+
 When the browser restores the page from the back/forward cache, the router emits `router:bfcache-restore` and fetches nothing. `router:bfcache-store` is emitted on every `pagehide`, whether or not the browser keeps the page in the cache.
 
 ## Navigating from code
@@ -306,7 +361,7 @@ When the browser restores the page from the back/forward cache, the router emits
 | `element`      | `Element \| null`                  | `null`           | The element that started the navigation; it receives the classes.          |
 | `scroll`       | `{ x: number, y: number } \| null` | `null`           | A position for listeners to restore after the swap.                        |
 
-A navigation to the current URL without `force` does nothing and emits no events. A new navigation cancels the request in progress, and waits for the previous swap to settle before changing the page. `navigate()` rejects with the error when a navigation fails.
+A navigation to the current URL without `force` does nothing and emits no events, unless the last navigation failed, so a page that couldn't be shown can be tried again. A new navigation cancels the request in progress, and waits for the previous swap to settle before changing the page. `navigate()` rejects with the error when a navigation fails.
 
 ```js
 await app.router.navigate('/search?q=tents', { viewTarget: 'results', replace: true });
@@ -363,7 +418,7 @@ These are emitted on the event bus, not as DOM events. [Events and alerts](event
 | `page:component-loaded`        | A component's module loaded.                                                   | `{ componentName, instance, queueSize }`                                                                                  |
 | `page:component-load-error`    | A component's module failed after its retries.                                 | `{ componentName, error, retries }`                                                                                       |
 | `page:component-mounted`       | A component mounted on an element.                                             | `{ componentName, element, instance, fragmentTarget }`                                                                    |
-| `page:component-mount-error`   | Mounting threw, or a component's selector is invalid.                          | `{ componentName, error, element, fragmentTarget }`, or `{ componentName, error }` for a selector                         |
+| `page:component-mount-error`   | Mounting threw or an async `_init` rejected, or a selector is invalid.         | `{ componentName, error, element, fragmentTarget }`, or `{ componentName, error }` for a selector                         |
 | `page:component-unmounted`     | A component unmounted from an element.                                         | `{ componentName, element, instance }`                                                                                    |
 
 In `router:navigate-success`:

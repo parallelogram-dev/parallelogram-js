@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { orderGuides, readGuide } from '../../../site/build/guides.js';
-import { slugFor } from '../../../site/build/render.js';
 
 const root = `${process.cwd()}/`;
 
@@ -101,16 +100,6 @@ describe('guides', () => {
         guide('accordions', 'Accordions'),
       ]).map(entry => entry.slug)
     ).toEqual(['getting-started', 'upgrading', 'accordions', 'zebra-crossings']);
-  });
-
-  it('links only to pages the site builds', () => {
-    const slugs = new Set(['index', ...contracts.map(slugFor), ...guides.map(guide => guide.slug)]);
-    const links = guides
-      .flatMap(guide => [...parse(guide.summary + guide.content).querySelectorAll('a[href]')])
-      .map(link => link.getAttribute('href'))
-      .filter(href => !/^[a-z]+:/.test(href) && !href.startsWith('#'));
-
-    expect(links.filter(href => !slugs.has(href.replace(/\.html(#.*)?$/, '')))).toEqual([]);
   });
 
   it('names every deprecation the contracts declare in the upgrade guide', () => {

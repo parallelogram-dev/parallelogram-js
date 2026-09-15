@@ -5,16 +5,17 @@ export default {
   tag: 'p-select',
   module: 'components/PSelect',
   summary: 'A select that can be searched, built as an editable combobox',
-  description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them; Enter or Tab chooses the highlighted option; Escape closes the list and puts the chosen label back.
+  description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them, and Page Up and Page Down move ten at a time; Enter or Tab chooses the highlighted option; Alt+Down Arrow opens the list without moving the highlight and Alt+Up Arrow chooses the highlighted option and closes it; Escape closes the list and puts the chosen label back.
 
-Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its initially selected option when the form resets.`,
+Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its \`value\` attribute, or else its selected option, when the form resets.`,
   attributes: [
     { name: 'name', type: 'string', property: 'name', description: 'The form field name' },
     {
       name: 'value',
       type: 'string',
       property: 'value',
-      description: 'The chosen value; defaults to the selected option',
+      description:
+        'The initial value, restored when the form resets; takes precedence over a selected option',
     },
     { name: 'placeholder', type: 'string', description: 'Shown when nothing is chosen' },
     { name: 'disabled', type: 'flag', property: 'disabled', description: 'Disables the select' },
@@ -87,7 +88,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       name: 'select',
       signature: '(value: string) => void',
       description:
-        'Choose an option as the user would, dispatching input, change and p-select:change',
+        'Choose an option as the user would, dispatching input, change and p-select:change when the value changes',
     },
     {
       name: 'setOptions',
@@ -110,12 +111,18 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
   ],
   events: [
-    { name: 'input', description: 'The user chose an option' },
-    { name: 'change', description: 'The user chose an option' },
+    {
+      name: 'input',
+      description: 'The user chose a different option; bubbles out of shadow roots',
+    },
+    {
+      name: 'change',
+      description: 'The user chose a different option; bubbles out of shadow roots',
+    },
     {
       name: 'p-select:change',
       detail: '{ value: string; label: string }',
-      description: 'An option was chosen; bubbles out of shadow roots',
+      description: 'A different option was chosen; bubbles out of shadow roots',
     },
     { name: 'p-select:open', description: 'The list opened' },
     { name: 'p-select:close', description: 'The list closed' },

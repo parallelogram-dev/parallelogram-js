@@ -113,7 +113,7 @@ The page manager mounts and unmounts enhancement components through `ComponentHo
 | `page:component-loaded`      | A component's module loaded and its instance was created             | `{ componentName, instance, queueSize }`                                                                     |
 | `page:component-load-error`  | A component's module failed to load after every retry                | `{ componentName, error, retries }`                                                                          |
 | `page:component-mounted`     | A component mounted on an element                                    | `{ componentName, element, instance, fragmentTarget }`                                                       |
-| `page:component-mount-error` | Mounting on an element threw, or the component's selector is invalid | `{ componentName, error, element, fragmentTarget }`; only `{ componentName, error }` for an invalid selector |
+| `page:component-mount-error` | Mounting threw, an async `_init` rejected or the selector is invalid | `{ componentName, error, element, fragmentTarget }`; only `{ componentName, error }` for an invalid selector |
 | `page:component-unmounted`   | A component unmounted from an element                                | `{ componentName, element, instance }`                                                                       |
 
 ### Fragments (FragmentSwapper)
@@ -225,7 +225,7 @@ Everything outside an open modal dialog is inert. When a toast is shown while a 
 AlertManager.notify('Link copied', 'success', { timeout: 2000 });
 ```
 
-The shared instance has no event bus. It uses the page's `<p-toasts>` like any other `AlertManager`.
+The shared instance has no event bus. It uses the page's `<p-toasts>` like any other `AlertManager`, lasts as long as the page and is never destroyed.
 
 ### Alerts on the bus
 
@@ -240,6 +240,8 @@ app.eventBus.on('alerts:close', ({ type, message }) => {
 ```
 
 Each such manager forwards separately. Two managers on the same bus and element send each message twice, so create one and share it.
+
+`destroy()` stops a manager forwarding, for example when the part of the app that created it goes away. The `<p-toasts>` element stays on the page, since other managers and the Toast component share it.
 
 ### Toasts from markup
 

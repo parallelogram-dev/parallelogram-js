@@ -147,6 +147,13 @@
     font-size: 0.875rem;
     white-space: nowrap;
   }
+
+  /* Shown in place of an image that failed to load */
+  &__error {
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+  }
 }
 
 /* State-based CSS using data-lightbox-state attribute */

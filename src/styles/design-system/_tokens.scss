@@ -150,6 +150,7 @@ $color-accent-hover: $primary-dark;
 
 /* Shadow Colors */
 $color-shadow: rgba(0, 0, 0, 0.12);
+/* Deprecated and unused: too faint for a focus ring. Removed in 0.6.0 */
 $color-focus-shadow: rgba(59, 130, 246, 0.1);
 
 /* State Colors */

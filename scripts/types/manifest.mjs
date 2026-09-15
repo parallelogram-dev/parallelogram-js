@@ -3,6 +3,7 @@ import {
   elementsOf,
   eventType,
   listenableEvents,
+  modulesOf,
   parseSignature,
   propertiesOf,
 } from './members.mjs';
@@ -145,21 +146,40 @@ function classDeclaration({ name, item }) {
 
 /**
  * @param {import('../../src/contract.js').ComponentContract} contract - An element contract
- * @returns {Object} The module entry for the file that defines the element
+ * @returns {Object[]} A module entry for each file that defines one of its elements, its own first.
+ *   The component's own module also exports child elements defined in another.
  */
-function moduleEntry(contract) {
-  const path = `dist/${contract.module}.js`;
+function moduleEntries(contract) {
+  const pathOf = module => `dist/${module}.js`;
   const elements = elementsOf(contract);
 
-  return {
-    kind: 'javascript-module',
-    path,
-    declarations: elements.map(classDeclaration),
-    exports: elements.flatMap(({ name, item, isDefault }) => [
-      { kind: 'js', name: isDefault ? 'default' : name, declaration: { name, module: path } },
-      { kind: 'custom-element-definition', name: item.tag, declaration: { name, module: path } },
-    ]),
-  };
+  return modulesOf(contract).map(module => {
+    const path = pathOf(module);
+    const defined = elements.filter(element => element.module === module);
+    const exported = module === contract.module ? elements : defined;
+
+    return {
+      kind: 'javascript-module',
+      path,
+      declarations: defined.map(classDeclaration),
+      exports: exported.flatMap(({ name, item, isDefault, module: from }) => [
+        {
+          kind: 'js',
+          name: isDefault ? 'default' : name,
+          declaration: { name, module: pathOf(from) },
+        },
+        ...(from === module
+          ? [
+              {
+                kind: 'custom-element-definition',
+                name: item.tag,
+                declaration: { name, module: path },
+              },
+            ]
+          : []),
+      ]),
+    };
+  });
 }
 
 /**
@@ -174,6 +194,6 @@ export function customElementsManifest(contracts) {
     modules: contracts
       .filter(contract => contract.kind === 'element')
       .sort((a, b) => a.tag.localeCompare(b.tag))
-      .map(moduleEntry),
+      .flatMap(moduleEntries),
   };
 }

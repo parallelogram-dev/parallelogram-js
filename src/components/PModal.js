@@ -1,6 +1,6 @@
 import styles from '../styles/framework/components/PModal.scss';
 import { ExtendedStates } from '../core/ComponentStates.js';
-import { getFocusableElements } from '../utils/dom-utils.js';
+import { deepActiveElement, getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
@@ -10,14 +10,6 @@ const openModals = [];
 
 /** Page overflow to put back once the last modal closes */
 let lockedOverflow = null;
-
-const deepActiveElement = () => {
-  let active = document.activeElement;
-  while (active?.shadowRoot?.activeElement) {
-    active = active.shadowRoot.activeElement;
-  }
-  return active;
-};
 
 /**
  * PModal - modal dialog web component built on the native `<dialog>` element
@@ -149,11 +141,17 @@ export default class PModal extends HTMLElement {
       { signal }
     );
 
-    /* The browser can close a modal dialog itself, for example on a repeated Escape */
+    /* The browser can close a modal dialog itself without a cancel event, as Chromium does on a
+       repeated Escape. A modal Escape can't close opens again; any other records that it closed. */
     this._dialog.addEventListener(
       'close',
       () => {
-        if (this.hasAttribute('open')) {
+        if (!this.hasAttribute('open')) return;
+
+        if (!this._closing && !(this._isKeyboardEnabled() && this._isClosable())) {
+          this._dialog.showModal();
+          this._focusInitial();
+        } else {
           this.removeAttribute('open');
         }
       },

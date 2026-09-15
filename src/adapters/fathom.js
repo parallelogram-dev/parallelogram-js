@@ -6,7 +6,8 @@ import { injectScript } from './_script.js';
  * config: `{ site: "ABCDEFGH", src?: string }`
  *
  * `site` is the Fathom site id; `src` points at a custom domain or self-hosted copy of the script.
- * Fathom records page views after router navigation itself.
+ * Fathom records page views after router navigation itself. DeferTracker loads a `src` only from
+ * Fathom's origin, the page's own, or an origin passed to `registerTrackerAdapter()`'s `origins`.
  *
  * @param {{ site?: string, src?: string }} config
  * @param {{ nonce?: string }} [ctx]
@@ -23,3 +24,6 @@ export default function fathomAdapter(config, { nonce } = {}) {
     attrs: { 'data-site': config.site },
   });
 }
+
+/** Origins DeferTracker lets a block's `src` load from */
+fathomAdapter.origins = ['https://cdn.usefathom.com'];

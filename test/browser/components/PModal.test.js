@@ -116,6 +116,31 @@ describe('p-modal', () => {
       expect([modal.hasAttribute('open'), dialogOf(modal)?.open]).toEqual([true, true]);
     });
 
+    it('opens again when the browser closes it without a cancel event and it cannot be closed', async () => {
+      const modal = renderModal({ 'data-modal-closable': 'false' });
+      const dialog = dialogOf(modal);
+      modal.open();
+
+      dialog.close();
+      await wait(100);
+
+      expect([modal.hasAttribute('open'), dialog.open, dialog.matches(':modal')]).toEqual([
+        true,
+        true,
+        true,
+      ]);
+    });
+
+    it('records a close the browser makes itself when Escape can close it', async () => {
+      const modal = renderModal();
+      const dialog = dialogOf(modal);
+      modal.open();
+
+      dialog.close();
+
+      await vi.waitFor(() => expect(modal.hasAttribute('open')).toBe(false), { timeout: 2000 });
+    });
+
     it('closes from its own close buttons when Escape and the backdrop cannot close it', async () => {
       const modal = renderModal({ 'data-modal-closable': 'false' });
       const keep = document.createElement('button');

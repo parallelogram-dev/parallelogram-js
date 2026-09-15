@@ -41,6 +41,44 @@ describe('custom elements manifest', () => {
     ]);
   });
 
+  it('lists a child element defined in its own module under that module, exported from both', () => {
+    const own = 'dist/components/PWidget.js';
+    const child = 'dist/components/PWidgetPart.js';
+    const modules = customElementsManifest([
+      elementContract({
+        elements: [
+          { tag: 'p-widget-part', module: 'components/PWidgetPart', description: 'A part' },
+        ],
+      }),
+    ]).modules;
+
+    expect(
+      modules.map(module => ({
+        path: module.path,
+        declarations: module.declarations.map(declaration => declaration.name),
+        exports: module.exports.map(entry => [entry.kind, entry.name, entry.declaration.module]),
+      }))
+    ).toEqual([
+      {
+        path: own,
+        declarations: ['PWidget'],
+        exports: [
+          ['js', 'default', own],
+          ['custom-element-definition', 'p-widget', own],
+          ['js', 'PWidgetPart', child],
+        ],
+      },
+      {
+        path: child,
+        declarations: ['PWidgetPart'],
+        exports: [
+          ['js', 'PWidgetPart', child],
+          ['custom-element-definition', 'p-widget-part', child],
+        ],
+      },
+    ]);
+  });
+
   it('describes attributes with their type, default and reflected property', () => {
     expect(widget.attributes).toEqual([
       {

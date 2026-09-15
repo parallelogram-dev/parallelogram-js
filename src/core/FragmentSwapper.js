@@ -1,5 +1,5 @@
 import { announce } from '../utils/announce.js';
-import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
+import { nextFrame, prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 import { trustedHTML, trustedScript, trustedScriptURL } from '../utils/trusted.js';
 
 const TRACKED_ASSETS = '[data-router-track="reload"]';
@@ -117,16 +117,21 @@ export class FragmentSwapper {
         throw this._fragmentMismatchError(missing);
       }
 
-      await this._mergeHeadAssets(doc, url);
+      await this._mergeHeadAssets(doc, url, options.signal);
 
       if (options.signal?.aborted) {
         return;
       }
 
       /* Fragments are replaced independently, so a slow or failing one cannot hold up the others */
-      const outcomes = await Promise.allSettled(
-        fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
-      );
+      fragmentOptions.viewTransition = this._usesViewTransition(viewTargets);
+      const replaceAll = () =>
+        Promise.allSettled(
+          fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
+        );
+      const outcomes = await (fragmentOptions.viewTransition
+        ? this._inViewTransition(replaceAll, options.signal)
+        : replaceAll());
 
       const replacementResults = outcomes.map((outcome, index) => {
         if (outcome.status === 'fulfilled') {
@@ -198,7 +203,9 @@ export class FragmentSwapper {
       transitionConfig,
     });
 
+    /* Content that is in place is never swapped again, even when a step after it fails */
     let swapped = false;
+    let swapFinished = false;
 
     try {
       if (transitionConfig?.out) {
@@ -208,7 +215,8 @@ export class FragmentSwapper {
       /* The main fragment scrolls to the top between the out transition and the swap, so old
          content fades out, the page snaps up and the new content fades in. 'instant' overrides any
          CSS scroll-behavior: smooth on the document. A hash naming an element in the new page
-         scrolls to that element after the swap instead. */
+         scrolls to that element after the swap instead. Browsers render no frames inside a view
+         transition's update, which has already captured the old content, so it isn't waited for. */
       if (
         viewTarget === 'main' &&
         !options.preserveScroll &&
@@ -216,7 +224,9 @@ export class FragmentSwapper {
         this.options.scrollPosition === 'top' &&
         !options.fromPopstate
       ) {
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        if (!options.viewTransition) {
+          await nextFrame();
+        }
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
@@ -224,8 +234,17 @@ export class FragmentSwapper {
         return { viewTarget, success: false, aborted: true };
       }
 
-      this._swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig);
-      swapped = true;
+      this._swapFragment(
+        sourceFragment,
+        targetFragment,
+        viewTarget,
+        options,
+        transitionConfig,
+        () => {
+          swapped = true;
+        }
+      );
+      swapFinished = true;
 
       this.eventBus.emit('page:fragment-did-replace', {
         targetFragment,
@@ -244,6 +263,9 @@ export class FragmentSwapper {
         transitionConfig,
       });
 
+      if (swapped && !swapFinished) {
+        return { viewTarget, success: false, error: transitionError?.message };
+      }
       if (!swapped && !options.signal?.aborted) {
         this._swapFragment(sourceFragment, targetFragment, viewTarget, options);
       }
@@ -259,13 +281,39 @@ export class FragmentSwapper {
   }
 
   /**
+   * Whether a swap runs inside a view transition: the `viewTransitions` option is on, the browser
+   * supports them, motion isn't reduced and no fragment has a transition of its own
+   */
+  _usesViewTransition(viewTargets) {
+    return Boolean(
+      this.options.viewTransitions &&
+      typeof document.startViewTransition === 'function' &&
+      !prefersReducedMotion() &&
+      !viewTargets.some(viewTarget => this.options.targetGroupTransitions?.[viewTarget])
+    );
+  }
+
+  /**
+   * Run an update inside a view transition, skipping the animation when the signal aborts
+   */
+  _inViewTransition(update, signal) {
+    let result;
+    const transition = document.startViewTransition(() => (result = update()));
+    signal?.addEventListener('abort', () => transition.skipTransition(), { once: true });
+    return transition.updateCallbackDone.then(() => result);
+  }
+
+  /**
    * Replace a fragment's content and run everything that depends on the new content straight away,
    * rather than after its in-transition: scroll, head and focus for the main fragment, and component
    * mounting for every fragment
+   *
+   * `onReplaced` is called as soon as the content is in place, before the steps that follow it.
    */
-  _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig) {
+  _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig, onReplaced) {
     this.unmountWithin(targetFragment);
     targetFragment.replaceChildren(...this._fragmentContent(sourceFragment));
+    onReplaced?.();
     this._syncFragmentRoot(sourceFragment, targetFragment, transitionConfig);
 
     if (viewTarget === 'main') {
@@ -359,33 +407,32 @@ export class FragmentSwapper {
    * @param {string} direction - 'in' or 'out'
    * @param {string} outClassName - Name of the 'out' class to remove when 'in' starts
    */
-  _performCSSTransition(fragment, className, duration, direction = 'in', outClassName = null) {
-    return new Promise(resolve => {
-      requestAnimationFrame(async () => {
-        fragment.classList.add(className);
+  async _performCSSTransition(
+    fragment,
+    className,
+    duration,
+    direction = 'in',
+    outClassName = null
+  ) {
+    await nextFrame();
+    fragment.classList.add(className);
 
-        /* Remove the 'out' class a frame later so the 'in' class applies first, avoiding a flicker */
-        if (direction === 'in' && outClassName) {
-          requestAnimationFrame(() => {
-            fragment.classList.remove(outClassName);
-          });
-        }
+    /* Remove the 'out' class a frame later so the 'in' class applies first, avoiding a flicker */
+    if (direction === 'in' && outClassName) {
+      nextFrame().then(() => fragment.classList.remove(outClassName));
+    }
 
-        if (fragment.getAnimations?.().length === 0) {
-          this.logger?.debug(`Transition class "${className}" did not start an animation`, {
-            fragment,
-          });
-        }
-
-        await whenAnimationsFinish(fragment, { fallback: duration + 250 });
-
-        if (direction === 'in') {
-          fragment.classList.remove(className);
-        }
-
-        resolve();
+    if (fragment.getAnimations?.().length === 0) {
+      this.logger?.debug(`Transition class "${className}" did not start an animation`, {
+        fragment,
       });
-    });
+    }
+
+    await whenAnimationsFinish(fragment, { fallback: duration + 250 });
+
+    if (direction === 'in') {
+      fragment.classList.remove(className);
+    }
   }
 
   /**
@@ -524,11 +571,12 @@ export class FragmentSwapper {
    * Assets marked [data-router-track="reload"] identify the site's versioned bundles; when their set
    * differs from the current page's, nothing is replaced so the router can load the page normally.
    * Stylesheets and external scripts that the new page's head adds are appended and waited for, up
-   * to `assetTimeout` milliseconds each. A response without head content is left alone.
+   * to `assetTimeout` milliseconds each, unless the signal has already aborted. A response without
+   * head content is left alone.
    *
    * @throws {Error} A `TrackedAssetsChangedError` when the tracked assets differ.
    */
-  async _mergeHeadAssets(doc, url) {
+  async _mergeHeadAssets(doc, url, signal) {
     if (!doc.head || doc.head.childElementCount === 0) {
       return;
     }
@@ -546,6 +594,10 @@ export class FragmentSwapper {
       const error = new Error('Tracked assets changed, so the page must be loaded normally');
       error.name = 'TrackedAssetsChangedError';
       throw error;
+    }
+
+    if (signal?.aborted) {
+      return;
     }
 
     const present = keys(document.querySelectorAll(HEAD_ASSETS), document.baseURI);

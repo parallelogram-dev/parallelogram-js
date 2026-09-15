@@ -1,14 +1,23 @@
-import Parallelogram, { BaseComponent, EventManager, RouterManager } from '@parallelogram-js/core';
+import Parallelogram, {
+  BaseComponent,
+  DevLogger,
+  EventManager,
+  RouterManager,
+} from '@parallelogram-js/core';
 import type { ComponentState } from '@parallelogram-js/core/core/BaseComponent';
+import Lightbox from '@parallelogram-js/core/components/Lightbox';
 import { AlertManager } from '@parallelogram-js/core/managers/AlertManager';
 import Toggle from '@parallelogram-js/core/components/Toggle';
+import { registerTrackerAdapter } from '@parallelogram-js/core/components/DeferTracker';
+import gtm from '@parallelogram-js/core/adapters/gtm';
 
 export function configure(): Parallelogram {
   const app = Parallelogram.create({
-    router: { timeout: 5000, loadingClass: 'is-loading' },
+    router: { timeout: 5000, loadingClass: 'is-loading', historyCache: 3, prefetch: false },
     pageManager: {
       containerSelector: 'main',
       focusTarget: false,
+      viewTransitions: true,
       targetGroups: { main: ['main', 'navbar'] },
       targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in', duration: 200 } },
     },
@@ -80,11 +89,42 @@ export function components(counter: Counter, element: HTMLElement, router: Route
   return new Toggle({ router }).trackedElements().length;
 }
 
+export function retryComponent(app: Parallelogram): boolean {
+  return app.pageManager?.host.retry('[data-tabs]') ?? false;
+}
+
 export function alerts(manager: AlertManager): void {
   const close = manager.success('Saved', { timeout: 3000 });
   close();
   AlertManager.notify('Could not save', 'error');
+  manager.destroy();
 
   /* @ts-expect-error notify takes a toast type */
   AlertManager.notify('Could not save', 'fatal');
+}
+
+export function logging(logger: DevLogger): void {
+  logger.debug('Mounted', { count: 2 });
+  logger.warn('Missing target');
+
+  /* @ts-expect-error setEnabled takes a boolean */
+  logger.setEnabled('yes');
+}
+
+export function lightbox(viewer: Lightbox, link: HTMLElement): number {
+  viewer.goTo(link, 2);
+
+  /* @ts-expect-error goTo takes the image's position as a number */
+  viewer.goTo(link, '2');
+
+  const status = viewer.getStatus(link);
+  return status?.lightboxState === 'open' ? status.gallerySize : 0;
+}
+
+export function registerTrackers(): void {
+  registerTrackerAdapter('gtm', gtm, {
+    ids: ['GTM-XXXXXX'],
+    origins: ['https://stats.example.com'],
+  });
+  registerTrackerAdapter('gtm', gtm);
 }

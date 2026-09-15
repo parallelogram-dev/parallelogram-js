@@ -58,10 +58,14 @@
   display: none !important;
 }
 
-/* Until Tabs loads, show only the first panel so the page doesn't jump; without scripts, or when
-   Tabs fails to load, all stay visible */
+/* Until Tabs loads, show only the panel the markup marks data-tab-panel="active", or else the first,
+   so the page doesn't jump; without scripts, or when Tabs fails to load, all stay visible */
 @media (scripting: enabled) {
-  [data-tabs]:not([data-tabs-enhanced], .component-error) [data-tab-panel] ~ [data-tab-panel] {
+  [data-tabs]:not([data-tabs-enhanced], .component-error)
+    [data-tab-panel]
+    ~ [data-tab-panel]:not([data-tab-panel='active']),
+  [data-tabs]:not([data-tabs-enhanced], .component-error)
+    [data-tab-panel]:has(~ [data-tab-panel='active']) {
     display: none;
   }
 }

@@ -17,6 +17,7 @@ import {
 } from './types/declarations.mjs';
 import { withoutInternalMembers } from './types/internals.mjs';
 import { customElementsManifest } from './types/manifest.mjs';
+import { modulesOf } from './types/members.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const componentsDir = path.join(root, 'src/components');
@@ -33,24 +34,26 @@ const elements = contracts.filter(contract => contract.kind === 'element');
 const problems = conflictingGlobalEvents(contracts);
 
 for (const contract of elements) {
-  const file = path.join(typesDir, `${contract.module}.d.ts`);
-  if (!existsSync(file)) {
-    problems.push(`${path.relative(root, file)} is missing; run tsc -p tsconfig.types.json first`);
-    continue;
-  }
+  for (const module of modulesOf(contract)) {
+    const file = path.join(typesDir, `${module}.d.ts`);
+    if (!existsSync(file)) {
+      problems.push(
+        `${path.relative(root, file)} is missing; run tsc -p tsconfig.types.json first`
+      );
+      continue;
+    }
 
-  const generated = elementDeclarations(contract);
-  const declared = exportedNames(generated);
-  const missing = [...exportedNames(readFileSync(file, 'utf8'))].filter(
-    name => !declared.has(name)
-  );
-  if (missing.length) {
-    problems.push(
-      `${contract.module} exports ${missing.join(', ')}, which its contract doesn't declare`
+    const generated = elementDeclarations(contract, module);
+    const declared = exportedNames(generated);
+    const missing = [...exportedNames(readFileSync(file, 'utf8'))].filter(
+      name => !declared.has(name)
     );
-  }
+    if (missing.length) {
+      problems.push(`${module} exports ${missing.join(', ')}, which its contract doesn't declare`);
+    }
 
-  writeFileSync(file, generated);
+    writeFileSync(file, generated);
+  }
 }
 
 if (problems.length) {

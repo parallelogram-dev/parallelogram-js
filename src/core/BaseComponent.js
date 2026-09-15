@@ -74,10 +74,14 @@ export class BaseComponent {
    *
    * If _init throws, the element is not tracked and its abort signal is aborted
    * before the error is rethrown. An _init that returns a Promise is tracked
-   * straight away, and its state is stored once the Promise resolves.
+   * straight away, and its state is stored once the Promise resolves; mount()
+   * then returns a Promise that settles when _init does and rejects when it
+   * fails. An _init that returns no state object logs a warning, and a state
+   * with the element's controller is stored instead, so unmount() still
+   * releases it.
    *
    * @param {HTMLElement} element
-   * @returns {void}
+   * @returns {void|Promise<void>}
    */
   mount(element) {
     if (this.elements.has(element) || this._initializing.has(element)) {
@@ -93,7 +97,7 @@ export class BaseComponent {
     }
 
     if (typeof state?.then !== 'function') {
-      this.elements.set(element, state);
+      this._store(element, state);
       return;
     }
 
@@ -104,17 +108,19 @@ export class BaseComponent {
           return;
         }
         this._initializing.delete(element);
-        this.elements.set(element, resolved);
+        this._store(element, resolved);
       },
       error => {
-        if (this._initializing.get(element) === pending) {
-          this._initializing.delete(element);
-          this._abortController(element);
-        }
         this.logger?.error('Component failed to initialize', { element, error });
+        if (this._initializing.get(element) !== pending) return;
+        this._initializing.delete(element);
+        this._abortController(element);
+        throw error;
       }
     );
+    pending.catch(() => {});
     this._initializing.set(element, pending);
+    return pending;
   }
 
   /**
@@ -134,21 +140,25 @@ export class BaseComponent {
    * afterwards, even if cleanup throws.
    *
    * @param {HTMLElement} element
-   * @returns {void}
+   * @returns {boolean} False when the component was not mounted on the element
    */
   unmount(element) {
     if (this._initializing.has(element)) {
       this._initializing.delete(element);
       this._abortController(element);
-      return;
+      return true;
     }
 
-    const state = this.elements.get(element);
-    if (!state) return;
+    if (!this.elements.has(element)) return false;
 
+    const state = this.elements.get(element);
     this.elements.delete(element);
-    this._controllers.delete(element);
-    this._runCleanup(state);
+    try {
+      this._runCleanup(state);
+    } finally {
+      this._abortController(element);
+    }
+    return true;
   }
 
   /**
@@ -178,6 +188,19 @@ export class BaseComponent {
    */
   _elementsKeys() {
     return new Set(this.trackedElements());
+  }
+
+  /** @internal */
+  _store(element, state) {
+    if (state && typeof state === 'object') {
+      this.elements.set(element, state);
+      return;
+    }
+
+    this.logger?.warn(`${this.constructor.name}: _init must return its state`, { element });
+    const controller = this._controllers.get(element) ?? new AbortController();
+    this._controllers.set(element, controller);
+    this.elements.set(element, { controller, cleanup() {} });
   }
 
   /** @internal */
@@ -326,12 +349,15 @@ export class BaseComponent {
    * @returns {HTMLElement|null} Target element or null
    *
    * @example
-   * // CSS selector approach
-   * <button data-toggle-target="#sidebar">Toggle</button>
+   * // In a component's _init, such as SelectLoader's
+   * const target = this._getTargetElement(element, 'target', { required: true });
    *
-   * // data-view approach (more consistent with framework)
-   * <button data-toggle-target-view="sidebar">Toggle</button>
-   * <div data-view="sidebar">...</div>
+   * // Markup with a CSS selector
+   * <select data-selectloader data-selectloader-target="#results">...</select>
+   *
+   * // Markup with a data-view name
+   * <select data-selectloader data-selectloader-target-view="results">...</select>
+   * <div data-view="results">...</div>
    */
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
