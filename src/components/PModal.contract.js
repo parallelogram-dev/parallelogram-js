@@ -89,18 +89,6 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       detail: MODAL_DETAIL,
       description: 'The modal has closed; bubbles out of shadow roots',
     },
-    {
-      name: 'modal:open',
-      detail: MODAL_DETAIL,
-      description: 'The old name for p-modal:open',
-      deprecated: 'Listen for p-modal:open. Removed in 0.6.0.',
-    },
-    {
-      name: 'modal:close',
-      detail: MODAL_DETAIL,
-      description: 'The old name for p-modal:close',
-      deprecated: 'Listen for p-modal:close. Removed in 0.6.0.',
-    },
   ],
   slots: [
     { name: 'title', description: 'The title, which also names the dialog' },

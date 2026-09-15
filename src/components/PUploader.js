@@ -83,8 +83,6 @@ const formatBytes = bytes => {
  *   Cancel it to show your own message.
  * - p-uploader:reject: a file was refused; cancelable, with `{ file, reason }` where reason is
  *   `"type"` or `"size"`
- * - upload:success, upload:error, sequence:update, file:update, file:delete: the same events under
- *   their names before 0.5.0; deprecated, and no longer dispatched from 0.6.0
  *
  * @csspart files - the list of files
  * @csspart selector - the drop zone
@@ -749,12 +747,7 @@ export default class PUploader extends HTMLElement {
     fileData.replaces?._handleConfirmDelete();
     this._updateDraggableState();
 
-    dispatchComponentEvent(
-      this,
-      'p-uploader:upload-success',
-      { fileId: fileData.id, response },
-      { legacy: 'upload:success' }
-    );
+    dispatchComponentEvent(this, 'p-uploader:upload-success', { fileId: fileData.id, response });
   }
 
   _handleUploadError(fileData, error) {
@@ -764,12 +757,7 @@ export default class PUploader extends HTMLElement {
     fileData.element.setAttribute('state', 'error');
     fileData.element.setAttribute('error', error);
 
-    dispatchComponentEvent(
-      this,
-      'p-uploader:upload-error',
-      { fileId: fileData.id, error },
-      { legacy: 'upload:error' }
-    );
+    dispatchComponentEvent(this, 'p-uploader:upload-error', { fileId: fileData.id, error });
   }
 
   _updateDraggableState() {
@@ -933,12 +921,7 @@ export default class PUploader extends HTMLElement {
       this._sequenceFailed = false;
       this._showMessage('');
     }
-    dispatchComponentEvent(
-      this,
-      'p-uploader:sequence-update',
-      { sequence },
-      { legacy: 'sequence:update' }
-    );
+    dispatchComponentEvent(this, 'p-uploader:sequence-update', { sequence });
   }
 
   _restoreOrder(order) {

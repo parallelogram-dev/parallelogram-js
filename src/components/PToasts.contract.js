@@ -46,18 +46,6 @@ Where popovers are supported the element shows itself as a manual popover and mo
       detail: TOAST_DETAIL,
       description: 'A toast closed; bubbles out of shadow roots',
     },
-    {
-      name: 'toast:show',
-      detail: TOAST_DETAIL,
-      description: 'The old name for p-toasts:show',
-      deprecated: 'Listen for p-toasts:show. Removed in 0.6.0.',
-    },
-    {
-      name: 'toast:close',
-      detail: TOAST_DETAIL,
-      description: 'The old name for p-toasts:close',
-      deprecated: 'Listen for p-toasts:close. Removed in 0.6.0.',
-    },
   ],
   parts: [
     { name: 'stack', description: 'The element holding the toasts' },
