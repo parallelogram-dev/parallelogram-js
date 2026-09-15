@@ -134,7 +134,7 @@ When the user prefers reduced motion, autoplay is left off and the video's contr
       title: 'Autoplaying video',
       description: 'Scroll it out of view to pause it; pause it yourself and it stays paused.',
       markup: `<video data-videoplay autoplay muted loop playsinline width="640" height="360"
-       src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"></video>`,
+       src="videos/test-pattern.mp4"></video>`,
       controls: [
         { attribute: 'data-videoplay-threshold' },
         { attribute: 'data-videoplay-autopause' },
