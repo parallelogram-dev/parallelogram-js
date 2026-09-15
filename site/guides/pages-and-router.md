@@ -307,7 +307,7 @@ When the browser restores the page from the back/forward cache, the router emits
 | `element`      | `Element \| null`                  | `null`           | The element that started the navigation; it receives the classes.          |
 | `scroll`       | `{ x: number, y: number } \| null` | `null`           | A position for listeners to restore after the swap.                        |
 
-A navigation to the current URL without `force` does nothing and emits no events. A new navigation cancels the request in progress, and waits for the previous swap to settle before changing the page. `navigate()` rejects with the error when a navigation fails.
+A navigation to the current URL without `force` does nothing and emits no events, unless the last navigation failed, so a page that couldn't be shown can be tried again. A new navigation cancels the request in progress, and waits for the previous swap to settle before changing the page. `navigate()` rejects with the error when a navigation fails.
 
 ```js
 await app.router.navigate('/search?q=tents', { viewTarget: 'results', replace: true });

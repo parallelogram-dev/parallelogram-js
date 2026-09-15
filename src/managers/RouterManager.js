@@ -81,6 +81,8 @@ export class RouterManager {
     this._navigation = null;
     this._swap = Promise.resolve();
     this._failedElement = null;
+    /* Set when the latest navigation failed, so its address can be tried again */
+    this._lastFailed = false;
     this._entry = null;
     this._entryCount = 0;
     this._scrollPositions = new Map();
@@ -469,11 +471,12 @@ export class RouterManager {
 
     const targetUrl = new URL(url, location.href);
 
-    if (!force && targetUrl.href === this.currentUrl.href) {
+    if (!force && !this._lastFailed && targetUrl.href === this.currentUrl.href) {
       this.logger?.debug('Navigation skipped - same URL', { url: targetUrl.href });
       return;
     }
 
+    this._lastFailed = false;
     this._abortInFlight();
     const navigation = { controller: new AbortController(), element };
     this._navigation = navigation;
@@ -566,6 +569,7 @@ export class RouterManager {
       }
 
       status = 'error';
+      this._lastFailed = true;
       this._showError(navigation);
 
       this.eventBus.emit('router:navigate-error', {
