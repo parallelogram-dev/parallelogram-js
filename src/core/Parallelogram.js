@@ -174,7 +174,7 @@ export class Parallelogram {
       router: this.router,
       options: { observeRoot: document.body, ...this.config.pageManager },
     };
-    this.pageManager = new PageManager(pageManagerConfig);
+    this.pageManager = new PageManager(pageManagerConfig).start();
 
     /* Create web component loader */
     const webComponentMap = {};

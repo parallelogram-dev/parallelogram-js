@@ -92,9 +92,12 @@ const pageManager = new PageManager({
   ],
   options: { targetGroups: { main: ['navbar', 'main'] } },
 });
+pageManager.start();
 ```
 
-Both constructors also take a `logger`. Each manager has a `destroy()` method: the router removes its listeners, cancels the navigation in progress and gives scroll restoration back to the browser, and the page manager unmounts every component and stops handling navigations.
+Constructing a `PageManager` does nothing to the page. `pageManager.start()` handles router navigations, mounts components in the observed root and starts watching it for changes. Calling it again does nothing, and a destroyed page manager can't be started again.
+
+Both constructors also take a `logger`. Each manager has a `destroy()` method: the router removes its listeners, cancels the navigation in progress and gives scroll restoration back to the browser, and the page manager unmounts every component and stops handling navigations, whether or not it started.
 
 `pageManager.replaceFragments(html, options)` swaps fragments from any HTML string, without the router. It takes `viewTargets` (default `['main']`), `url`, `fromNavigation`, `fromPopstate`, `preserveScroll`, `scroll` and `signal`. Target groups aren't resolved here, so list every fragment name. It rejects before changing the page when a fragment is missing or tracked assets changed.
 

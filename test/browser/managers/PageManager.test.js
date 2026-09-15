@@ -43,7 +43,7 @@ describe('PageManager in the browser', () => {
       registry: [],
       eventBus: bus,
       options: { mountDelay: 0, ...options },
-    });
+    }).start();
   };
 
   it('runs the scripts in new content, except ones marked data-router-skip', async () => {
