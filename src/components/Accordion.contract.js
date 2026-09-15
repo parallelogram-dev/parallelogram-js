@@ -71,26 +71,34 @@ Details that share a \`name\` close each other with the same animation, includin
     },
     {
       name: '--accordion-border-color',
-      default: '#e2e8f0',
-      description: 'The lines between and around the items',
+      default: 'var(--surface-item-border-color, var(--color-border, #e2e8f0))',
+      description: 'The lines between and around the items: the item border colour',
     },
     {
       name: '--accordion-summary-padding',
       default: '1rem 1.25rem',
       description: 'Padding around each summary',
     },
-    { name: '--accordion-summary-color', default: '#111827', description: 'Summary text colour' },
+    {
+      name: '--accordion-summary-color',
+      default: 'var(--surface-item-color-text, #111827)',
+      description: "Summary text colour: the item text colour, which is the page's text colour",
+    },
     {
       name: '--accordion-summary-hover-bg',
-      default: '#f9fafb',
-      description: 'Summary background on hover',
+      default: 'var(--color-hover, #f9fafb)',
+      description: 'Summary background on hover: the hover tint',
     },
     {
       name: '--accordion-content-padding',
       default: '0 1.25rem 1.25rem',
       description: 'Padding around the content element after each summary',
     },
-    { name: '--accordion-content-color', default: '#374151', description: 'Content text colour' },
+    {
+      name: '--accordion-content-color',
+      default: 'var(--surface-item-color-text, #374151)',
+      description: "Content text colour: the item text colour, which is the page's text colour",
+    },
     {
       name: '--accordion-icon',
       description: 'The icon image, used as a mask: a plus from Tabler Icons by default',
