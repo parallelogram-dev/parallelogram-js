@@ -281,6 +281,7 @@ Colours come from a small set of roles, and the surface, form control, button an
 | `--color-border`, `--color-border-strong`                                 | Borders, and borders that need to stand out, such as cards and buttons       |
 | `--color-overlay`, `--color-shadow`                                       | Modal backdrops and shadows                                                  |
 | `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg` | Status colours and their backgrounds                                         |
+| `--color-danger-contrast`                                                 | Text on a danger fill, such as the danger button                             |
 
 Text colour isn't a role: surfaces inherit it from the page.
 

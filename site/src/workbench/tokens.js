@@ -44,6 +44,7 @@ export const TOKEN_GROUPS = [
       colour('--color-shadow'),
       colour('--color-danger'),
       colour('--color-danger-bg'),
+      colour('--color-danger-contrast'),
       colour('--color-success'),
       colour('--color-success-bg'),
       colour('--color-warning'),
