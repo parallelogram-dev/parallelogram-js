@@ -36,6 +36,7 @@ import { DevLogger } from './DevLogger.js';
 import { WebComponentLoader } from './WebComponentLoader.js';
 import { EventManager } from '../managers/EventManager.js';
 import { PageManager } from '../managers/PageManager.js';
+import { trackFocusSource } from '../utils/focus-source.js';
 
 /**
  * @typedef {Object} ParallelogramConfig
@@ -196,6 +197,7 @@ export class Parallelogram {
 
     /* Initialize web component loader */
     this.webComponentLoader.init();
+    trackFocusSource();
 
     this._initialized = true;
     this.logger?.info('Parallelogram initialized successfully');

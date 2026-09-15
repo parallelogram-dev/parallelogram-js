@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PageManager` no longer subscribes to router events or mounts components in its constructor. Call the new `pageManager.start()` after creating it. A second call does nothing, a destroyed manager can't be started again, and `destroy()` works whether or not it started. `Parallelogram` calls `start()` for you.
 - `setState()` writes state only to `data-<component>-state`, and `getElementState()` reads only that attribute.
 - `<p-datetime>` stores, submits and reports local date and time strings like the native inputs: `yyyy-mm-ddThh:mm` in datetime mode and `hh:mm` in time mode, with seconds only when they aren't zero, instead of UTC instants such as `2024-01-15T03:30:00.000Z`. Values, `min`, `max` and linked fields given as ISO instants are still read, as the local date and time they stand for. `format` still decides what is submitted.
+- Focus rings show only after keyboard use. `Parallelogram`, `<p-select>`, `<p-datetime>` and `<p-uploader>` record whether the last input was a keyboard or a pointer as `data-focus-source` on `<html>`, and on those elements while they have focus, and the framework styles hide focus outlines and form field focus rings after pointer input; fields keep their focused border colour. Browsers show a ring in a clicked text field under `:focus-visible` alone, which is why the attribute is needed. Without the script, rings show as before.
 
 ### Removed
 
@@ -33,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ComponentRegistry's unused `validate()`, `detectCycles()`, `toPascalCase()` and `fork()`. Use `ComponentRegistry.create()` instead of `fork()`.
 - The legacy design-system variables module (`design-system/variables`), with names such as `$spacing-*`, `$font-size-*`, `$transition-*`, `$legacy-color-*` and `$size-*`, and the unused `$color-focus-shadow` token. Use the tokens from `design-system`.
 - The `legacy` option of the internal `dispatchComponentEvent()`.
+
+### Fixed
+
+- `<p-datetime>` no longer closes in Safari when the next or previous month arrow, the month and year heading, or the space between days is clicked. Safari doesn't focus a clicked button, so focus moved to the nearest focusable element around the picker, such as a `main` with `tabindex="-1"`, and the picker took that as focus leaving it. The panel now takes focus itself.
+- `<p-datetime>` opens below its field when the panel fits neither below nor above, instead of above with its header cut off at the top of the viewport. Scrolling up to reach the header moved the panel back below the field, so the click that followed landed outside it and closed it.
+- `<p-select>` without `required` clears its value, with `input` and `change` events, when its text is deleted and the list closes, instead of restoring the previous option.
+- `<p-uploader>` leaves the same gap between the last file and the file selector as between files.
 
 ## [0.5.5] - 2026-09-15
 
