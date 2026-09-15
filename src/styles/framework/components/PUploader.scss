@@ -425,3 +425,8 @@ textarea:focus-visible {
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
+
+/* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
+:host([data-focus-source='pointer']) :focus {
+  outline: none;
+}

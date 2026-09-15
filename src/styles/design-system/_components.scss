@@ -82,6 +82,12 @@
     @include form-control-focus;
   }
 
+  /* The border still marks focus; the ring is for keyboard users */
+  :root[data-focus-source='pointer'] &:focus,
+  :root[data-focus-source='pointer'] &.is-focused {
+    box-shadow: none;
+  }
+
   &:disabled,
   &[disabled] {
     @include form-control-disabled;
