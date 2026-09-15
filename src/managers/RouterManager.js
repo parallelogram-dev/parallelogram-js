@@ -250,7 +250,8 @@ export class RouterManager {
    *
    * Moves between entries of the same document (a hash change) only restore their scroll position.
    * Otherwise the fragment changed by the later of the two entries is replaced: going back undoes
-   * the navigation that created the entry being left.
+   * the navigation that created the entry being left. A jump over other entries, whose changes
+   * aren't known, replaces `main`.
    */
   _onPopState(event) {
     const departing = this._entry;
@@ -275,11 +276,12 @@ export class RouterManager {
     });
 
     const changed = arriving.position < departing.position ? departing : arriving;
+    const adjacent = Math.abs(arriving.position - departing.position) === 1;
 
     this.navigate(url, {
       trigger: 'popstate',
       force: true,
-      viewTarget: changed.viewTarget,
+      viewTarget: adjacent ? changed.viewTarget : 'main',
       scroll: savedScroll,
     }).catch(() => {});
   }
