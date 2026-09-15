@@ -168,6 +168,7 @@
   },
   "sizeBudget": {
     "index.js": 14998,
+    "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3783,
     "components/DataTable.js": 6221,
     "components/DeferTracker.js": 4603,
@@ -213,6 +214,6 @@
     "managers/PageManager.js": 7556,
     "managers/RouterManager.js": 3245,
     "managers/TransitionManager.js": 1016,
-    "styles/index.min.css": 3670
+    "styles/index.min.css": 4244
   }
 }
