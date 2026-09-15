@@ -79,7 +79,7 @@ describe('Toggle', () => {
     ]);
   });
 
-  it('writes target state to data-toggle-state and the deprecated data-toggle-target', () => {
+  it('writes target state to data-toggle-state only', () => {
     document.body.innerHTML = `
       <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-animate="false">Account</button>
       <div id="account-menu">Settings</div>
@@ -94,7 +94,7 @@ describe('Toggle', () => {
     expect([
       menu.getAttribute('data-toggle-state'),
       menu.getAttribute('data-toggle-target'),
-    ]).toEqual(['open', 'open']);
+    ]).toEqual(['open', null]);
   });
 
   it('puts back the markup it changed once its only trigger unmounts', () => {
