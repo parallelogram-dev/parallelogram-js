@@ -95,7 +95,9 @@ const addMonths = (date, months) => {
  * The value fields and the calendar button open a dialog. In the day grid, the arrow keys move by day
  * and week, Home and End go to the start and end of the week, Page Up and Page Down change month
  * (with Shift, year), Enter or Space picks the focused day, and Escape closes the dialog and returns
- * focus to the control that opened it.
+ * focus to the control that opened it. In the month and year views, the arrow keys move between
+ * months or years and Home and End go to the start and end of the row. Moving focus outside the
+ * component closes the dialog and leaves focus where it went.
  *
  * @cssprop --datetime-accent - selected days, focus rings and primary buttons
  * @cssprop --datetime-bg, --datetime-text, --datetime-muted - panel background, text and muted text
@@ -255,6 +257,20 @@ export default class PDatetime extends HTMLElement {
       'click',
       event => {
         if (this._open && !event.composedPath().includes(this)) {
+          this.close();
+        }
+      },
+      { signal }
+    );
+
+    /* Close when focus moves to something outside the component. A focusout without a new target,
+       such as when the window loses focus or a click lands on something unfocusable in the panel,
+       leaves the panel open. */
+    this.shadowRoot.addEventListener(
+      'focusout',
+      event => {
+        const next = event.relatedTarget;
+        if (this._open && next && !this.shadowRoot.contains(next)) {
           this.close();
         }
       },
@@ -441,7 +457,12 @@ export default class PDatetime extends HTMLElement {
    * Keyboard navigation in the day grid, following the WAI-ARIA date picker dialog pattern
    */
   _onGridKeydown(event) {
-    const current = this._viewMode === 'day' && this._parseValue(event.target.dataset?.date);
+    if (this._viewMode !== 'day') {
+      this._onPickerKeydown(event);
+      return;
+    }
+
+    const current = this._parseValue(event.target.dataset?.date);
     if (!current) return;
 
     const column = (current.getDay() - this._weekStart + 7) % 7;
@@ -479,11 +500,35 @@ export default class PDatetime extends HTMLElement {
       this._view = new Date(date.getFullYear(), date.getMonth(), 1);
     }
     this._renderCalendar();
-    this._focusActiveDay();
+    this._focusActiveCell();
   }
 
-  _focusActiveDay() {
-    this._grid.querySelector('[data-date][tabindex="0"]')?.focus({ preventScroll: true });
+  /**
+   * Arrow keys, Home and End move between the months or years of the month and year views
+   */
+  _onPickerKeydown(event) {
+    const cells = [...this._grid.querySelectorAll('[data-month], [data-year]')];
+    const index = cells.indexOf(event.target);
+    const rowStart = index - (index % 3);
+    const target = {
+      ArrowLeft: index - 1,
+      ArrowRight: index + 1,
+      ArrowUp: index - 3,
+      ArrowDown: index + 3,
+      Home: rowStart,
+      End: rowStart + 2,
+    }[event.key];
+    if (index === -1 || target === undefined) return;
+
+    event.preventDefault();
+    const next = cells[Math.max(0, Math.min(cells.length - 1, target))];
+    cells[index].tabIndex = -1;
+    next.tabIndex = 0;
+    next.focus({ preventScroll: true });
+  }
+
+  _focusActiveCell() {
+    this._grid.querySelector('[tabindex="0"]')?.focus({ preventScroll: true });
   }
 
   /**
@@ -774,7 +819,7 @@ export default class PDatetime extends HTMLElement {
     if (this._modeConfig[this.mode]?.showCalendar === false) {
       this._hourSelect.focus({ preventScroll: true });
     } else {
-      this._focusActiveDay();
+      this._focusActiveCell();
     }
   }
 
@@ -1165,7 +1210,7 @@ export default class PDatetime extends HTMLElement {
     }
 
     if (hadFocus) {
-      this._focusActiveDay();
+      this._focusActiveCell();
     }
   }
 
@@ -1233,10 +1278,7 @@ export default class PDatetime extends HTMLElement {
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
 
-    this._grid.replaceChildren();
-    this._grid.removeAttribute('role');
-    this._grid.classList.add('month-view');
-    this._grid.classList.remove('year-view');
+    const buttons = [];
 
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
       const monthDate = new Date(year, monthIndex, 1);
@@ -1257,15 +1299,16 @@ export default class PDatetime extends HTMLElement {
       }
       if (selected && monthIndex === selected.getMonth() && year === selected.getFullYear()) {
         button.classList.add('selected');
-        button.setAttribute('aria-pressed', 'true');
       }
       if ((effMax && monthDate > effMax) || (effMin && monthEnd < effMin)) {
         button.classList.add('disabled');
-        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
       }
 
-      this._grid.append(button);
+      buttons.push(button);
     }
+
+    this._renderPickerCells(buttons, 'month-view');
   }
 
   /* Year picker view */
@@ -1278,10 +1321,7 @@ export default class PDatetime extends HTMLElement {
     const minYear = effMin ? effMin.getFullYear() : null;
     const maxYear = effMax ? effMax.getFullYear() : null;
 
-    this._grid.replaceChildren();
-    this._grid.removeAttribute('role');
-    this._grid.classList.add('year-view');
-    this._grid.classList.remove('month-view');
+    const buttons = [];
 
     for (let year = currentYear - 5; year < currentYear + 7; year++) {
       const button = node(
@@ -1295,14 +1335,48 @@ export default class PDatetime extends HTMLElement {
       }
       if (selected && year === selected.getFullYear()) {
         button.classList.add('selected');
-        button.setAttribute('aria-pressed', 'true');
       }
       if ((minYear !== null && year < minYear) || (maxYear !== null && year > maxYear)) {
         button.classList.add('disabled');
-        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
       }
 
-      this._grid.append(button);
+      buttons.push(button);
+    }
+
+    this._renderPickerCells(buttons, 'year-view');
+  }
+
+  /**
+   * Lay out month or year buttons in grid rows of three, with a roving tabindex on the selected
+   * button, else today's, else the first
+   */
+  _renderPickerCells(buttons, viewClass) {
+    const hadFocus = this._grid.contains(this.shadowRoot.activeElement);
+    const has = name => button => button.classList.contains(name);
+    const active = buttons.find(has('selected')) ?? buttons.find(has('today')) ?? buttons[0];
+
+    this._grid.classList.remove('month-view', 'year-view');
+    this._grid.classList.add(viewClass);
+    this._grid.setAttribute('role', 'grid');
+    this._grid.replaceChildren();
+
+    buttons.forEach((button, index) => {
+      if (index % 3 === 0) {
+        this._grid.append(node('div', { class: 'row', role: 'row' }));
+      }
+      button.tabIndex = button === active ? 0 : -1;
+      const cell = node('div', {
+        class: 'cell',
+        role: 'gridcell',
+        'aria-selected': String(has('selected')(button)),
+      });
+      cell.append(button);
+      this._grid.lastElementChild.append(cell);
+    });
+
+    if (hadFocus) {
+      this._focusActiveCell();
     }
   }
 
