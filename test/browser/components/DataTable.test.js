@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import DataTable from '../../../src/components/DataTable.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
 import datatableStyles from '../../../src/styles/framework/components/datatable.scss';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const WAIT = { timeout: 2000 };
 
@@ -224,6 +225,45 @@ describe('DataTable', () => {
     style.remove();
 
     expect([color, backgroundColor]).toEqual(['rgb(240, 240, 240)', 'rgba(0, 0, 0, 0)']);
+  });
+
+  it('draws the search box, pagination, sort icons and status with the dark roles when data-theme is dark', () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    document.documentElement.dataset.theme = 'dark';
+
+    try {
+      const table = mount(build(PEOPLE, 'data-datatable-filterable data-datatable-paginate="2"'));
+      const holder = table.parentElement;
+      const search = holder.querySelector('.datatable-search');
+      const current = holder.querySelector('nav button[aria-current="page"]');
+      const page = holder.querySelector('nav button[aria-label="Page 2"]');
+      [search, current, page].forEach(node =>
+        node.getAnimations().forEach(animation => animation.finish())
+      );
+
+      expect([
+        getComputedStyle(search).backgroundColor,
+        getComputedStyle(search).borderTopColor,
+        getComputedStyle(current).backgroundColor,
+        getComputedStyle(current).color,
+        getComputedStyle(page).borderTopColor,
+        getComputedStyle(table.querySelector('.sort-icon')).color,
+        getComputedStyle(holder.querySelector('.datatable__status')).color,
+      ]).toEqual([
+        'rgb(23, 29, 38)',
+        'rgba(255, 255, 255, 0.36)',
+        'rgb(147, 197, 253)',
+        'rgb(11, 18, 32)',
+        'rgb(58, 67, 80)',
+        'rgba(255, 255, 255, 0.6)',
+        'rgba(255, 255, 255, 0.6)',
+      ]);
+    } finally {
+      delete document.documentElement.dataset.theme;
+      style.remove();
+    }
   });
 
   it('shows a window of page numbers for long tables', () => {

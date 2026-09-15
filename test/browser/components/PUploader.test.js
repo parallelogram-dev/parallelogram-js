@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../../src/components/PUploader.js';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const PAYLOAD = '<img src="data:," onerror="window.__puploaderInjected = true">';
 
@@ -379,6 +380,56 @@ describe('p-uploader host', () => {
     reorder(uploader);
 
     await expect(saved).resolves.toEqual([true, ['first', 'second']]);
+  });
+
+  it('draws the uploader and an added file with the dark roles when data-theme is dark', async () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    document.documentElement.dataset.theme = 'dark';
+
+    try {
+      const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+      /* The file item only exists once a file is added, and settles once its upload finishes */
+      addFiles(uploader, [new File(['x'], 'harbour.txt', { type: 'text/plain' })]);
+      const file = await vi.waitFor(() => {
+        const added = uploader.querySelector('p-uploader-file[state="uploaded"]');
+        expect(added).not.toBeNull();
+        return added;
+      });
+      const selector = uploader.shadowRoot.querySelector('[part~="selector"]');
+      const panel = file.shadowRoot.querySelector('[data-panel="info"]');
+
+      const colours = () => {
+        [uploader, selector, file, panel].forEach(node =>
+          node.getAnimations().forEach(animation => animation.finish())
+        );
+        return [
+          getComputedStyle(uploader).backgroundColor,
+          getComputedStyle(uploader).borderTopColor,
+          getComputedStyle(selector).backgroundColor,
+          getComputedStyle(selector).borderTopColor,
+          getComputedStyle(file).backgroundColor,
+          getComputedStyle(file).borderTopColor,
+          getComputedStyle(panel).backgroundColor,
+        ];
+      };
+
+      await vi.waitFor(() =>
+        expect(colours()).toEqual([
+          'rgb(23, 29, 38)',
+          'rgba(255, 255, 255, 0.14)',
+          'rgb(32, 39, 51)',
+          'rgb(58, 67, 80)',
+          'rgb(23, 29, 38)',
+          'rgb(58, 67, 80)',
+          'rgb(23, 29, 38)',
+        ])
+      );
+    } finally {
+      delete document.documentElement.dataset.theme;
+      style.remove();
+    }
   });
 
   it('announces a finished upload to the page as p-uploader:upload-success', async () => {
