@@ -215,7 +215,11 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     },
   ],
   cssProperties: [
-    { name: '--datatable-border-color', default: '#d1d5db', description: 'Borders' },
+    {
+      name: '--datatable-border-color',
+      description:
+        'Borders of the search box and pagination buttons; by default the search box uses --surface-control-border-color and the buttons --color-border-strong',
+    },
     {
       name: '--datatable-button-bg',
       default: 'transparent',
@@ -224,22 +228,34 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     { name: '--datatable-button-color', default: 'inherit', description: 'Pagination button text' },
     {
       name: '--datatable-button-hover-bg',
-      default: 'rgba(128, 128, 128, 0.15)',
-      description: 'Pagination button background on hover',
+      default: 'var(--color-hover)',
+      description: 'Pagination button background on hover: the hover tint',
     },
     {
       name: '--datatable-button-hover-border-color',
-      default: '#9ca3af',
-      description: 'Pagination button border on hover',
+      default: 'var(--color-text-muted)',
+      description: 'Pagination button border on hover: the muted text colour',
     },
-    { name: '--datatable-current-bg', default: '#1d4ed8', description: 'The current page button' },
-    { name: '--datatable-current-color', default: '#ffffff', description: 'The current page text' },
+    {
+      name: '--datatable-current-bg',
+      default: 'var(--color-accent-hover)',
+      description: 'The current page button: the stronger accent',
+    },
+    {
+      name: '--datatable-current-color',
+      default: 'var(--color-accent-contrast)',
+      description: 'The current page text: the text colour on the accent',
+    },
     {
       name: '--datatable-header-hover-bg',
-      default: 'rgba(128, 128, 128, 0.12)',
-      description: 'Sortable header background on hover',
+      default: 'var(--color-hover)',
+      description: 'Sortable header background on hover: the hover tint',
     },
-    { name: '--datatable-muted-color', default: '#6b7280', description: 'Status and sort icons' },
+    {
+      name: '--datatable-muted-color',
+      default: 'var(--color-text-muted)',
+      description: 'Status, messages and sort icons: the muted text colour',
+    },
   ],
   examples: [
     {
