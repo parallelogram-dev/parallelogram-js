@@ -8,7 +8,7 @@ export default {
   match: '[data-modal][data-modal-target]',
   module: 'components/Modal',
   summary: 'Buttons that open a <p-modal>',
-  description: `Settings belong on the \`<p-modal>\`; a trigger only overrides the ones it sets itself. Opening a modal closes the others unless the trigger allows several, and focus returns to the trigger when the modal closes. The trigger gets \`aria-haspopup\`, \`aria-expanded\` and \`aria-controls\`.
+  description: `Settings belong on the \`<p-modal>\`; a trigger only overrides the ones it sets itself. Opening a modal closes the others unless the trigger allows several, and focus returns to the trigger when the modal closes. Several triggers can open the same modal; every one gets \`aria-haspopup\`, \`aria-controls\` and an \`aria-expanded\` that follows the modal.
 
 Load the \`<p-modal>\` element as well; see its page for the dialog itself.`,
   attributes: [
@@ -74,13 +74,15 @@ Load the \`<p-modal>\` element as well; see its page for the dialog itself.`,
       name: 'modal:opened',
       channel: 'both',
       detail: MODAL_DETAIL,
-      description: 'Dispatched on the trigger when its modal opens',
+      description:
+        'Dispatched once on the trigger that opened the modal when it opens. When a script opens the modal, dispatched on its first mounted trigger',
     },
     {
       name: 'modal:closed',
       channel: 'both',
       detail: MODAL_DETAIL,
-      description: 'Dispatched on the trigger when its modal has closed',
+      description:
+        'Dispatched once when the modal has closed, on the same trigger as its `modal:opened`',
     },
   ],
   examples: [
