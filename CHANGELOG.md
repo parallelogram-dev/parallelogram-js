@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-15
+
 ### Added
 
 - Accordion, an enhancement component for native `<details>` elements. It animates their height as they open and close instead of snapping, writes `data-accordion-state`, and keeps details that share a `name` closing each other with the same animation, including in browsers without `name` support. Without JavaScript the details still work. Import `components/Accordion` and the package stylesheet or `styles/accordion.css`.
