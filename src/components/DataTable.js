@@ -113,7 +113,6 @@ export class DataTable extends BaseComponent {
       return state;
     }
 
-    state.originalSelectorValue = element.getAttribute('data-datatable');
     state.config = this._getConfiguration(element);
     state.tbody = tbody;
     state.originalNodes = Array.from(tbody.childNodes);
@@ -156,11 +155,6 @@ export class DataTable extends BaseComponent {
       element.removeAttribute('aria-busy');
       element.removeAttribute('data-datatable-state');
       this.removeAttr(element, 'error-message');
-      if (state.originalSelectorValue === null) {
-        element.removeAttribute('data-datatable');
-      } else {
-        element.setAttribute('data-datatable', state.originalSelectorValue);
-      }
     };
 
     this._dispatch(element, 'datatable:mounted', { config: state.config });
