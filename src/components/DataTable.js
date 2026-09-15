@@ -1,5 +1,4 @@
 import { BaseComponent } from '../core/BaseComponent.js';
-import { ComponentStates, ExtendedStates } from '../core/ComponentStates.js';
 import { createElement, generateId } from '../utils/dom-utils.js';
 
 /** Page numbers shown either side of the current page */
@@ -136,7 +135,7 @@ export class DataTable extends BaseComponent {
     state.injected = [];
     state.restore = [];
 
-    this.setState(element, ComponentStates.MOUNTED);
+    this.setState(element, 'mounted');
 
     const { signal } = state.controller;
     if (state.config.sortable) this._setupSorting(element, state, signal);
@@ -591,7 +590,7 @@ export class DataTable extends BaseComponent {
     const controller = new AbortController();
     state.loadController = controller;
 
-    this.setState(element, ExtendedStates.LOADING);
+    this.setState(element, 'loading');
     element.setAttribute('aria-busy', 'true');
     state.errorMessage = null;
     this.removeAttr(element, 'error-message');
@@ -619,7 +618,7 @@ export class DataTable extends BaseComponent {
       state.currentPage = 1;
       this._showSort(state);
 
-      this.setState(element, rows.length > 0 ? ExtendedStates.LOADED : 'empty');
+      this.setState(element, rows.length > 0 ? 'loaded' : 'empty');
       this._update(element, state);
       this._dispatch(element, rows.length > 0 ? 'datatable:loaded' : 'datatable:empty', {
         url,
@@ -628,7 +627,7 @@ export class DataTable extends BaseComponent {
     } catch (error) {
       if (controller.signal.aborted) return;
 
-      this.setState(element, ComponentStates.ERROR);
+      this.setState(element, 'error');
       this.setAttr(element, 'error-message', error.message);
       state.errorMessage = error.message;
       state.tbody.replaceChildren(this._messageRow(state, error.message, 'alert'));
@@ -653,7 +652,7 @@ export class DataTable extends BaseComponent {
 
     state.errorMessage = null;
     this.removeAttr(element, 'error-message');
-    this.setState(element, ComponentStates.MOUNTED);
+    this.setState(element, 'mounted');
     this._update(element, state, { announce: false });
   }
 

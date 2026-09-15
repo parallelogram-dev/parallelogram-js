@@ -1,5 +1,4 @@
 import { BaseComponent } from '../core/BaseComponent.js';
-import { ExtendedStates } from '../core/ComponentStates.js';
 import { deepActiveElement, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 
@@ -152,7 +151,7 @@ export default class Toggle extends BaseComponent {
     const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
     if (firstTrigger) {
       this._originals.set(target, rememberAttributes(target, TARGET_ATTRIBUTES));
-      this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
+      this._setTargetState(target, isOpen ? 'open' : 'closed');
     }
 
     if (!target.id) {
@@ -342,7 +341,7 @@ export default class Toggle extends BaseComponent {
     this._open.set(target, element);
     this._syncTriggers(target, true);
     target.classList.add(this.constructor.defaults.openClass);
-    this._transition(target, state, ExtendedStates.OPENING, ExtendedStates.OPEN);
+    this._transition(target, state, 'opening', 'open');
 
     this._dispatch(element, 'toggle:show', {
       target,
@@ -375,7 +374,7 @@ export default class Toggle extends BaseComponent {
     this._open.delete(target);
     this._syncTriggers(target, false);
     target.classList.remove(this.constructor.defaults.openClass);
-    this._transition(target, state, ExtendedStates.CLOSING, ExtendedStates.CLOSED);
+    this._transition(target, state, 'closing', 'closed');
 
     this._dispatch(element, 'toggle:hide', {
       target,
@@ -408,7 +407,7 @@ export default class Toggle extends BaseComponent {
 
   _isTargetOpen(target) {
     const value = this._getTargetState(target);
-    return value === ExtendedStates.OPEN || value === ExtendedStates.OPENING;
+    return value === 'open' || value === 'opening';
   }
 
   _closeGroup(group, except) {
@@ -454,7 +453,7 @@ export default class Toggle extends BaseComponent {
    */
   _setTargetState(target, value) {
     this.setAttr(target, 'state', value);
-    target.hidden = value === ExtendedStates.CLOSED;
+    target.hidden = value === 'closed';
   }
 
   _getTargetState(target) {
