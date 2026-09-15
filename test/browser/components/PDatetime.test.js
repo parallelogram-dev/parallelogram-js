@@ -231,6 +231,34 @@ describe('p-datetime', () => {
       expect(panel(picker).hidden).toBe(true);
     });
 
+    it('disables every control that opens the panel inside a disabled fieldset', () => {
+      const { picker } = renderForm(
+        '<fieldset disabled><p-datetime name="checkIn" range range-to="checkOut" mode="date"></p-datetime></fieldset>'
+      );
+
+      const openers = [...picker.shadowRoot.querySelectorAll('[aria-haspopup="dialog"]')];
+      expect(openers.map(control => control.disabled)).toEqual([true, true, true]);
+    });
+
+    it('closes its open panel when its fieldset becomes disabled', () => {
+      const { form, picker } = renderForm(
+        '<fieldset><p-datetime name="eventDate" mode="date"></p-datetime></fieldset>'
+      );
+      picker.open();
+
+      form.querySelector('fieldset').disabled = true;
+
+      expect(trigger(picker).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('looks dimmed while disabled', () => {
+      const { picker } = renderForm(
+        '<p-datetime name="eventDate" mode="date" disabled></p-datetime>'
+      );
+
+      expect(getComputedStyle(picker).opacity).toBe('0.3');
+    });
+
     it('does not add hidden inputs to the page', () => {
       const { form } = renderForm(
         '<p-datetime name="checkIn" range range-to="checkOut" mode="date" value="2025-03-10"></p-datetime>'

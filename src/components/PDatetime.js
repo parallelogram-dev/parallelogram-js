@@ -1742,7 +1742,9 @@ export default class PDatetime extends HTMLElement {
 
   formDisabledCallback(disabled) {
     this._formDisabled = disabled;
-    this._btn.disabled = disabled;
+    for (const control of [this._input, this._toInput, this._btn]) {
+      control.disabled = disabled;
+    }
     if (disabled) this.close();
   }
 
