@@ -61,29 +61,23 @@ Where popovers are supported the element shows itself as a manual popover and mo
     },
     {
       name: '--toast-bg-success',
-      default: 'var(--color-inverse-surface)',
+      default: 'var(--color-success-strong)',
       description: 'Background of success toasts',
     },
     {
       name: '--toast-bg-warning',
-      default: 'var(--color-inverse-surface)',
+      default: 'var(--color-warning-strong)',
       description: 'Background of warning toasts',
     },
     {
       name: '--toast-bg-error',
-      default: 'var(--color-inverse-surface)',
+      default: 'var(--color-danger-strong)',
       description: 'Background of error toasts',
     },
     {
-      name: '--toast-accent-width',
-      default: '4px',
-      description:
-        'Width of the strip in --color-success, --color-warning or --color-danger at the start of success, warning and error toasts',
-    },
-    {
       name: '--toast-text-color',
-      default: 'var(--color-inverse-text)',
-      description: 'Text colour',
+      description:
+        'Text colour of every toast; defaults to --color-inverse-text on info toasts and --color-on-status on success, warning and error toasts',
     },
     { name: '--toast-border-radius', description: 'Corner radius' },
     {
