@@ -244,6 +244,8 @@ export default class PDatetime extends HTMLElement {
     this._activeDate = null;
     this._opener = null;
     this._renderQueued = false;
+    this._timeLists = null;
+    this._presets = null;
 
     /* Listeners on the component's own shadow nodes are added once; document listeners are added
        on connect and removed on disconnect */
@@ -1399,27 +1401,31 @@ export default class PDatetime extends HTMLElement {
     const is12Hour = this.timeFormat === '12';
     this._ampm.hidden = !is12Hour;
 
-    /* Build hour select options */
-    this._hourSelect.replaceChildren();
-    const hourRange = is12Hour ? 12 : 24;
-    const hourStart = is12Hour ? 1 : 0;
-
-    for (let h = hourStart; h < (is12Hour ? hourStart + 12 : hourRange); h++) {
-      const option = document.createElement('option');
-      option.value = h;
-      option.textContent = String(h).padStart(2, '0');
-      this._hourSelect.appendChild(option);
-    }
-
-    /* Build minute select options */
-    this._minuteSelect.replaceChildren();
     const minuteStep = this._step || 15; /* Default 15-minute increments */
 
-    for (let m = 0; m < 60; m += minuteStep) {
-      const option = document.createElement('option');
-      option.value = m;
-      option.textContent = String(m).padStart(2, '0');
-      this._minuteSelect.appendChild(option);
+    /* Build the hour and minute options only when the time format or step changes */
+    const timeLists = `${is12Hour}:${minuteStep}`;
+    if (timeLists !== this._timeLists) {
+      this._timeLists = timeLists;
+
+      this._hourSelect.replaceChildren();
+      const hourRange = is12Hour ? 12 : 24;
+      const hourStart = is12Hour ? 1 : 0;
+
+      for (let h = hourStart; h < (is12Hour ? hourStart + 12 : hourRange); h++) {
+        const option = document.createElement('option');
+        option.value = h;
+        option.textContent = String(h).padStart(2, '0');
+        this._hourSelect.appendChild(option);
+      }
+
+      this._minuteSelect.replaceChildren();
+      for (let m = 0; m < 60; m += minuteStep) {
+        const option = document.createElement('option');
+        option.value = m;
+        option.textContent = String(m).padStart(2, '0');
+        this._minuteSelect.appendChild(option);
+      }
     }
 
     /* Set current values based on the focused field in range mode */
@@ -1445,6 +1451,9 @@ export default class PDatetime extends HTMLElement {
       const currentMinute = date.getMinutes();
       const closestMinute = Math.round(currentMinute / minuteStep) * minuteStep;
       this._minuteSelect.value = closestMinute >= 60 ? 0 : closestMinute;
+    } else {
+      this._hourSelect.selectedIndex = 0;
+      this._minuteSelect.selectedIndex = 0;
     }
   }
 
@@ -1487,53 +1496,63 @@ export default class PDatetime extends HTMLElement {
     const shouldShow = this.showQuickDates && this.mode !== 'time';
     this._quickDates.hidden = !shouldShow;
 
-    if (shouldShow) {
-      const dates = this.quickDates.split(',').map(s => s.trim());
-      const dateMap = {
-        yesterday: { days: -1, label: 'Yesterday' },
-        today: { days: 0, label: 'Today' },
-        tomorrow: { days: 1, label: 'Tomorrow' },
-      };
+    if (!shouldShow) return;
 
-      this._quickDates.replaceChildren();
+    const effMin = this._effectiveMin();
+    const effMax = this._effectiveMax();
 
-      const effMin = this._effectiveMin();
-      const effMax = this._effectiveMax();
+    /* Build the presets only when the list, the boundaries or today's date change */
+    const presets = [
+      this.quickDates,
+      effMin?.getTime(),
+      effMax?.getTime(),
+      this._dateString(new Date()),
+    ].join('|');
+    if (presets === this._presets) return;
+    this._presets = presets;
 
-      dates.forEach(dateKey => {
-        if (dateMap[dateKey]) {
-          /* Skip presets that fall outside the allowed range */
-          const preview = new Date();
-          preview.setDate(preview.getDate() + dateMap[dateKey].days);
-          if (this._isDayOutOfRange(preview, effMin, effMax)) return;
+    const dates = this.quickDates.split(',').map(s => s.trim());
+    const dateMap = {
+      yesterday: { days: -1, label: 'Yesterday' },
+      today: { days: 0, label: 'Today' },
+      tomorrow: { days: 1, label: 'Tomorrow' },
+    };
 
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'preset';
-          btn.textContent = dateMap[dateKey].label;
-          btn.addEventListener('click', () => {
-            const date = new Date();
-            date.setDate(date.getDate() + dateMap[dateKey].days);
+    this._quickDates.replaceChildren();
 
-            if (this.mode === 'date') {
-              this.value = this._dateString(date);
-            } else {
-              date.setHours(9, 0, 0, 0);
-              this.value = date.toISOString();
-            }
+    dates.forEach(dateKey => {
+      if (dateMap[dateKey]) {
+        /* Skip presets that fall outside the allowed range */
+        const preview = new Date();
+        preview.setDate(preview.getDate() + dateMap[dateKey].days);
+        if (this._isDayOutOfRange(preview, effMin, effMax)) return;
 
-            /* Reset view to day mode and navigate to selected date */
-            this._viewMode = 'day';
-            this._view = new Date(date);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset';
+        btn.textContent = dateMap[dateKey].label;
+        btn.addEventListener('click', () => {
+          const date = new Date();
+          date.setDate(date.getDate() + dateMap[dateKey].days);
 
-            this._emitChange();
-            this._render();
-            if (this.mode === 'date') this.close();
-          });
-          this._quickDates.appendChild(btn);
-        }
-      });
-    }
+          if (this.mode === 'date') {
+            this.value = this._dateString(date);
+          } else {
+            date.setHours(9, 0, 0, 0);
+            this.value = date.toISOString();
+          }
+
+          /* Reset view to day mode and navigate to selected date */
+          this._viewMode = 'day';
+          this._view = new Date(date);
+
+          this._emitChange();
+          this._render();
+          if (this.mode === 'date') this.close();
+        });
+        this._quickDates.appendChild(btn);
+      }
+    });
   }
 
   _syncTime() {
