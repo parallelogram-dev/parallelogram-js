@@ -25,7 +25,8 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * keyboard focus is on the stack. Where popovers are supported the element shows itself as a manual
  * popover and moves to the top of the top layer with each new toast. Everything outside an open
  * modal dialog is inert, so while a `p-modal` or modal `<dialog>` is open the element moves inside
- * it to show a toast, and returns to its place when that modal closes.
+ * it to show a toast, and returns to its place when that modal closes or, by the next toast, is
+ * removed.
  *
  * @example
  * <p-toasts placement="bottom-center"></p-toasts>
@@ -236,9 +237,14 @@ export default class PToasts extends HTMLElement {
   }
 
   /**
-   * Move inside the most recently opened modal, where the toasts can be announced and dismissed
+   * Move inside the most recently opened modal, where the toasts can be announced and dismissed.
+   * A modal removed from the page without closing sends the element back first.
    */
   _followModal() {
+    if (this._modal && !this._modal.isConnected) {
+      this._goHome(this._modal);
+    }
+
     const modal = getOpenModal();
     if (!modal || modal === this._modal || modal.contains(this)) return;
 
