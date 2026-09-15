@@ -165,7 +165,17 @@ Registering two enhancement components with the same name throws `A component na
 
 Nothing downloads when you register a component. An enhancement component's loader runs the first time an element matching its selector is on the page, or is added to it later. The module loads once, and every matching element found while it loads mounts when it arrives, if the element is still on the page. Elements waiting for a module have the `component-loading` class.
 
-When a loader fails, it is retried after 1 second, then 2, then 4, up to `maxRetryAttempts`. After the last attempt the waiting elements get the `component-error` class and the event bus emits `page:component-load-error`. A module without a component class is not retried.
+When a loader fails, it is retried after 1 second, then 2, then 4, up to `maxRetryAttempts`. After the last attempt the waiting elements, and matching elements added later, get the `component-error` class and the event bus emits `page:component-load-error`. A module without a component class is not retried.
+
+To try a component that failed for good again, for example once the connection is back, call `app.pageManager.host.retry(name)` with its registered name. It returns `false` unless that component failed. Otherwise it starts a fresh set of retries, retries any failed dependencies first, and matching elements on the page wait for the new load.
+
+```js
+app.eventBus.on('page:component-load-error', ({ componentName }) => {
+  window.addEventListener('online', () => app.pageManager.host.retry(componentName), {
+    once: true,
+  });
+});
+```
 
 Removing an element unmounts its component. Adding matching markup, whether through the router or your own script, mounts it.
 

@@ -181,6 +181,70 @@ describe('ComponentHost', () => {
     expect(document.getElementById('gallery').classList.contains('component-error')).toBe(true);
   });
 
+  it('marks elements added after a component failed to load for good', async () => {
+    const loader = vi.fn().mockRejectedValue(new Error('network error'));
+    host = new ComponentHost({
+      registry: [{ name: 'lightbox', selector: '[data-lightbox]', loader }],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    root.innerHTML = '<div id="gallery" data-lightbox></div>';
+    await vi.waitFor(() => expect(host.records.get('lightbox')?.status).toBe('failed'));
+
+    root.insertAdjacentHTML('beforeend', '<div id="later" data-lightbox></div>');
+    await flush();
+
+    expect(document.getElementById('later').classList.contains('component-error')).toBe(true);
+  });
+
+  it('mounts the elements of a failed component once it is retried', async () => {
+    root.innerHTML = '<div id="gallery" data-lightbox></div>';
+    const loader = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValue({ default: recorder.define('lightbox') });
+    host = new ComponentHost({
+      registry: [{ name: 'lightbox', selector: '[data-lightbox]', loader }],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    await flush();
+
+    const retried = host.retry('lightbox');
+    await flush();
+
+    expect([retried, recorder.log, root.firstElementChild.className]).toEqual([
+      true,
+      [['mount', 'lightbox', 'gallery']],
+      '',
+    ]);
+  });
+
+  it('retries a failed dependency along with the component that needs it', async () => {
+    root.innerHTML = '<div id="chart" data-chart></div>';
+    const loadCharts = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValue({ default: recorder.define('charts') });
+    host = new ComponentHost({
+      registry: [
+        { name: 'charts', selector: '[data-charts]', loader: loadCharts },
+        syncEntry('chart', { dependsOn: ['charts'] }),
+      ],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+    await flush();
+
+    host.retry('chart');
+    await flush();
+
+    expect(recorder.log).toEqual([['mount', 'chart', 'chart']]);
+  });
+
   it('does not retry when the loaded module has no component class', async () => {
     root.innerHTML = '<div id="gallery" data-lightbox></div>';
     const loadError = vi.fn();
