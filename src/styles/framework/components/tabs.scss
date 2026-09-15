@@ -3,15 +3,18 @@
  *
  * Styles the data attributes that Tabs markup already has, and the aria-selected state Tabs sets on
  * the chosen tab, so no extra classes are needed.
+ *
+ * Colours default to the panel and dropdown surface tokens, then the colour roles, then the light
+ * values, so they follow the dark theme and still render without the package stylesheet.
  */
 
 :root {
-  --tabs-border-color: #e2e8f0;
-  --tabs-color: #6b7280;
-  --tabs-hover-color: #374151;
-  --tabs-hover-bg: #f9fafb;
-  --tabs-selected-color: #0369a1;
-  --tabs-selected-bg: #f0f9ff;
+  --tabs-border-color: var(--surface-panel-border-color, var(--color-border, #e2e8f0));
+  --tabs-color: var(--color-text-muted, #6b7280);
+  --tabs-hover-color: var(--surface-panel-color-text, #374151);
+  --tabs-hover-bg: var(--color-hover, #f9fafb);
+  --tabs-selected-color: var(--color-accent-hover, #0369a1);
+  --tabs-selected-bg: var(--surface-dropdown-item-selected-bg, #f0f9ff);
   --tabs-transition-duration: 0.2s;
 }
 
@@ -43,7 +46,8 @@
   }
 
   &:focus-visible {
-    outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #3b82f6);
+    outline: var(--framework-focus-width, 2px) solid
+      var(--framework-focus-color, var(--color-accent, #3b82f6));
     outline-offset: calc(-1 * var(--framework-focus-width, 2px));
   }
 }
