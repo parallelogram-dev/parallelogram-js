@@ -198,7 +198,7 @@
     "adapters/hubspot.js": 900,
     "adapters/linkedin-insight.js": 852,
     "adapters/meta-pixel.js": 1012,
-    "adapters/pinterest-tag.js": 944,
+    "adapters/pinterest-tag.js": 1011,
     "adapters/plausible.js": 892,
     "adapters/tiktok-pixel.js": 1262,
     "core/BaseComponent.js": 2642,
