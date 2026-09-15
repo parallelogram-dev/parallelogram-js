@@ -55,6 +55,10 @@ Components write their state only to `data-<component>-state`. Update styles and
 | [Lightbox](lightbox.html)'s `data-lightbox-state-closed-class`, which was never applied | The `lightbox:closed` event                                                         |
 | `<p-datetime>`'s `isRange`                                                              | `range`                                                                             |
 
+## Dates and times from `<p-datetime>`
+
+In datetime and time modes, [`<p-datetime>`](p-datetime.html) now stores, submits and reports the wall-clock time the user picked, with no timezone, the same as `datetime-local` and `time` inputs: `2024-01-15T14:30` and `14:30`. It used to use UTC instants such as `2024-01-15T03:30:00.000Z`. If your server expects an instant, set `format="iso-tz"` to submit the local time with its offset, or convert on the server with the user's timezone. Instants already in your markup still work and are read as local time, but `value` and event details are local strings too.
+
 ## Styles
 
 The legacy `design-system/variables` module is gone. `@use` the `design-system` module and switch to its tokens:
