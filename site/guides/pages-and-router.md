@@ -213,6 +213,28 @@ When the `main` fragment is replaced, the head is reconciled with the new page. 
 
 Other head elements are left alone. A navigation that doesn't replace `main` doesn't update the title.
 
+## Content Security Policy and Trusted Types
+
+On a page that enforces Trusted Types with `require-trusted-types-for 'script'`, the library inserts HTML and scripts through two policies, which the page's `trusted-types` directive must list:
+
+| Policy                  | What goes through it                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parallelogram`         | Web component templates, the pages the router fetches, the fragments SelectLoader loads, `Modal.create()` string content and `<p-toasts>` messages with `allowHTML` |
+| `parallelogram-scripts` | Scripts the router runs from a fetched page, in swapped fragments and added to the head, and the scripts DeferTracker's adapters load                               |
+
+```
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types parallelogram parallelogram-scripts
+```
+
+Add `'allow-duplicates'` to `trusted-types` when more than one copy of the library loads on a page. When a policy can't be created, the library logs a console warning naming it and inserts plain strings, which the browser then rejects. Without `parallelogram-scripts`, scripts in swapped content don't run and tracker adapters can't load their scripts, though the rest of the page still works.
+
+Both policies pass values through unchanged. They mark what the library already inserts rather than checking it:
+
+- The router trusts HTML from its own origin, as a full page load would, and SelectLoader fragments must come from the same trusted source.
+- `Modal.create()` strings and `allowHTML` messages must only carry trusted HTML. Pass a Node to `Modal.create()`, or leave `allowHTML` off, for anything built from user data.
+
+Trusted Types sit alongside `script-src` rather than replacing it, so scripts still need to be allowed there. To give the scripts that tracker adapters add a nonce, pass it to `configureDeferTracker({ nonce })`.
+
 ## After a swap
 
 Each fragment goes through these steps:
