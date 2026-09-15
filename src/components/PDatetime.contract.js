@@ -186,7 +186,12 @@ export default {
     {
       name: '--datetime-accent',
       default: 'var(--color-accent)',
-      description: 'Selected days, focus rings and primary buttons',
+      description: 'Focus rings, today, hovered buttons and the tint behind days in a range',
+    },
+    {
+      name: '--datetime-accent-strong',
+      default: 'var(--color-accent-hover)',
+      description: 'Selected days and primary buttons, which carry text',
     },
     {
       name: '--datetime-bg',
@@ -198,7 +203,12 @@ export default {
     {
       name: '--datetime-border',
       default: 'var(--color-border)',
-      description: 'Field and panel border',
+      description: 'Panel border and dividers',
+    },
+    {
+      name: '--datetime-control-border',
+      default: 'var(--surface-control-border-color)',
+      description: 'Border of the field and the time selects',
     },
     { name: '--datetime-radius', description: 'Corner radius' },
     {

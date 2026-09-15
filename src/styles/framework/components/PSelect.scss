@@ -17,7 +17,10 @@
 
 /* Custom properties default to the surface tokens, then the colour roles, then light values */
 :host {
-  --select-border-color: var(--surface-control-border-color, var(--color-border, #{$color-border}));
+  --select-border-color: var(
+    --surface-control-border-color,
+    var(--color-control-border, #{$color-control-border})
+  );
   --select-focus-color: var(--color-accent, #{$primary});
   --select-bg: var(--surface-control-color-bg, var(--color-surface, #ffffff));
   --select-text: var(--surface-control-color-text, #{$color-text});
@@ -91,8 +94,8 @@
 }
 
 .input::placeholder {
-  color: inherit;
-  opacity: 0.6;
+  color: var(--select-placeholder);
+  opacity: 1;
 }
 
 .arrow {
