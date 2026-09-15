@@ -147,6 +147,7 @@
     "eslint-plugin-compat": "^7.0.2",
     "globals": "^17.12.0",
     "happy-dom": "^20.14.5",
+    "marked": "^18.0.13",
     "playwright": "^1.63.0",
     "postcss": "^8.5.28",
     "prettier": "^3.9.6",

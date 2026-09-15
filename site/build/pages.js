@@ -1,11 +1,13 @@
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { componentPage, homePage, layout, slugFor, titleFor } from './render.js';
+import { readGuide } from './guides.js';
+import { componentPage, guidePage, homePage, layout, slugFor, titleFor } from './render.js';
 
 export const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const repoRoot = path.resolve(siteRoot, '..');
 export const componentsDir = path.join(repoRoot, 'src/components');
+export const guidesDir = path.join(siteRoot, 'guides');
 
 /**
  * Every component contract, read afresh so the development server picks up edits
@@ -27,14 +29,29 @@ export async function loadContracts() {
 }
 
 /**
+ * Every guide in site/guides, ordered by file name
+ *
+ * @returns {import('./guides.js').Guide[]}
+ */
+export function loadGuides() {
+  return readdirSync(guidesDir)
+    .filter(file => file.endsWith('.md'))
+    .sort()
+    .map(file =>
+      readGuide(path.basename(file, '.md'), readFileSync(path.join(guidesDir, file), 'utf8'))
+    );
+}
+
+/**
  * Write the site's pages into its root, replacing the pages from an earlier run
  *
  * @returns {Promise<Record<string, string>>} Rollup input names and the page files
  */
 export async function writePages() {
   const contracts = await loadContracts();
+  const guides = loadGuides();
   const { version } = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-  const shared = { contracts, version };
+  const shared = { contracts, guides, version };
 
   const pages = {
     index: layout({
@@ -45,6 +62,15 @@ export async function writePages() {
       content: homePage(contracts, version),
     }),
   };
+  for (const guide of guides) {
+    pages[guide.slug] = layout({
+      ...shared,
+      title: `${guide.title} · Parallelogram`,
+      description: guide.description,
+      current: guide.slug,
+      content: guidePage(guide),
+    });
+  }
   for (const contract of contracts) {
     pages[slugFor(contract)] = layout({
       ...shared,
