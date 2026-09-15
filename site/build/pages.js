@@ -3,7 +3,16 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { discoveryFiles } from './discovery.js';
 import { orderGuides, readGuide } from './guides.js';
-import { componentPage, guidePage, homePage, layout, slugFor, titleFor } from './render.js';
+import {
+  componentPage,
+  designSystemPage,
+  guidePage,
+  homePage,
+  layout,
+  previewDocument,
+  slugFor,
+  titleFor,
+} from './render.js';
 
 export const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const repoRoot = path.resolve(siteRoot, '..');
@@ -72,6 +81,15 @@ export async function writePages() {
       current: 'index',
       content: homePage(contracts, version),
     }),
+    'design-system': layout({
+      ...shared,
+      title: 'Design system · Parallelogram',
+      description:
+        'Every component in a light and a dark frame, with live controls for the design tokens',
+      current: 'design-system',
+      content: designSystemPage(),
+    }),
+    'design-system-preview': previewDocument(contracts),
   };
   for (const guide of guides) {
     pages[guide.slug] = layout({

@@ -1,0 +1,225 @@
+@use 'framework/index';
+@use 'design-system' as ds;
+
+/* Haffer by Displaay, licensed to PeptoLab for web use (invoice DP15764) */
+@font-face {
+  font-family: Haffer;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Haffer-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Haffer;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Haffer-SemiBold.woff2') format('woff2');
+}
+
+/* The preview page's own colours; everything inside a specimen comes from the design system */
+:root {
+  --preview-ground: #f4f5f8;
+  --preview-ink: #161b24;
+  --preview-muted: #586273;
+  --preview-line: #dce0e7;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --preview-ground: #10141b;
+  --preview-ink: #e4e8ee;
+  --preview-muted: #9aa3b1;
+  --preview-line: #29313d;
+
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  background: var(--preview-ground);
+  color: var(--preview-ink);
+  font:
+    0.95rem/1.55 Haffer,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+.preview-group {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+
+  > h2 {
+    margin: 0;
+    color: var(--preview-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+.specimen {
+  border: 1px solid var(--preview-line);
+  border-radius: 10px;
+}
+
+.specimen__label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  align-items: baseline;
+  margin: 0;
+  padding: 0.6rem 0.9rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  small {
+    color: var(--preview-muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+  }
+}
+
+/* Scaffolding for the examples, built from the design system so both themes are honest.
+   :where() keeps it below the components' own selectors. */
+.specimen__stage {
+  padding: 0.9rem;
+}
+
+:where(.specimen__stage) {
+  :where(button) {
+    @include ds.button-base;
+    @include ds.button-secondary;
+  }
+
+  :where(img, video) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--surface-item-radius);
+  }
+
+  :where(.menu) {
+    width: max-content;
+    margin-top: 0.5rem;
+
+    @include ds.panel-base;
+
+    a {
+      display: block;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  :where(.panel) {
+    min-height: 5rem;
+    margin-top: 0.75rem;
+
+    @include ds.panel-base;
+  }
+
+  :where(.accordion) {
+    display: grid;
+    gap: 0.5rem;
+
+    > button {
+      justify-content: flex-start;
+    }
+  }
+
+  :where(.card-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  :where(.card) {
+    padding: 1rem;
+    border: var(--surface-card-border-width) solid var(--surface-card-border-color);
+    border-radius: var(--surface-card-radius);
+    background: var(--surface-card-color-bg);
+    color: var(--surface-card-color-text);
+  }
+
+  :where(.hero) {
+    display: grid;
+    place-items: end start;
+    min-height: 10rem;
+    padding: 1rem;
+    border-radius: var(--surface-panel-radius);
+    background-color: #1f2a44;
+    background-position: center;
+    background-size: cover;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  :where(.demo-header) {
+    position: sticky;
+    top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: var(--surface-panel-radius);
+    background: #1f2a44;
+    color: #fff;
+    transition:
+      transform var(--framework-transition-duration) var(--framework-transition-easing),
+      opacity var(--framework-transition-duration) var(--framework-transition-easing);
+
+    &.scrollhide {
+      opacity: 0;
+      transform: translateY(-120%);
+    }
+  }
+
+  :where(.button-row, .gallery) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  :where(.gallery img) {
+    display: block;
+    width: 10rem;
+  }
+
+  :where(.form) {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 24rem;
+
+    label {
+      font-size: 0.9rem;
+    }
+
+    input {
+      @include ds.form-control;
+    }
+
+    [data-error-for] {
+      margin: 0;
+      color: var(--button-danger-bg);
+      font-size: 0.85rem;
+    }
+
+    button {
+      justify-self: start;
+    }
+  }
+
+  :where(table) {
+    width: 100%;
+  }
+}

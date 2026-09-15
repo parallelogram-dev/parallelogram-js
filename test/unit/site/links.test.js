@@ -2,7 +2,14 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadContracts, loadGuides, siteRoot } from '../../../site/build/pages.js';
-import { componentPage, guidePage, homePage, layout, slugFor } from '../../../site/build/render.js';
+import {
+  componentPage,
+  designSystemPage,
+  guidePage,
+  homePage,
+  layout,
+  slugFor,
+} from '../../../site/build/render.js';
 
 const contracts = await loadContracts();
 const guides = loadGuides();
@@ -24,6 +31,7 @@ const page = (current, content) =>
  */
 const pages = new Map([
   ['index', [page('index', homePage(contracts, '0.0.0'))]],
+  ['design-system', [page('design-system', designSystemPage())]],
   ...guides.map(guide => [guide.slug, [page(guide.slug, guidePage(guide))]]),
   ...contracts.map(contract => [
     slugFor(contract),
