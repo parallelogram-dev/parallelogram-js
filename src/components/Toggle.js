@@ -27,9 +27,11 @@ const containsComposed = (container, node) => {
  *
  * This is the disclosure pattern: triggers get `aria-expanded` and an `aria-controls` link to the
  * target, which is given an id when it has none. The target's state is written to
- * `data-toggle-state` (closed, opening, open or closing) and it has the `open` class while open. The
- * shipped stylesheet hides closed targets and animates the change, and Toggle waits for those
- * animations instead of a fixed delay, so the duration lives only in CSS.
+ * `data-toggle-state` (closed, opening, open or closing) and it has the `open` class while open. A
+ * closed target also has the `hidden` attribute, removed as soon as it starts opening and added once
+ * it has finished closing. The shipped stylesheet keeps closed targets hidden whatever display page
+ * styles give them, leaves open targets their own display, and animates the change; Toggle waits for
+ * those animations instead of a fixed delay, so the duration lives only in CSS.
  *
  * Toggles are independent unless they share a `data-toggle-group`, in which case opening one closes
  * the others in the group. A capture toggle, such as a dropdown, also closes when the user clicks or
@@ -431,13 +433,15 @@ export default class Toggle extends BaseComponent {
   }
 
   /**
-   * Record a target's open state in `data-toggle-state`
+   * Record a target's open state in `data-toggle-state`, and hide it with the `hidden` attribute
+   * once it is closed
    *
    * A target that is not a toggle itself also gets the deprecated copy in `data-toggle-target`, which
    * stops in 0.6.0. On a toggle that attribute holds its own target selector, so it is left alone.
    */
   _setTargetState(target, value) {
     this.setAttr(target, 'state', value);
+    target.hidden = value === ExtendedStates.CLOSED;
     if (!target.hasAttribute(this._getSelector())) {
       this.setAttr(target, 'target', value);
     }

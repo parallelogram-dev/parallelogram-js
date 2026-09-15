@@ -24,6 +24,28 @@ describe('framework stylesheet', () => {
     expect(displayOf('#menu')).toBe('none');
   });
 
+  it('keeps closed toggle targets hidden and open ones in their own display inside a cascade layer', () => {
+    style.textContent = `@layer parallelogram { ${frameworkStyles} }\n.menu { display: flex; }`;
+    document.body.innerHTML = `
+      <nav id="closed" class="menu" data-toggle-state="closed" hidden>Links</nav>
+      <nav id="open" class="menu" data-toggle-state="open">Links</nav>`;
+
+    expect([displayOf('#closed'), displayOf('#open')]).toEqual(['none', 'flex']);
+  });
+
+  it('keeps inactive tab panels hidden inside a cascade layer when page styles set their display', () => {
+    style.textContent = `@layer parallelogram { ${frameworkStyles} }\n.panel { display: grid; }`;
+    document.body.innerHTML = `
+      <div data-tabs data-tabs-enhanced="true">
+        <div data-tabs-panels>
+          <section id="active" class="panel" data-tab-panel="active">Shipping</section>
+          <section id="inactive" class="panel" data-tab-panel="inactive" hidden>Returns</section>
+        </div>
+      </div>`;
+
+    expect([displayOf('#active'), displayOf('#inactive')]).toEqual(['grid', 'none']);
+  });
+
   it('shows only the first tab panel before Tabs loads', () => {
     document.body.innerHTML = `
       <div data-tabs>

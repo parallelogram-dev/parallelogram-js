@@ -52,9 +52,10 @@
   padding: 1rem 0;
 }
 
-/* Keeps inactive panels hidden even when page styles give panels a display value */
+/* Keeps inactive panels hidden even when page styles give panels a display value, including when the
+   framework is imported into a cascade layer */
 [data-tab-panel][hidden] {
-  display: none;
+  display: none !important;
 }
 
 /* Until Tabs loads, show only the first panel so the page doesn't jump; without scripts, or when

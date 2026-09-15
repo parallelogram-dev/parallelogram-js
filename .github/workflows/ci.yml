@@ -24,3 +24,4 @@ jobs:
       - run: npm run check:exports
       - run: npm run check:package
       - run: npm run check:types
+      - run: npm run check:size

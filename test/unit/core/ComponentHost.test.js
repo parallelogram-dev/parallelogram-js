@@ -228,6 +228,76 @@ describe('ComponentHost', () => {
     expect(recorder.log).toEqual([['mount', 'editor', 'editor']]);
   });
 
+  it('waits for a dependency that is retrying before loading a component', async () => {
+    root.innerHTML = '<div id="editor" data-editor></div>';
+    const calls = [];
+    let baseAttempts = 0;
+    start([
+      syncEntry('editor', {
+        dependsOn: ['base'],
+        loader: () => {
+          calls.push('editor');
+          return { default: recorder.define('editor') };
+        },
+      }),
+      syncEntry('base', {
+        loader: () => {
+          calls.push('base');
+          baseAttempts++;
+          return baseAttempts === 1
+            ? Promise.reject(new Error('offline'))
+            : { default: recorder.define('base') };
+        },
+      }),
+    ]);
+
+    await vi.waitFor(() => expect(calls).toContain('editor'), { timeout: 1000 });
+
+    expect(calls).toEqual(['base', 'base', 'editor']);
+  });
+
+  it('fails a component whose dependency fails to load for good', async () => {
+    root.innerHTML = '<div id="editor" data-editor></div>';
+    const editorLoader = vi.fn(() => ({ default: recorder.define('editor') }));
+    const errors = [];
+    bus.on('page:component-load-error', ({ componentName, error }) =>
+      errors.push([componentName, error.cause?.message ?? error.message])
+    );
+    host = new ComponentHost({
+      registry: [
+        syncEntry('editor', { dependsOn: ['base'], loader: editorLoader }),
+        syncEntry('base', { loader: () => Promise.reject(new Error('offline')) }),
+      ],
+      eventBus: bus,
+      maxRetryAttempts: 0,
+    });
+    host.start(root);
+
+    await vi.waitFor(() => expect(errors).toHaveLength(2));
+
+    expect([
+      editorLoader.mock.calls.length,
+      document.getElementById('editor').className,
+      errors,
+    ]).toEqual([
+      0,
+      'component-error',
+      [
+        ['base', 'offline'],
+        ['editor', 'offline'],
+      ],
+    ]);
+  });
+
+  it('refuses components that depend on each other in a cycle', () => {
+    expect(() =>
+      start([
+        syncEntry('menu', { dependsOn: ['panel'] }),
+        syncEntry('panel', { dependsOn: ['menu'] }),
+      ])
+    ).toThrow('panel → menu → panel');
+  });
+
   it('mounts matching elements added to the page later', async () => {
     start([syncEntry('toggle')]);
 

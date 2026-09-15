@@ -25,13 +25,13 @@ app.run();
 
 A selector that is a valid custom element name, such as `price-table`, loads a web component instead, so give enhancement components an attribute or element selector.
 
-| Option       | Type                       | Default      | What it does                                                                       |
-| ------------ | -------------------------- | ------------ | ---------------------------------------------------------------------------------- |
-| `name`       | `string`                   | The selector | The name `dependsOn` refers to. Registering the same name twice throws.            |
-| `loader`     | `() => module`             |              | Loads the component, when it isn't the second argument                             |
-| `priority`   | `'critical'` or `'normal'` | `'normal'`   | Critical components are mounted before the others on every pass                    |
-| `dependsOn`  | `string[]`                 |              | Names of components whose modules must load first. An unknown name logs a warning. |
-| `exportName` | `string`                   |              | The named export to use when the module has no default export                      |
+| Option       | Type                       | Default      | What it does                                                              |
+| ------------ | -------------------------- | ------------ | ------------------------------------------------------------------------- |
+| `name`       | `string`                   | The selector | The name `dependsOn` refers to. Registering the same name twice throws.   |
+| `loader`     | `() => module`             |              | Loads the component, when it isn't the second argument                    |
+| `priority`   | `'critical'` or `'normal'` | `'normal'`   | Critical components are mounted before the others on every pass           |
+| `dependsOn`  | `string[]`                 |              | Names of components that must load first. An unknown name logs a warning. |
+| `exportName` | `string`                   |              | The named export to use when the module has no default export             |
 
 The loader may return a module with a default export, a module with the export named by `exportName`, or the class itself. When it returns anything else, the component fails straight away without retrying. When the loader itself fails, it is retried three times, waiting 1 second and then twice as long before each retry.
 

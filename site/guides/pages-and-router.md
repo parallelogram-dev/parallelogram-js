@@ -222,7 +222,7 @@ Each fragment goes through these steps:
 3. For `main`, scroll is set and the head is reconciled.
 4. Scripts run, then components with `priority: 'critical'` mount. `dom:content-loaded` is emitted.
 5. The other components mount after `mountDelay`, or straight away when it is `0`.
-6. For `main`, focus moves and the title is announced.
+6. For `main`, focus moves and the title is announced. Without `main`, this happens once after every fragment is replaced, as described under Focus.
 7. `page:fragment-did-replace` is emitted, then the `in` transition runs.
 
 Components mounted through the swap get a `data-fragment-target` attribute with the fragment name, removed when they unmount. Register critical components with `app.components.add(selector, { loader, priority: 'critical' })`, as described in [Writing components](writing-components.html).
@@ -233,9 +233,11 @@ Components also mount as soon as their elements are added inside the observed ro
 
 For the `main` fragment, focus moves to the first of these that exists: the element the URL hash names, an `[autofocus]` element in the fragment, the `focusTarget` match, or the fragment itself. An element that isn't natively focusable gets `tabindex="-1"`. Focus doesn't scroll the page. `focusTarget: false` leaves focus where it is.
 
+A navigation that doesn't replace `main`, such as one to the `results` group above, moves focus only when nothing on the page has it any more, for example because the link that was activated was in a replaced fragment. Once every fragment is replaced, focus moves by the same rules into the first fragment replaced. Focus that was elsewhere on the page stays there.
+
 ### Announcements
 
-With `announce`, the new `document.title`, or the fragment's first `h1` when there is no title, is read out through a visually hidden `role="status"` live region.
+With `announce`, the new `document.title`, or the fragment's first `h1` when there is no title, is read out through a visually hidden `role="status"` live region. A navigation that doesn't replace `main` announces the fetched page's title, or the current title when the response has none, once all its fragments are replaced. A navigation that is aborted doesn't move focus or announce anything.
 
 ### Scroll
 

@@ -313,6 +313,78 @@ describe('PageManager', () => {
 
       expect(window.scrollY).toBe(640);
     });
+
+    describe('when main is not replaced', () => {
+      const resultsOptions = {
+        mountDelay: 0,
+        targetGroups: { results: ['results', 'pagination'] },
+      };
+      const resultsPage =
+        '<html><head><title>Results, page 2</title></head><body><main data-view="main"><div data-view="results"><p>Result 11</p></div><nav data-view="pagination"><a href="/results?page=3">Next</a></nav></main></body></html>';
+
+      beforeEach(() => {
+        document.body.innerHTML =
+          '<input id="search"><main id="app" data-view="main"><div data-view="results"><p>Result 1</p></div><nav data-view="pagination"><a id="next" href="/results?page=2">Next</a></nav></main>';
+      });
+
+      it('moves focus into the new results when the focused link is replaced', async () => {
+        start([], bus, resultsOptions);
+        document.querySelector('#next').focus();
+
+        await navigate(resultsPage, { viewTarget: 'results' });
+
+        expect(document.activeElement).toBe(document.querySelector('[data-view="results"]'));
+      });
+
+      it('announces the title of the new page', async () => {
+        start([], bus, resultsOptions);
+        document.querySelector('#next').focus();
+
+        await navigate(resultsPage, { viewTarget: 'results' });
+
+        await vi.waitFor(() =>
+          expect(document.querySelector('[role="status"]')?.textContent).toBe('Results, page 2')
+        );
+      });
+
+      it('leaves focus where it is when it was outside the replaced fragments', async () => {
+        start([], bus, resultsOptions);
+        document.querySelector('#search').focus();
+
+        await navigate(resultsPage, { viewTarget: 'results' });
+
+        expect(document.activeElement.id).toBe('search');
+      });
+
+      it('moves focus once when a target group replaces several fragments', async () => {
+        start([], bus, resultsOptions);
+        document.querySelector('#next').focus();
+        const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+
+        await navigate(resultsPage, { viewTarget: 'results' });
+
+        expect(focus.mock.contexts).toEqual([document.querySelector('[data-view="results"]')]);
+      });
+
+      it('leaves focus alone when the navigation is aborted after the swap', async () => {
+        start([], bus, {
+          ...resultsOptions,
+          targetGroupTransitions: { pagination: { in: 'is-entering', duration: 0 } },
+        });
+        document.querySelector('#next').focus();
+        const controller = new AbortController();
+        bus.on('page:fragment-did-replace', ({ viewTarget }) => {
+          if (viewTarget === 'pagination') {
+            controller.abort();
+          }
+        });
+        const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+
+        await navigate(resultsPage, { viewTarget: 'results', signal: controller.signal });
+
+        expect(focus).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('fragment transitions', () => {
