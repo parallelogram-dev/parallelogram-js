@@ -92,10 +92,10 @@ const formatBytes = bytes => {
  *
  * @cssprop --puploader-radius - host corner radius
  * @cssprop --puploader-border-width - host border width
- * @cssprop --puploader-border-color - host border colour
- * @cssprop --puploader-bg - host background
- * @cssprop --puploader-color - host text colour
- * @cssprop --puploader-shadow - host shadow
+ * @cssprop --puploader-border-color - host border colour (default `var(--surface-panel-border-color)`)
+ * @cssprop --puploader-bg - host background (default `var(--surface-panel-color-bg)`)
+ * @cssprop --puploader-color - host text colour (default `var(--surface-panel-color-text)`)
+ * @cssprop --puploader-shadow - host shadow (default `var(--surface-panel-shadow)`)
  * @cssprop --puploader-padding - host padding
  * @cssprop --puploader-files-gap - space between files (default the small spacing step)
  *
