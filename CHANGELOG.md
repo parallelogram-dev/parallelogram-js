@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The legacy design-system variables module (`design-system/variables`), with names such as `$spacing-*`, `$font-size-*`, `$transition-*`, `$legacy-color-*` and `$size-*`, and the unused `$color-focus-shadow` token. Use the tokens from `design-system`.
 - The `legacy` option of the internal `dispatchComponentEvent()`.
 
+## [0.5.5] - 2026-09-15
+
 ### Fixed
 
 - `<p-datetime>`'s panel no longer closes when picking a month in the month view, or when another click inside it re-renders the grid before the outside-click check runs.
