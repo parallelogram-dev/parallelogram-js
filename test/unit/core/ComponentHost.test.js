@@ -353,6 +353,26 @@ describe('ComponentHost', () => {
     expect(unmounted).not.toHaveBeenCalled();
   });
 
+  it('reports an element mounted once when it is found again while its _init is running', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    const ready = deferred();
+    class MapView extends BaseComponent {
+      _init(element) {
+        const state = super._init(element);
+        return ready.promise.then(() => state);
+      }
+    }
+    start([{ name: 'map', selector: '[data-map]', loader: () => MapView }]);
+
+    host.mountWithin(root);
+    ready.resolve();
+    await flush();
+
+    expect(mounted).toHaveBeenCalledOnce();
+  });
+
   it('refuses two components with the same name', () => {
     expect(() => start([syncEntry('toggle'), syncEntry('toggle')])).toThrow(/toggle/);
   });

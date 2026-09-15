@@ -483,7 +483,7 @@ export class ComponentHost {
   }
 
   _mountElement(name, instance, element, fragmentTarget) {
-    if (instance.elements?.has(element)) return;
+    if (instance.elements?.has(element) || instance._initializing?.has(element)) return;
 
     try {
       instance.mount(element);

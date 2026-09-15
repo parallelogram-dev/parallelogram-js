@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tabs pages that start on a tab other than the first no longer jump when Tabs loads, if the markup marks that tab's panel `data-tab-panel="active"`. The stylesheet shows the marked panel instead of the first until Tabs mounts, and Tabs selects it when no tab has `aria-selected="true"`. CSS can't tell which panel an `aria-selected` tab or `data-tabs-default-tab` names, so without the marker the first panel still shows until then.
 - A Toggle target the markup marks `data-toggle-state="closed"` stays visible when scripts are disabled, or when Toggle fails to load and its triggers get `component-error`. The stylesheet hid it in every case; it still hides it before Toggle mounts while scripts are enabled, so marking targets that start closed, such as header navigation or accordion answers, keeps the page from jumping when Toggle loads.
 - A component whose `_init` returns no state object no longer keeps the element tracked forever. The logger warns, a state holding the element's controller is stored, and unmounting aborts that controller, so the host emits `page:component-unmounted` once instead of on every later removal from the page. `unmount()` returns whether the component was mounted on the element, and the host only reports unmounts that happened.
+- Scanning the page again while a component's asynchronous `_init` is still running no longer calls `update()` and emits a second `page:component-mounted` for that element.
 
 ## [0.5.3] - 2026-09-15
 
