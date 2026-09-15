@@ -163,7 +163,7 @@ Parallelogram.create({
 });
 ```
 
-Back and forward replace the target of whichever of the two history entries is newer, so going back undoes the navigation that created the entry being left.
+Back and forward replace the target of whichever of the two history entries is newer, so going back undoes the navigation that created the entry being left. A jump over more than one entry, such as from the browser's history menu, replaces the `main` target, because the entries in between may have changed other fragments.
 
 ### Transitions
 

@@ -417,6 +417,24 @@ describe('RouterManager', () => {
       ]);
     });
 
+    it('replaces main when history jumps back over more than one entry', async () => {
+      start();
+      const startState = history.state;
+      for (const page of [2, 3]) {
+        const navigation = router.navigate(`/reviews?page=${page}`, { viewTarget: 'reviews' });
+        server.requests.at(-1).respond(htmlResponse('<main>'));
+        await navigation;
+      }
+      const success = record('router:navigate-success');
+
+      history.pushState(startState, '', '/start');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: startState }));
+      server.requests.at(-1)?.respond(htmlResponse('<main>'));
+
+      await vi.waitFor(() => expect(success).toHaveBeenCalledOnce());
+      expect(success.mock.calls[0][0].viewTarget).toBe('main');
+    });
+
     it('restores the scroll position when history moves back from a hash entry', () => {
       start();
       const startState = history.state;

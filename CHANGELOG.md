@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Toggle, Tabs, Modal, Lightbox and DataTable read their defaults through the instance's class, so a subclass that overrides `static get defaults()` gets its own defaults instead of the parent's.
 - With `fullLoadOnError: false`, a navigation whose page fails to swap in after the address changed can be tried again straight away. The router skipped it as a navigation to the current URL.
 - A navigation replaced by a newer one before its head assets are merged no longer adds the new page's stylesheets and scripts to the head. The Pages and the router guide describes what a replaced navigation leaves.
+- Going back or forward over more than one history entry at once replaces the `main` target instead of only the target of the entry arrived at or left, so fragments changed by the entries in between no longer keep another page's content.
 
 ## [0.5.3] - 2026-09-15
 
