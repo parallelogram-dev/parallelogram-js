@@ -116,6 +116,20 @@ describe('p-modal', () => {
       expect([modal.hasAttribute('open'), dialogOf(modal)?.open]).toEqual([true, true]);
     });
 
+    it('closes from its own close buttons when Escape and the backdrop cannot close it', async () => {
+      const modal = renderModal({ 'data-modal-closable': 'false' });
+      const keep = document.createElement('button');
+      keep.slot = 'actions';
+      keep.setAttribute('data-modal-close', '');
+      keep.textContent = 'Keep booking';
+      modal.append(keep);
+
+      modal.open();
+      keep.click();
+
+      await vi.waitFor(() => expect(modal.hasAttribute('open')).toBe(false), { timeout: 2000 });
+    });
+
     it('keeps page scroll locked until the last open modal closes', async () => {
       const first = renderModal({}, 'First');
       const second = renderModal({}, 'Second');

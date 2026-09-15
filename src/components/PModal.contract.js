@@ -30,7 +30,7 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       type: 'boolean',
       default: true,
       description:
-        'false hides the close button and ignores Escape, the backdrop and close buttons',
+        'false hides the close button and ignores Escape and the backdrop; data-modal-close buttons still close the modal',
     },
     {
       name: 'data-modal-backdrop-close',
