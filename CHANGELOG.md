@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The documentation site publishes `llms.txt`, an index of its guides and component pages for coding agents, and `llms-full.txt`, with every guide and each component's attributes, events, CSS custom properties and first example in one file. It also publishes `sitemap.xml` and `robots.txt`. All four are generated from the guides and component contracts, like the pages.
+- `package.json` names the documentation site as the package's `homepage` and GitHub issues as its `bugs` URL.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
 
 ### Fixed
