@@ -17,7 +17,8 @@ Deep links keep working: when the address names a panel, or an element inside on
       name: 'data-tabs-list',
       type: 'flag',
       on: 'the element holding the tabs',
-      description: 'Marks the tab list',
+      description:
+        'Marks the tab list. Tabs gives it aria-orientation="horizontal" unless it has one; the Up and Down arrow keys move between tabs only when it is "vertical"',
     },
     { name: 'data-tab', type: 'string', on: 'each tab', description: "The id of the tab's panel" },
     {

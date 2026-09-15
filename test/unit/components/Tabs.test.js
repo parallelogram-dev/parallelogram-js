@@ -164,3 +164,82 @@ describe('Tabs deep links', () => {
     expect(outer.querySelector('[data-tab="returns"]').hasAttribute('aria-selected')).toBe(false);
   });
 });
+
+describe('Tabs orientation', () => {
+  let tabs;
+
+  const mount = (listAttributes = '') => {
+    document.body.innerHTML = `
+      <div data-tabs id="settings">
+        <div data-tabs-list ${listAttributes}>
+          <button data-tab="profile">Profile</button>
+          <button data-tab="billing">Billing</button>
+        </div>
+        <div data-tabs-panels>
+          <div id="profile" data-tab-panel>Name</div>
+          <div id="billing" data-tab-panel>Card</div>
+        </div>
+      </div>
+    `;
+    const container = document.getElementById('settings');
+    tabs = new Tabs();
+    tabs.mount(container);
+    return container;
+  };
+
+  const pressOnFirstTab = (container, key) => {
+    const tab = container.querySelector('[data-tab]');
+    tab.focus();
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    tab.dispatchEvent(event);
+    return event;
+  };
+
+  afterEach(() => {
+    tabs?.destroy();
+    tabs = null;
+    document.body.replaceChildren();
+  });
+
+  it('marks the tab list horizontal', () => {
+    const container = mount();
+
+    expect(container.querySelector('[data-tabs-list]').getAttribute('aria-orientation')).toBe(
+      'horizontal'
+    );
+  });
+
+  it('keeps the orientation the tab list is given', () => {
+    const container = mount('aria-orientation="vertical"');
+
+    expect(container.querySelector('[data-tabs-list]').getAttribute('aria-orientation')).toBe(
+      'vertical'
+    );
+  });
+
+  it('leaves the Down arrow to the page when the tabs are horizontal', () => {
+    const container = mount();
+
+    const event = pressOnFirstTab(container, 'ArrowDown');
+
+    expect([event.defaultPrevented, tabs.getActiveTab(container)]).toEqual([false, 'profile']);
+  });
+
+  it('moves to the next tab with the Down arrow when the tabs are vertical', () => {
+    const container = mount('aria-orientation="vertical"');
+
+    pressOnFirstTab(container, 'ArrowDown');
+
+    expect(tabs.getActiveTab(container)).toBe('billing');
+  });
+
+  it('removes the orientation it added when unmounted', () => {
+    const container = mount();
+
+    tabs.unmount(container);
+
+    expect(container.querySelector('[data-tabs-list]').hasAttribute('aria-orientation')).toBe(
+      false
+    );
+  });
+});
