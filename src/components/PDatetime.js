@@ -108,8 +108,10 @@ const addMonths = (date, months) => {
  *   `var(--color-accent)`)
  * @cssprop --datetime-bg, --datetime-text, --datetime-muted - field and panel background, text and
  *   muted text (defaults `var(--surface-dropdown-color-bg)`, `currentColor`, `var(--color-text-muted)`)
- * @cssprop --datetime-border, --datetime-radius, --datetime-shadow - field and panel surface (colours
- *   default to `var(--color-border)` and `var(--color-shadow)`)
+ * @cssprop --datetime-border, --datetime-radius, --datetime-shadow - panel border and dividers, corner
+ *   radius and panel shadow (colours default to `var(--color-border)` and `var(--color-shadow)`)
+ * @cssprop --datetime-control-border - border of the field and the time selects (default
+ *   `var(--surface-control-border-color)`)
  * @cssprop --datetime-hover - background of hovered days and buttons (default `var(--color-hover)`)
  * @cssprop --datetime-cell-size - size of each day in the grid
  * @cssprop --datetime-panel-min-width - narrowest the panel gets

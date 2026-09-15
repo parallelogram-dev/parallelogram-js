@@ -22,7 +22,7 @@
   box-sizing: border-box;
   min-width: 12rem;
   min-height: 2.5rem;
-  border: var(--datetime-border-width) solid var(--datetime-border);
+  border: var(--datetime-border-width) solid var(--datetime-control-border);
   border-radius: var(--datetime-radius);
   background: var(--datetime-bg);
 
@@ -33,6 +33,10 @@
   --datetime-hover: var(--color-hover, rgba(0, 0, 0, 0.05));
   --datetime-bg: var(--surface-dropdown-color-bg, var(--color-surface, #fff));
   --datetime-border: var(--color-border, rgba(0, 0, 0, 0.1));
+  --datetime-control-border: var(
+    --surface-control-border-color,
+    var(--color-control-border, rgba(0, 0, 0, 0.45))
+  );
   --datetime-shadow-color: var(--color-shadow, rgba(0, 0, 0, 0.12));
   --datetime-btn-hover-bg: var(--color-hover, rgba(0, 0, 0, 0.05));
 
@@ -93,6 +97,12 @@
 .preset,
 .btn {
   border: var(--datetime-border-width) solid var(--datetime-border);
+}
+
+/* Fields need a boundary that stands out from the background */
+.time-select,
+.ampm {
+  border-color: var(--datetime-control-border);
 }
 
 .grid-container,

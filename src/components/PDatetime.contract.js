@@ -198,7 +198,12 @@ export default {
     {
       name: '--datetime-border',
       default: 'var(--color-border)',
-      description: 'Field and panel border',
+      description: 'Panel border and dividers',
+    },
+    {
+      name: '--datetime-control-border',
+      default: 'var(--surface-control-border-color)',
+      description: 'Border of the field and the time selects',
     },
     { name: '--datetime-radius', description: 'Corner radius' },
     {

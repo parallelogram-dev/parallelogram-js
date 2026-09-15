@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Colour roles on `:root` in the package stylesheet: `--color-accent`, `--color-accent-hover`, `--color-accent-contrast`, `--color-text-muted`, `--color-surface`, `--color-surface-muted`, `--color-hover`, `--color-border`, `--color-border-strong`, `--color-overlay`, `--color-shadow`, `--color-danger`, `--color-success` and `--color-warning` with a `-bg` for each, and `--color-danger-contrast` for text on a danger fill. The surface, form control, button, panel and modal tokens now read them, so setting a role changes every surface that uses it. Text colour is still inherited.
+- Colour roles on `:root` in the package stylesheet: `--color-accent`, `--color-accent-hover`, `--color-accent-contrast`, `--color-text-muted`, `--color-surface`, `--color-surface-muted`, `--color-hover`, `--color-border`, `--color-border-strong`, `--color-control-border`, `--color-overlay`, `--color-shadow`, `--color-danger`, `--color-success` and `--color-warning` with a `-bg` for each, and `--color-danger-contrast` for text on a danger fill. The surface, form control, button, panel and modal tokens now read them, so setting a role changes every surface that uses it. Text colour is still inherited.
 - A dark theme that redefines only the colour roles. It applies when the operating system prefers a dark colour scheme, unless `<html>` has `data-theme="light"`, and whenever `<html>` has `data-theme="dark"`. It replaces the dark values the stylesheet set for form fields, secondary button hovers and panels. Pages still set `color-scheme` themselves.
 
 ### Changed
@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Form field borders meet 3:1 contrast. A new `--color-control-border` role, `rgba(0, 0, 0, 0.45)` in light mode and `rgba(255, 255, 255, 0.36)` in dark mode, borders form fields through `--surface-control-border-color`, `<p-select>` and `<p-datetime>`, including its time selects: 3.35:1 on white and 3.32:1 on the dark surface, up from 1.25:1 and 1.54:1 with `--color-border`. Dividers, panels, dropdowns, cards and buttons keep their borders. Hovered form fields use `--color-text-muted` for the border instead of `--color-border-strong`, which is now lighter than the resting border. `<p-datetime>` borders its field and time selects with a new `--datetime-control-border`; `--datetime-border` now sets only the panel border and dividers.
 - Placeholder text meets 4.5:1 contrast. `--color-text-muted` is `rgba(0, 0, 0, 0.55)` instead of 50% black in light mode, 4.76:1 on white and 4.63:1 on the hover tint (3.98:1 and 3.89:1 before), and it also colours secondary text in `<p-datetime>`. Form field placeholders, `<p-datetime>` placeholders and `<p-select>` placeholders no longer dim it with a further 60% opacity, so they go from 2.11:1 to 4.76:1 in light mode and from 3.32:1 to 6.82:1 in dark mode. `<p-select>` placeholders now use `--select-placeholder`, which they ignored, instead of the text colour at 60%.
 
 ## [0.6.1] - 2026-09-15

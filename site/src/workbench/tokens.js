@@ -40,6 +40,7 @@ export const TOKEN_GROUPS = [
       colour('--color-hover'),
       colour('--color-border'),
       colour('--color-border-strong'),
+      colour('--color-control-border'),
       colour('--color-overlay'),
       colour('--color-shadow'),
       colour('--color-danger'),
