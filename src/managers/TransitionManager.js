@@ -76,7 +76,21 @@ export class TransitionManager {
     }
 
     const animation = el.animate([from ?? (isEnter ? hidden : shown), end], { duration, easing });
-    return { animation, finished: animation.finished.catch(() => {}) };
+
+    /* An animation whose timeline stalls is cancelled soon after it should have ended, leaving the
+       end styles in place, so the transition never waits forever */
+    let timer;
+    const finished = Promise.race([
+      animation.finished.catch(() => {}),
+      new Promise(resolve => {
+        timer = setTimeout(() => {
+          animation.cancel();
+          resolve();
+        }, duration + 250);
+      }),
+    ]).then(() => clearTimeout(timer));
+
+    return { animation, finished };
   }
 
   _currentFrame(el) {

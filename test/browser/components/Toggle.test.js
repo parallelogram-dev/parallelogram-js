@@ -120,9 +120,7 @@ describe('Toggle', () => {
     $('#about').addEventListener('keydown', event => event.preventDefault());
     escapeFrom($('#about'));
 
-    await pause(200);
-
-    expect(stateOf('#site-menu')).toBe('open');
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
   });
 
   it('closes the last opened toggle with Escape when a click left focus outside it, as in Safari', async () => {
