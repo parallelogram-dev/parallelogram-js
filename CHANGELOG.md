@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://github.com/parallelogram-dev/parallelogram-js/blob/main/site/guides/upgrading.md) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
+
 ### Added
 
 - A documentation site in `site/`, built with Vite (`npm run site`, `npm run build:site`). Every component has a page generated from its contract, with live examples whose attributes can be changed in place, an event log showing what the component sends, markup to copy, usage code and reference tables for attributes, properties, methods, events, slots, parts and CSS custom properties. The site runs on Parallelogram itself, so its links go through the framework's router, and a stand-in server lets the uploader and select loader examples work on a static host.

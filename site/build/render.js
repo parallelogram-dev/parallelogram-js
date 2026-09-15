@@ -37,7 +37,13 @@ export const matchFor = contract => contract.match ?? contract.tag ?? `[${contra
 const code = value => `<code>${escapeHtml(value)}</code>`;
 const byName = (a, b) => a.name.localeCompare(b.name);
 
-export function sidebar(contracts, current) {
+/**
+ * @param {import('../../src/contract.js').ComponentContract[]} contracts
+ * @param {string} current - The slug of the page being rendered
+ * @param {import('./guides.js').Guide[]} [guides]
+ * @returns {string}
+ */
+export function sidebar(contracts, current, guides = []) {
   const link = (slug, label) =>
     `<li><a href="${slug}.html"${slug === current ? ' aria-current="page"' : ''}>${label}</a></li>`;
   const group = (heading, items) =>
@@ -50,12 +56,32 @@ export function sidebar(contracts, current) {
 
   return [
     group('Start', [link('index', 'Overview')]),
+    ...(guides.length
+      ? [group('Guides', guides.map(guide => link(guide.slug, escapeHtml(guide.title))))]
+      : []),
     group('Web components', kind('element')),
     group('Enhancements', kind('enhancement')),
   ].join('\n');
 }
 
-export function layout({ title, description, current, contracts, content, version }) {
+/**
+ * A guide's page: its title and summary, then its sections
+ *
+ * @param {import('./guides.js').Guide} guide
+ * @returns {string}
+ */
+export function guidePage(guide) {
+  return `<article class="doc" aria-labelledby="doc-title">
+<header class="doc__header">
+  <p class="doc__eyebrow">Guide</p>
+  <h1 id="doc-title">${escapeHtml(guide.title)}</h1>
+  <p class="doc__summary">${guide.summary}</p>
+</header>
+${guide.content}
+</article>`;
+}
+
+export function layout({ title, description, current, contracts, guides, content, version }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -78,7 +104,7 @@ export function layout({ title, description, current, contracts, content, versio
 </header>
 <div class="site">
 <nav class="sidebar" data-view="sidebar" aria-label="Documentation">
-${sidebar(contracts, current)}
+${sidebar(contracts, current, guides)}
 </nav>
 <main id="content" class="content" data-view="main" tabindex="-1">
 ${content}

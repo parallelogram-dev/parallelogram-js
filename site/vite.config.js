@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import scss from '../rollup-plugin-scss.js';
-import { componentsDir, repoRoot, siteRoot, writePages } from './build/pages.js';
+import { componentsDir, guidesDir, repoRoot, siteRoot, writePages } from './build/pages.js';
 
 const styles = path.join(repoRoot, 'src/styles');
 
@@ -24,15 +24,15 @@ function componentStyles() {
 }
 
 /**
- * Regenerate the pages when a contract changes during development
+ * Regenerate the pages when a contract or a guide changes during development
  */
 function contractPages() {
   return {
     name: 'contract-pages',
     configureServer(server) {
-      server.watcher.add(componentsDir);
+      server.watcher.add([componentsDir, guidesDir]);
       server.watcher.on('change', async file => {
-        if (!file.endsWith('.contract.js')) return;
+        if (!file.endsWith('.contract.js') && !file.startsWith(guidesDir + path.sep)) return;
         await writePages();
         server.ws.send({ type: 'full-reload' });
       });
