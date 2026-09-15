@@ -39,6 +39,16 @@ describe('documentation site rendering', () => {
     ).toEqual(['Tabs']);
   });
 
+  it('lists guides in the sidebar after the overview', () => {
+    const nav = parse(
+      sidebar([Tabs, PModal], 'upgrading', [{ slug: 'upgrading', title: 'Upgrading' }])
+    );
+
+    expect(
+      [...nav.querySelectorAll('.sidebar__heading')].map(heading => heading.textContent)
+    ).toEqual(['Start', 'Guides', 'Web components', 'Enhancements']);
+  });
+
   it('lists attributes with their allowed values and defaults', () => {
     const page = parse(componentPage(Tabs));
     const row = [...page.querySelectorAll('#attributes ~ .table-wrap tbody tr')].find(
