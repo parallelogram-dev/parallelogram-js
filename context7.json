@@ -1,0 +1,8 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "Parallelogram",
+  "description": "@parallelogram-js/core, a lightweight progressive enhancement framework of data attribute components and web components for server-rendered HTML",
+  "folders": ["site/guides", "src/components"],
+  "excludeFolders": ["site/dist", "dist", "test", "node_modules"],
+  "excludeFiles": ["CHANGELOG.md"]
+}
