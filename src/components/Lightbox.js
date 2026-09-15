@@ -382,7 +382,20 @@ export class Lightbox extends BaseComponent {
     const image = document.createElement('img');
     image.className = config.imageClass;
     image.alt = '';
-    content.append(image);
+    const error = document.createElement('p');
+    error.className = 'lightbox__error';
+    error.hidden = true;
+    image.addEventListener('error', () => {
+      if (!image.getAttribute('src')) return;
+      error.textContent = `${image.alt || 'The image'} couldn't be loaded`;
+      error.hidden = false;
+      image.hidden = true;
+    });
+    image.addEventListener('load', () => {
+      error.hidden = true;
+      image.hidden = false;
+    });
+    content.append(image, error);
     container.append(content);
     overlay.append(container);
 
