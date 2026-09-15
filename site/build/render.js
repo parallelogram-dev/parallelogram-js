@@ -7,8 +7,8 @@
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
-const PACKAGE = '@parallelogram-js/core';
-const REPOSITORY = 'https://github.com/parallelogram-dev/parallelogram-js';
+export const PACKAGE = '@parallelogram-js/core';
+export const REPOSITORY = 'https://github.com/parallelogram-dev/parallelogram-js';
 
 export const escapeHtml = value =>
   String(value ?? '').replace(/[&<>"']/g, character => ESCAPES[character]);
@@ -35,7 +35,7 @@ export const titleFor = contract =>
 export const matchFor = contract => contract.match ?? contract.tag ?? `[${contract.selector}]`;
 
 const code = value => `<code>${escapeHtml(value)}</code>`;
-const byName = (a, b) => a.name.localeCompare(b.name);
+export const byName = (a, b) => a.name.localeCompare(b.name);
 
 /**
  * @param {import('../../src/contract.js').ComponentContract[]} contracts
