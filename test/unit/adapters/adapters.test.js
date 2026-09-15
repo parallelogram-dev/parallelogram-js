@@ -255,6 +255,38 @@ describe('tracker adapters', () => {
     expect(window._hsq.slice(-2)).toEqual([['setPath', '/menu?table=4'], ['trackPageView']]);
   });
 
+  it('hubspot records a later page once when two hubs share the page', async () => {
+    const { default: hubspot } = await import('../../../src/adapters/hubspot.js');
+    const later = { url: 'https://shop.example/menu', mounted: false };
+
+    hubspot.page({ id: '999' }, {}, later);
+    hubspot.page({ id: '888' }, {}, later);
+
+    expect(window._hsq.filter(([command]) => command === 'trackPageView')).toHaveLength(1);
+  });
+
+  it('pinterest-tag records one page visit for two tags, after both have loaded', async () => {
+    const { default: pinterest } = await import('../../../src/adapters/pinterest-tag.js');
+
+    pinterest({ id: '26123' });
+    pinterest({ id: '26456' });
+    await Promise.resolve();
+
+    expect(window.pintrk.queue.map(([command]) => command)).toEqual(['load', 'load', 'page']);
+  });
+
+  it('pinterest-tag records a later page once for two tags', async () => {
+    const { default: pinterest } = await import('../../../src/adapters/pinterest-tag.js');
+    pinterest({ id: '26123' });
+    pinterest({ id: '26456' });
+    await Promise.resolve();
+
+    pinterest.page({ id: '26123' }, {}, laterPage);
+    pinterest.page({ id: '26456' }, {}, laterPage);
+
+    expect(window.pintrk.queue.filter(([command]) => command === 'page')).toHaveLength(2);
+  });
+
   it('pinterest-tag warns when given an email that is not hashed', async () => {
     const { default: pinterest } = await import('../../../src/adapters/pinterest-tag.js');
     const logger = { warn: vi.fn() };
