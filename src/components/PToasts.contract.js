@@ -54,13 +54,37 @@ Where popovers are supported the element shows itself as a manual popover and mo
     { name: 'close', description: "A toast's dismiss button" },
   ],
   cssProperties: [
-    { name: '--toast-bg-info', description: 'Background of info toasts' },
-    { name: '--toast-bg-success', description: 'Background of success toasts' },
-    { name: '--toast-bg-warning', description: 'Background of warning toasts' },
-    { name: '--toast-bg-error', description: 'Background of error toasts' },
-    { name: '--toast-text-color', default: '#fff', description: 'Text colour' },
+    {
+      name: '--toast-bg-info',
+      default: 'var(--color-inverse-surface)',
+      description: 'Background of info toasts',
+    },
+    {
+      name: '--toast-bg-success',
+      default: 'var(--color-success-strong)',
+      description: 'Background of success toasts',
+    },
+    {
+      name: '--toast-bg-warning',
+      default: 'var(--color-warning-strong)',
+      description: 'Background of warning toasts',
+    },
+    {
+      name: '--toast-bg-error',
+      default: 'var(--color-danger-strong)',
+      description: 'Background of error toasts',
+    },
+    {
+      name: '--toast-text-color',
+      description:
+        'Text colour of every toast; defaults to --color-inverse-text on info toasts and --color-on-status on success, warning and error toasts',
+    },
     { name: '--toast-border-radius', description: 'Corner radius' },
-    { name: '--toast-shadow', description: 'Shadow' },
+    {
+      name: '--toast-shadow',
+      default: '0 6px 20px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--color-border)',
+      description: 'Shadow, including the inset ring that edges the toast',
+    },
     { name: '--toast-padding', description: 'Space around the stack' },
     { name: '--toast-gap', description: 'Space between toasts' },
     { name: '--toast-item-padding', description: 'Padding inside each toast' },

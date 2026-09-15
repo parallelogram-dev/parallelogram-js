@@ -50,6 +50,12 @@ export const TOKEN_GROUPS = [
       colour('--color-success-bg'),
       colour('--color-warning'),
       colour('--color-warning-bg'),
+      colour('--color-inverse-surface'),
+      colour('--color-inverse-text'),
+      colour('--color-success-strong'),
+      colour('--color-warning-strong'),
+      colour('--color-danger-strong'),
+      colour('--color-on-status'),
     ],
   },
   {

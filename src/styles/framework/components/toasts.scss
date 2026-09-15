@@ -1,4 +1,6 @@
-/* Toast theme tokens, read by the p-toasts web component through its shadow styles */
+/* Toast theme tokens, read by the p-toasts web component through its shadow styles. Info toasts use
+   the inverse surface and status toasts the strong status fills, in both themes; the inset ring gives
+   them an edge against a dark page. Text defaults to the inverse or on-status role for each type */
 :root {
   --toast-z-index: 2147483647;
   --toast-padding: 12px;
@@ -7,12 +9,11 @@
   --toast-max-width: 500px;
   --toast-item-padding: 10px 12px;
   --toast-border-radius: 8px;
-  --toast-text-color: #ffffff;
-  --toast-bg-info: #111827;
-  --toast-bg-success: #065f46;
-  --toast-bg-warning: #7c2d12;
-  --toast-bg-error: #7f1d1d;
-  --toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --toast-bg-info: var(--color-inverse-surface);
+  --toast-bg-success: var(--color-success-strong);
+  --toast-bg-warning: var(--color-warning-strong);
+  --toast-bg-error: var(--color-danger-strong);
+  --toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--color-border);
   --toast-font: 14px/1.4 system-ui, -apple-system, sans-serif;
   --toast-animation-duration: 0.18s;
 }

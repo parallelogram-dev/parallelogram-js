@@ -2,6 +2,9 @@
    LIGHTBOX COMPONENT
    BEM-compliant styles for the lightbox gallery viewer, a native <dialog>
    State-based CSS using the data-lightbox-state attribute
+
+   The viewer is dark in both themes, so photos are seen against a dim surround. Its colours are its
+   own custom properties rather than the page's colour roles, with these values as fallbacks
    ============================================ */
 
 :root {
@@ -22,8 +25,8 @@
     margin: 0;
     padding: 0;
     border: 0;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
+    background: var(--lightbox-overlay-bg, rgba(0, 0, 0, 0.9));
+    color: var(--lightbox-color, white);
     align-items: center;
     justify-content: center;
     transition: opacity var(--lightbox-transition-duration) var(--lightbox-transition-easing);
@@ -74,7 +77,7 @@
 
   &__close,
   &__nav {
-    color: white;
+    color: var(--lightbox-color, white);
     border: none;
     border-radius: 50%;
     cursor: pointer;
@@ -87,7 +90,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid var(--lightbox-color, white);
       outline-offset: 2px;
     }
   }
@@ -98,11 +101,11 @@
     right: 1rem;
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--lightbox-close-bg, rgba(255, 255, 255, 0.2));
     transition: background-color 0.2s;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--lightbox-close-hover-bg, rgba(255, 255, 255, 0.3));
     }
   }
 
@@ -112,13 +115,13 @@
     transform: translateY(-50%);
     width: 50px;
     height: 50px;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--lightbox-nav-bg, rgba(0, 0, 0, 0.5));
     transition:
       background-color 0.2s,
       opacity 0.2s;
 
     &:hover:not(:disabled) {
-      background: rgba(0, 0, 0, 0.7);
+      background: var(--lightbox-nav-hover-bg, rgba(0, 0, 0, 0.7));
     }
 
     &:disabled {
@@ -140,8 +143,8 @@
     bottom: 1rem;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
+    background: var(--lightbox-counter-bg, rgba(0, 0, 0, 0.7));
+    color: var(--lightbox-color, white);
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.875rem;
