@@ -46,6 +46,20 @@
   }
 }
 
+/* Dark theme declarations for :root, applied when the OS prefers dark unless the page sets
+   data-theme="light", and whenever the page sets data-theme="dark" */
+@mixin dark-theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      @content;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    @content;
+  }
+}
+
 /* ============================================================================
    Layout Mixins
    ============================================================================ */

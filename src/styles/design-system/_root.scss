@@ -8,6 +8,48 @@
 @use 'tokens' as *;
 @use 'mixins' as mix;
 
+/* Colour roles: surfaces and components read these, and dark mode redefines only these. Text
+   colour is inherited, so there is no text role */
+:root {
+  --color-accent: #{$primary};
+  --color-accent-hover: #{$primary-dark};
+  --color-accent-contrast: #ffffff;
+  --color-text-muted: #{$color-text-muted};
+  --color-surface: #ffffff;
+  --color-surface-muted: #{$neutral-100};
+  --color-hover: #{$color-bg-hover};
+  --color-border: #{$color-border};
+  --color-border-strong: #{$neutral-300};
+  --color-overlay: #{$color-bg-overlay};
+  --color-shadow: #{$color-shadow};
+  --color-danger: #{$error-dark};
+  --color-danger-bg: #{$color-error-bg};
+  --color-success: #{$success-dark};
+  --color-success-bg: #{$color-success-bg};
+  --color-warning: #{$warning-dark};
+  --color-warning-bg: #{$color-warning-bg};
+}
+
+@include mix.dark-theme {
+  --color-accent: #60a5fa;
+  --color-accent-hover: #93c5fd;
+  --color-accent-contrast: #0b1220;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-surface: #171d26;
+  --color-surface-muted: #202733;
+  --color-hover: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.14);
+  --color-border-strong: #3a4350;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-shadow: rgba(0, 0, 0, 0.5);
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248, 113, 113, 0.16);
+  --color-success: #4ade80;
+  --color-success-bg: rgba(74, 222, 128, 0.16);
+  --color-warning: #fb923c;
+  --color-warning-bg: rgba(251, 146, 60, 0.16);
+}
+
 :root {
   /* Control surfaces (form inputs, selects, textareas) */
   --surface-control-radius: #{$radius-sm};
