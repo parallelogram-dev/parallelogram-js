@@ -17,17 +17,34 @@ import {
 const classesWarnedAboutSelector = new WeakSet();
 
 /**
+ * A component's state for one mounted element: the object `_init` returns, which subclasses extend
+ * with their own entries
+ *
+ * @typedef {{ controller: AbortController, cleanup: () => void, [key: string]: unknown }} ComponentState
+ */
+
+/**
+ * What the framework passes to the components it creates
+ *
+ * @typedef {Object} ComponentContext
+ * @property {import('../managers/EventManager.js').EventManager} [eventBus]
+ * @property {import('./DevLogger.js').DevLogger} [logger]
+ * @property {import('../managers/RouterManager.js').RouterManager | null} [router]
+ * @property {import('./ComponentHost.js').RegistryEntry} [config] - The registry entry the
+ *   component was loaded from
+ */
+
+/**
  * BaseComponent - Production-ready base class with state management
  *
  * Provides lifecycle helpers, state tracking per element, data-attribute
  * parsing, and event dispatching. Components should extend this class and
  * implement _init(element) and optionally update(element).
- *
- * @typedef {Object} ComponentState
- * @property {AbortController} controller - Abort controller for listeners
- * @property {Function} cleanup - Cleanup function called on unmount
  */
 export class BaseComponent {
+  /**
+   * @param {ComponentContext} [context]
+   */
   constructor({ eventBus, logger, router } = {}) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -36,9 +53,19 @@ export class BaseComponent {
     this.elements = new Map();
     // Backward-compat alias for older components expecting `states`
     this.states = this.elements;
-    /** @type {Map<HTMLElement, Promise<void>>} Elements whose asynchronous _init is still running */
+    /**
+     * Elements whose asynchronous _init is still running
+     *
+     * @internal
+     * @type {Map<HTMLElement, Promise<void>>}
+     */
     this._initializing = new Map();
-    /** @type {WeakMap<HTMLElement, AbortController>} Controllers created by the base _init */
+    /**
+     * Controllers created by the base _init
+     *
+     * @internal
+     * @type {WeakMap<HTMLElement, AbortController>}
+     */
     this._controllers = new WeakMap();
   }
 
@@ -48,6 +75,9 @@ export class BaseComponent {
    * If _init throws, the element is not tracked and its abort signal is aborted
    * before the error is rethrown. An _init that returns a Promise is tracked
    * straight away, and its state is stored once the Promise resolves.
+   *
+   * @param {HTMLElement} element
+   * @returns {void}
    */
   mount(element) {
     if (this.elements.has(element) || this._initializing.has(element)) {
@@ -87,6 +117,12 @@ export class BaseComponent {
     this._initializing.set(element, pending);
   }
 
+  /**
+   * Called by mount() for an element the component is already mounted on
+   *
+   * @param {HTMLElement} _element
+   * @returns {void}
+   */
   update(_element) {
     // Override in subclasses for update logic
   }
@@ -96,6 +132,9 @@ export class BaseComponent {
    *
    * The state's cleanup() runs and the element's abort signal is aborted
    * afterwards, even if cleanup throws.
+   *
+   * @param {HTMLElement} element
+   * @returns {void}
    */
   unmount(element) {
     if (this._initializing.has(element)) {
@@ -112,6 +151,11 @@ export class BaseComponent {
     this._runCleanup(state);
   }
 
+  /**
+   * Unmount the component from every element it is mounted on
+   *
+   * @returns {void}
+   */
   destroy() {
     for (const element of this.trackedElements()) {
       this.unmount(element);
@@ -129,12 +173,14 @@ export class BaseComponent {
 
   /**
    * @deprecated 0.5.0 Use trackedElements() instead. Will be removed in 0.6.0.
+   * @protected
    * @returns {Set<HTMLElement>}
    */
   _elementsKeys() {
     return new Set(this.trackedElements());
   }
 
+  /** @internal */
   _runCleanup(state) {
     try {
       state?.cleanup?.();
@@ -143,6 +189,7 @@ export class BaseComponent {
     }
   }
 
+  /** @internal */
   _cleanupLate(element, state) {
     try {
       this._runCleanup(state);
@@ -151,6 +198,7 @@ export class BaseComponent {
     }
   }
 
+  /** @internal */
   _abortController(element) {
     this._controllers.get(element)?.abort();
     this._controllers.delete(element);
@@ -189,6 +237,7 @@ export class BaseComponent {
    * automatically when baseCleanup() runs — no manual removeEventListener()
    * calls needed.
    *
+   * @protected
    * @param {HTMLElement} element - Element being mounted
    * @returns {ComponentState} State stored in this.elements for the element
    */
@@ -206,7 +255,7 @@ export class BaseComponent {
    * with setState().
    *
    * @param {HTMLElement} element
-   * @returns {Object|undefined}
+   * @returns {ComponentState|undefined}
    */
   getState(element) {
     return this.elements.get(element);
@@ -215,23 +264,52 @@ export class BaseComponent {
   /**
    * @deprecated 0.5.0 Reads an unprefixed `data-<attr>` and guesses its type. Use getAttr(),
    * getBoolAttr() or getNumberAttr(), which read `data-<component>-<attr>`. Removed in 0.6.0.
+   * @protected
+   * @param {HTMLElement} element
+   * @param {string} attr
+   * @param {unknown} [defaultValue]
+   * @returns {unknown}
    */
   _getDataAttr(element, attr, defaultValue) {
     return getDataAttr(element, attr, defaultValue);
   }
 
+  /**
+   * @protected
+   * @param {string} str
+   * @returns {string}
+   */
   _camelCase(str) {
     return camelCase(str);
   }
 
+  /**
+   * @protected
+   * @template {(...args: any[]) => void} F
+   * @param {F} func
+   * @param {number} [wait=300] - Milliseconds to wait after the last call
+   * @returns {(...args: Parameters<F>) => void}
+   */
   _debounce(func, wait = 300) {
     return debounce(func, wait);
   }
 
+  /**
+   * @protected
+   * @template {(...args: any[]) => void} F
+   * @param {F} func
+   * @param {number} [limit=100] - Milliseconds between calls
+   * @returns {(...args: Parameters<F>) => void}
+   */
   _throttle(func, limit = 100) {
     return throttle(func, limit);
   }
 
+  /**
+   * @protected
+   * @param {number} ms
+   * @returns {Promise<void>}
+   */
   _delay(ms) {
     return delay(ms);
   }
@@ -240,10 +318,11 @@ export class BaseComponent {
    * Get target element from data attribute with validation
    * Supports both CSS selectors (data-*-target="#id") and data-view lookups (data-*-target-view="viewname")
    *
+   * @protected
    * @param {HTMLElement} element - Element containing the data attribute
    * @param {string} dataAttr - Data attribute name (without 'data-' prefix)
-   * @param {Object} options - Options for validation
-   * @param {boolean} options.required - Whether to warn if not found
+   * @param {Object} [options] - Options for validation
+   * @param {boolean} [options.required] - Whether to warn if not found
    * @returns {HTMLElement|null} Target element or null
    *
    * @example
@@ -294,9 +373,10 @@ export class BaseComponent {
    * `static defaults`: boolean defaults are read with getBoolAttr(), number
    * defaults with getNumberAttr(), and everything else as a string.
    *
+   * @protected
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
-   * @returns {Object} Configuration object
+   * @param {Record<string, string>} mapping - Map of config keys to short attribute names (without component prefix)
+   * @returns {Record<string, string|number|boolean|null>} Configuration object
    * @example
    * // In SelectLoader component:
    * const config = this._getConfigFromAttrs(element, {
@@ -321,9 +401,10 @@ export class BaseComponent {
 
   /**
    * Validate and require state exists before proceeding
+   * @protected
    * @param {HTMLElement} element - Element to get state for
-   * @param {string} methodName - Name of calling method for error messages
-   * @returns {Object|null} State object or null
+   * @param {string} [methodName] - Name of calling method for error messages
+   * @returns {ComponentState|undefined} State object, or undefined after logging a warning
    */
   _requireState(element, methodName = 'method') {
     const state = this.getState(element);
@@ -333,39 +414,95 @@ export class BaseComponent {
     return state;
   }
 
+  /**
+   * @protected
+   * @param {string} [prefix='elem']
+   * @returns {string}
+   */
   _generateId(prefix = 'elem') {
     return generateId(prefix);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [timeout=2000] - Longest wait in milliseconds
+   * @returns {Promise<void>}
+   */
   async _waitForTransition(element, timeout = 2000) {
     return waitForTransition(element, timeout);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [duration=300] - Milliseconds
+   * @returns {Promise<void>}
+   */
   async _fadeIn(element, duration = 300) {
     return fadeIn(element, duration);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [duration=300] - Milliseconds
+   * @returns {Promise<void>}
+   */
   async _fadeOut(element, duration = 300) {
     return fadeOut(element, duration);
   }
 
+  /**
+   * @protected
+   * @param {ParentNode} [container=document]
+   * @returns {HTMLElement[]}
+   */
   _getFocusableElements(container = document) {
     return getFocusableElements(container);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} container
+   * @param {KeyboardEvent} event - The Tab keydown event
+   * @returns {void}
+   */
   _trapFocus(container, event) {
     return trapFocus(container, event);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement|null} element
+   * @returns {void}
+   */
   _restoreFocus(element) {
     return restoreFocus(element);
   }
 
+  /**
+   * @protected
+   * @param {string} tag
+   * @param {Record<string, string>} [attributes]
+   * @param {string|HTMLElement} [content] - Text content or a child element
+   * @returns {HTMLElement}
+   */
   _createElement(tag, attributes = {}, content = '') {
     return createElement(tag, attributes, content);
   }
 
-  // Dispatch custom events
+  /**
+   * Dispatch a bubbling, cancelable CustomEvent on an element, and emit it on the event bus with the
+   * element added to its detail
+   *
+   * @protected
+   * @template {Record<string, unknown>} [T=Record<string, unknown>]
+   * @param {HTMLElement} element
+   * @param {string} eventType
+   * @param {T} [detail]
+   * @returns {CustomEvent<T>}
+   */
   _dispatch(element, eventType, detail) {
     const event = new CustomEvent(eventType, {
       detail,
@@ -383,6 +520,9 @@ export class BaseComponent {
    * Read from `static selector` on the component class, written as `'data-toggle'`, `'toggle'` or
    * `'[data-toggle]'`. Without one the name comes from the class name, which minifiers change, so a
    * warning is logged once per class.
+   *
+   * @protected
+   * @returns {string}
    */
   _getSelector() {
     if (this._selector) return this._selector;
@@ -457,10 +597,11 @@ export class BaseComponent {
    * getBoolAttr() or getNumberAttr() for flags and numbers, because the
    * string "false" is truthy.
    *
+   * @template [T=null]
    * @param {HTMLElement} element - Target element
    * @param {string} attr - Attribute name (without data- prefix)
-   * @param {*} defaultValue - Default value if attribute doesn't exist
-   * @returns {string|null} Attribute value or null
+   * @param {T} [defaultValue=null] - Value when the attribute doesn't exist
+   * @returns {string|T} Attribute value, or the default
    * @example
    * const duration = this.getAttr(element, 'duration', '300'); // "300"
    */

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true,
+    "skipLibCheck": true,
+    "target": "es2023",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": [],
+    "rootDir": "src",
+    "outDir": "dist/types"
+  },
+  "include": ["src/**/*.js"],
+  "exclude": ["src/contract.js", "src/**/*.contract.js"]
+}

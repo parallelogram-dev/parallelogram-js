@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { validateContract } from '../../src/contract.js';
+import { classNameFor, propertiesOf } from '../../scripts/types/members.mjs';
 
 const root = `${process.cwd()}/`;
 const read = file => readFileSync(`${root}${file}`, 'utf8');
@@ -132,6 +133,50 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
         slots: unique(itemsOf(contract).flatMap(item => (item.slots ?? []).map(slot => slot.name))),
       }).toEqual({ parts: unique(parts), slots: unique(slots) });
     });
+
+    it.runIf(contract.kind === 'element')(
+      'declares properties and methods its elements have',
+      async () => {
+        await componentOf(contract);
+        /** A prototype chain's own value for a name, read without running any getter */
+        const valueOf = (prototype, name) => {
+          for (let current = prototype; current; current = Object.getPrototypeOf(current)) {
+            const descriptor = Object.getOwnPropertyDescriptor(current, name);
+            if (descriptor) return descriptor.value;
+          }
+          return undefined;
+        };
+
+        const problems = [];
+        for (const item of itemsOf(contract)) {
+          const { prototype } = customElements.get(item.tag);
+          for (const property of propertiesOf(item)) {
+            if (!(property.name in prototype) && !source.includes(`this.${property.name} =`)) {
+              problems.push(`${item.tag} has no ${property.name} property`);
+            }
+          }
+          for (const method of item.methods ?? []) {
+            if (typeof valueOf(prototype, method.name) !== 'function') {
+              problems.push(`${item.tag} has no ${method.name}() method`);
+            }
+          }
+        }
+
+        expect(problems).toEqual([]);
+      }
+    );
+
+    it.runIf(contract.kind === 'element')(
+      'names its child element classes after their tags',
+      async () => {
+        await componentOf(contract);
+        const children = contract.elements ?? [];
+
+        expect(children.map(element => customElements.get(element.tag)?.name)).toEqual(
+          children.map(element => classNameFor(element.tag))
+        );
+      }
+    );
 
     it('names CSS properties its styles or source use', () => {
       const missing = (contract.cssProperties ?? [])
