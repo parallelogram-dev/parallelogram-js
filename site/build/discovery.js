@@ -58,7 +58,6 @@ export function llmsTxt(contracts, guides) {
     componentsOfKind(contracts, kind).map(contract =>
       item(linkText(contract), pageUrl(slugFor(contract)), contract.summary)
     );
-  const upgrading = guides.find(guide => guide.slug === 'upgrading');
 
   return [
     '# Parallelogram',
@@ -73,7 +72,6 @@ export function llmsTxt(contracts, guides) {
     components('element').join('\n'),
     '## Optional',
     [
-      ...(upgrading ? [item(upgrading.title, pageUrl(upgrading.slug), upgrading.description)] : []),
       item(
         'Custom Elements Manifest',
         MANIFEST_URL,
