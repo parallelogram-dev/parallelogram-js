@@ -8,3 +8,4 @@ site/dist/
 site/*.html
 .claude/settings.local.json
 .vitest/
+coverage/
