@@ -233,6 +233,11 @@ export function registerTrackerAdapter(name, boot) {
  * `requireCategory`, trackers without a category wait too, so a missing or
  * misspelt `consent` field fails closed.
  *
+ * Consent is checked again before each page step, so a tracker whose consent is
+ * withdrawn stops recording later pages. A vendor script that has already loaded
+ * can't be unloaded, so also call the vendor's own consent update, such as
+ * `gtag('consent', 'update', …)` or `fbq('consent', 'revoke')`.
+ *
  * @param {((category: string) => boolean)|null} fn
  * @param {{ requireCategory?: boolean }} [options]
  */
@@ -506,6 +511,8 @@ export default class DeferTracker extends BaseComponent {
     if (typeof page !== 'function') return;
 
     const config = this.getState(element)?.config ?? tracker.config;
+    if (!this._consentGranted(tracker.name, config)) return;
+
     try {
       page(config, this._context(element), { url, mounted });
     } catch (error) {

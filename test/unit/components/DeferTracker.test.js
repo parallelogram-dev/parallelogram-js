@@ -447,6 +447,26 @@ describe('DeferTracker trackers', () => {
     expect(boot).toHaveBeenCalledOnce();
   });
 
+  it('skips the page step on a later page once consent is withdrawn', async () => {
+    const { default: DeferTracker, registerTrackerAdapter, setTrackerConsent } = await loadModule();
+    const { EventManager } = await import('../../../src/managers/EventManager.js');
+    const eventBus = new EventManager();
+    const boot = vi.fn();
+    boot.page = vi.fn();
+    registerTrackerAdapter('meta-pixel', boot);
+    let granted = true;
+    setTrackerConsent(category => category === 'marketing' && granted);
+    new DeferTracker({ eventBus }).mount(block('meta-pixel', { id: '123', consent: 'marketing' }));
+    interact();
+    await vi.advanceTimersByTimeAsync(0);
+
+    granted = false;
+    history.pushState(null, '', '/menu');
+    eventBus.emit('router:navigate-end', { url: '/menu', status: 'success' });
+
+    expect(boot.page).not.toHaveBeenCalled();
+  });
+
   it('treats a consent resolver that throws as not granted and logs it', async () => {
     const { default: DeferTracker, registerTrackerAdapter, setTrackerConsent } = await loadModule();
     registerTrackerAdapter('hotjar', vi.fn());

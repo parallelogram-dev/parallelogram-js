@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DeferTracker no longer counts `scroll` or `mousemove` as interaction, so scroll restoration on reload or back and forward, a link to a `#hash`, or a pointer resting over the page no longer boots every tracker while the page loads. Trackers boot on a pointer press, touch, key press or click, or after the idle fallback. Pass `configureDeferTracker({ events })` to add either event back.
 - DeferTracker logs a warning listing tracker blocks it can't load, such as blocks in `<head>` or outside the element the framework observes, when the first tracker starts. Those blocks were skipped silently and never got a status.
 - Two Pinterest tags on a page record one page visit when they start and one each time the router shows a new page, instead of one per tag, and the visit is recorded after every tag starting at the same time has loaded. Two HubSpot blocks with different hub ids likewise record one page view per router navigation, since they share the `_hsq` queue.
+- DeferTracker checks consent again before running an adapter's page step, so a tracker whose consent has been withdrawn no longer records later pages the router shows. A vendor script that has already loaded can't be unloaded, so sites should also call the vendor's own consent update.
 
 ## [0.5.3] - 2026-09-15
 
