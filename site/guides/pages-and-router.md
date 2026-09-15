@@ -48,6 +48,7 @@ The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`
 | `observeRoot`            | `Element \| string \| null`          | `document.body` | The element, or its selector, whose subtree components mount in and are watched.                                              |
 | `targetGroups`           | `Record<string, string[]>`           | `{}`            | Fragments that update together, by target name.                                                                               |
 | `targetGroupTransitions` | `Record<string, FragmentTransition>` | None            | Transitions for each fragment, by its `data-view` name.                                                                       |
+| `viewTransitions`        | `boolean`                            | `false`         | Swap fragments inside `document.startViewTransition()` where supported. See View transitions.                                 |
 | `fragmentFallbacks`      | `boolean`                            | `false`         | Also find a fragment without `data-view` by its id, common main-content selectors or class.                                   |
 | `runScripts`             | `boolean`                            | `true`          | Run the scripts in swapped fragments.                                                                                         |
 | `assetTimeout`           | `number`                             | `3000`          | Milliseconds to wait for each stylesheet or script the new page's head adds.                                                  |
@@ -187,6 +188,32 @@ Parallelogram.create({
 ```
 
 Fragments in a group are replaced independently, so a slow transition on one doesn't hold up the others.
+
+### View transitions
+
+With `viewTransitions: true`, a navigation swaps its fragments inside `document.startViewTransition()`, so the browser cross-fades from the old page to the new one. It is off by default, so existing sites don't change.
+
+```js
+Parallelogram.create({
+  router: {},
+  pageManager: { viewTransitions: true },
+});
+```
+
+The swap runs without a view transition, straight away as it otherwise would, when the browser doesn't support `document.startViewTransition()`, when the user prefers reduced motion, or when any fragment being replaced has a `targetGroupTransitions` entry. Components mount, scroll is set, focus moves and the title is announced once, inside the transition's update, as they do without one. A navigation replaced by a newer one before its swap starts no transition, and one replaced during the transition skips its animation.
+
+Style the transition with CSS. Give a fragment a `view-transition-name` to animate it separately from the rest of the page, and use the `::view-transition-*` pseudo-elements to change the animation:
+
+```css
+[data-view='main'] {
+  view-transition-name: main;
+}
+
+::view-transition-old(main),
+::view-transition-new(main) {
+  animation-duration: 200ms;
+}
+```
 
 ### Root attributes
 

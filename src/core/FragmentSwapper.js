@@ -124,9 +124,14 @@ export class FragmentSwapper {
       }
 
       /* Fragments are replaced independently, so a slow or failing one cannot hold up the others */
-      const outcomes = await Promise.allSettled(
-        fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
-      );
+      fragmentOptions.viewTransition = this._usesViewTransition(viewTargets);
+      const replaceAll = () =>
+        Promise.allSettled(
+          fragments.map(fragment => this._processSingleFragment(fragment, html, fragmentOptions))
+        );
+      const outcomes = await (fragmentOptions.viewTransition
+        ? this._inViewTransition(replaceAll, options.signal)
+        : replaceAll());
 
       const replacementResults = outcomes.map((outcome, index) => {
         if (outcome.status === 'fulfilled') {
@@ -210,7 +215,8 @@ export class FragmentSwapper {
       /* The main fragment scrolls to the top between the out transition and the swap, so old
          content fades out, the page snaps up and the new content fades in. 'instant' overrides any
          CSS scroll-behavior: smooth on the document. A hash naming an element in the new page
-         scrolls to that element after the swap instead. */
+         scrolls to that element after the swap instead. Browsers render no frames inside a view
+         transition's update, which has already captured the old content, so it isn't waited for. */
       if (
         viewTarget === 'main' &&
         !options.preserveScroll &&
@@ -218,7 +224,9 @@ export class FragmentSwapper {
         this.options.scrollPosition === 'top' &&
         !options.fromPopstate
       ) {
-        await nextFrame();
+        if (!options.viewTransition) {
+          await nextFrame();
+        }
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
@@ -270,6 +278,29 @@ export class FragmentSwapper {
       targetFragment,
       transitionConfig,
     };
+  }
+
+  /**
+   * Whether a swap runs inside a view transition: the `viewTransitions` option is on, the browser
+   * supports them, motion isn't reduced and no fragment has a transition of its own
+   */
+  _usesViewTransition(viewTargets) {
+    return Boolean(
+      this.options.viewTransitions &&
+      typeof document.startViewTransition === 'function' &&
+      !prefersReducedMotion() &&
+      !viewTargets.some(viewTarget => this.options.targetGroupTransitions?.[viewTarget])
+    );
+  }
+
+  /**
+   * Run an update inside a view transition, skipping the animation when the signal aborts
+   */
+  _inViewTransition(update, signal) {
+    let result;
+    const transition = document.startViewTransition(() => (result = update()));
+    signal?.addEventListener('abort', () => transition.skipTransition(), { once: true });
+    return transition.updateCallbackDone.then(() => result);
   }
 
   /**
