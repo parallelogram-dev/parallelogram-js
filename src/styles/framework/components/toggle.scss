@@ -18,14 +18,11 @@
   user-select: none;
 }
 
-[data-toggle-state='closed'] {
-  display: none;
-}
-
-[data-toggle-state='opening'],
-[data-toggle-state='open'],
-[data-toggle-state='closing'] {
-  display: block;
+/* Closed targets stay hidden whatever display page styles give them, including when the framework is
+   imported into a cascade layer. Open targets keep their own display, such as flex or grid. */
+[data-toggle-state='closed'],
+[data-toggle-state][hidden] {
+  display: none !important;
 }
 
 [data-toggle-state='closing'] {
