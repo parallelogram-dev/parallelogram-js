@@ -1,4 +1,17 @@
 /**
+ * @typedef {Object} RouterOptions
+ * @property {number} [timeout=10000] - Milliseconds before a page request is abandoned
+ * @property {string} [loadingClass='router-loading'] - Class on the body and the followed link
+ *   while a navigation is in progress
+ * @property {string} [errorClass='router-error'] - Class on the body and the followed link after a
+ *   navigation fails
+ * @property {boolean} [fullLoadOnError=true] - Load the page normally when it can't be shown in
+ *   place
+ * @property {string[]} [nonRoutableExtensions] - Lowercase file extensions, without the dot, that
+ *   links open natively instead of loading as a page
+ */
+
+/**
  * Client-side navigation for server-rendered pages
  *
  * Handles same-origin link clicks and history moves by fetching the new page and emitting
@@ -7,6 +20,12 @@
  * router is never worse than a plain link.
  */
 export class RouterManager {
+  /**
+   * @param {Object} config
+   * @param {import('./EventManager.js').EventManager} config.eventBus
+   * @param {import('../core/DevLogger.js').DevLogger} [config.logger]
+   * @param {RouterOptions} [config.options]
+   */
   constructor({ eventBus, logger, options = {} }) {
     this.eventBus = eventBus;
     this.logger = logger;

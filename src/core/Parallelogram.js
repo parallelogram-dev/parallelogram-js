@@ -39,25 +39,50 @@ import { EventManager } from '../managers/EventManager.js';
 import { RouterManager } from '../managers/RouterManager.js';
 import { PageManager } from '../managers/PageManager.js';
 
+/**
+ * @typedef {Object} ParallelogramConfig
+ * @property {'development'|'production'} [mode='production'] - Framework mode
+ * @property {boolean} [debug=false] - Enable debug/log/info/group output. The package's default
+ *   build leaves out the framework's own debug output, so it only appears when the bundler resolves
+ *   the `development` export condition (Vite does during development; esbuild needs
+ *   `--conditions=development`).
+ * @property {boolean} [silent=false] - Suppress ALL logger output, including warn and error. Use in
+ *   production when console pollution is unacceptable. Overrides `debug`.
+ * @property {import('../managers/RouterManager.js').RouterOptions} [router] - Router options; the
+ *   router is only created when they are given
+ * @property {import('../managers/PageManager.js').PageManagerOptions & { containerSelector?: string }} [pageManager] -
+ *   PageManager options, and the selector of the element whose fragments it manages (the body by
+ *   default)
+ */
+
+/**
+ * Returns a component's module or class, usually with a dynamic `import()`
+ *
+ * @typedef {() => (object | Promise<object>)} ComponentLoader
+ */
+
+/**
+ * @typedef {Object} ComponentOptions
+ * @property {string} [name] - The name `dependsOn` refers to; the selector by default
+ * @property {ComponentLoader} [loader] - Loads the component, when it isn't the second argument
+ * @property {'critical'|'normal'} [priority='normal'] - Critical components mount first
+ * @property {string[]} [dependsOn] - Names of components that must load first
+ * @property {string} [exportName] - The named export to use when the module has no default export
+ */
+
 export class Parallelogram {
   /**
    * Create a new Parallelogram instance
-   * @param {Object} config - Configuration options
-   * @param {string} [config.mode='production'] - Framework mode ('development' or 'production')
-   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. The package's
-   *   default build leaves out the framework's own debug output, so it only appears when the
-   *   bundler resolves the `development` export condition (Vite does during development; esbuild
-   *   needs `--conditions=development`).
-   * @param {boolean} [config.silent=false] - Suppress ALL logger output, including warn and error.
-   *   Use in production when console pollution is unacceptable. Overrides `debug`.
-   * @param {Object} [config.router] - Router configuration (enables router if provided)
-   * @param {Object} [config.pageManager] - PageManager configuration
+   * @param {ParallelogramConfig} [config] - Configuration options
    * @returns {Parallelogram}
    */
   static create(config = {}) {
     return new Parallelogram(config);
   }
 
+  /**
+   * @param {ParallelogramConfig} [config] - Configuration options
+   */
   constructor(config = {}) {
     this.config = {
       mode: config.mode || 'production',
@@ -72,13 +97,14 @@ export class Parallelogram {
     this.eventBus = null;
     this.router = null;
     this.pageManager = null;
+    /** @type {import('./ComponentHost.js').RegistryEntry[] | null} */
     this.componentRegistry = null;
     this.webComponentLoader = null;
 
     // Component registration helper
     this.components = new ComponentRegistrationHelper(this);
 
-    // Track initialization state
+    /** @internal */
     this._initialized = false;
   }
 
@@ -108,6 +134,7 @@ export class Parallelogram {
    * Initialize the framework
    * Sets up all managers and starts component loading
    * Note: Use run() instead if you're unsure about DOM ready state
+   * @returns {Parallelogram}
    */
   init() {
     if (this._initialized) {
@@ -214,7 +241,7 @@ export class Parallelogram {
 
   /**
    * Register an enhancement component added after init()
-   * @private
+   * @internal
    */
   _registerLateComponent({ name, selector, options }) {
     if (!this._initialized) return;
@@ -233,7 +260,7 @@ export class Parallelogram {
 
   /**
    * Register a web component added after init()
-   * @private
+   * @internal
    */
   _registerLateWebComponent(tagName, loader) {
     if (!this._initialized) return;
@@ -256,8 +283,13 @@ export class Parallelogram {
  * Automatically detects web components vs enhancement components
  */
 class ComponentRegistrationHelper {
+  /**
+   * @param {Parallelogram} parallelogram
+   */
   constructor(parallelogram) {
+    /** @internal */
     this.parallelogram = parallelogram;
+    /** @internal */
     this._configs = {
       webComponents: [],
       enhancementComponents: [],
@@ -274,8 +306,8 @@ class ComponentRegistrationHelper {
    * straight away.
    *
    * @param {string} nameOrSelector - Custom element tag name, or selector for an enhancement
-   * @param {Function|Object} loaderOrOptions - Loader function or options object
-   * @param {Object} [options] - Additional options (only for enhancement components)
+   * @param {ComponentLoader|ComponentOptions} loaderOrOptions - Loader function or options object
+   * @param {ComponentOptions} [options] - Additional options (only for enhancement components)
    * @returns {ComponentRegistrationHelper}
    * @throws {Error} If an enhancement component with the same name is already registered.
    *
@@ -327,7 +359,7 @@ class ComponentRegistrationHelper {
   /**
    * Whether a string is a valid custom element name (lowercase, starting with a letter,
    * containing a hyphen)
-   * @private
+   * @internal
    */
   _detectWebComponent(nameOrSelector) {
     return /^[a-z][a-z0-9._]*-[a-z0-9._-]*$/.test(nameOrSelector);

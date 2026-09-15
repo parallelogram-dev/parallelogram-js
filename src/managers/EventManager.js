@@ -8,10 +8,12 @@
 export class EventManager {
   /**
    * @param {Object} [options]
-   * @param {Object} [options.logger] - Receives listener errors; console.error is used otherwise
+   * @param {{ error: (...args: unknown[]) => void }} [options.logger] - Receives listener errors;
+   *   console.error is used otherwise
    */
   constructor({ logger } = {}) {
     this.logger = logger;
+    /** @type {Map<string, Set<(payload: any) => void>>} */
     this.listeners = new Map();
   }
 
@@ -19,7 +21,7 @@ export class EventManager {
    * Subscribe to an event.
    *
    * @param {string} event
-   * @param {Function} callback - Called with the emitted payload
+   * @param {(payload: any) => void} callback - Called with the emitted payload
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal] - Removes the listener when aborted
    * @returns {() => void} Function that removes the listener
@@ -41,7 +43,7 @@ export class EventManager {
    * Subscribe to the next emission of an event only.
    *
    * @param {string} event
-   * @param {Function} callback - Called with the emitted payload
+   * @param {(payload: any) => void} callback - Called with the emitted payload
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal] - Removes the listener when aborted
    * @returns {() => void} Function that removes the listener
@@ -62,7 +64,7 @@ export class EventManager {
    * Remove one listener, or every listener for the event when no callback is given.
    *
    * @param {string} event
-   * @param {Function} [callback]
+   * @param {(payload: any) => void} [callback]
    */
   off(event, callback) {
     const listeners = this.listeners.get(event);
@@ -79,6 +81,12 @@ export class EventManager {
     }
   }
 
+  /**
+   * Call every listener for an event with a payload.
+   *
+   * @param {string} event
+   * @param {unknown} [payload]
+   */
   emit(event, payload) {
     const listeners = this.listeners.get(event);
     if (!listeners) return;
@@ -93,10 +101,21 @@ export class EventManager {
     }
   }
 
+  /**
+   * The number of listeners subscribed to an event.
+   *
+   * @param {string} event
+   * @returns {number}
+   */
   listenerCount(event) {
     return this.listeners.get(event)?.size ?? 0;
   }
 
+  /**
+   * Remove every listener for an event, or for all events when none is given.
+   *
+   * @param {string} [event]
+   */
   clear(event) {
     if (event) {
       this.listeners.delete(event);
