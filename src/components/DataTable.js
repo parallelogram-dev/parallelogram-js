@@ -12,6 +12,10 @@ const rowsOf = section => childrenNamed(section, 'tr');
 
 const cellsOf = row => childrenNamed(row, 'td', 'th');
 
+/** Replace `{name}` placeholders with values */
+const fill = (template, values) =>
+  template.replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
+
 /**
  * DataTable - sorting, filtering and pagination for an existing table
  *
@@ -47,6 +51,14 @@ const cellsOf = row => childrenNamed(row, 'td', 'th');
  * - data-datatable-search-label, data-datatable-search-placeholder: the search box's label and
  *   placeholder
  * - data-datatable-empty-message: the row shown when nothing matches (default "No matching rows")
+ * - data-datatable-status-message: the status after each change (default "Showing {from}–{to} of
+ *   {total} rows")
+ * - data-datatable-pagination-label: the pagination region's label (default "Table pagination")
+ * - data-datatable-previous-text, data-datatable-next-text: the buttons' text (default "Previous"
+ *   and "Next")
+ * - data-datatable-previous-label, data-datatable-next-label: the buttons' labels (default
+ *   "Previous page" and "Next page")
+ * - data-datatable-page-label: each page number's label (default "Page {page}")
  * - data-sort, data-sort-type: on a header, the column key and string (default), number or date
  * - data-sort-value: on a cell, the value to sort by instead of its text
  * - data-datatable-state: set by the component to mounted, loading, loaded, empty or error
@@ -70,6 +82,13 @@ export class DataTable extends BaseComponent {
       searchLabel: 'Search',
       searchPlaceholder: 'Search table…',
       emptyMessage: 'No matching rows',
+      statusMessage: 'Showing {from}–{to} of {total} rows',
+      paginationLabel: 'Table pagination',
+      previousText: 'Previous',
+      previousLabel: 'Previous page',
+      nextText: 'Next',
+      nextLabel: 'Next page',
+      pageLabel: 'Page {page}',
       sortIcons: {
         unsorted: '↕',
         asc: '↑',
@@ -167,6 +186,15 @@ export class DataTable extends BaseComponent {
       searchLabel: this.getAttr(element, 'search-label', defaults.searchLabel),
       searchPlaceholder: this.getAttr(element, 'search-placeholder', defaults.searchPlaceholder),
       emptyMessage: this.getAttr(element, 'empty-message', defaults.emptyMessage),
+      ...this._getConfigFromAttrs(element, {
+        statusMessage: 'status-message',
+        paginationLabel: 'pagination-label',
+        previousText: 'previous-text',
+        previousLabel: 'previous-label',
+        nextText: 'next-text',
+        nextLabel: 'next-label',
+        pageLabel: 'page-label',
+      }),
     };
   }
 
@@ -336,7 +364,7 @@ export class DataTable extends BaseComponent {
   _setupPagination(element, state, signal) {
     const nav = createElement('nav', {
       className: 'datatable__pagination',
-      'aria-label': 'Table pagination',
+      'aria-label': state.config.paginationLabel,
     });
     state.status.after(nav);
     state.injected.push(nav);
@@ -451,7 +479,7 @@ export class DataTable extends BaseComponent {
         state,
         total === 0
           ? config.emptyMessage
-          : `Showing ${start + 1}–${start + visible.length} of ${total} rows`
+          : fill(config.statusMessage, { from: start + 1, to: start + visible.length, total })
       );
     }
 
@@ -487,11 +515,12 @@ export class DataTable extends BaseComponent {
     const focusedLabel = nav.contains(document.activeElement)
       ? document.activeElement.getAttribute('aria-label')
       : null;
+    const { config, currentPage: current } = state;
     nav.replaceChildren();
+    /* Hide an empty region so screen readers don't list it as a landmark */
+    nav.hidden = pageCount <= 1;
+    if (nav.hidden) return;
 
-    if (pageCount <= 1) return;
-
-    const current = state.currentPage;
     const button = (page, text, label, { disabled = false, isCurrent = false } = {}) => {
       const element = document.createElement('button');
       element.type = 'button';
@@ -506,7 +535,9 @@ export class DataTable extends BaseComponent {
       return element;
     };
 
-    nav.append(button(current - 1, 'Previous', 'Previous page', { disabled: current === 1 }));
+    nav.append(
+      button(current - 1, config.previousText, config.previousLabel, { disabled: current === 1 })
+    );
 
     let previousPage = 0;
     for (let page = 1; page <= pageCount; page++) {
@@ -519,11 +550,17 @@ export class DataTable extends BaseComponent {
         gap.textContent = '…';
         nav.append(gap);
       }
-      nav.append(button(page, String(page), `Page ${page}`, { isCurrent: page === current }));
+      nav.append(
+        button(page, String(page), fill(config.pageLabel, { page }), {
+          isCurrent: page === current,
+        })
+      );
       previousPage = page;
     }
 
-    nav.append(button(current + 1, 'Next', 'Next page', { disabled: current === pageCount }));
+    nav.append(
+      button(current + 1, config.nextText, config.nextLabel, { disabled: current === pageCount })
+    );
 
     /* Re-rendering replaces the buttons, so keep focus on the one that was pressed */
     if (focusedLabel) {
