@@ -89,16 +89,20 @@ export function layout({ title, description, current, contracts, guides, content
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(description)}">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/MatterSQ-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/src/styles/site.scss">
 <script type="module" src="/src/main.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
 <header class="site-header">
-  <a class="brand" href="index.html"><span class="brand__mark" aria-hidden="true"></span>Parallelogram</a>
+  <a class="brand" href="index.html"><svg class="brand__mark" aria-hidden="true" focusable="false" viewBox="0 0 401 365.81"><g fill="#0000ff" stroke="#fff"><path d="M40.16 40.16L40.16 40.16L133.04 133.04L40.16 40.16"/><path d="M40.16 40.16L7.31 7.31C3.1 11.51 0.5 17.32 0.5 23.73L0.5 265.59L133.04 133.04L40.16 40.16"/><path d="M0.5 265.59L92.98 358.07L93.82 358.9C97.98 362.86 103.61 365.31 109.81 365.31C122.64 365.31 133.04 354.91 133.04 342.07L133.04 265.59L0.5 265.59"/><path d="M393.9 116.84L393.47 116.41L284.73 7.66L284.04 6.98C279.87 2.97 274.21 0.5 267.97 0.5L23.73 0.5C17.32 0.5 11.51 3.1 7.31 7.31L40.16 40.16L133.04 133.04L133.04 133.04L354.03 133.04L400.5 133.04C400.5 126.74 397.98 121.03 393.9 116.84"/><path d="M354.03 133.04L133.04 133.04L0.5 265.59L133.04 265.59L267.69 265.59C267.78 265.59 267.88 265.6 267.97 265.6C268.07 265.6 268.17 265.59 268.26 265.59C274.29 265.51 279.75 263.14 283.84 259.31L284.92 258.22L393.47 149.68L393.9 149.25C397.98 145.06 400.5 139.35 400.5 133.04L354.03 133.04"/></g></svg>Parallelogram</a>
   <span class="site-header__version">${escapeHtml(version)}</span>
   <a class="site-header__link" href="${REPOSITORY}">GitHub</a>
 </header>
