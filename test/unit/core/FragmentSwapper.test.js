@@ -37,6 +37,29 @@ describe('FragmentSwapper', () => {
     }).toEqual({ text: 'Pricing', unmounted: true, mounted: true });
   });
 
+  it('reports a failure without swapping again when a step after the swap throws', async () => {
+    document.body.innerHTML = '<main data-view="main">Home</main>';
+    const eventBus = new EventManager();
+    const replaced = vi.fn();
+    eventBus.on('page:fragments-replaced', replaced);
+    const unmountWithin = vi.fn();
+    const swapper = new FragmentSwapper({
+      options: { focusTarget: '[' },
+      eventBus,
+      mountWithin: vi.fn(),
+      unmountWithin,
+    });
+
+    await swapper.replaceFragments('<main data-view="main"><h1>Pricing</h1></main>', {
+      viewTargets: ['main'],
+      fromNavigation: true,
+    });
+
+    expect([unmountWithin.mock.calls.length, replaced.mock.calls[0][0].results[0].success]).toEqual(
+      [1, false]
+    );
+  });
+
   it('moves the parsed content into the fragment without setting its HTML', async () => {
     document.body.innerHTML = '<main data-view="main">Home</main>';
     const setInnerHTML = vi.spyOn(ownerOf(HTMLElement.prototype, 'innerHTML'), 'innerHTML', 'set');

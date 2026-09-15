@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scanning the page again while a component's asynchronous `_init` is still running no longer calls `update()` and emits a second `page:component-mounted` for that element.
 - A component whose asynchronous `_init` rejects is reported with `page:component-mount-error` instead of `page:component-mounted`, and the host emits `page:component-mounted` for an asynchronous `_init` once its state has resolved. `BaseComponent#mount()` returns the Promise for an asynchronous `_init`, which rejects when it fails.
 - Elements added to the page after their component failed to load for good get the `component-error` class, as the elements waiting at the time did, so stylesheets show their content instead of leaving it hidden.
+- A fragment whose swap fails after its content was replaced, for example on an invalid `focusTarget` selector, is no longer swapped a second time, which ran its scripts and mounted its components again, and is reported with `success: false` in `page:fragments-replaced`.
 
 ## [0.5.3] - 2026-09-15
 

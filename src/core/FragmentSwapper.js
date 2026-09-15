@@ -198,7 +198,9 @@ export class FragmentSwapper {
       transitionConfig,
     });
 
+    /* Content that is in place is never swapped again, even when a step after it fails */
     let swapped = false;
+    let swapFinished = false;
 
     try {
       if (transitionConfig?.out) {
@@ -224,8 +226,17 @@ export class FragmentSwapper {
         return { viewTarget, success: false, aborted: true };
       }
 
-      this._swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig);
-      swapped = true;
+      this._swapFragment(
+        sourceFragment,
+        targetFragment,
+        viewTarget,
+        options,
+        transitionConfig,
+        () => {
+          swapped = true;
+        }
+      );
+      swapFinished = true;
 
       this.eventBus.emit('page:fragment-did-replace', {
         targetFragment,
@@ -244,6 +255,9 @@ export class FragmentSwapper {
         transitionConfig,
       });
 
+      if (swapped && !swapFinished) {
+        return { viewTarget, success: false, error: transitionError?.message };
+      }
       if (!swapped && !options.signal?.aborted) {
         this._swapFragment(sourceFragment, targetFragment, viewTarget, options);
       }
@@ -262,10 +276,13 @@ export class FragmentSwapper {
    * Replace a fragment's content and run everything that depends on the new content straight away,
    * rather than after its in-transition: scroll, head and focus for the main fragment, and component
    * mounting for every fragment
+   *
+   * `onReplaced` is called as soon as the content is in place, before the steps that follow it.
    */
-  _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig) {
+  _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig, onReplaced) {
     this.unmountWithin(targetFragment);
     targetFragment.replaceChildren(...this._fragmentContent(sourceFragment));
+    onReplaced?.();
     this._syncFragmentRoot(sourceFragment, targetFragment, transitionConfig);
 
     if (viewTarget === 'main') {
