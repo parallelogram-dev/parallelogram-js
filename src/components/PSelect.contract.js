@@ -87,7 +87,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       name: 'select',
       signature: '(value: string) => void',
       description:
-        'Choose an option as the user would, dispatching input, change and p-select:change',
+        'Choose an option as the user would, dispatching input, change and p-select:change when the value changes',
     },
     {
       name: 'setOptions',
@@ -110,12 +110,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
   ],
   events: [
-    { name: 'input', description: 'The user chose an option' },
-    { name: 'change', description: 'The user chose an option' },
+    { name: 'input', description: 'The user chose a different option' },
+    { name: 'change', description: 'The user chose a different option' },
     {
       name: 'p-select:change',
       detail: '{ value: string; label: string }',
-      description: 'An option was chosen; bubbles out of shadow roots',
+      description: 'A different option was chosen; bubbles out of shadow roots',
     },
     { name: 'p-select:open', description: 'The list opened' },
     { name: 'p-select:close', description: 'The list closed' },

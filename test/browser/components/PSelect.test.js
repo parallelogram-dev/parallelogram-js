@@ -338,6 +338,19 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change', 'p-select:change']);
   });
 
+  it('dispatches no change events when Tab leaves the option that was already chosen', () => {
+    const select = mountSelect(COUNTRIES);
+    const seen = [];
+    for (const type of ['input', 'change', 'p-select:change']) {
+      select.addEventListener(type, () => seen.push(type));
+    }
+    press(select, 'ArrowDown');
+
+    press(select, 'Tab');
+
+    expect(seen).toEqual([]);
+  });
+
   it('announces how many options match inside its own shadow root', async () => {
     const select = mountSelect(COUNTRIES);
 
