@@ -211,6 +211,21 @@ describe('DataTable', () => {
     expect([nav.hidden, display]).toEqual([true, 'none']);
   });
 
+  it('draws pagination buttons in the colours of the page around them', () => {
+    const style = document.createElement('style');
+    style.textContent = datatableStyles;
+    document.head.append(style);
+    const table = build(PEOPLE, 'data-datatable-paginate="2"');
+    table.parentElement.style.cssText = 'background: rgb(17, 17, 17); color: rgb(240, 240, 240)';
+    mount(table);
+    const { color, backgroundColor } = getComputedStyle(
+      document.querySelector('.holder nav button[aria-label="Page 2"]')
+    );
+    style.remove();
+
+    expect([color, backgroundColor]).toEqual(['rgb(240, 240, 240)', 'rgba(0, 0, 0, 0)']);
+  });
+
   it('shows a window of page numbers for long tables', () => {
     const rows = Array.from({ length: 100 }, (_, index) => `<tr><td>Guest ${index}</td></tr>`).join(
       ''
