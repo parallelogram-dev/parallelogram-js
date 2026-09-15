@@ -6,9 +6,10 @@ import { trustedHTML } from '../utils/trusted.js';
 /**
  * SelectLoader - load an HTML fragment into a target when a select's choice changes
  *
- * Each option's value is the URL of a fragment, fetched through RouterManager. A newer choice
- * cancels a load that is still running, the target is marked `aria-busy` while loading, and the
- * loaded content is announced. Fragments are inserted as HTML, so they must come from a trusted,
+ * Each option's value is the URL of a fragment, fetched through RouterManager. Choices made before
+ * the on-demand router has loaded wait for it to start. A newer choice cancels a load that is still
+ * running, the target is marked `aria-busy` while loading, and the loaded content is announced.
+ * Fragments are inserted as HTML, so they must come from a trusted,
  * same-origin source; sanitise anything else first, for example with DOMPurify.
  *
  * @example
@@ -160,6 +161,23 @@ export default class SelectLoader extends BaseComponent {
    * Load an HTML fragment through RouterManager, cancelling any load still in progress
    */
   async _loadFragment(element, state, url) {
+    /* The router loads on demand, so wait for it, then load whatever is chosen by then. It is
+       handed to components after router:initialized is emitted, hence the microtask. */
+    if (!this.router && this.eventBus && state.routerWait !== false) {
+      state.routerWait ??= this.eventBus.once(
+        'router:initialized',
+        () =>
+          queueMicrotask(() => {
+            state.routerWait = false;
+            if (element.value && !state.controller.signal.aborted) {
+              this._loadFragment(element, state, element.value);
+            }
+          }),
+        { signal: state.controller.signal }
+      );
+      return;
+    }
+
     state.request?.abort();
     const request = new AbortController();
     state.request = request;

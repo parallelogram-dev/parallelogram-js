@@ -51,6 +51,57 @@ describe('SelectLoader', () => {
     document.body.replaceChildren();
   });
 
+  it('loads the chosen fragment once the router starts, after mounting without one', async () => {
+    const eventBus = new EventManager();
+    const router = { get: vi.fn(async url => ({ data: `<p>${url}</p>` })) };
+    const { loader, select, target } = mountLoader({ eventBus });
+
+    choose(select, '/fragments/laptop.html');
+    choose(select, '/fragments/phone.html');
+    eventBus.emit('router:initialized', {});
+    loader.router = router;
+
+    await vi.waitFor(() => expect(target.textContent).toBe('/fragments/phone.html'));
+    expect([router.get.mock.calls.length, target.querySelector('.select-loader__error')]).toEqual([
+      1,
+      null,
+    ]);
+  });
+
+  it('does not load when unmounted before the router starts', async () => {
+    const eventBus = new EventManager();
+    const router = { get: vi.fn(async () => ({ data: '<p>Laptop</p>' })) };
+    const { loader, select } = mountLoader({ eventBus });
+
+    choose(select, '/fragments/laptop.html');
+    loader.unmount(select);
+    loader.router = router;
+    eventBus.emit('router:initialized', {});
+    await Promise.resolve();
+
+    expect(router.get).not.toHaveBeenCalled();
+  });
+
+  it('shows an error when there is no router or event bus to wait for', async () => {
+    document.body.innerHTML = `
+      <select data-selectloader data-selectloader-target="#product-details" data-selectloader-transition="none">
+        <option value="">Choose a product</option>
+        <option value="/fragments/laptop.html">Laptop</option>
+      </select>
+      <div id="product-details"></div>`;
+    const select = document.querySelector('select');
+    const target = document.querySelector('#product-details');
+    new SelectLoader().mount(select);
+
+    choose(select, '/fragments/laptop.html');
+
+    await vi.waitFor(() =>
+      expect(target.querySelector('.select-loader__error p')?.textContent).toBe(
+        'RouterManager not available'
+      )
+    );
+  });
+
   it('removes its event bus listener when unmounted', () => {
     const bus = new EventManager();
     const { loader, select } = mountLoader({ eventBus: bus });
