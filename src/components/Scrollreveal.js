@@ -144,6 +144,7 @@ export default class Scrollreveal extends BaseComponent {
       const state = this.getState(element);
       if (!state) continue;
 
+      state.isIntersecting = entry.isIntersecting;
       if (entry.isIntersecting && !state.hasBeenRevealed && !state.isRevealing) {
         if (state.stagger > 0) {
           this._addToRevealQueue(element, state);
@@ -234,6 +235,11 @@ export default class Scrollreveal extends BaseComponent {
       await this._hideItems([element]);
       state.hasBeenRevealed = false;
       this.eventBus?.emit('scrollreveal:hide-complete', { element, timestamp: performance.now() });
+
+      /* The element came back into view while it was hiding */
+      if (state.isIntersecting) {
+        this._handleIntersection([{ target: element, isIntersecting: true }]);
+      }
     } catch (error) {
       this.logger?.error('Scrollreveal hide animation failed', { element, error });
     }
