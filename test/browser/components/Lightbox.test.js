@@ -11,6 +11,8 @@ const WAIT = { timeout: 2500 };
 const overlay = () => document.querySelector('.lightbox__overlay');
 const lightboxState = () => overlay()?.getAttribute('data-lightbox-state');
 const counter = () => overlay()?.querySelector('.lightbox__counter')?.textContent;
+const errorMessage = () => overlay()?.querySelector('.lightbox__error');
+const viewerImage = () => overlay()?.querySelector('.lightbox__image');
 const press = key =>
   (overlay() ?? document).dispatchEvent(
     new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
@@ -94,6 +96,36 @@ describe('Lightbox', () => {
     lightbox.next(links[0]);
     await vi.waitFor(() => expect([counter(), lightboxState()]).toEqual(['3 / 3', 'open']), WAIT);
     expect(overlay().querySelector('.lightbox__image').className).toBe('lightbox__image');
+  });
+
+  it('names the image in a message shown in place of an image that fails to load', async () => {
+    const { links } = mountGallery(['/missing-lightbox-image.png', IMAGE, IMAGE]);
+
+    links[0].click();
+
+    await vi.waitFor(
+      () =>
+        expect([
+          errorMessage()?.hidden,
+          errorMessage()?.textContent,
+          viewerImage()?.hidden,
+        ]).toEqual([false, "Photo 1 couldn't be loaded", true]),
+      WAIT
+    );
+  });
+
+  it('removes the failed image message once the next image loads', async () => {
+    const { lightbox, links } = mountGallery(['/missing-lightbox-image.png', IMAGE, IMAGE]);
+    links[0].click();
+    await vi.waitFor(() => expect(errorMessage()?.hidden).toBe(false), WAIT);
+    await vi.waitFor(() => expect(lightboxState()).toBe('open'), WAIT);
+
+    lightbox.next(links[0]);
+
+    await vi.waitFor(
+      () => expect([errorMessage().hidden, viewerImage().hidden]).toEqual([true, false]),
+      WAIT
+    );
   });
 
   it('does not mount on its own overlay when a page observer mounts components', async () => {
