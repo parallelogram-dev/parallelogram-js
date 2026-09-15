@@ -227,6 +227,9 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
         { name: 'edit-button', description: 'The Edit button' },
         { name: 'dialog', description: 'The edit dialog' },
       ],
+      slots: [
+        { name: '', description: "The <p-uploader-data> elements holding the file's values" },
+      ],
     },
     {
       tag: 'p-uploader-fields',
