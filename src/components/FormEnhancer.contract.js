@@ -1,5 +1,3 @@
-const REMOVED = 'Removed in 0.6.0.';
-
 /** @type {import('../contract.js').ComponentContract} */
 export default {
   name: 'FormEnhancer',
@@ -74,26 +72,6 @@ Each error is written to the form's \`[data-error-for]\` element for that field,
       on: "the element that shows a field's error",
       description: "The field's name",
     },
-    {
-      name: 'data-form-validator',
-      type: 'flag',
-      description: 'The old name for data-form-enhancer',
-      deprecated: `Use data-form-enhancer. ${REMOVED}`,
-    },
-    {
-      name: 'data-validate',
-      type: 'string',
-      on: 'a field',
-      description: 'Rules such as "required|email|min:3"',
-      deprecated: `Use native validation attributes. ${REMOVED}`,
-    },
-    {
-      name: 'data-validate-message',
-      type: 'string',
-      on: 'a field',
-      description: 'The message for data-validate rules',
-      deprecated: `Use data-form-enhancer-message. ${REMOVED}`,
-    },
   ],
   events: [
     {
@@ -113,27 +91,6 @@ Each error is written to the form's \`[data-error-for]\` element for that field,
       channel: 'both',
       detail: '{ element: HTMLFormElement }',
       description: 'Every field passed and the submission goes ahead',
-    },
-    {
-      name: 'form-validator:mounted',
-      channel: 'bus',
-      detail: '{ element: HTMLFormElement; fieldCount: number }',
-      description: 'The old name for form-enhancer:mounted',
-      deprecated: `Listen for form-enhancer:mounted. ${REMOVED}`,
-    },
-    {
-      name: 'form-validator:submit-blocked',
-      channel: 'bus',
-      detail: '{ element: HTMLFormElement; errors: Array<[string, string]> }',
-      description: 'The old name for form-enhancer:submit-blocked',
-      deprecated: `Listen for form-enhancer:submit-blocked. ${REMOVED}`,
-    },
-    {
-      name: 'form-validator:submit-valid',
-      channel: 'bus',
-      detail: '{ element: HTMLFormElement }',
-      description: 'The old name for form-enhancer:submit-valid',
-      deprecated: `Listen for form-enhancer:submit-valid. ${REMOVED}`,
     },
   ],
   examples: [
