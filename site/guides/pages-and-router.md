@@ -26,7 +26,9 @@ app.eventBus.on('router:navigate-end', ({ url, status }) => {
 });
 ```
 
-`app.router`, `app.pageManager` and `app.eventBus` exist once `run()` or `init()` has run. Subscribe to events after that.
+`app.pageManager` and `app.eventBus` exist once `run()` or `init()` has run. Subscribe to events after that.
+
+The router's code is loaded with a dynamic `import()` only when `router` is set, so pages without it don't download it. `app.router` is set once it has loaded and started, before the promise `run()` returns resolves and as `router:initialized` is emitted. Until then, which is only a moment after `init()`, followed links load pages normally. `RouterManager` is still exported from the package root and `@parallelogram-js/core/managers/RouterManager` for creating it yourself.
 
 ### Router options
 

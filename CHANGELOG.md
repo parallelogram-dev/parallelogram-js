@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `Parallelogram` loads `RouterManager` with a dynamic `import()`, and only when `router` options are given, so pages without the router don't download its code. The promise `run()` returns resolves once the router has loaded and started, with `app.router` set. After calling `init()` directly, `app.router` is `null` until then, `router:initialized` is emitted when it starts, and links followed in the meantime load pages normally. Components that mounted before it loaded are given the router. `RouterManager` is still exported from the package root.
 - DeferTracker loads a block's `src`, such as Fathom's or Plausible's custom script address, only from the page's own origin or the vendor's origin the adapter declares; any other `src` marks the block `error` and nothing loads, so a block injected into a page can't load its own script with the site's nonce. To allow a proxy or self-hosted copy on another origin, pass it at registration, such as `registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] })`.
 - The package no longer includes `src`. The development build's source maps embed their sources; the production build's maps name the source files without including them.
 

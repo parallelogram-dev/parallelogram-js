@@ -129,11 +129,8 @@ export class PageManager {
       }
     );
 
-    /* Start loading the swapping code early when navigation is possible */
     if (this.router) {
-      this._loadSwapper().catch(error => {
-        this.logger?.error('Failed to load FragmentSwapper', { error });
-      });
+      this._useRouter(this.router);
     }
 
     /* Initial component mounting */
@@ -142,6 +139,24 @@ export class PageManager {
     this.eventBus.emit('page-manager:initialized', {
       containerSelector: this.containerSelector,
       options: this.options,
+    });
+  }
+
+  /**
+   * Hand the router to components, including those that mounted before it loaded, and start loading
+   * the swapping code now that navigation is possible
+   * @internal
+   * @param {import('./RouterManager.js').RouterManager} router
+   */
+  _useRouter(router) {
+    this.router = router;
+    this.host.router = router;
+    for (const instance of this.host.getInstances().values()) {
+      instance.router ??= router;
+    }
+
+    this._loadSwapper().catch(error => {
+      this.logger?.error('Failed to load FragmentSwapper', { error });
     });
   }
 
