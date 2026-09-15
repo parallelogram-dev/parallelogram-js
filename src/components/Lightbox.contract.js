@@ -43,7 +43,8 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
       type: 'boolean',
       default: true,
       option: 'closeOnEscape',
-      description: 'Close with Escape',
+      description:
+        "Close with Escape. When false, a second Escape without a click or other key press in between still closes the viewer, because browsers don't let a page keep a modal dialog open against it",
     },
     {
       name: 'data-lightbox-close-backdrop',
