@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-15
+
+Fixes from the post-0.5.0 audit, and a clean-up of options and methods that never did anything. The removals below skip the usual deprecation release because none of them had an effect; the deprecated names listed in the upgrade guide still work until 0.6.0.
+
 ### Added
 
 - `CONTRIBUTING.md`, with setup, the conventions the code follows, and how changes are tested and released.
@@ -15,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The README is a short introduction with links to the documentation site and its guides, instead of repeating them. The generated component tables and `npm run readme` are gone.
 - `page:fragments-replaced` no longer has a `duration`, which was always `null` unless performance tracking was on.
+
+### Fixed
+
+- A navigation replaced by a newer one no longer finishes its fragment swap first. PageManager passes the navigation's `signal` to the swap, so the swap stops before changing the page and its result has `aborted: true`, as the guide describes.
+- Components no longer mount after `PageManager.destroy()` or `ComponentHost.stop()` when a fragment swap's `mountDelay` timer fires later. A stopped ComponentHost ignores `mountWithin()` until it starts again.
+- A navigation to an address whose hash names no element in the new page scrolls to the top, instead of keeping the previous page's scroll position.
+- Modal emits `modal:opened` and `modal:closed` once on the event bus, instead of twice. The single event has `element` as well as `trigger` and `modal`.
+- FormEnhancer lets a submit button with `formnovalidate` submit without validating, as the browser does.
+- Tabs nested inside another tab set's panel keep their own panels visible when the outer tabs change.
+- Tab panels and `[data-reveal]` content that the stylesheet hides until Tabs or Scrollreveal mounts are shown again when the component fails to load. They still stay hidden when the component is never registered.
+- The Writing a component guide's CharacterCount example keeps its state attribute after the element is removed and added again, and the events guide's AbortSignal example shows its error message and no longer removes its listeners straight away.
 
 ### Removed
 
