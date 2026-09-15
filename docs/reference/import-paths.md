@@ -1,5 +1,7 @@
 # Import Paths Reference
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 The package name is `@parallelogram-js/core` and all import paths should use this scope.
 
 ## Core Framework

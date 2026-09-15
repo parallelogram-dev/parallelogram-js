@@ -1,5 +1,7 @@
 # State Management Overview - Parallelogram-JS
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 **Status**: ✅ Complete
 **Last Updated**: 2025-11-19
 **Version**: 1.0.0
