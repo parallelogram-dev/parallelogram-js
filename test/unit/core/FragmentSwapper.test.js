@@ -60,6 +60,26 @@ describe('FragmentSwapper', () => {
     );
   });
 
+  it('finishes a navigation with scrolling and transition classes while the tab is hidden', async () => {
+    document.body.innerHTML = '<main data-view="main">Home</main>';
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    vi.stubGlobal('requestAnimationFrame', () => 0);
+    const swapper = new FragmentSwapper({
+      options: { targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in' } } },
+      eventBus: new EventManager(),
+      mountWithin: vi.fn(),
+      unmountWithin: vi.fn(),
+    });
+
+    const swap = swapper.replaceFragments('<main data-view="main">Pricing</main>', {
+      viewTargets: ['main'],
+    });
+
+    await expect(
+      Promise.race([swap.then(() => 'finished'), new Promise(r => setTimeout(r, 500, 'waiting'))])
+    ).resolves.toBe('finished');
+  });
+
   it('moves the parsed content into the fragment without setting its HTML', async () => {
     document.body.innerHTML = '<main data-view="main">Home</main>';
     const setInnerHTML = vi.spyOn(ownerOf(HTMLElement.prototype, 'innerHTML'), 'innerHTML', 'set');
