@@ -31,10 +31,9 @@
   overflow: hidden;
 }
 
-/* Global focus styles for framework components. p-modal hosts carry the deprecated data-modal state
-   copy, so only triggers match. */
+/* Global focus styles for framework components */
 [data-lazysrc],
-[data-modal]:not(p-modal),
+[data-modal],
 [data-lightbox],
 [data-form-enhancer],
 [data-copytoclipboard],
