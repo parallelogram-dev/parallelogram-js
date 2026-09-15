@@ -56,6 +56,7 @@ The old attributes still receive a copy of the state until 0.6.0, so existing st
 - `z-index` no longer affects `<p-modal>`, because nothing on the page sits above the top layer.
 - The `backdrop` part is gone. Style the dimmed page with `p-modal::part(panel)::backdrop`.
 - The `panel` part is now the `<dialog>` itself.
+- With `data-modal-closable="false"`, the modal’s own `data-modal-close` buttons now close it. Escape, the backdrop and its close button still don’t.
 - Setting `modal.open = true` before the element is defined now opens it. `modal.open()`, the `open` attribute and `[data-modal]` triggers work as before.
 
 ## Web component events

@@ -42,8 +42,8 @@ const deepActiveElement = () => {
  * @attributes
  * - open: present while the modal is open; set or remove it, or call open() and close()
  * - data-modal-size: xs | sm | md (default) | lg | xl | fullscreen
- * - data-modal-closable: "false" hides the close button and ignores Escape, the backdrop and
- *   `[data-modal-close]` buttons
+ * - data-modal-closable: "false" hides the close button and ignores Escape and the backdrop;
+ *   `[data-modal-close]` buttons still close the modal
  * - data-modal-backdrop-close: "false" keeps the modal open when the backdrop is clicked
  * - data-modal-keyboard: "false" ignores Escape
  * - data-modal-state: set by the component to closed, opening, open or closing
@@ -128,7 +128,8 @@ export default class PModal extends HTMLElement {
     this.addEventListener(
       'click',
       event => {
-        if (event.target.closest?.('[data-modal-close]') && this._isClosable()) {
+        /* A modal's own close buttons close it even when Escape and the backdrop can't */
+        if (event.target.closest?.('[data-modal-close]')) {
           this.close();
         }
       },
