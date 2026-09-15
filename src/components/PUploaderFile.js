@@ -641,12 +641,7 @@ export class PUploaderFile extends HTMLElement {
     dataElement.textContent = value;
     this._updateFieldDisplay(key, value);
 
-    dispatchComponentEvent(
-      this,
-      'p-uploader-file:update',
-      { fileId, field: key, value },
-      { legacy: 'file:update' }
-    );
+    dispatchComponentEvent(this, 'p-uploader-file:update', { fileId, field: key, value });
   }
 
   async _handleConfirmDelete() {
@@ -675,12 +670,7 @@ export class PUploaderFile extends HTMLElement {
         /* Delete successful, remove the file */
         this._removeFile();
 
-        dispatchComponentEvent(
-          this,
-          'p-uploader-file:delete',
-          { fileId },
-          { legacy: 'file:delete' }
-        );
+        dispatchComponentEvent(this, 'p-uploader-file:delete', { fileId });
       } else {
         /* Delete failed, show error */
         const errorText = await response.text();

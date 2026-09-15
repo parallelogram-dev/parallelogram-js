@@ -231,7 +231,7 @@ describe('BaseComponent', () => {
   });
 
   describe('element state', () => {
-    it('writes state to its own attribute and to the deprecated selector attribute', () => {
+    it('writes state to its state attribute and leaves the selector attribute alone', () => {
       const element = widgetElement();
 
       new Widget().setState(element, 'open');
@@ -239,14 +239,21 @@ describe('BaseComponent', () => {
       expect([
         element.getAttribute('data-widget-state'),
         element.getAttribute('data-widget'),
-      ]).toEqual(['open', 'open']);
+      ]).toEqual(['open', '']);
     });
 
-    it('reads state from the state attribute before the selector attribute', () => {
+    it('reads state from the state attribute', () => {
       const element = widgetElement();
       element.setAttribute('data-widget-state', 'open');
 
       expect(new Widget().getElementState(element)).toBe('open');
+    });
+
+    it('reads no state from the selector attribute alone', () => {
+      const element = widgetElement();
+      element.setAttribute('data-widget', 'open');
+
+      expect(new Widget().getElementState(element)).toBeNull();
     });
   });
 

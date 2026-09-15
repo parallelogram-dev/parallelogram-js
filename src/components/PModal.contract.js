@@ -51,14 +51,6 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       readonly: true,
       description: "The modal's state",
     },
-    {
-      name: 'data-modal',
-      type: 'enum',
-      options: STATES,
-      readonly: true,
-      description: 'A copy of data-modal-state',
-      deprecated: 'Read data-modal-state. Removed in 0.6.0.',
-    },
   ],
   methods: [
     {
@@ -88,18 +80,6 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       name: 'p-modal:close',
       detail: MODAL_DETAIL,
       description: 'The modal has closed; bubbles out of shadow roots',
-    },
-    {
-      name: 'modal:open',
-      detail: MODAL_DETAIL,
-      description: 'The old name for p-modal:open',
-      deprecated: 'Listen for p-modal:open. Removed in 0.6.0.',
-    },
-    {
-      name: 'modal:close',
-      detail: MODAL_DETAIL,
-      description: 'The old name for p-modal:close',
-      deprecated: 'Listen for p-modal:close. Removed in 0.6.0.',
     },
   ],
   slots: [

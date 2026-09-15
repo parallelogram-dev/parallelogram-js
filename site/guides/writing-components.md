@@ -173,16 +173,7 @@ The element doesn't need to be the one the component is mounted on. Toggle, for 
 
 `setState(element, state)` writes `data-<component>-state`, which styles and scripts can read. `getElementState(element)` reads it back.
 
-Until 0.6.0, `setState` also copies the value into `data-<component>` itself, and `getElementState` falls back to that attribute when the state attribute is missing. The copy replaces whatever value `data-<component>` had, so keep configuration out of that attribute's value.
-
-`src/core/ComponentStates.js` defines standard names, which you can import from `@parallelogram-js/core/core/ComponentStates`:
-
-| Export            | Values                                                                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ComponentStates` | `PENDING` (`''`), `INITIALIZING`, `MOUNTED`, `ERROR`, `DESTROYED`                                                                                                                     |
-| `ExtendedStates`  | `LOADING`, `LOADED`, `HIDDEN`, `REVEALING`, `REVEALED`, `OPEN`, `CLOSED`, `OPENING`, `CLOSING`, `PROCESSING`, `COMPLETE`, `VALIDATING`, `VALIDATED`, `PLAYING`, `PAUSED`, `BUFFERING` |
-
-Each value is the lowercase name, such as `'open'`. Your own names are fine too. The state attribute is optional: [CopyToClipboard](copy-to-clipboard.html) writes `data-copytoclipboard-state` with `setAttr()` so it can remove it again.
+Conventional values are `mounted`, `error`, `loading`, `loaded`, `hidden`, `revealed`, `open`, `closed`, `opening`, `closing`, `processing` and `complete`. Your own names are fine too. The state attribute is optional: [CopyToClipboard](copy-to-clipboard.html) writes `data-copytoclipboard-state` with `setAttr()` so it can remove it again.
 
 ### JavaScript state
 

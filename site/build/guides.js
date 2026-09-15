@@ -28,6 +28,7 @@ export const GUIDE_ORDER = [
   'events-and-alerts',
   'trackers',
   'upgrading',
+  'upgrading-from-0-4',
 ];
 
 /**

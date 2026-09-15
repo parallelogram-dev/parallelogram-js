@@ -311,7 +311,7 @@ describe('DeferTracker trackers', () => {
             loader: () => ({ default: DeferTracker }),
           },
         ],
-      });
+      }).start();
       interact();
       await vi.advanceTimersByTimeAsync(0);
       return eventBus;

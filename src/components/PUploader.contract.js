@@ -1,5 +1,3 @@
-const REMOVED = 'Removed in 0.6.0.';
-
 /** @type {import('../contract.js').ComponentContract} */
 export default {
   name: 'PUploader',
@@ -118,24 +116,6 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
       detail: "{ file: File; reason: 'type' | 'size' }",
       description: 'A file was refused; cancel it to show your own message',
     },
-    {
-      name: 'upload:success',
-      detail: '{ fileId: string; response: unknown }',
-      description: 'The old name for p-uploader:upload-success',
-      deprecated: `Listen for p-uploader:upload-success. ${REMOVED}`,
-    },
-    {
-      name: 'upload:error',
-      detail: '{ fileId: string; error: string }',
-      description: 'The old name for p-uploader:upload-error',
-      deprecated: `Listen for p-uploader:upload-error. ${REMOVED}`,
-    },
-    {
-      name: 'sequence:update',
-      detail: '{ sequence: string[] }',
-      description: 'The old name for p-uploader:sequence-update',
-      deprecated: `Listen for p-uploader:sequence-update. ${REMOVED}`,
-    },
   ],
   slots: [
     { name: '', description: 'The <p-uploader-file> elements' },
@@ -202,18 +182,6 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
           name: 'p-uploader-file:delete',
           detail: '{ fileId: string }',
           description: 'The file was deleted',
-        },
-        {
-          name: 'file:update',
-          detail: '{ fileId: string; field: string; value: string }',
-          description: 'The old name for p-uploader-file:update',
-          deprecated: `Listen for p-uploader-file:update. ${REMOVED}`,
-        },
-        {
-          name: 'file:delete',
-          detail: '{ fileId: string }',
-          description: 'The old name for p-uploader-file:delete',
-          deprecated: `Listen for p-uploader-file:delete. ${REMOVED}`,
         },
       ],
       parts: [

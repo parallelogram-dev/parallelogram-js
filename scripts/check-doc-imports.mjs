@@ -132,7 +132,7 @@ function moduleExports(file, seen = new Set()) {
 }
 
 const declarationsFor = file => {
-  const relative = path.relative(dist, file).replace(/^dev[\\/]/, '');
+  const relative = path.relative(dist, file);
   return path.join(dist, 'types', relative.replace(/\.js$/, '.d.ts'));
 };
 

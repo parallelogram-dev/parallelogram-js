@@ -1,5 +1,4 @@
 import styles from '../styles/framework/components/PModal.scss';
-import { ExtendedStates } from '../core/ComponentStates.js';
 import { deepActiveElement, getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
@@ -49,8 +48,6 @@ let lockedOverflow = null;
  * Events bubble out of shadow roots.
  * - p-modal:open: dispatched when the modal opens, with `{ modal }`
  * - p-modal:close: dispatched once the modal has closed, with `{ modal }`
- * - modal:open, modal:close: the same events under their names before 0.5.0; deprecated, and no
- *   longer dispatched from 0.6.0
  *
  * @csspart panel - the `<dialog>`; style the dimmed page with `::part(panel)::backdrop`
  * @csspart header - the title row
@@ -103,7 +100,7 @@ export default class PModal extends HTMLElement {
   connectedCallback() {
     /* Custom element constructors may not add attributes, so the initial state is set here */
     if (!this.hasAttribute('data-modal-state')) {
-      this._setModalState(this.getAttribute('data-modal') || ExtendedStates.CLOSED);
+      this._setModalState('closed');
     }
 
     this._listeners = new AbortController();
@@ -188,13 +185,9 @@ export default class PModal extends HTMLElement {
 
   /**
    * Record the modal's state in `data-modal-state`
-   *
-   * The value is also copied to `data-modal`, which is deprecated and stops in 0.6.0 because it
-   * matches the `[data-modal]` trigger selector.
    */
   _setModalState(value) {
     this.setAttribute('data-modal-state', value);
-    this.setAttribute('data-modal', value);
   }
 
   /**
@@ -211,7 +204,7 @@ export default class PModal extends HTMLElement {
 
     if (this._closing) {
       this._closing = null;
-      this._setModalState(ExtendedStates.OPEN);
+      this._setModalState('open');
       return;
     }
 
@@ -226,13 +219,13 @@ export default class PModal extends HTMLElement {
 
     if (!this._dialog.open) {
       this.removeAttribute('open');
-      this._setModalState(ExtendedStates.CLOSED);
+      this._setModalState('closed');
       return;
     }
 
     const closing = {};
     this._closing = closing;
-    this._setModalState(ExtendedStates.CLOSING);
+    this._setModalState('closing');
 
     whenAnimationsFinish(this._dialog).then(() => {
       if (this._closing === closing) {
@@ -275,17 +268,17 @@ export default class PModal extends HTMLElement {
     this._pendingReturnFocus = undefined;
     this._closeButton.hidden = !this._isClosable();
     this._updateName();
-    this._setModalState(ExtendedStates.OPENING);
+    this._setModalState('opening');
 
     this._dialog.showModal();
     this._hold();
     this._focusInitial();
 
-    dispatchComponentEvent(this, 'p-modal:open', { modal: this }, { legacy: 'modal:open' });
+    dispatchComponentEvent(this, 'p-modal:open', { modal: this });
 
     whenAnimationsFinish(this._dialog).then(() => {
       if (this.hasAttribute('open') && !this._closing) {
-        this._setModalState(ExtendedStates.OPEN);
+        this._setModalState('open');
       }
     });
   }
@@ -295,7 +288,7 @@ export default class PModal extends HTMLElement {
     if (this._dialog.open) {
       this._dialog.close();
     }
-    this._setModalState(ExtendedStates.CLOSED);
+    this._setModalState('closed');
 
     const returnFocus = this._resolveReturnFocus(this._returnFocus);
     this._lastReturnFocus = this._returnFocus;
@@ -308,7 +301,7 @@ export default class PModal extends HTMLElement {
       topModal._focusInitial();
     }
 
-    dispatchComponentEvent(this, 'p-modal:close', { modal: this }, { legacy: 'modal:close' });
+    dispatchComponentEvent(this, 'p-modal:close', { modal: this });
   }
 
   /**

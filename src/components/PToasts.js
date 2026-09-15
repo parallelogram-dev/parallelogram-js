@@ -40,8 +40,6 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * Events bubble out of shadow roots.
  * - p-toasts:show: with `{ id, type, message }`
  * - p-toasts:close: with `{ id, type, message }`
- * - toast:show, toast:close: the same events under their names before 0.5.0; deprecated, and no
- *   longer dispatched from 0.6.0
  *
  * @csspart stack - the element holding the toasts
  * @csspart toast - each toast
@@ -170,7 +168,7 @@ export default class PToasts extends HTMLElement {
     const spoken = title ? `${title}: ${messageElement.textContent}` : messageElement.textContent;
     this._announce(spoken, ASSERTIVE_TYPES.has(type));
 
-    dispatchComponentEvent(this, 'p-toasts:show', { id, type, message }, { legacy: 'toast:show' });
+    dispatchComponentEvent(this, 'p-toasts:show', { id, type, message });
 
     return entry.dismiss;
   }
@@ -184,12 +182,11 @@ export default class PToasts extends HTMLElement {
     entry.element.setAttribute('data-state', 'leaving');
     whenAnimationsFinish(entry.element).then(() => entry.element.remove());
 
-    dispatchComponentEvent(
-      this,
-      'p-toasts:close',
-      { id, type: entry.type, message: entry.message },
-      { legacy: 'toast:close' }
-    );
+    dispatchComponentEvent(this, 'p-toasts:close', {
+      id,
+      type: entry.type,
+      message: entry.message,
+    });
   }
 
   _startTimer(entry) {

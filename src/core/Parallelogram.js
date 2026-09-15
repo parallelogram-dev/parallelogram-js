@@ -35,7 +35,6 @@ import { ComponentRegistry } from './ComponentRegistry.js';
 import { DevLogger } from './DevLogger.js';
 import { WebComponentLoader } from './WebComponentLoader.js';
 import { EventManager } from '../managers/EventManager.js';
-import { RouterManager } from '../managers/RouterManager.js';
 import { PageManager } from '../managers/PageManager.js';
 
 /**
@@ -92,7 +91,10 @@ export class Parallelogram {
     /* Core instances (will be initialized in init()) */
     this.logger = null;
     this.eventBus = null;
+    /** @type {import('../managers/RouterManager.js').RouterManager | null} */
     this.router = null;
+    /** @internal @type {Promise<Parallelogram> | null} */
+    this._routerReady = null;
     this.pageManager = null;
     /** @type {import('./ComponentHost.js').RegistryEntry[] | null} */
     this.componentRegistry = null;
@@ -108,21 +110,22 @@ export class Parallelogram {
   /**
    * Smart initialization - runs immediately if DOM ready, otherwise waits
    * Handles async/defer script loading correctly
-   * @returns {Promise<Parallelogram>}
+   * @returns {Promise<Parallelogram>} Resolves once the framework has started, and the router has
+   *   loaded when `router` options are given
    */
   run() {
     /* Check if DOM is already ready */
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       /* DOM is ready, initialize immediately */
       this.init();
-      return Promise.resolve(this);
+      return this._routerReady ?? Promise.resolve(this);
     }
 
     /* DOM not ready yet, wait for DOMContentLoaded */
     return new Promise(resolve => {
       document.addEventListener('DOMContentLoaded', () => {
         this.init();
-        resolve(this);
+        resolve(this._routerReady ?? this);
       });
     });
   }
@@ -156,13 +159,10 @@ export class Parallelogram {
     });
     this.componentRegistry = registry.build();
 
-    /* Create router if configured */
+    /* The router loads on demand, so pages without one don't download it. Links load pages
+       normally until it is ready. */
     if (this.config.router) {
-      this.router = new RouterManager({
-        eventBus: this.eventBus,
-        logger: this.logger,
-        options: this.config.router,
-      });
+      this._routerReady = this._loadRouter();
     }
 
     /* Create page manager */
@@ -174,7 +174,7 @@ export class Parallelogram {
       router: this.router,
       options: { observeRoot: document.body, ...this.config.pageManager },
     };
-    this.pageManager = new PageManager(pageManagerConfig);
+    this.pageManager = new PageManager(pageManagerConfig).start();
 
     /* Create web component loader */
     const webComponentMap = {};
@@ -204,6 +204,33 @@ export class Parallelogram {
   }
 
   /**
+   * Load the router, then start it and give it to the page manager, unless the framework was
+   * destroyed first
+   * @internal
+   * @returns {Promise<Parallelogram>}
+   */
+  _loadRouter() {
+    const ready = import('../managers/RouterManager.js').then(
+      ({ RouterManager }) => {
+        if (this._routerReady === ready) {
+          this.router = new RouterManager({
+            eventBus: this.eventBus,
+            logger: this.logger,
+            options: this.config.router,
+          });
+          this.pageManager._useRouter(this.router);
+        }
+        return this;
+      },
+      error => {
+        this.logger?.error('Failed to load the router; links load pages normally', { error });
+        return this;
+      }
+    );
+    return ready;
+  }
+
+  /**
    * Destroy the framework and clean up resources
    */
   destroy() {
@@ -212,6 +239,9 @@ export class Parallelogram {
     }
 
     this.logger?.info('Parallelogram destroying');
+
+    /* A router still loading is not started */
+    this._routerReady = null;
 
     /* Clean up web component loader */
     if (this.webComponentLoader) {

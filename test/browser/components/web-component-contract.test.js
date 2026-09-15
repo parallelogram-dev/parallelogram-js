@@ -47,16 +47,6 @@ describe('web component contract', () => {
     expect(events).toEqual(['p-modal:open', 'p-modal:close']);
   });
 
-  it('p-modal still dispatches modal:open and modal:close until 0.6.0', () => {
-    const modal = document.body.appendChild(document.createElement('p-modal'));
-    const events = heard(modal, ['p-modal:open', 'modal:open', 'p-modal:close', 'modal:close']);
-
-    modal.open();
-    modal.removeAttribute('open');
-
-    expect(events).toEqual(['p-modal:open', 'modal:open', 'p-modal:close', 'modal:close']);
-  });
-
   it('p-modal opens when open was set as a property before it was defined', () => {
     const template = document.createElement('template');
     template.innerHTML = '<p-modal></p-modal>';
@@ -75,15 +65,6 @@ describe('web component contract', () => {
     host.toast({ message: 'Saved', timeout: 0 })();
 
     expect(events).toEqual(['p-toasts:show', 'p-toasts:close']);
-  });
-
-  it('p-toasts still dispatches toast:show and toast:close until 0.6.0', () => {
-    const host = document.body.appendChild(document.createElement('p-toasts'));
-    const events = heard(host, ['p-toasts:show', 'toast:show', 'p-toasts:close', 'toast:close']);
-
-    host.toast({ message: 'Saved', timeout: 0 })();
-
-    expect(events).toEqual(['p-toasts:show', 'toast:show', 'p-toasts:close', 'toast:close']);
   });
 
   it('p-select announces opening and closing to the page from inside a shadow root', () => {

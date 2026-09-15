@@ -291,6 +291,68 @@ describe('p-datetime', () => {
       expect([data.get('checkIn'), data.get('checkOut')]).toEqual(['2025-03-10', '2025-03-14']);
     });
 
+    const chooseTime = (picker, hour, minute) => {
+      shadow(picker, '[data-datetime-hour]').value = String(hour);
+      shadow(picker, '[data-datetime-minute]').value = String(minute);
+      shadow(picker, '[data-datetime-minute]').dispatchEvent(new Event('change'));
+    };
+
+    it('stores and submits a picked date and time as the local yyyy-mm-ddThh:mm', () => {
+      const { form, picker } = renderForm(
+        '<p-datetime name="starts" mode="datetime" value="2024-01-15T08:00"></p-datetime>'
+      );
+      picker.open();
+
+      shadow(picker, '[data-date="2024-01-16"]').click();
+      chooseTime(picker, 9, 30);
+
+      expect([picker.value, new FormData(form).get('starts')]).toEqual([
+        '2024-01-16T09:30',
+        '2024-01-16T09:30',
+      ]);
+    });
+
+    it('stores and submits a picked time as hh:mm', () => {
+      const { form, picker } = renderForm('<p-datetime name="opens" mode="time"></p-datetime>');
+      picker.open();
+
+      chooseTime(picker, 9, 30);
+
+      expect([picker.value, new FormData(form).get('opens')]).toEqual(['09:30', '09:30']);
+    });
+
+    it('submits both ends of a datetime range as local dates and times', () => {
+      const { form, picker } = renderForm(
+        '<p-datetime name="starts" range range-to="ends" mode="datetime" value="2024-01-08T09:00"></p-datetime>'
+      );
+      picker.open();
+
+      shadow(picker, '[data-date="2024-01-10"]').click();
+      shadow(picker, '[data-date="2024-01-12"]').click();
+      chooseTime(picker, 17, 15);
+
+      const data = new FormData(form);
+      expect([data.get('starts'), data.get('ends')]).toEqual([
+        '2024-01-10T09:00',
+        '2024-01-12T17:15',
+      ]);
+    });
+
+    it('reads an ISO instant as the local date and time it stands for', () => {
+      const instant = '2024-01-15T22:30:00.000Z';
+      const date = new Date(instant);
+      const pad = number => String(number).padStart(2, '0');
+      const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      const local = `${localDate(instant)}T${time}`;
+      const { form } = renderForm(
+        `<p-datetime name="starts" mode="datetime" value="${instant}"></p-datetime>
+         <p-datetime name="opens" mode="time" value="${instant}"></p-datetime>`
+      );
+
+      const data = new FormData(form);
+      expect([data.get('starts'), data.get('opens')]).toEqual([local, time]);
+    });
+
     it('shows a yyyy-mm-dd value as that calendar date', () => {
       const { picker } = renderForm(
         '<p-datetime name="eventDate" mode="date" value="2024-01-15"></p-datetime>'

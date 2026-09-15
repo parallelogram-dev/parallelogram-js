@@ -78,17 +78,14 @@ export class CopyToClipboard extends BaseComponent {
 
   /**
    * Resolve what to copy at click time.
-   *
-   * The legacy data-copy-text and data-copy-target spellings are still read
-   * so markup written against earlier releases keeps working.
    */
   _getTarget(element) {
-    const text = this.getAttr(element, 'text') ?? element.getAttribute('data-copy-text');
+    const text = this.getAttr(element, 'text');
     if (text) {
       return { type: 'text', content: text };
     }
 
-    const selector = this.getAttr(element, 'target') ?? element.getAttribute('data-copy-target');
+    const selector = this.getAttr(element, 'target');
     const targetElement = selector ? document.querySelector(selector) : null;
     if (targetElement) {
       return { type: 'element', element: targetElement };

@@ -396,7 +396,7 @@ describe('p-uploader host', () => {
     await expect(uploaded).resolves.toEqual([true, { id: 'server-1' }]);
   });
 
-  it('still dispatches upload:success after p-uploader:upload-success until 0.6.0', async () => {
+  it('no longer dispatches the removed upload:success alias', async () => {
     const uploader = await renderUploader({ 'upload-action': '/api/upload' });
     const events = [];
     for (const type of ['p-uploader:upload-success', 'upload:success']) {
@@ -405,7 +405,7 @@ describe('p-uploader host', () => {
 
     addFiles(uploader, [new File(['hello'], 'notes.txt', { type: 'text/plain' })]);
 
-    await vi.waitFor(() => expect(events).toEqual(['p-uploader:upload-success', 'upload:success']));
+    await vi.waitFor(() => expect(events).toEqual(['p-uploader:upload-success']));
   });
 
   it('restores the original order when saving a new order fails', async () => {

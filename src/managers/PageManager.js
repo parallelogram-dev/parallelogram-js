@@ -90,14 +90,29 @@ export class PageManager {
       maxRetryAttempts: this.options.retryFailedLoads ? this.options.maxRetryAttempts : 0,
     });
 
-    this._initialize();
+    this._listeners = new AbortController();
+    this._started = false;
   }
 
   /**
-   * Initialize the PageManager with event listeners
+   * Handle router navigations, mount components in the observed root and start watching it
+   *
+   * The constructor has no side effects, so call this once the manager is created;
+   * `Parallelogram.create()` calls it for you. Calling it again does nothing. A destroyed manager
+   * can't be started again: it logs a warning and does nothing, so create a new one instead.
+   *
+   * @returns {PageManager}
    */
-  _initialize() {
-    this._listeners = new AbortController();
+  start() {
+    if (this._listeners.signal.aborted) {
+      this.logger?.warn('PageManager was destroyed and cannot start again');
+      return this;
+    }
+    if (this._started) {
+      this.logger?.warn('PageManager has already started');
+      return this;
+    }
+    this._started = true;
 
     this.logger?.info('PageManager initializing', {
       containerSelector: this.containerSelector,
@@ -129,11 +144,8 @@ export class PageManager {
       }
     );
 
-    /* Start loading the swapping code early when navigation is possible */
     if (this.router) {
-      this._loadSwapper().catch(error => {
-        this.logger?.error('Failed to load FragmentSwapper', { error });
-      });
+      this._useRouter(this.router);
     }
 
     /* Initial component mounting */
@@ -142,6 +154,26 @@ export class PageManager {
     this.eventBus.emit('page-manager:initialized', {
       containerSelector: this.containerSelector,
       options: this.options,
+    });
+
+    return this;
+  }
+
+  /**
+   * Hand the router to components, including those that mounted before it loaded, and start loading
+   * the swapping code now that navigation is possible
+   * @internal
+   * @param {import('./RouterManager.js').RouterManager} router
+   */
+  _useRouter(router) {
+    this.router = router;
+    this.host.router = router;
+    for (const instance of this.host.getInstances().values()) {
+      instance.router ??= router;
+    }
+
+    this._loadSwapper().catch(error => {
+      this.logger?.error('Failed to load FragmentSwapper', { error });
     });
   }
 
@@ -366,7 +398,7 @@ export class PageManager {
   }
 
   /**
-   * Clean up resources
+   * Unmount every component and stop handling navigations, whether or not the manager started
    */
   destroy() {
     this.logger?.info('PageManager destroying');
@@ -375,7 +407,7 @@ export class PageManager {
     this.host.stop();
 
     /* Remove event bus listeners */
-    this._listeners?.abort();
+    this._listeners.abort();
 
     this.eventBus.emit('page-manager:destroyed', {});
 
