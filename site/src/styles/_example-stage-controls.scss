@@ -1,0 +1,33 @@
+/* Demo styling for plain buttons and form fields in documentation examples. It loads before the
+   framework styles and sits inside :where(), so component styles always win, such as DataTable's
+   current page and sort buttons. */
+:where(.example__stage) {
+  :where(button) {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #c3c9d4;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2430;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  :where(button:hover) {
+    border-color: #4453c4;
+  }
+
+  :where(.form input) {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #c3c9d4;
+    border-radius: 6px;
+    font: inherit;
+  }
+
+  :where(.form input.is-invalid) {
+    border-color: #b42318;
+  }
+
+  :where(.form button) {
+    justify-self: start;
+  }
+}
