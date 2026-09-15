@@ -135,6 +135,66 @@ describe('DeferTracker trackers', () => {
     expect([boot.mock.calls.length, statusOf(repeat)]).toEqual([1, 'duplicate']);
   });
 
+  describe('with a second, different block for a tracker on the page', () => {
+    afterEach(() => {
+      window.happyDOM.settings.handleDisabledFileLoadingAsSuccess = false;
+      delete window.gtag;
+      delete window.dataLayer;
+      document.head.replaceChildren();
+    });
+
+    it('sends a Google Ads conversion beside a remarketing block with the same id', async () => {
+      window.happyDOM.settings.handleDisabledFileLoadingAsSuccess = true;
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const { default: googleAds } = await import('../../../src/adapters/google-ads.js');
+      registerTrackerAdapter('google-ads', googleAds);
+      const tracker = new DeferTracker();
+      tracker.mount(block('google-ads', { id: 'AW-1' }));
+      const confirmation = block('google-ads', { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } });
+      tracker.mount(confirmation);
+
+      interact();
+      await vi.advanceTimersByTimeAsync(0);
+
+      const conversions = window.dataLayer.filter(entry => entry[1] === 'conversion');
+      expect([conversions.length, statusOf(confirmation)]).toEqual([1, 'booted']);
+    });
+  });
+
+  it('marks a repeated block as a duplicate even when the adapter handles second blocks', async () => {
+    const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+    const boot = vi.fn();
+    boot.block = vi.fn();
+    registerTrackerAdapter('google-ads', boot);
+    const tracker = new DeferTracker();
+    tracker.mount(block('google-ads', { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } }));
+    const repeat = block('google-ads', { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } });
+    tracker.mount(repeat);
+
+    interact();
+
+    expect([boot.block.mock.calls.length, statusOf(repeat)]).toEqual([0, 'duplicate']);
+  });
+
+  it('marks a different block for the same tracker as a duplicate without recording another page view', async () => {
+    const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+    const boot = vi.fn();
+    boot.page = vi.fn();
+    registerTrackerAdapter('pinterest-tag', boot);
+    const tracker = new DeferTracker();
+    tracker.mount(block('pinterest-tag', { id: '26123' }));
+    const second = block('pinterest-tag', { id: '26123', em: 'hashed' });
+    tracker.mount(second);
+
+    interact();
+
+    expect([boot.mock.calls.length, boot.page.mock.calls.length, statusOf(second)]).toEqual([
+      1,
+      0,
+      'duplicate',
+    ]);
+  });
+
   it("runs the adapter's page step when the router shows a new page", async () => {
     const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
     const { EventManager } = await import('../../../src/managers/EventManager.js');

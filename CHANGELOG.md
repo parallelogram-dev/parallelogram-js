@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- DeferTracker passes a second block for a tracker already on the page to the adapter's new optional `block(config, ctx)` step when its config differs from the blocks there, instead of marking it `duplicate`. A Google Ads conversion block on an order confirmation page is now sent when the layout also has a remarketing block with the same id. Identical blocks, and blocks for adapters without a `block` step, such as Pinterest and HubSpot, are still marked `duplicate`, so page views aren't counted twice.
+
 ## [0.5.2] - 2026-09-15
 
 ### Added
