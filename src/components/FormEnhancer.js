@@ -21,37 +21,10 @@ const tokens = value =>
 
 const kebab = name => name.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 
-const isCheckable = field => field.type === 'checkbox' || field.type === 'radio';
-
 /** Submit buttons report willValidate too, but they have no value to check */
 const BUTTON_TYPES = new Set(['submit', 'reset', 'button', 'image']);
 
 const isValidated = field => field.willValidate === true && !BUTTON_TYPES.has(field.type);
-
-/** The deprecated `data-validate` rules, kept until 0.6.0 */
-const LEGACY_RULES = {
-  required: field => (isCheckable(field) ? field.checked : field.value.trim().length > 0),
-  email: field => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value),
-  min: (field, param) => field.value.length >= Number.parseInt(param, 10),
-  max: (field, param) => field.value.length <= Number.parseInt(param, 10),
-  minnum: (field, param) => Number.parseFloat(field.value) >= Number.parseFloat(param),
-  maxnum: (field, param) => Number.parseFloat(field.value) <= Number.parseFloat(param),
-  number: field => Number.isFinite(Number(field.value)),
-  url: field => URL.canParse(field.value),
-  pattern: (field, param) => new RegExp(param).test(field.value),
-};
-
-const LEGACY_MESSAGES = {
-  required: () => 'This field is required',
-  email: () => 'Please enter a valid email address',
-  min: param => `Minimum ${param} characters required`,
-  max: param => `Maximum ${param} characters allowed`,
-  minnum: param => `Value must be at least ${param}`,
-  maxnum: param => `Value must be no more than ${param}`,
-  number: () => 'Please enter a valid number',
-  url: () => 'Please enter a valid URL',
-  pattern: () => 'Invalid format',
-};
 
 /**
  * FormEnhancer - accessible error messages for the browser's own form validation
@@ -94,7 +67,6 @@ const LEGACY_MESSAGES = {
  *   -too-short, -too-long, -range-underflow, -range-overflow, -step-mismatch: on a field, the message
  *   for one constraint
  * - data-error-for: on the element that shows a field's error, set to the field's name
- * - data-form-validator, data-validate, data-validate-message: deprecated, removed in 0.6.0
  *
  * @events
  * - form-enhancer:mounted: with `{ element, fieldCount }`
@@ -135,18 +107,6 @@ export class FormEnhancer extends BaseComponent {
     state.timers = new Map();
     state.created = new Set();
 
-    if (
-      !element.hasAttribute('data-form-enhancer') &&
-      element.hasAttribute('data-form-validator')
-    ) {
-      this.logger?.warn('data-form-validator is deprecated; use data-form-enhancer', { element });
-    }
-    if (element.querySelector('[data-validate]')) {
-      this.logger?.warn('data-validate is deprecated; use native constraint attributes', {
-        element,
-      });
-    }
-
     element.noValidate = true;
     element.addEventListener('submit', event => this._onSubmit(element, state, event), { signal });
     element.addEventListener('input', event => this._onEdit(element, state, event), { signal });
@@ -164,7 +124,6 @@ export class FormEnhancer extends BaseComponent {
 
     const fieldCount = this._groups(element).size;
     this._dispatch(element, 'form-enhancer:mounted', { element, fieldCount });
-    this.eventBus?.emit('form-validator:mounted', { element, fieldCount });
     return state;
   }
 
@@ -241,7 +200,6 @@ export class FormEnhancer extends BaseComponent {
 
     if (errors.length === 0) {
       this._dispatch(form, 'form-enhancer:submit-valid', { element: form });
-      this.eventBus?.emit('form-validator:submit-valid', { element: form });
       return;
     }
 
@@ -253,7 +211,6 @@ export class FormEnhancer extends BaseComponent {
     firstInvalid?.focus();
 
     this._dispatch(form, 'form-enhancer:submit-blocked', { element: form, errors });
-    this.eventBus?.emit('form-validator:submit-blocked', { element: form, errors });
   }
 
   /**
@@ -287,7 +244,6 @@ export class FormEnhancer extends BaseComponent {
     let message = '';
 
     for (const field of fields) {
-      this._applyLegacyRules(field);
       if (field.validity?.valid === false) {
         invalid.add(field);
         message ||= this._messageFor(field);
@@ -333,39 +289,6 @@ export class FormEnhancer extends BaseComponent {
       field.validationMessage ||
       'Please check this field'
     );
-  }
-
-  /**
-   * Turn a field's deprecated `data-validate` rules into a custom validity message
-   *
-   * Rules other than `required` pass when the field is empty, so optional fields can be left blank.
-   */
-  _applyLegacyRules(field) {
-    const rules = field.getAttribute('data-validate');
-    if (rules === null) return;
-
-    const empty = isCheckable(field) ? !field.checked : field.value.trim() === '';
-    let failure = null;
-
-    for (const rule of rules.split('|')) {
-      const [name, ...rest] = rule.split(':');
-      const param = rest.join(':');
-      const check = LEGACY_RULES[name];
-      if (!check || (empty && name !== 'required')) continue;
-
-      let passes;
-      try {
-        passes = check(field, param);
-      } catch {
-        passes = true;
-      }
-      if (!passes) {
-        failure = field.getAttribute('data-validate-message') || LEGACY_MESSAGES[name](param);
-        break;
-      }
-    }
-
-    field.setCustomValidity(failure ?? '');
   }
 
   /**
@@ -424,7 +347,6 @@ export class FormEnhancer extends BaseComponent {
         field.removeAttribute('aria-invalid');
         field.classList.remove(...tokens(errorClass), ...tokens(validClass));
         if (container) this._describe(field, container, false);
-        if (field.hasAttribute('data-validate')) field.setCustomValidity('');
       }
       if (container) {
         container.textContent = '';
@@ -461,7 +383,7 @@ export class FormEnhancer extends BaseComponent {
     return state ? Array.from(state.errors.entries()) : [];
   }
 
-  static enhanceAll(selector = '[data-form-enhancer], [data-form-validator]', options) {
+  static enhanceAll(selector = '[data-form-enhancer]', options) {
     const instance = new FormEnhancer(options);
     document.querySelectorAll(selector).forEach(el => instance.mount(el));
     return instance;

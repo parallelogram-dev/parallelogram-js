@@ -66,18 +66,6 @@ export default {
       readonly: true,
       description: 'The result of the last copy, until the label returns',
     },
-    {
-      name: 'data-copy-target',
-      type: 'selector',
-      description: 'The old name for data-copytoclipboard-target',
-      deprecated: 'Use data-copytoclipboard-target. Removed in 0.6.0.',
-    },
-    {
-      name: 'data-copy-text',
-      type: 'string',
-      description: 'The old name for data-copytoclipboard-text',
-      deprecated: 'Use data-copytoclipboard-text. Removed in 0.6.0.',
-    },
   ],
   events: [
     {

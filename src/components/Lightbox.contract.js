@@ -113,11 +113,6 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
     classAttribute('content-class', 'contentClass', 'lightbox__content', 'Class on the image area'),
     classAttribute('image-class', 'imageClass', 'lightbox__image', 'Class on the image'),
     classAttribute('counter-class', 'counterClass', 'lightbox__counter', 'Class on the counter'),
-    {
-      ...classAttribute('state-closed-class', 'stateClosedClass', 'is-closed', 'Never applied'),
-      deprecated:
-        'The viewer is removed when it closes, so the class is never applied; listen for lightbox:closed instead. Removed in 0.6.0.',
-    },
     classAttribute(
       'state-opening-class',
       'stateOpeningClass',

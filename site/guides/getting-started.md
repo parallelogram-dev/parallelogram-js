@@ -48,10 +48,6 @@ The production build differs from the development build in these ways:
 
 Both builds include source maps. Because the production build has no debug calls, `debug: true` only shows the framework's debug output in the development build. Your own calls to `app.logger.info()` are not removed.
 
-### Deprecated `dev/*` paths
-
-`@parallelogram-js/core/dev/components/*`, `dev/core/*` and `dev/adapters/*` load the development build directly. They are deprecated and removed in 0.6.0. Use the normal paths with the `development` export condition.
-
 ## Start the framework
 
 Create an instance with `Parallelogram.create()`, register components, then call `run()`.
@@ -91,11 +87,11 @@ Two PageManager options affect loading on every page:
 
 ### `run()` and `init()`
 
-`init()` creates the logger, event bus, router, page manager and web component loader, mounts components already on the page and starts watching it. It returns the instance. Calling it a second time logs a warning and does nothing else.
+`init()` creates the logger, event bus, page manager and web component loader, starts loading the router when `router` is set, mounts components already on the page and starts watching it. It returns the instance. Calling it a second time logs a warning and does nothing else.
 
 `run()` calls `init()` at the right moment. If the document has finished parsing, it calls `init()` straight away and returns a promise that resolves with the instance. Otherwise it waits for `DOMContentLoaded` first. Use `run()` unless you know the DOM is ready, for example in a script that runs after the markup.
 
-The promise resolves once the framework has started, not once components have loaded. Component modules load in the background.
+The promise resolves once the framework has started, not once components have loaded. Component modules load in the background. With `router` set, the router's code loads on demand, so pages without it don't download it, and the promise resolves once the router has loaded and started. After calling `init()` directly, `app.router` stays `null` until then; `router:initialized` is emitted on the event bus when it starts. Links followed before that load pages normally.
 
 ### `destroy()` and `isInitialized`
 
@@ -108,7 +104,7 @@ After `init()`, the instance exposes the parts it created. They are `null` befor
 | Property                 | What it is                                                                           |
 | ------------------------ | ------------------------------------------------------------------------------------ |
 | `app.eventBus`           | The `EventManager` components and managers communicate through                       |
-| `app.router`             | The `RouterManager`, or `null` when `router` isn't set                               |
+| `app.router`             | The `RouterManager` once it has loaded, or `null` when `router` isn't set            |
 | `app.pageManager`        | The `PageManager`, which mounts components through `app.pageManager.host`            |
 | `app.logger`             | The `DevLogger`, which prefixes messages with `[parallelogram]`                      |
 | `app.webComponentLoader` | The `WebComponentLoader` that loads web components                                   |
@@ -374,5 +370,6 @@ Module scripts are deferred, so `run()` starts the framework once the document h
 - [Pages and the router](pages-and-router.html): swapping pages in place, fragments, scrolling and focus.
 - [Writing components](writing-components.html): building your own enhancement components on `BaseComponent`.
 - [Events and alerts](events-and-alerts.html): the event bus and the events components emit.
-- [Upgrading from 0.4 to 0.5](upgrading.html): changes to imports, markup and events.
+- [Upgrading from 0.5 to 0.6](upgrading.html): removed names and what replaces them.
+- [Upgrading from 0.4 to 0.5](upgrading-from-0-4.html): changes to imports, markup and events.
 - Component pages, with attributes, events and live examples: [Toggle](toggle.html), [Tabs](tabs.html), [Modal](modal.html) and [`<p-modal>`](p-modal.html).

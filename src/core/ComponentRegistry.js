@@ -48,19 +48,6 @@ export class ComponentRegistry {
   }
 
   /**
-   * Convert string to PascalCase
-   * @private
-   * @param {string} str - Input string
-   * @returns {string} PascalCase string
-   */
-  toPascalCase(str) {
-    return str
-      .split(/[-_\s]+/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
-  }
-
-  /**
    * Get the built registry array
    * @returns {Array} Component registry configuration
    */
@@ -94,109 +81,6 @@ export class ComponentRegistry {
       priorities,
       withDependencies,
     };
-  }
-
-  /**
-   * Validate the registry for circular dependencies and missing dependencies
-   * @returns {Object} Validation result
-   */
-  validate() {
-    const componentNames = new Set(this.registry.map(comp => comp.name));
-    const errors = [];
-    const warnings = [];
-
-    /* Check for missing dependencies */
-    this.registry.forEach(comp => {
-      if (comp.dependsOn) {
-        comp.dependsOn.forEach(dep => {
-          if (!componentNames.has(dep)) {
-            errors.push(
-              `Component '${comp.name}' depends on '${dep}' which is not in the registry`
-            );
-          }
-        });
-      }
-    });
-
-    /* Check for circular dependencies (simplified check) */
-    const hasCycles = this.detectCycles();
-    if (hasCycles.length > 0) {
-      errors.push(`Circular dependencies detected: ${hasCycles.join(', ')}`);
-    }
-
-    /* Check for duplicate selectors */
-    const selectors = new Map();
-    this.registry.forEach(comp => {
-      if (selectors.has(comp.selector)) {
-        warnings.push(
-          `Duplicate selector '${comp.selector}' used by '${comp.name}' and '${selectors.get(comp.selector)}'`
-        );
-      } else {
-        selectors.set(comp.selector, comp.name);
-      }
-    });
-
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings,
-    };
-  }
-
-  /**
-   * Detect circular dependencies
-   * @private
-   * @returns {Array} Component names involved in cycles
-   */
-  detectCycles() {
-    const visited = new Set();
-    const recursionStack = new Set();
-    const cycles = [];
-
-    const visit = (componentName, path = []) => {
-      if (recursionStack.has(componentName)) {
-        const cycleStart = path.indexOf(componentName);
-        cycles.push(path.slice(cycleStart).concat(componentName).join(' -> '));
-        return;
-      }
-
-      if (visited.has(componentName)) {
-        return;
-      }
-
-      visited.add(componentName);
-      recursionStack.add(componentName);
-
-      const component = this.registry.find(comp => comp.name === componentName);
-      if (component?.dependsOn) {
-        component.dependsOn.forEach(dep => {
-          visit(dep, [...path, componentName]);
-        });
-      }
-
-      recursionStack.delete(componentName);
-    };
-
-    this.registry.forEach(comp => {
-      if (!visited.has(comp.name)) {
-        visit(comp.name);
-      }
-    });
-
-    return cycles;
-  }
-
-  /**
-   * Create a new, empty registry with this registry's configuration, overridden by the given options
-   * @param {Object} [options={}] - Configuration options to override
-   * @param {string} [options.defaultPriority] - Default priority for components
-   * @returns {ComponentRegistry} New registry instance
-   */
-  fork(options = {}) {
-    return new ComponentRegistry({
-      defaultPriority: this.defaultPriority,
-      ...options,
-    });
   }
 
   /**

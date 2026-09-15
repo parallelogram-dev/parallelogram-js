@@ -26,7 +26,9 @@ app.eventBus.on('router:navigate-end', ({ url, status }) => {
 });
 ```
 
-`app.router`, `app.pageManager` and `app.eventBus` exist once `run()` or `init()` has run. Subscribe to events after that.
+`app.pageManager` and `app.eventBus` exist once `run()` or `init()` has run. Subscribe to events after that.
+
+The router's code is loaded with a dynamic `import()` only when `router` is set, so pages without it don't download it. `app.router` is set once it has loaded and started, before the promise `run()` returns resolves and as `router:initialized` is emitted. Until then, which is only a moment after `init()`, followed links load pages normally. `RouterManager` is still exported from the package root and `@parallelogram-js/core/managers/RouterManager` for creating it yourself.
 
 ### Router options
 
@@ -90,9 +92,12 @@ const pageManager = new PageManager({
   ],
   options: { targetGroups: { main: ['navbar', 'main'] } },
 });
+pageManager.start();
 ```
 
-Both constructors also take a `logger`. Each manager has a `destroy()` method: the router removes its listeners, cancels the navigation in progress and gives scroll restoration back to the browser, and the page manager unmounts every component and stops handling navigations.
+Constructing a `PageManager` does nothing to the page. `pageManager.start()` handles router navigations, mounts components in the observed root and starts watching it for changes. Calling it again does nothing, and a destroyed page manager can't be started again.
+
+Both constructors also take a `logger`. Each manager has a `destroy()` method: the router removes its listeners, cancels the navigation in progress and gives scroll restoration back to the browser, and the page manager unmounts every component and stops handling navigations, whether or not it started.
 
 `pageManager.replaceFragments(html, options)` swaps fragments from any HTML string, without the router. It takes `viewTargets` (default `['main']`), `url`, `fromNavigation`, `fromPopstate`, `preserveScroll`, `scroll` and `signal`. Target groups aren't resolved here, so list every fragment name. It rejects before changing the page when a fragment is missing or tracked assets changed.
 

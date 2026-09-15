@@ -41,9 +41,6 @@ const cases = [
     { specifier: `${name}/${subpath}`, devFolder: true },
     { specifier: `${name}/${subpath}.js`, devFolder: true },
   ]),
-  ...jsSubpaths
-    .filter(subpath => !subpath.startsWith('managers/'))
-    .map(subpath => ({ specifier: `${name}/dev/${subpath}.js`, devFolder: true, alwaysDev: true })),
   { specifier: `${name}/styles` },
   ...readdirSync(path.join(root, 'dist/styles/components')).map(file => ({
     specifier: `${name}/styles/${file}`,
@@ -79,7 +76,7 @@ console.log(JSON.stringify(out));`
     ['development', ['--conditions=development'], true],
   ]) {
     const resolved = resolveAll(conditions);
-    for (const { specifier, devFolder, alwaysDev } of cases) {
+    for (const { specifier, devFolder } of cases) {
       const result = resolved[specifier];
       if (typeof result !== 'string') {
         failures.push(`${label}: ${specifier} did not resolve (${result.error})`);
@@ -91,7 +88,7 @@ console.log(JSON.stringify(out));`
         continue;
       }
       const inDev = file.includes(`${path.sep}dist${path.sep}dev${path.sep}`);
-      if (devFolder && inDev !== (expectDev || Boolean(alwaysDev))) {
+      if (devFolder && inDev !== expectDev) {
         failures.push(`${label}: ${specifier} resolved to ${path.relative(root, file)}`);
       }
     }

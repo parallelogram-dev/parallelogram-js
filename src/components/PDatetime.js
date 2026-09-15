@@ -55,16 +55,17 @@ const addMonths = (date, months) => {
  * <p-datetime name="deadline" mode="date" show-quick-dates quick-dates="yesterday,today,tomorrow"></p-datetime>
  *
  * With initial value:
- * <p-datetime name="meetingTime" mode="datetime" value="2024-01-15T14:30:00.000Z"></p-datetime>
+ * <p-datetime name="meetingTime" mode="datetime" value="2024-01-15T14:30"></p-datetime>
  *
  * Date range picker:
  * <p-datetime name="eventDates" mode="date" range range-to="endDate" from-label="Start Date" to-label="End Date"></p-datetime>
  *
  * @attributes
  * - mode: "date" | "datetime" | "time" (default: "date") - Controls picker type (date, datetime, or time only)
- * - value: string - Current value (or start of the range): `yyyy-mm-dd` in date mode, an ISO
- *   instant in datetime and time modes. Date-only values are always read as local dates, and time
- *   mode also reads `HH:mm` or `HH:mm:ss` as that time today.
+ * - value: string - Current value (or start of the range) in local time, formatted like the matching
+ *   native input: `yyyy-mm-dd` in date mode, `yyyy-mm-ddThh:mm` in datetime mode (as
+ *   `datetime-local`) and `hh:mm` in time mode, with `:ss` added when the seconds are set. An ISO
+ *   instant with `Z` or an offset is also read, as the local date and time it stands for.
  * - name: string - Form field name. The element is form-associated and submits its own value.
  * - time-format: "12" | "24" (default: "24") - Time display format
  * - show-quick-dates: boolean - Shows quick date preset buttons
@@ -74,8 +75,10 @@ const addMonths = (date, months) => {
  * - from-label: string - Label for start date input (default: "From")
  * - to-label: string - Label for end date input (default: "To")
  * - range-to-value: string - End of the range, in the same format as value
- * - min: ISO date or yyyy-mm-dd - Earliest selectable date; days before are disabled
- * - max: ISO date or yyyy-mm-dd - Latest selectable date; days after are disabled
+ * - min: yyyy-mm-dd, a local date and time, or an ISO instant - Earliest selectable date; days
+ *   before are disabled
+ * - max: yyyy-mm-dd, a local date and time, or an ISO instant - Latest selectable date; days after
+ *   are disabled
  * - min-from-field: string - Name of another field whose current value supplies the effective min (more restrictive of the two wins)
  * - max-from-field: string - Name of another field whose current value supplies the effective max
  * - format: string - Format of the submitted value: a preset (iso, iso-tz, iso-datetime,
@@ -111,7 +114,7 @@ const addMonths = (date, months) => {
  * @example
  * // JavaScript usage
  * const picker = document.querySelector('p-datetime');
- * picker.value = '2024-01-15T14:30:00.000Z';
+ * picker.value = '2024-01-15T14:30';
  * picker.addEventListener('change', (e) => {
  *   // Handle the selected datetime value
  *   const selectedValue = e.detail.value;
@@ -566,9 +569,9 @@ export default class PDatetime extends HTMLElement {
         this._rangeState = 'selecting-to';
       }
     } else {
-      const current = this._parseValue(this.value) ?? new Date();
+      const current = this._parseValue(this.value) ?? new Date(new Date().setSeconds(0, 0));
       current.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
-      this.value = current.toISOString();
+      this.value = this._valueString(current);
     }
 
     this._emitChange();
@@ -577,18 +580,10 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * The stored value for a picked day: `yyyy-mm-dd` in date mode, otherwise an ISO instant at 09:00
-   * in datetime mode and at the current time in time mode
+   * The stored value for a picked day: `yyyy-mm-dd` in date mode, otherwise that day at 09:00
    */
   _pickedValue(dt) {
-    if (this.mode === 'date') return this._dateString(dt);
-
-    const picked = new Date();
-    picked.setFullYear(dt.getFullYear(), dt.getMonth(), dt.getDate());
-    if (this.mode === 'datetime') {
-      picked.setHours(9, 0, 0, 0);
-    }
-    return picked.toISOString();
+    return this._valueString(new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 9));
   }
 
   get mode() {
@@ -598,7 +593,7 @@ export default class PDatetime extends HTMLElement {
     this.setAttribute('mode', v);
   }
   get value() {
-    return this.getAttribute('value') || '';
+    return this._localValue(this.getAttribute('value'));
   }
   set value(v) {
     v ? this.setAttribute('value', v) : this.removeAttribute('value');
@@ -633,15 +628,6 @@ export default class PDatetime extends HTMLElement {
   set range(v) {
     this.toggleAttribute('range', Boolean(v));
   }
-  /**
-   * @deprecated 0.5.0 Use range instead. Removed in 0.6.0.
-   */
-  get isRange() {
-    return this.range;
-  }
-  set isRange(v) {
-    this.range = v;
-  }
   get rangeTo() {
     return this.getAttribute('range-to');
   }
@@ -661,7 +647,7 @@ export default class PDatetime extends HTMLElement {
     this.setAttribute('to-label', v);
   }
   get rangeToValue() {
-    return this.getAttribute('range-to-value') || '';
+    return this._localValue(this.getAttribute('range-to-value'));
   }
   set rangeToValue(v) {
     v ? this.setAttribute('range-to-value', v) : this.removeAttribute('range-to-value');
@@ -698,27 +684,15 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * Parses a boundary string into a local-midnight Date.
-   *
-   * Accepts:
-   * - Plain `yyyy-mm-dd` — interpreted literally as a local date.
-   * - ISO 8601 with time/zone — parsed as an instant; local Y/M/D taken
-   *   from the resulting Date. This matters because a date selected as
-   *   "May 20 local" serialises to e.g. `2026-05-19T14:00:00.000Z` in
-   *   UTC+10. Regexing the yyyy-mm-dd prefix would yield May 19, off by
-   *   a day. Parsing as an instant and reading the local date keeps the
-   *   boundary at May 20 for that user.
+   * Parses a boundary string into a local-midnight Date, from any value `_parseValue` reads. An ISO
+   * instant gives the local date it falls on, so `2026-05-19T14:00:00.000Z` is May 20 in UTC+10.
    *
    * @param {string} s
    * @returns {Date|null}
    */
   _parseBoundary(s) {
-    if (!s) return null;
-    const ymdOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-    if (ymdOnly) return new Date(+ymdOnly[1], +ymdOnly[2] - 1, +ymdOnly[3]);
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return null;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const date = this._parseValue(s);
+    return date && new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   /**
@@ -736,15 +710,10 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * Reads the current value off a linked field. Handles plain inputs and
-   * sibling <p-datetime> hosts (which carry their ISO value on the host
-   * attribute).
+   * Reads the current value off a linked field, such as an input or a sibling <p-datetime>
    */
   _readFieldValue(el) {
     if (!el) return '';
-    if (el.tagName && el.tagName.toLowerCase() === 'p-datetime') {
-      return el.getAttribute('value') || '';
-    }
     return ('value' in el ? el.value : el.getAttribute('value')) || '';
   }
 
@@ -1570,12 +1539,10 @@ export default class PDatetime extends HTMLElement {
           const date = new Date();
           date.setDate(date.getDate() + dateMap[dateKey].days);
 
-          if (this.mode === 'date') {
-            this.value = this._dateString(date);
-          } else {
+          if (this.mode !== 'date') {
             date.setHours(9, 0, 0, 0);
-            this.value = date.toISOString();
           }
+          this.value = this._valueString(date);
 
           /* Reset view to day mode and navigate to selected date */
           this._viewMode = 'day';
@@ -1614,9 +1581,9 @@ export default class PDatetime extends HTMLElement {
 
     /* Update the appropriate field based on range mode */
     if (this.range && this._currentField === 'to') {
-      this.rangeToValue = d.toISOString();
+      this.rangeToValue = this._valueString(d);
     } else {
-      this.value = d.toISOString();
+      this.value = this._valueString(d);
     }
 
     this._emitChange();
@@ -1624,17 +1591,17 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * Formats an ISO date string according to the format attribute
+   * Formats a stored value according to the format attribute
    * Supports tokens: yyyy, mm, dd, hh, ii, ss, tz, tzz
    * Supports presets: iso, iso-tz, us-date, us-datetime, eu-date, eu-datetime
-   * @param {string} isoString - ISO 8601 date string
+   * @param {string} value - A value `_parseValue` reads
    * @returns {string} - Formatted date string
    */
-  _formatDate(isoString) {
-    if (!isoString || !this.format) return isoString;
+  _formatDate(value) {
+    if (!value || !this.format) return value;
 
-    const date = this._parseValue(isoString);
-    if (!date) return isoString;
+    const date = this._parseValue(value);
+    if (!date) return value;
 
     /* Check for preset formats */
     const presets = {
@@ -1693,23 +1660,27 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * A Date for a stored value. `yyyy-mm-dd` is read as a local date, and in time mode `HH:mm` or
-   * `HH:mm:ss` as that time today; anything else goes to Date.
+   * A Date for a stored value. `yyyy-mm-dd` and `yyyy-mm-ddThh:mm` (with optional seconds) are read
+   * as local time, and in time mode `hh:mm` or `hh:mm:ss` as that time today. Anything else, such as
+   * an ISO instant with `Z` or an offset, goes to Date.
    *
    * @param {string} value
    * @returns {Date|null}
    */
   _parseValue(value) {
     if (!value) return null;
-    const time = this.mode === 'time' && /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/.exec(value);
+    const time =
+      this.mode === 'time' && /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(?:\.\d+)?)?$/.exec(value);
     if (time) {
       const today = new Date();
       today.setHours(Number(time[1]), Number(time[2]), Number(time[3] ?? 0), 0);
       return today;
     }
-    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    const date = dateOnly
-      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    const local = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/.exec(
+      value
+    );
+    const date = local
+      ? new Date(local[1], local[2] - 1, local[3], local[4] ?? 0, local[5] ?? 0, local[6] ?? 0)
       : new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
   }
@@ -1726,15 +1697,32 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * The submitted value for a stored value: formatted when `format` is set, and `yyyy-mm-dd` in
-   * date mode
+   * The local value string for a Date, as the matching native input writes it: `yyyy-mm-dd` in date
+   * mode, `hh:mm` in time mode and `yyyy-mm-ddThh:mm` in datetime mode, with `:ss` when the seconds
+   * are set
+   */
+  _valueString(date) {
+    if (this.mode === 'date') return this._dateString(date);
+    const seconds = date.getSeconds() ? [date.getSeconds()] : [];
+    const time = [date.getHours(), date.getMinutes(), ...seconds]
+      .map(part => String(part).padStart(2, '0'))
+      .join(':');
+    return this.mode === 'time' ? time : `${this._dateString(date)}T${time}`;
+  }
+
+  /**
+   * A stored value in the local format of the mode, or as given when it cannot be read
+   */
+  _localValue(value) {
+    const date = this._parseValue(value);
+    return date ? this._valueString(date) : value || '';
+  }
+
+  /**
+   * The submitted value for a stored value, formatted when `format` is set
    */
   _formValueFor(value) {
-    if (!value) return '';
-    if (this.format) return this._formatDate(value);
-    if (this.mode !== 'date') return value;
-    const date = this._parseValue(value);
-    return date ? this._dateString(date) : value;
+    return this.format ? this._formatDate(value) : value;
   }
 
   /**

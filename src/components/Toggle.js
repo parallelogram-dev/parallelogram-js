@@ -1,5 +1,4 @@
 import { BaseComponent } from '../core/BaseComponent.js';
-import { ExtendedStates } from '../core/ComponentStates.js';
 import { deepActiveElement, rememberAttributes, restoreAttributes } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 
@@ -9,7 +8,7 @@ const INTERACTIVE =
 
 /** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
 const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
-const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state', 'data-toggle-target'];
+const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state'];
 
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
@@ -152,7 +151,7 @@ export default class Toggle extends BaseComponent {
     const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
     if (firstTrigger) {
       this._originals.set(target, rememberAttributes(target, TARGET_ATTRIBUTES));
-      this._setTargetState(target, isOpen ? ExtendedStates.OPEN : ExtendedStates.CLOSED);
+      this._setTargetState(target, isOpen ? 'open' : 'closed');
     }
 
     if (!target.id) {
@@ -342,7 +341,7 @@ export default class Toggle extends BaseComponent {
     this._open.set(target, element);
     this._syncTriggers(target, true);
     target.classList.add(this.constructor.defaults.openClass);
-    this._transition(target, state, ExtendedStates.OPENING, ExtendedStates.OPEN);
+    this._transition(target, state, 'opening', 'open');
 
     this._dispatch(element, 'toggle:show', {
       target,
@@ -375,7 +374,7 @@ export default class Toggle extends BaseComponent {
     this._open.delete(target);
     this._syncTriggers(target, false);
     target.classList.remove(this.constructor.defaults.openClass);
-    this._transition(target, state, ExtendedStates.CLOSING, ExtendedStates.CLOSED);
+    this._transition(target, state, 'closing', 'closed');
 
     this._dispatch(element, 'toggle:hide', {
       target,
@@ -408,7 +407,7 @@ export default class Toggle extends BaseComponent {
 
   _isTargetOpen(target) {
     const value = this._getTargetState(target);
-    return value === ExtendedStates.OPEN || value === ExtendedStates.OPENING;
+    return value === 'open' || value === 'opening';
   }
 
   _closeGroup(group, except) {
@@ -451,20 +450,14 @@ export default class Toggle extends BaseComponent {
   /**
    * Record a target's open state in `data-toggle-state`, and hide it with the `hidden` attribute
    * once it is closed
-   *
-   * A target that is not a toggle itself also gets the deprecated copy in `data-toggle-target`, which
-   * stops in 0.6.0. On a toggle that attribute holds its own target selector, so it is left alone.
    */
   _setTargetState(target, value) {
     this.setAttr(target, 'state', value);
-    target.hidden = value === ExtendedStates.CLOSED;
-    if (!target.hasAttribute(this._getSelector())) {
-      this.setAttr(target, 'target', value);
-    }
+    target.hidden = value === 'closed';
   }
 
   _getTargetState(target) {
-    return this.getAttr(target, 'state') ?? this.getAttr(target, 'target');
+    return this.getAttr(target, 'state');
   }
 
   /**

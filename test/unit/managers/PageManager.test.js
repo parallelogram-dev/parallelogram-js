@@ -58,9 +58,81 @@ describe('PageManager', () => {
       registry,
       eventBus,
       options,
-    });
+    }).start();
     return manager;
   };
+
+  it('does nothing to the page until it is started', () => {
+    document.body.innerHTML = '<main id="app"><div data-hero></div></main>';
+    const mounted = [];
+    const bus = new EventManager();
+    const initialized = vi.fn();
+    bus.on('page-manager:initialized', initialized);
+
+    manager = new PageManager({
+      containerSelector: '#app',
+      registry: [component('hero', 'critical', mounted)],
+      eventBus: bus,
+    });
+
+    expect({ mounted, initialized: initialized.mock.calls.length }).toEqual({
+      mounted: [],
+      initialized: 0,
+    });
+  });
+
+  it('mounts components and handles navigation only once when started twice', () => {
+    document.body.innerHTML = '<main id="app"><div data-hero></div></main>';
+    const mounted = [];
+    const bus = new EventManager();
+    const initialized = vi.fn();
+    bus.on('page-manager:initialized', initialized);
+    start([component('hero', 'critical', mounted)], bus);
+    const replaceFragments = vi.spyOn(manager, 'replaceFragments').mockResolvedValue();
+
+    manager.start();
+    bus.emit('router:navigate-success', { html: '<main></main>', url: new URL(location.href) });
+
+    expect({
+      mounted,
+      initialized: initialized.mock.calls.length,
+      swaps: replaceFragments.mock.calls.length,
+    }).toEqual({ mounted: ['hero'], initialized: 1, swaps: 1 });
+  });
+
+  it('can be destroyed before it is started', () => {
+    document.body.innerHTML = '<main id="app"></main>';
+    const bus = new EventManager();
+    const destroyed = vi.fn();
+    bus.on('page-manager:destroyed', destroyed);
+    manager = new PageManager({ containerSelector: '#app', registry: [], eventBus: bus });
+
+    manager.destroy();
+    manager = null;
+
+    expect(destroyed).toHaveBeenCalledOnce();
+  });
+
+  it('does not start again once destroyed', () => {
+    document.body.innerHTML = '<main id="app"><div data-hero></div></main>';
+    const mounted = [];
+    const bus = new EventManager();
+    const initialized = vi.fn();
+    bus.on('page-manager:initialized', initialized);
+    const destroyed = new PageManager({
+      containerSelector: '#app',
+      registry: [component('hero', 'critical', mounted)],
+      eventBus: bus,
+    });
+    destroyed.destroy();
+
+    destroyed.start();
+
+    expect({ mounted, initialized: initialized.mock.calls.length }).toEqual({
+      mounted: [],
+      initialized: 0,
+    });
+  });
 
   it('mounts critical components before normal ones on the initial pass', () => {
     document.body.innerHTML =
@@ -171,7 +243,12 @@ describe('PageManager', () => {
     vi.stubGlobal('fetch', fetch);
     const bus = new EventManager();
     router = new RouterManager({ eventBus: bus });
-    manager = new PageManager({ containerSelector: '#app', registry: [], eventBus: bus, router });
+    manager = new PageManager({
+      containerSelector: '#app',
+      registry: [],
+      eventBus: bus,
+      router,
+    }).start();
 
     history.pushState(null, '', '/previous');
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -192,7 +269,7 @@ describe('PageManager', () => {
         targetGroups: { main: ['main'] },
         targetGroupTransitions: { main: { out: 'fade-out', in: 'fade-in', duration: 50 } },
       },
-    });
+    }).start();
     let swap;
 
     bus.emit('router:navigate-success', {

@@ -17,7 +17,7 @@ export default {
   tag: 'p-datetime',
   module: 'components/PDatetime',
   summary: 'Date, time and date range picker with a calendar dialog',
-  description: `The value fields and the calendar button open a dialog with a day grid and, in datetime and time modes, time selects. In date mode the value is a plain \`yyyy-mm-dd\` date, always read as a local date; datetime and time modes use ISO instants. The element is form-associated: it submits its value, and in range mode the end of the range under \`range-to\`, in the chosen format.
+  description: `The value fields and the calendar button open a dialog with a day grid and, in datetime and time modes, time selects. Values are local and follow the native inputs: \`yyyy-mm-dd\` in date mode, \`yyyy-mm-ddThh:mm\` in datetime mode like \`datetime-local\`, and \`hh:mm\` in time mode, with \`:ss\` when the seconds are set. An ISO instant with \`Z\` or an offset is read as the local date and time it stands for. The element is form-associated: it submits its value, and in range mode the end of the range under \`range-to\`, in that format or the one \`format\` names.
 
 \`min\` and \`max\` disable days outside them, and \`min-from-field\` and \`max-from-field\` follow another field, such as a check-in date limiting check-out.`,
   attributes: [
@@ -34,7 +34,7 @@ export default {
       type: 'string',
       property: 'value',
       description:
-        'The value, or the start of the range: yyyy-mm-dd in date mode, otherwise ISO; time mode also reads HH:mm or HH:mm:ss as that time today',
+        'The value, or the start of the range, in local time: yyyy-mm-dd in date mode, yyyy-mm-ddThh:mm in datetime mode and hh:mm in time mode. An ISO instant with Z or an offset is read as the local date and time',
     },
     { name: 'name', type: 'string', property: 'name', description: 'The form field name' },
     {
@@ -89,13 +89,13 @@ export default {
       name: 'min',
       type: 'string',
       property: 'min',
-      description: 'Earliest selectable date, as yyyy-mm-dd or ISO',
+      description: 'Earliest selectable date, as yyyy-mm-dd, a local date and time, or ISO',
     },
     {
       name: 'max',
       type: 'string',
       property: 'max',
-      description: 'Latest selectable date, as yyyy-mm-dd or ISO',
+      description: 'Latest selectable date, as yyyy-mm-dd, a local date and time, or ISO',
     },
     {
       name: 'min-from-field',
@@ -129,15 +129,18 @@ export default {
     },
   ],
   properties: [
-    { name: 'value', type: 'string', description: 'The value, or the start of the range' },
-    { name: 'rangeToValue', type: 'string', description: 'The end of the range' },
-    { name: 'range', type: 'boolean', description: 'Reflects the range attribute' },
     {
-      name: 'isRange',
-      type: 'boolean',
-      description: 'The old name for range',
-      deprecated: 'Use range. Removed in 0.6.0.',
+      name: 'value',
+      type: 'string',
+      description:
+        'The value, or the start of the range, as a local string in the format of the mode',
     },
+    {
+      name: 'rangeToValue',
+      type: 'string',
+      description: 'The end of the range, in the same format as value',
+    },
+    { name: 'range', type: 'boolean', description: 'Reflects the range attribute' },
     {
       name: 'form',
       type: 'HTMLFormElement | null',
@@ -213,6 +216,18 @@ export default {
         { attribute: 'required' },
         { attribute: 'disabled' },
       ],
+    },
+    {
+      id: 'datetime',
+      title: 'Appointment',
+      description:
+        'Submits the local date and time chosen, such as `2024-01-15T14:30`, as `<input type="datetime-local">` does. In time mode it submits `hh:mm`, and `format` changes what is sent.',
+      markup: `<form class="form" action="#chosen">
+  <label for="appointment">Appointment</label>
+  <p-datetime id="appointment" name="appointment" mode="datetime" value="2024-01-15T14:30"></p-datetime>
+  <button type="submit">Book</button>
+</form>`,
+      controls: [{ attribute: 'mode' }, { attribute: 'time-format' }, { attribute: 'format' }],
     },
     {
       id: 'range',

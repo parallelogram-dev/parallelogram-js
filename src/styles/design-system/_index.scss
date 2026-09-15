@@ -10,9 +10,6 @@
 /* Forward component patterns */
 @forward 'components';
 
-/* Forward legacy variables for backwards compatibility */
-@forward 'variables';
-
 /* Usage in components:
  * @use '../../design-system' as ds;
  *
@@ -28,7 +25,4 @@
  *   @include ds.form-control;
  *   @include ds.button-primary;
  *   @include ds.panel-base;
- *
- * Legacy components can still use:
- * @use '../../design-system/variables' as *;
  */
