@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { commands } from 'vitest/browser';
+import Accordion from '../../../src/components/Accordion.js';
+import Tabs from '../../../src/components/Tabs.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const rootValue = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -68,5 +70,59 @@ describe('dark theme', () => {
       role: 'rgb(255, 255, 255)',
       surface: 'rgb(255, 255, 255)',
     });
+  });
+
+  it('draws an open accordion item and the selected tab with the dark roles when data-theme is dark', async () => {
+    addFrameworkStyles();
+    document.documentElement.dataset.theme = 'dark';
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <details data-accordion><summary>Shipping</summary><div>Two working days.</div></details>
+      <div data-tabs>
+        <div data-tabs-list>
+          <button data-tab="panel-shipping">Shipping</button>
+          <button data-tab="panel-returns">Returns</button>
+        </div>
+        <div data-tabs-panels>
+          <div id="panel-shipping" data-tab-panel>Orders ship in two days.</div>
+          <div id="panel-returns" data-tab-panel>Return within 30 days.</div>
+        </div>
+      </div>`;
+    document.body.append(container);
+    const item = container.querySelector('[data-accordion]');
+    const accordion = new Accordion();
+    const tabs = new Tabs();
+    cleanups.push(() => {
+      accordion.destroy();
+      tabs.destroy();
+      container.remove();
+    });
+    accordion.mount(item);
+    tabs.mount(container.querySelector('[data-tabs]'));
+
+    /* The item's content only shows once it has opened, and the tab takes its colours once chosen */
+    accordion.show(item);
+    await vi.waitFor(() => expect(item.dataset.accordionState).toBe('open'), { timeout: 2000 });
+    const [shipping, returns] = container.querySelectorAll('[data-tab]');
+    returns.click();
+    await vi.waitFor(() => expect(returns.getAttribute('aria-selected')).toBe('true'));
+
+    const colours = () => [
+      getComputedStyle(item).borderBottomColor,
+      getComputedStyle(container.querySelector('[data-tabs-list]')).borderBottomColor,
+      getComputedStyle(shipping).color,
+      getComputedStyle(returns).color,
+      getComputedStyle(returns).borderBottomColor,
+    ];
+
+    await vi.waitFor(() =>
+      expect(colours()).toEqual([
+        'rgba(255, 255, 255, 0.14)',
+        'rgba(255, 255, 255, 0.14)',
+        'rgba(255, 255, 255, 0.6)',
+        'rgb(147, 197, 253)',
+        'rgb(147, 197, 253)',
+      ])
+    );
   });
 });
