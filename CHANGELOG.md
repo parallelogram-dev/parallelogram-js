@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pages that enforce Trusted Types with `require-trusted-types-for 'script'` can use the router, SelectLoader, `Modal.create()` with string content, `<p-toasts>` messages with `allowHTML` and DeferTracker's adapters, which threw on the first HTML or script they inserted. HTML goes through the `parallelogram` policy web components already used, and the scripts the router runs and adapters load through a new `parallelogram-scripts` policy, so the page's `trusted-types` directive must list both. When a policy can't be created, because the directive doesn't list it or a second copy of the library already created it, a console warning names the policy and the directive to add. The router moves the fetched page's content into each fragment instead of setting the fragment's HTML, and a script a policy rejects is skipped without stopping the swap.
+
 ## [0.5.3] - 2026-09-15
 
 ### Fixed

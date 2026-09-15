@@ -32,7 +32,7 @@ Where popovers are supported the element shows itself as a manual popover and mo
       signature:
         "(options: { message: string; type?: 'info' | 'success' | 'warning' | 'error' | 'warn' | 'danger'; title?: string; timeout?: number; dismissible?: boolean; allowHTML?: boolean }) => () => void",
       description:
-        'Show a toast and return a function that closes it; timeout is in milliseconds, or 0 to keep it, and allowHTML treats the message as trusted HTML',
+        'Show a toast and return a function that closes it; timeout is in milliseconds, or 0 to keep it, and allowHTML treats the message as trusted HTML, inserted through the parallelogram Trusted Types policy',
     },
   ],
   events: [

@@ -1,8 +1,7 @@
+import { trustedHTML } from './trusted.js';
+
 /** Constructable stylesheets shared by every instance, keyed by their CSS text */
 const sheets = new Map();
-
-/** The Trusted Types policy for static templates, created on first use; null when unavailable */
-let policy;
 
 const canAdopt = root =>
   'adoptedStyleSheets' in root &&
@@ -51,15 +50,5 @@ export function adoptStyles(root, ...styles) {
  * @param {string} markup
  */
 export function setStaticHTML(target, markup) {
-  if (policy === undefined) {
-    try {
-      policy =
-        globalThis.trustedTypes?.createPolicy('parallelogram', { createHTML: value => value }) ??
-        null;
-    } catch {
-      policy = null;
-    }
-  }
-
-  target.innerHTML = policy ? policy.createHTML(markup) : markup;
+  target.innerHTML = trustedHTML(markup);
 }
