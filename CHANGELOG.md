@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Open Toggle targets keep the display page styles give them, such as `flex` or `grid`, instead of the stylesheet setting `display: block`.
+
+### Fixed
+
+- A component waits for the components named in its `dependsOn` while they retry, and isn't loaded when one fails for good: its elements get the `component-error` class and `page:component-load-error` is emitted for it, with the dependency's error as `cause`. Components that depend on each other in a cycle throw when registered, instead of both loading.
+- Closed Toggle targets get the `hidden` attribute, and closed targets and inactive tab panels stay hidden when page styles give them a display value, including when the framework stylesheet is imported into a cascade layer.
+
 ## [0.5.1] - 2026-09-15
 
 Fixes from the post-0.5.0 audit, and a clean-up of options and methods that never did anything. The removals below skip the usual deprecation release because none of them had an effect; the deprecated names listed in the upgrade guide still work until 0.6.0.
