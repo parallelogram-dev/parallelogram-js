@@ -84,8 +84,13 @@ export default class Tabs extends BaseComponent {
       return state;
     }
 
-    const tabs = [...tabsList.querySelectorAll('[data-tab]')];
-    const panels = [...tabsContainer.querySelectorAll('[data-tab-panel]')];
+    /* A tab set nested inside a panel keeps its own tabs and panels */
+    const tabs = [...tabsList.querySelectorAll('[data-tab]')].filter(
+      tab => tab.closest('[data-tabs-list]') === tabsList
+    );
+    const panels = [...tabsContainer.querySelectorAll('[data-tab-panel]')].filter(
+      panel => panel.closest('[data-tabs-panels]') === tabsContainer
+    );
 
     if (tabs.length === 0 || panels.length === 0) {
       this.logger?.warn('Tabs: No tabs or panels found', element);
