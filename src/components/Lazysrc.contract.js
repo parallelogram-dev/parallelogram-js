@@ -147,9 +147,21 @@ Failed loads are retried with a growing delay. Don't lazy load the largest image
     { name: '--lazy-transition-duration', default: '0.3s', description: 'Length of the fade' },
     { name: '--lazy-transition-easing', description: 'Easing of the fade' },
     { name: '--lazy-loading-opacity', default: '0.7', description: 'Opacity while loading' },
-    { name: '--lazy-placeholder-bg', description: 'Background while loading' },
-    { name: '--lazy-error-bg', description: 'Background after an error' },
-    { name: '--lazy-error-color', description: 'Outline colour after an error' },
+    {
+      name: '--lazy-placeholder-bg',
+      default: 'var(--color-surface-muted)',
+      description: 'Background while loading: the muted surface',
+    },
+    {
+      name: '--lazy-error-bg',
+      default: 'var(--color-danger-bg)',
+      description: 'Background after an error: the danger tint',
+    },
+    {
+      name: '--lazy-error-color',
+      default: 'var(--color-danger)',
+      description: 'Outline colour after an error: the danger colour',
+    },
   ],
   examples: [
     {

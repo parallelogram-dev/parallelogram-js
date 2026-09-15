@@ -1,11 +1,12 @@
-/* Lazysrc styles, keyed on data-lazysrc-state: loading, loaded or error */
+/* Lazysrc styles, keyed on data-lazysrc-state: loading, loaded or error. Colours default to the
+   colour roles, then the light values, so they follow the dark theme */
 
 :root {
   --lazy-transition-duration: 0.3s;
   --lazy-transition-easing: ease-in-out;
-  --lazy-placeholder-bg: #f3f4f6;
-  --lazy-error-bg: #fef2f2;
-  --lazy-error-color: #dc2626;
+  --lazy-placeholder-bg: var(--color-surface-muted, #f3f4f6);
+  --lazy-error-bg: var(--color-danger-bg, #fef2f2);
+  --lazy-error-color: var(--color-danger, #dc2626);
   --lazy-loading-opacity: 0.7;
 }
 
