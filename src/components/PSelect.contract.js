@@ -7,14 +7,15 @@ export default {
   summary: 'A select that can be searched, built as an editable combobox',
   description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them; Enter or Tab chooses the highlighted option; Escape closes the list and puts the chosen label back.
 
-Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its initially selected option when the form resets.`,
+Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its \`value\` attribute, or else its selected option, when the form resets.`,
   attributes: [
     { name: 'name', type: 'string', property: 'name', description: 'The form field name' },
     {
       name: 'value',
       type: 'string',
       property: 'value',
-      description: 'The chosen value; defaults to the selected option',
+      description:
+        'The initial value, restored when the form resets; takes precedence over a selected option',
     },
     { name: 'placeholder', type: 'string', description: 'Shown when nothing is chosen' },
     { name: 'disabled', type: 'flag', property: 'disabled', description: 'Disables the select' },

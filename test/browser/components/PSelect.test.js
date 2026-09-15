@@ -90,6 +90,26 @@ describe('p-select', () => {
     expect(new FormData(form).get('country')).toBe('uk');
   });
 
+  it('restores its value attribute when the form is reset', () => {
+    const { form, select } = renderForm(`
+      <p-select name="country" value="us">
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+      </p-select>
+    `);
+    select.select('uk');
+
+    form.reset();
+
+    expect([select.value, new FormData(form).get('country')]).toEqual(['us', 'us']);
+  });
+
+  it('prefers its value attribute to a selected option', () => {
+    const { select } = renderForm(COUNTRIES.replace('name="country"', 'name="country" value="us"'));
+
+    expect(select.value).toBe('us');
+  });
+
   it('disables its text input inside a disabled fieldset', () => {
     const { select } = renderForm(`<fieldset disabled>${COUNTRIES}</fieldset>`);
 

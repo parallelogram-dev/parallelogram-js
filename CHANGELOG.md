@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DeferTracker checks consent again before running an adapter's page step, so a tracker whose consent has been withdrawn no longer records later pages the router shows. A vendor script that has already loaded can't be unloaded, so sites should also call the vendor's own consent update.
 - `<p-select>` dispatches `input`, `change` and `p-select:change` only when the chosen option changes. Opening a select and pressing Tab or Enter on the option already chosen, or calling `select()` with the current value, dispatched all three.
 - `<p-select>`'s `input` and `change` events are composed, like a native select's, so a page hears them outside a shadow root the select is in.
+- A `<p-select>` given its value in its `value` attribute, such as one rendered by a server, keeps that value when a form resets, where it cleared it, and shows it when an `<option selected>` names a different option. The attribute is the default when it names an option; otherwise the selected option is.
 
 ## [0.5.3] - 2026-09-15
 
