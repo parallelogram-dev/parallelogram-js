@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-15
+
 0.6.0 removes everything 0.5 deprecated. The [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) lists each change and what to use instead.
 
 ### Changed
