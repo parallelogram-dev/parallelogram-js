@@ -11,9 +11,10 @@
   --reveal-distance: 1rem;
 }
 
-/* Until Scrollreveal loads, hide what it will reveal so the content doesn't flash in first */
+/* Until Scrollreveal loads, hide what it will reveal so the content doesn't flash in first, unless it
+   fails to load */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  [data-reveal]:not([data-reveal-enhanced]) {
+  [data-reveal]:not([data-reveal-enhanced], .component-error) {
     opacity: 0;
     transform: translateY(var(--reveal-distance));
   }

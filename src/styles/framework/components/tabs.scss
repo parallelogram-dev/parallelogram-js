@@ -57,9 +57,10 @@
   display: none;
 }
 
-/* Until Tabs loads, show only the first panel so the page doesn't jump; without scripts all stay visible */
+/* Until Tabs loads, show only the first panel so the page doesn't jump; without scripts, or when
+   Tabs fails to load, all stay visible */
 @media (scripting: enabled) {
-  [data-tabs]:not([data-tabs-enhanced]) [data-tab-panel] ~ [data-tab-panel] {
+  [data-tabs]:not([data-tabs-enhanced], .component-error) [data-tab-panel] ~ [data-tab-panel] {
     display: none;
   }
 }
