@@ -1,5 +1,7 @@
 # Design System
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 Parallelogram uses a minimal, opinionated design system with ~40 tokens for consistency and flexibility.
 
 ## Quick Start
@@ -34,55 +36,58 @@ Parallelogram uses a minimal, opinionated design system with ~40 tokens for cons
 ### Colors
 
 **Neutrals** (4 shades):
+
 - `$neutral-100` → `#f5f5f5` (light backgrounds)
 - `$neutral-300` → `#d4d4d4` (borders, disabled)
 - `$neutral-600` → `#525252` (muted text)
 - `$neutral-900` → `#171717` (primary text)
 
 **Semantic Colors** (light/dark variants):
+
 - `$primary` / `$primary-light` / `$primary-dark` (Blue)
 - `$success` / `$success-light` / `$success-dark` (Green)
 - `$warning` / `$warning-light` / `$warning-dark` (Orange)
 - `$error` / `$error-light` / `$error-dark` (Red)
 
 **Semantic Tokens** (for theming):
+
 ```scss
-$color-text:       currentColor;
+$color-text: currentColor;
 $color-text-muted: rgba(0, 0, 0, 0.5);
-$color-bg:         #ffffff;
-$color-bg-hover:   rgba(0, 0, 0, 0.05);
-$color-border:     rgba(0, 0, 0, 0.1);
-$color-accent:     $primary;
+$color-bg: #ffffff;
+$color-bg-hover: rgba(0, 0, 0, 0.05);
+$color-border: rgba(0, 0, 0, 0.1);
+$color-accent: $primary;
 ```
 
 ### Spacing (Golden Ratio)
 
 ```scss
-$space-xs:  0.125em;  /* ~2px */
-$space-sm:  0.25em;   /* ~4px */
-$space-md:  0.5em;    /* ~8px */
-$space-lg:  0.75em;   /* ~12px */
-$space-xl:  1.25em;   /* ~20px */
-$space-2xl: 2em;      /* ~32px */
+$space-xs: 0.125em; /* ~2px */
+$space-sm: 0.25em; /* ~4px */
+$space-md: 0.5em; /* ~8px */
+$space-lg: 0.75em; /* ~12px */
+$space-xl: 1.25em; /* ~20px */
+$space-2xl: 2em; /* ~32px */
 ```
 
 ### Typography
 
 ```scss
 /* Sizes */
-$font-xs:   0.75em;   /* 12px */
-$font-sm:   0.875em;  /* 14px */
-$font-base: 1em;      /* 16px */
-$font-lg:   1.125em;  /* 18px */
+$font-xs: 0.75em; /* 12px */
+$font-sm: 0.875em; /* 14px */
+$font-base: 1em; /* 16px */
+$font-lg: 1.125em; /* 18px */
 
 /* Weights */
-$font-normal:   400;
-$font-medium:   500;
+$font-normal: 400;
+$font-medium: 500;
 $font-semibold: 600;
-$font-bold:     700;
+$font-bold: 700;
 
 /* Line Heights */
-$leading-tight:  1.25;
+$leading-tight: 1.25;
 $leading-normal: 1.5;
 $leading-relaxed: 1.75;
 ```
@@ -91,13 +96,13 @@ $leading-relaxed: 1.75;
 
 ```scss
 /* Widths */
-$border-width:       1px;
+$border-width: 1px;
 $border-width-thick: 2px;
 
 /* Radius */
-$radius-sm: 0.25em;  /* ~4px - subtle */
-$radius-md: 0.5em;   /* ~8px - default */
-$radius-lg: 0.75em;  /* ~12px - panels */
+$radius-sm: 0.25em; /* ~4px - subtle */
+$radius-md: 0.5em; /* ~8px - default */
+$radius-lg: 0.75em; /* ~12px - panels */
 ```
 
 ### Shadows & Elevation
@@ -111,33 +116,33 @@ $shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
 ### Z-Index
 
 ```scss
-$z-base:     1;
+$z-base: 1;
 $z-dropdown: 10;
-$z-overlay:  100;
-$z-modal:    1000;
-$z-toast:    2000;
+$z-overlay: 100;
+$z-modal: 1000;
+$z-toast: 2000;
 ```
 
 ### Opacity
 
 ```scss
 $opacity-disabled: 0.3;
-$opacity-muted:    0.6;
-$opacity-icon:     0.7;
-$opacity-hover:    0.9;
+$opacity-muted: 0.6;
+$opacity-icon: 0.7;
+$opacity-hover: 0.9;
 ```
 
 ### Animation
 
 ```scss
 /* Duration */
-$duration-fast:   0.15s;
+$duration-fast: 0.15s;
 $duration-normal: 0.3s;
-$duration-slow:   0.5s;
+$duration-slow: 0.5s;
 
 /* Easing */
 $ease-standard: cubic-bezier(0.5, 0, 0, 1);
-$ease-smooth:   ease-in-out;
+$ease-smooth: ease-in-out;
 ```
 
 ## Utility Mixins
@@ -194,9 +199,9 @@ $ease-smooth:   ease-in-out;
 ### Elevation
 
 ```scss
-@include ds.elevation(1);  /* shadow-sm */
-@include ds.elevation(2);  /* shadow-md */
-@include ds.elevation(3);  /* shadow-lg */
+@include ds.elevation(1); /* shadow-sm */
+@include ds.elevation(2); /* shadow-md */
+@include ds.elevation(3); /* shadow-lg */
 ```
 
 ## CSS Custom Properties Pattern
@@ -279,6 +284,7 @@ No changes needed! Legacy variables still work:
 ### When to Migrate
 
 Migrate components when:
+
 - Adding new features
 - Major refactoring
 - Need runtime theming

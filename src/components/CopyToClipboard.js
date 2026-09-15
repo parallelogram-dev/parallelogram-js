@@ -1,21 +1,24 @@
-import { BaseComponent } from '@parallelogram-js/core';
+import { BaseComponent } from '../core/BaseComponent.js';
 
 /**
  * CopyToClipboard Component - Copy text to clipboard
  *
+ * Copies the value or text of the element named by data-copytoclipboard-target,
+ * or the literal data-copytoclipboard-text. The trigger stays enabled and
+ * focused; progress is exposed through data-copytoclipboard-state ("copied" or
+ * "failed") and announced to screen readers. If the trigger contains a
+ * [data-copytoclipboard-label] element, only its text is swapped for the
+ * success or error message.
+ *
  * @example
- * <button data-copytoclipboard data-copytoclipboard-target="#code-block">Copy Code</button>
- * <pre id="code-block">logger?.info('Hello World');</pre>
+ * <button data-copytoclipboard data-copytoclipboard-target="#code-block">
+ *   <svg aria-hidden="true">...</svg>
+ *   <span data-copytoclipboard-label>Copy code</span>
+ * </button>
+ * <pre id="code-block">logger.info('Hello World');</pre>
  */
 export class CopyToClipboard extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-copytoclipboard';
-  }
+  static selector = 'data-copytoclipboard';
 
   static get defaults() {
     return {
@@ -29,20 +32,28 @@ export class CopyToClipboard extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
+    const baseCleanup = state.cleanup;
 
-    const config = this._getConfiguration(element);
-    const target = this._getTarget(element);
+    state.config = this._getConfiguration(element);
+    state.busy = false;
+    state.resetTimer = null;
+    state.restoreLabel = null;
 
-    state.config = config;
-    state.target = target;
-    state.originalText = element.textContent;
+    element.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        this._handleCopy(element, state);
+      },
+      { signal: state.controller.signal }
+    );
 
-    element.addEventListener('click', e => {
-      e.preventDefault();
-      this._handleCopy(element, state);
-    });
+    state.cleanup = () => {
+      this._resetFeedback(element, state);
+      baseCleanup();
+    };
 
-    this.eventBus?.emit('copy-to-clipboard:mounted', { element, target });
+    this.eventBus?.emit('copy-to-clipboard:mounted', { element, target: this._getTarget(element) });
     return state;
   }
 
@@ -53,126 +64,160 @@ export class CopyToClipboard extends BaseComponent {
         'success-message',
         CopyToClipboard.defaults.successMessage
       ),
-      errorMessage: this.getAttr(
+      errorMessage: this.getAttr(element, 'error-message', CopyToClipboard.defaults.errorMessage),
+      successDuration: this.getNumberAttr(
         element,
-        'error-message',
-        CopyToClipboard.defaults.errorMessage
+        'success-duration',
+        CopyToClipboard.defaults.successDuration
       ),
-      successDuration: parseInt(
-        this.getAttr(
-          element,
-          'success-duration',
-          CopyToClipboard.defaults.successDuration
-        )
-      ),
-      successClass: this.getAttr(
-        element,
-        'success-class',
-        CopyToClipboard.defaults.successClass
-      ),
-      errorClass: this.getAttr(
-        element,
-        'error-class',
-        CopyToClipboard.defaults.errorClass
-      ),
+      successClass: this.getAttr(element, 'success-class', CopyToClipboard.defaults.successClass),
+      errorClass: this.getAttr(element, 'error-class', CopyToClipboard.defaults.errorClass),
     };
   }
 
+  /**
+   * Resolve what to copy at click time.
+   *
+   * The legacy data-copy-text and data-copy-target spellings are still read
+   * so markup written against earlier releases keeps working.
+   */
   _getTarget(element) {
-    const targetSelector = element.dataset.copyTarget;
-    const textContent = element.dataset.copyText;
-
-    if (textContent) {
-      return { type: 'text', content: textContent };
-    } else if (targetSelector) {
-      const targetElement = document.querySelector(targetSelector);
-      if (targetElement) {
-        return { type: 'element', element: targetElement };
-      }
+    const text = this.getAttr(element, 'text') ?? element.getAttribute('data-copy-text');
+    if (text) {
+      return { type: 'text', content: text };
     }
 
-    return { type: 'text', content: element.textContent };
+    const selector = this.getAttr(element, 'target') ?? element.getAttribute('data-copy-target');
+    const targetElement = selector ? document.querySelector(selector) : null;
+    if (targetElement) {
+      return { type: 'element', element: targetElement };
+    }
+
+    return { type: 'text', content: element.textContent.trim() };
   }
 
   async _handleCopy(element, state) {
-    try {
-      let textToCopy = '';
+    if (state.busy) return;
+    state.busy = true;
 
-      if (state.target.type === 'text') {
-        textToCopy = state.target.content;
-      } else if (state.target.type === 'element') {
-        // Try to get text content, fallback to input value
-        textToCopy = state.target.element.value || state.target.element.textContent;
-      }
+    try {
+      const target = this._getTarget(element);
+      const textToCopy =
+        target.type === 'element'
+          ? 'value' in target.element
+            ? target.element.value
+            : target.element.textContent
+          : target.content;
 
       if (!textToCopy) {
         throw new Error('No text to copy');
       }
 
-      // Use modern clipboard API if available
-      if (navigator.clipboard && window.isSecureContext) {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
       } else {
-        // Fallback for older browsers
         this._fallbackCopy(textToCopy);
       }
 
-      this._showSuccess(element, state);
-
-      this.eventBus?.emit('copy-to-clipboard:success', {
-        element,
-        text: textToCopy,
-      });
+      this._showFeedback(element, state, 'copied');
+      this.eventBus?.emit('copy-to-clipboard:success', { element, text: textToCopy });
     } catch (error) {
-      this._showError(element, state);
-
-      this.eventBus?.emit('copy-to-clipboard:error', {
-        element,
-        error: error.message,
-      });
+      this._showFeedback(element, state, 'failed');
+      this.eventBus?.emit('copy-to-clipboard:error', { element, error: error.message });
+    } finally {
+      state.busy = false;
     }
   }
 
+  /**
+   * Copy with the legacy execCommand API on pages without the async Clipboard API.
+   *
+   * @throws {Error} If the browser reports that the copy did not happen.
+   */
   _fallbackCopy(text) {
+    const previousFocus = document.activeElement;
     const textArea = document.createElement('textarea');
     textArea.value = text;
+    textArea.setAttribute('readonly', '');
     textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
+    textArea.style.opacity = '0';
     document.body.appendChild(textArea);
-    textArea.focus();
     textArea.select();
 
     try {
-      document.execCommand('copy');
+      if (!document.execCommand('copy')) {
+        throw new Error('Copy command was rejected');
+      }
     } finally {
-      document.body.removeChild(textArea);
+      textArea.remove();
+      previousFocus?.focus?.({ preventScroll: true });
     }
   }
 
-  _showSuccess(element, state) {
-    element.textContent = state.config.successMessage;
-    element.classList.add(state.config.successClass);
-    element.disabled = true;
+  _showFeedback(element, state, outcome) {
+    const { config } = state;
+    const message = outcome === 'copied' ? config.successMessage : config.errorMessage;
 
-    setTimeout(() => {
-      element.textContent = state.originalText;
-      element.classList.remove(state.config.successClass);
-      element.disabled = false;
-    }, state.config.successDuration);
+    this._resetFeedback(element, state);
+
+    this.setAttr(element, 'state', outcome);
+    element.classList.add(outcome === 'copied' ? config.successClass : config.errorClass);
+
+    const label =
+      element.querySelector('[data-copytoclipboard-label]') ??
+      (element.children.length === 0 ? element : null);
+    if (label) {
+      const originalText = label.textContent;
+      label.textContent = message;
+      state.restoreLabel = () => {
+        label.textContent = originalText;
+      };
+    }
+
+    CopyToClipboard._announce(message);
+
+    state.resetTimer = setTimeout(
+      () => this._resetFeedback(element, state),
+      config.successDuration
+    );
   }
 
-  _showError(element, state) {
-    element.textContent = state.config.errorMessage;
-    element.classList.add(state.config.errorClass);
-
-    setTimeout(() => {
-      element.textContent = state.originalText;
-      element.classList.remove(state.config.errorClass);
-    }, state.config.successDuration);
+  _resetFeedback(element, state) {
+    clearTimeout(state.resetTimer);
+    state.resetTimer = null;
+    state.restoreLabel?.();
+    state.restoreLabel = null;
+    this.removeAttr(element, 'state');
+    element.classList.remove(state.config.successClass, state.config.errorClass);
   }
 
-  static enhanceAll(selector = '[data-copy-to-clipboard]', options) {
+  /**
+   * Announce a message through one visually hidden status region shared by all instances.
+   */
+  static _announce(message) {
+    let region = document.querySelector('[data-copytoclipboard-status]');
+    if (!region) {
+      region = document.createElement('div');
+      region.setAttribute('data-copytoclipboard-status', '');
+      region.setAttribute('role', 'status');
+      Object.assign(region.style, {
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        overflow: 'hidden',
+        clipPath: 'inset(50%)',
+        whiteSpace: 'nowrap',
+      });
+      document.body.append(region);
+    }
+
+    region.textContent = '';
+    requestAnimationFrame(() => {
+      region.textContent = message;
+    });
+  }
+
+  static enhanceAll(selector = '[data-copytoclipboard]', options) {
     const instance = new CopyToClipboard(options);
     document.querySelectorAll(selector).forEach(el => instance.mount(el));
     return instance;

@@ -39,22 +39,50 @@ import { EventManager } from '../managers/EventManager.js';
 import { RouterManager } from '../managers/RouterManager.js';
 import { PageManager } from '../managers/PageManager.js';
 
+/**
+ * @typedef {Object} ParallelogramConfig
+ * @property {'development'|'production'} [mode='production'] - Framework mode
+ * @property {boolean} [debug=false] - Enable debug/log/info/group output. The package's default
+ *   build leaves out the framework's own debug output, so it only appears when the bundler resolves
+ *   the `development` export condition (Vite does during development; esbuild needs
+ *   `--conditions=development`).
+ * @property {boolean} [silent=false] - Suppress ALL logger output, including warn and error. Use in
+ *   production when console pollution is unacceptable. Overrides `debug`.
+ * @property {import('../managers/RouterManager.js').RouterOptions} [router] - Router options; the
+ *   router is only created when they are given
+ * @property {import('../managers/PageManager.js').PageManagerOptions & { containerSelector?: string }} [pageManager] -
+ *   PageManager options, and the selector of the element whose fragments it manages (the body by
+ *   default)
+ */
+
+/**
+ * Returns a component's module or class, usually with a dynamic `import()`
+ *
+ * @typedef {() => (object | Promise<object>)} ComponentLoader
+ */
+
+/**
+ * @typedef {Object} ComponentOptions
+ * @property {string} [name] - The name `dependsOn` refers to; the selector by default
+ * @property {ComponentLoader} [loader] - Loads the component, when it isn't the second argument
+ * @property {'critical'|'normal'} [priority='normal'] - Critical components mount first
+ * @property {string[]} [dependsOn] - Names of components that must load first
+ * @property {string} [exportName] - The named export to use when the module has no default export
+ */
+
 export class Parallelogram {
   /**
    * Create a new Parallelogram instance
-   * @param {Object} config - Configuration options
-   * @param {string} [config.mode='production'] - Framework mode ('development' or 'production')
-   * @param {boolean} [config.debug=false] - Enable debug/log/info/group output. Default false.
-   * @param {boolean} [config.silent=false] - Suppress ALL logger output, including warn and error.
-   *   Use in production when console pollution is unacceptable. Overrides `debug`.
-   * @param {Object} [config.router] - Router configuration (enables router if provided)
-   * @param {Object} [config.pageManager] - PageManager configuration
+   * @param {ParallelogramConfig} [config] - Configuration options
    * @returns {Parallelogram}
    */
   static create(config = {}) {
     return new Parallelogram(config);
   }
 
+  /**
+   * @param {ParallelogramConfig} [config] - Configuration options
+   */
   constructor(config = {}) {
     this.config = {
       mode: config.mode || 'production',
@@ -69,13 +97,14 @@ export class Parallelogram {
     this.eventBus = null;
     this.router = null;
     this.pageManager = null;
+    /** @type {import('./ComponentHost.js').RegistryEntry[] | null} */
     this.componentRegistry = null;
     this.webComponentLoader = null;
 
     // Component registration helper
     this.components = new ComponentRegistrationHelper(this);
 
-    // Track initialization state
+    /** @internal */
     this._initialized = false;
   }
 
@@ -86,10 +115,7 @@ export class Parallelogram {
    */
   run() {
     // Check if DOM is already ready
-    if (
-      document.readyState === 'complete' ||
-      document.readyState === 'interactive'
-    ) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
       // DOM is ready, initialize immediately
       this.init();
       return Promise.resolve(this);
@@ -108,15 +134,16 @@ export class Parallelogram {
    * Initialize the framework
    * Sets up all managers and starts component loading
    * Note: Use run() instead if you're unsure about DOM ready state
+   * @returns {Parallelogram}
    */
   init() {
     if (this._initialized) {
-      console.warn('[Parallelogram] Already initialized');
+      this.logger?.warn('Parallelogram is already initialized');
       return this;
     }
 
     // Create logger
-    this.logger = new DevLogger({}, this.config.debug, this.config.silent);
+    this.logger = new DevLogger('parallelogram', this.config.debug, this.config.silent);
     this.logger?.info('Parallelogram initializing', {
       mode: this.config.mode,
       debug: this.config.debug,
@@ -124,15 +151,13 @@ export class Parallelogram {
     });
 
     // Create event bus
-    this.eventBus = new EventManager();
+    this.eventBus = new EventManager({ logger: this.logger });
 
     // Create component registry for enhancement components
     const registry = ComponentRegistry.create(this.config.mode);
-    this.components._configs.enhancementComponents.forEach(
-      ({ name, selector, options }) => {
-        registry.component(name, selector, options);
-      }
-    );
+    this.components._configs.enhancementComponents.forEach(({ name, selector, options }) => {
+      registry.component(name, selector, options);
+    });
     this.componentRegistry = registry.build();
 
     // Create router if configured
@@ -151,7 +176,7 @@ export class Parallelogram {
       eventBus: this.eventBus,
       logger: this.logger,
       router: this.router,
-      options: this.config.pageManager,
+      options: { observeRoot: document.body, ...this.config.pageManager },
     };
     this.pageManager = new PageManager(pageManagerConfig);
 
@@ -163,6 +188,7 @@ export class Parallelogram {
 
     this.webComponentLoader = new WebComponentLoader(webComponentMap, {
       observeDOM: true, // Watch for dynamically added web components
+      logger: this.logger,
       onLoad: tagName => {
         this.logger?.info(`Web component loaded: ${tagName}`);
       },
@@ -173,11 +199,6 @@ export class Parallelogram {
 
     // Initialize web component loader
     this.webComponentLoader.init();
-
-    // Mount all enhancement components in the initial page
-    this.pageManager.mountAllWithin(document.body, {
-      trigger: 'initial-global',
-    });
 
     this._initialized = true;
     this.logger?.info('Parallelogram initialized successfully');
@@ -219,6 +240,36 @@ export class Parallelogram {
   }
 
   /**
+   * Register an enhancement component added after init()
+   * @internal
+   */
+  _registerLateComponent({ name, selector, options }) {
+    if (!this._initialized) return;
+
+    const entry = {
+      name,
+      selector,
+      priority: options.priority,
+      dependsOn: options.dependsOn,
+      exportName: options.exportName,
+      loader: options.loader,
+    };
+    this.componentRegistry.push(entry);
+    this.pageManager.host.add(entry);
+  }
+
+  /**
+   * Register a web component added after init()
+   * @internal
+   */
+  _registerLateWebComponent(tagName, loader) {
+    if (!this._initialized) return;
+
+    this.webComponentLoader.register(tagName, loader);
+    this.webComponentLoader.scanAndLoad();
+  }
+
+  /**
    * Check if framework is initialized
    * @returns {boolean}
    */
@@ -232,8 +283,13 @@ export class Parallelogram {
  * Automatically detects web components vs enhancement components
  */
 class ComponentRegistrationHelper {
+  /**
+   * @param {Parallelogram} parallelogram
+   */
   constructor(parallelogram) {
+    /** @internal */
     this.parallelogram = parallelogram;
+    /** @internal */
     this._configs = {
       webComponents: [],
       enhancementComponents: [],
@@ -242,10 +298,18 @@ class ComponentRegistrationHelper {
 
   /**
    * Add a component (auto-detects type based on selector pattern)
-   * @param {string} nameOrSelector - Component name (web component) or selector (enhancement)
-   * @param {Function|Object} loaderOrOptions - Loader function or options object
-   * @param {Object} [options] - Additional options (only for enhancement components)
+   *
+   * Custom element tag names (containing a hyphen, such as `p-modal`) are lazy-loaded
+   * web components; anything else is an enhancement component selector. An
+   * enhancement component is named by its `name` option, or otherwise by its selector,
+   * and `dependsOn` refers to those names. Components added after `run()` are mounted
+   * straight away.
+   *
+   * @param {string} nameOrSelector - Custom element tag name, or selector for an enhancement
+   * @param {ComponentLoader|ComponentOptions} loaderOrOptions - Loader function or options object
+   * @param {ComponentOptions} [options] - Additional options (only for enhancement components)
    * @returns {ComponentRegistrationHelper}
+   * @throws {Error} If an enhancement component with the same name is already registered.
    *
    * @example
    * // Web component (tag name + loader)
@@ -258,68 +322,47 @@ class ComponentRegistrationHelper {
    * @example
    * // Enhancement component with options
    * .add('[data-toggle]', {
+   *   name: 'toggle',
    *   loader: () => import('./Toggle'),
    *   priority: 'critical'
    * })
    */
   add(nameOrSelector, loaderOrOptions, options = {}) {
-    const isWebComponent = this._detectWebComponent(nameOrSelector);
-
-    if (isWebComponent) {
-      // Web component: nameOrSelector is tag name, loaderOrOptions is loader function
-      this._configs.webComponents.push({
-        name: nameOrSelector,
-        loader: loaderOrOptions,
-      });
-    } else {
-      // Enhancement component: nameOrSelector is selector
+    if (this._detectWebComponent(nameOrSelector)) {
       const loader =
-        typeof loaderOrOptions === 'function'
-          ? loaderOrOptions
-          : loaderOrOptions.loader;
-      const componentOptions =
-        typeof loaderOrOptions === 'function'
-          ? options
-          : { ...loaderOrOptions, ...options };
-
-      this._configs.enhancementComponents.push({
-        name: this._generateComponentName(nameOrSelector),
-        selector: nameOrSelector,
-        options: {
-          ...componentOptions,
-          loader,
-        },
-      });
+        typeof loaderOrOptions === 'function' ? loaderOrOptions : loaderOrOptions?.loader;
+      this._configs.webComponents.push({ name: nameOrSelector, loader });
+      this.parallelogram._registerLateWebComponent(nameOrSelector, loader);
+      return this;
     }
 
-    return this; // Chainable
+    const loader = typeof loaderOrOptions === 'function' ? loaderOrOptions : loaderOrOptions.loader;
+    const componentOptions =
+      typeof loaderOrOptions === 'function' ? options : { ...loaderOrOptions, ...options };
+    const name = componentOptions.name ?? nameOrSelector;
+
+    if (this._configs.enhancementComponents.some(config => config.name === name)) {
+      throw new Error(`A component named "${name}" is already registered`);
+    }
+
+    const config = {
+      name,
+      selector: nameOrSelector,
+      options: { ...componentOptions, loader },
+    };
+    this._configs.enhancementComponents.push(config);
+    this.parallelogram._registerLateComponent(config);
+
+    return this;
   }
 
   /**
-   * Detect if a selector is a web component (custom element tag)
-   * @private
+   * Whether a string is a valid custom element name (lowercase, starting with a letter,
+   * containing a hyphen)
+   * @internal
    */
   _detectWebComponent(nameOrSelector) {
-    // Web components are simple tag names (no special selector characters)
-    // Enhancement components have [, ., #, :, or space
-    return !/[\[\.\#\:\s]/.test(nameOrSelector);
-  }
-
-  /**
-   * Generate a component name from a selector
-   * @private
-   */
-  _generateComponentName(selector) {
-    // Extract meaningful name from selector
-    // [data-toggle] -> toggle
-    // .lightbox -> lightbox
-    // #main-nav -> main-nav
-    const match = selector.match(/data-([a-z-]+)|[\.\#]([a-z-]+)/i);
-    if (match) {
-      return match[1] || match[2];
-    }
-    // Fallback: sanitize the selector
-    return selector.replace(/[^a-z0-9-]/gi, '');
+    return /^[a-z][a-z0-9._]*-[a-z0-9._-]*$/.test(nameOrSelector);
   }
 }
 

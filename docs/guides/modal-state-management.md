@@ -1,5 +1,7 @@
 # Modal State Management
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 ## Overview
 
 The PModal web component uses a simple state machine pattern with `ExtendedStates` from `ComponentStates.js` to manage modal lifecycle transitions.
@@ -21,19 +23,23 @@ stateDiagram-v2
 The modal uses the `data-modal` attribute to expose its current state:
 
 ### `closed` (ExtendedStates.CLOSED)
+
 - **Initial state** - Modal is not visible
 - **Transitions to**: `opening` via `open()` method
 
 ### `opening` (ExtendedStates.OPENING)
+
 - **Transition state** - Modal is becoming visible
 - **Duration**: One animation frame
 - **Transitions to**: `open` automatically
 
 ### `open` (ExtendedStates.OPEN)
+
 - **Active state** - Modal is fully visible and interactive
 - **Transitions to**: `closing` via `close()` method
 
 ### `closing` (ExtendedStates.CLOSING)
+
 - **Transition state** - Modal is becoming hidden
 - **Duration**: Controlled by `--modal-animation-duration` CSS variable (default: 0.2s)
 - **Transitions to**: `closed` automatically
@@ -104,12 +110,12 @@ Example external CSS targeting (if needed):
 
 ```css
 /* Target modals in opening state */
-p-modal[data-modal="opening"] {
+p-modal[data-modal='opening'] {
   /* Optional external styling */
 }
 
 /* Target modals in closing state */
-p-modal[data-modal="closing"] {
+p-modal[data-modal='closing'] {
   /* Optional external styling */
 }
 ```
@@ -118,17 +124,15 @@ p-modal[data-modal="closing"] {
 
 The modal dispatches events at key lifecycle points:
 
-- `modal:open` - Fired when modal opens (during `_onOpen()`)
-- `modal:close` - Fired when modal closes (during `_onClose()`)
+- `p-modal:open` - Fired when modal opens (during `_onOpen()`)
+- `p-modal:close` - Fired when modal closes (during `_onClose()`)
 
 State changes do not trigger separate events; use the existing lifecycle events instead.
 
 ## Usage Example
 
 ```html
-<p-modal id="example-modal"
-         data-modal-closable="true"
-         data-modal-backdrop-close="true">
+<p-modal id="example-modal" data-modal-closable="true" data-modal-backdrop-close="true">
   <h2 slot="title">Example Modal</h2>
   <p>Modal content goes here.</p>
   <div slot="actions">
@@ -137,9 +141,7 @@ State changes do not trigger separate events; use the existing lifecycle events 
   </div>
 </p-modal>
 
-<button data-modal data-modal-target="#example-modal">
-  Open Modal
-</button>
+<button data-modal data-modal-target="#example-modal">Open Modal</button>
 ```
 
 ### JavaScript API
@@ -165,16 +167,19 @@ console.log(modal.getAttribute('data-modal')); // "open", "closed", etc.
 ## Benefits
 
 ### Code Simplicity
+
 - Uses existing `ExtendedStates` constants
 - No custom state validation logic needed
 - Minimal code addition (~15 lines)
 
 ### Consistency
+
 - Matches framework-wide state management pattern
 - Same state values as other components (Lightbox, Toggle, etc.)
 - Predictable state transitions
 
 ### Debugging
+
 - State visible in DevTools as `data-modal` attribute
 - Easy to verify current modal state
 - Helpful for testing and troubleshooting
@@ -204,7 +209,7 @@ The `close()` method reads this value to ensure the `closing` state duration mat
 1. **Don't manipulate state directly** - Use `open()` and `close()` methods
 2. **Don't skip states** - Let the state machine handle transitions
 3. **Use CSS variables** - Configure animation timing via CSS, not JavaScript
-4. **Listen to events** - Use `modal:open` and `modal:close` for lifecycle hooks
+4. **Listen to events** - Use `p-modal:open` and `p-modal:close` for lifecycle hooks
 5. **Check state when needed** - Read `data-modal` attribute for current state
 
 ## Migration Notes
@@ -216,6 +221,7 @@ No migration needed - this is a non-breaking addition. The modal continues to wo
 ### State Values
 
 All state values are lowercase strings matching `ExtendedStates`:
+
 - `"closed"` (not `"CLOSED"`)
 - `"opening"` (not `"OPENING"`)
 - `"open"` (not `"OPEN"`)

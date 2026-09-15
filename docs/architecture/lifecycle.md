@@ -1,5 +1,7 @@
 # Application Lifecycle
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 This document explains the complete application lifecycle from initial page load through component initialization, state management, and cleanup.
 
 ## Overview
@@ -24,7 +26,7 @@ graph TD
 ### Step 1: Core System Setup
 
 ```javascript
-// File: src/demo/demo.js
+// File: site/src/main.js
 async function initFramework() {
   // 1. Initialize logger first for debugging throughout
   const logger = new DevLogger({ level: 'debug', prefix: 'Demo' }, true);
@@ -462,17 +464,29 @@ class MyComponent extends BaseComponent {
 
   setupEventListeners(element, signal) {
     // All listeners use the same signal
-    element.addEventListener('click', () => {
-      this.handleClick(element);
-    }, { signal });
+    element.addEventListener(
+      'click',
+      () => {
+        this.handleClick(element);
+      },
+      { signal }
+    );
 
-    document.addEventListener('scroll', () => {
-      this.handleScroll(element);
-    }, { signal });
+    document.addEventListener(
+      'scroll',
+      () => {
+        this.handleScroll(element);
+      },
+      { signal }
+    );
 
-    window.addEventListener('resize', () => {
-      this.handleResize(element);
-    }, { signal });
+    window.addEventListener(
+      'resize',
+      () => {
+        this.handleResize(element);
+      },
+      { signal }
+    );
   }
 
   // Cleanup happens automatically in BaseComponent.unmount()

@@ -1,5 +1,7 @@
 # Creating Components
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 This guide walks you through creating components in Parallelogram-JS, from basic enhancements to complex interactive features.
 
 ## Quick Start
@@ -111,19 +113,19 @@ registry.component('mycomponent', '[data-mycomponent]', {
 ```html
 <!-- Basic usage -->
 <div data-mycomponent>
-    <button>Toggle</button>
-    <div data-target>Content to toggle</div>
+  <button>Toggle</button>
+  <div data-target>Content to toggle</div>
 </div>
 
 <!-- With configuration -->
 <div
-    data-mycomponent
-    data-mycomponent-active-class="highlight"
-    data-mycomponent-duration="500"
-    data-mycomponent-auto-start="true"
+  data-mycomponent
+  data-mycomponent-active-class="highlight"
+  data-mycomponent-duration="500"
+  data-mycomponent-auto-start="true"
 >
-    <button>Toggle</button>
-    <div data-target>Content</div>
+  <button>Toggle</button>
+  <div data-target>Content</div>
 </div>
 ```
 
@@ -472,7 +474,7 @@ export default class SelectLoader extends BaseComponent {
     return {
       loadingClass: 'loading',
       errorClass: 'error',
-      transition: 'fade',        // 'fade', 'slide', 'none'
+      transition: 'fade', // 'fade', 'slide', 'none'
       transitionDuration: 300,
       retainScroll: false,
       emptyMessage: 'Please select an option',
@@ -506,7 +508,7 @@ export default class SelectLoader extends BaseComponent {
 
     // Get target container using BaseComponent helper
     const targetElement = this._getTargetElement(element, 'selectloader-target', {
-      required: true
+      required: true,
     });
 
     if (!targetElement) {
@@ -533,7 +535,7 @@ export default class SelectLoader extends BaseComponent {
     this.logger?.info('SelectLoader initialized', {
       element,
       target: config.target,
-      options: element.options.length
+      options: element.options.length,
     });
 
     return state;
@@ -545,21 +547,29 @@ export default class SelectLoader extends BaseComponent {
    */
   _setupEventListeners(element, state) {
     // Listen for select changes
-    element.addEventListener('change', (event) => {
-      this._handleChange(event, element, state);
-    }, { signal: state.controller.signal });
+    element.addEventListener(
+      'change',
+      event => {
+        this._handleChange(event, element, state);
+      },
+      { signal: state.controller.signal }
+    );
 
     // Listen for form resets
     const form = element.closest('form');
     if (form) {
-      form.addEventListener('reset', async () => {
-        await this._delay(10);
-        this._showEmptyMessage(state);
-      }, { signal: state.controller.signal });
+      form.addEventListener(
+        'reset',
+        async () => {
+          await this._delay(10);
+          this._showEmptyMessage(state);
+        },
+        { signal: state.controller.signal }
+      );
     }
 
     // Listen for router navigation events via EventManager
-    this.eventBus?.on('router:navigate-success', (data) => {
+    this.eventBus?.on('router:navigate-success', data => {
       // Check if target still exists after navigation
       if (state.targetElement && !document.contains(state.targetElement)) {
         this.logger?.warn('SelectLoader: Target removed during navigation');
@@ -578,7 +588,7 @@ export default class SelectLoader extends BaseComponent {
     const beforeEvent = this._dispatch(element, 'selectloader:before-change', {
       value,
       previousUrl: state.currentUrl,
-      targetElement: state.targetElement
+      targetElement: state.targetElement,
     });
 
     if (beforeEvent.defaultPrevented) {
@@ -592,7 +602,7 @@ export default class SelectLoader extends BaseComponent {
       state.currentUrl = null;
 
       this._dispatch(element, 'selectloader:cleared', {
-        targetElement: state.targetElement
+        targetElement: state.targetElement,
       });
       return;
     }
@@ -628,7 +638,7 @@ export default class SelectLoader extends BaseComponent {
     // Emit loading event
     this._dispatch(element, 'selectloader:loading', {
       url,
-      targetElement: state.targetElement
+      targetElement: state.targetElement,
     });
 
     try {
@@ -662,18 +672,17 @@ export default class SelectLoader extends BaseComponent {
       this._dispatch(element, 'selectloader:loaded', {
         url,
         targetElement: state.targetElement,
-        html
+        html,
       });
 
       // EventManager will propagate this event
       this.eventBus?.emit('selectloader:content-loaded', {
         element,
         url,
-        targetElement: state.targetElement
+        targetElement: state.targetElement,
       });
 
       this.logger?.info('SelectLoader: Fragment loaded', { url });
-
     } catch (error) {
       this.logger?.error('SelectLoader: Load failed', { url, error });
 
@@ -684,16 +693,15 @@ export default class SelectLoader extends BaseComponent {
       this._dispatch(element, 'selectloader:error', {
         url,
         error,
-        targetElement: state.targetElement
+        targetElement: state.targetElement,
       });
 
       // Could notify via toast/alert if available
       this.eventBus?.emit('app:notification', {
         type: 'error',
         message: `Failed to load content: ${error.message}`,
-        duration: 5000
+        duration: 5000,
       });
-
     } finally {
       // Remove loading state
       state.isLoading = false;
@@ -703,7 +711,7 @@ export default class SelectLoader extends BaseComponent {
 
       this._dispatch(element, 'selectloader:complete', {
         url,
-        success: !state.targetElement.classList.contains(state.config.errorClass)
+        success: !state.targetElement.classList.contains(state.config.errorClass),
       });
     }
   }
@@ -808,15 +816,19 @@ export default class SelectLoader extends BaseComponent {
     // Setup retry button using BaseComponent event handling
     const retryButton = document.getElementById(retryId);
     if (retryButton) {
-      retryButton.addEventListener('click', () => {
-        // Find the select element from state
-        const element = Array.from(document.querySelectorAll('select')).find(
-          el => this.getState(el) === state
-        );
-        if (element && state.currentUrl) {
-          this._loadFragment(element, state, state.currentUrl);
-        }
-      }, { once: true });
+      retryButton.addEventListener(
+        'click',
+        () => {
+          // Find the select element from state
+          const element = Array.from(document.querySelectorAll('select')).find(
+            el => this.getState(el) === state
+          );
+          if (element && state.currentUrl) {
+            this._loadFragment(element, state, state.currentUrl);
+          }
+        },
+        { once: true }
+      );
     }
   }
 
@@ -858,12 +870,14 @@ export default class SelectLoader extends BaseComponent {
    */
   getLoadState(element) {
     const state = this.getState(element);
-    return state ? {
-      isLoading: state.isLoading,
-      currentUrl: state.currentUrl,
-      hasContent: state.targetElement.children.length > 0,
-      hasError: state.targetElement.classList.contains(state.config.errorClass)
-    } : null;
+    return state
+      ? {
+          isLoading: state.isLoading,
+          currentUrl: state.currentUrl,
+          hasContent: state.targetElement.children.length > 0,
+          hasError: state.targetElement.classList.contains(state.config.errorClass),
+        }
+      : null;
   }
 }
 ```
@@ -896,12 +910,14 @@ export default class SelectLoader extends BaseComponent {
 </div>
 
 <!-- Advanced configuration with data-view -->
-<select data-selectloader
-        data-selectloader-target-view="product-details"
-        data-selectloader-transition="slide"
-        data-selectloader-transition-duration="400"
-        data-selectloader-retain-scroll="true"
-        data-selectloader-loading-class="is-loading">
+<select
+  data-selectloader
+  data-selectloader-target-view="product-details"
+  data-selectloader-transition="slide"
+  data-selectloader-transition-duration="400"
+  data-selectloader-retain-scroll="true"
+  data-selectloader-loading-class="is-loading"
+>
   <option value="">Select product...</option>
   <option value="/products/1/fragment">Product 1</option>
   <option value="/products/2/fragment">Product 2</option>
@@ -920,7 +936,7 @@ const registry = ComponentRegistry.create('dev');
 
 registry.component('selectloader', '[data-selectloader]', {
   priority: 'normal',
-  loader: () => import('./components/SelectLoader.js')
+  loader: () => import('./components/SelectLoader.js'),
 });
 
 // Initialize app with managers
@@ -929,8 +945,8 @@ const app = new App({
   router: {
     enabled: true,
     baseUrl: '',
-    timeout: 10000
-  }
+    timeout: 10000,
+  },
 });
 
 await app.initialize();
@@ -942,7 +958,7 @@ await app.initialize();
 
 ```javascript
 // Listen for content loaded events
-app.eventBus.on('selectloader:content-loaded', (data) => {
+app.eventBus.on('selectloader:content-loaded', data => {
   const { url, targetElement } = data;
   console.log(`Content loaded from ${url}`);
 
@@ -951,12 +967,12 @@ app.eventBus.on('selectloader:content-loaded', (data) => {
 });
 
 // Listen for errors
-app.eventBus.on('selectloader:error', (data) => {
+app.eventBus.on('selectloader:error', data => {
   console.error('SelectLoader error:', data.error);
 });
 
 // Listen for app notifications (could trigger toast)
-app.eventBus.on('app:notification', (notification) => {
+app.eventBus.on('app:notification', notification => {
   // Toast component could listen for this
   console.log(`${notification.type}: ${notification.message}`);
 });
@@ -972,15 +988,12 @@ app.eventBus.on('app:notification', (notification) => {
 </select>
 
 <script>
-// Prevent certain changes using DOM events
-document.getElementById('region-select').addEventListener(
-  'selectloader:before-change',
-  (event) => {
+  // Prevent certain changes using DOM events
+  document.getElementById('region-select').addEventListener('selectloader:before-change', event => {
     if (!confirm('Load new content? Unsaved changes will be lost.')) {
       event.preventDefault(); // Cancels the load
     }
-  }
-);
+  });
 </script>
 ```
 
@@ -1047,7 +1060,9 @@ select.loading {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Empty state */
@@ -1125,9 +1140,7 @@ class Carousel extends InteractiveElement {
 ```javascript
 class Carousel extends BaseComponent {
   _init(element) {
-    const state = {
-      /* ... */
-    };
+    const state = {/* ... */};
 
     // Load plugins based on configuration
     this._loadPlugins(element, state);

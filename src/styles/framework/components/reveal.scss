@@ -1,6 +1,8 @@
 /**
  * Reveal (Scrollreveal) Component Styles
- * State-based styling using data-reveal attribute values
+ * State-based styling using data-reveal-state attribute values
+ *
+ * Content only starts hidden while scripts are running, so it stays visible when they don't.
  */
 
 :root {
@@ -9,45 +11,37 @@
   --reveal-distance: 1rem;
 }
 
-/* Base styles for all reveal elements - start hidden by default with no transition */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(var(--reveal-distance));
-}
-
-/* State: Hidden - element not yet revealed (explicit state, same as default) */
-[data-reveal="hidden"] {
-  opacity: 0;
-  transform: translateY(var(--reveal-distance));
-}
-
-/* State: Revealing - element is animating in (transition applied here) */
-[data-reveal="revealing"] {
-  opacity: 1;
-  transform: translateY(0);
-  will-change: opacity, transform;
-  transition:
-    opacity var(--reveal-transition-duration) var(--reveal-transition-easing),
-    transform var(--reveal-transition-duration) var(--reveal-transition-easing);
-}
-
-/* State: Revealed - element fully visible */
-[data-reveal="revealed"] {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Accessibility: Respect reduced motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] {
-    transition: none;
-    opacity: 1;
-    transform: none;
+/* Until Scrollreveal loads, hide what it will reveal so the content doesn't flash in first */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal]:not([data-reveal-enhanced]) {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance));
   }
+}
 
-  [data-reveal="hidden"],
-  [data-reveal="revealing"],
-  [data-reveal="revealed"] {
+[data-reveal-state='hidden'],
+[data-reveal-state='hiding'] {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+}
+
+[data-reveal-state='revealing'],
+[data-reveal-state='visible'] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal-state='revealing'],
+  [data-reveal-state='hiding'] {
+    transition:
+      opacity var(--reveal-transition-duration) var(--reveal-transition-easing),
+      transform var(--reveal-transition-duration) var(--reveal-transition-easing);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal][data-reveal-state] {
     opacity: 1;
     transform: none;
   }

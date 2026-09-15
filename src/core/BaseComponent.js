@@ -1,7 +1,6 @@
 import {
   camelCase,
   getDataAttr,
-  getConfigFromAttrs,
   generateId,
   debounce,
   throttle,
@@ -13,8 +12,27 @@ import {
   trapFocus,
   restoreFocus,
   createElement,
-  getTargetElement
 } from '../utils/dom-utils.js';
+
+const classesWarnedAboutSelector = new WeakSet();
+
+/**
+ * A component's state for one mounted element: the object `_init` returns, which subclasses extend
+ * with their own entries
+ *
+ * @typedef {{ controller: AbortController, cleanup: () => void, [key: string]: unknown }} ComponentState
+ */
+
+/**
+ * What the framework passes to the components it creates
+ *
+ * @typedef {Object} ComponentContext
+ * @property {import('../managers/EventManager.js').EventManager} [eventBus]
+ * @property {import('./DevLogger.js').DevLogger} [logger]
+ * @property {import('../managers/RouterManager.js').RouterManager | null} [router]
+ * @property {import('./ComponentHost.js').RegistryEntry} [config] - The registry entry the
+ *   component was loaded from
+ */
 
 /**
  * BaseComponent - Production-ready base class with state management
@@ -22,66 +40,173 @@ import {
  * Provides lifecycle helpers, state tracking per element, data-attribute
  * parsing, and event dispatching. Components should extend this class and
  * implement _init(element) and optionally update(element).
- *
- * @typedef {Object} ComponentState
- * @property {AbortController} controller - Abort controller for listeners
- * @property {Function} cleanup - Cleanup function called on unmount
  */
 export class BaseComponent {
-  constructor({ eventBus, logger, router }) {
+  /**
+   * @param {ComponentContext} [context]
+   */
+  constructor({ eventBus, logger, router } = {}) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
-    // Primary storage for element states
-    this.elements = new WeakMap();
+    /** @type {Map<HTMLElement, ComponentState>} Mounted elements and their state */
+    this.elements = new Map();
     // Backward-compat alias for older components expecting `states`
     this.states = this.elements;
-    this._keys = null;
+    /**
+     * Elements whose asynchronous _init is still running
+     *
+     * @internal
+     * @type {Map<HTMLElement, Promise<void>>}
+     */
+    this._initializing = new Map();
+    /**
+     * Controllers created by the base _init
+     *
+     * @internal
+     * @type {WeakMap<HTMLElement, AbortController>}
+     */
+    this._controllers = new WeakMap();
   }
 
+  /**
+   * Mount the component on an element, or call update() if it is already mounted.
+   *
+   * If _init throws, the element is not tracked and its abort signal is aborted
+   * before the error is rethrown. An _init that returns a Promise is tracked
+   * straight away, and its state is stored once the Promise resolves.
+   *
+   * @param {HTMLElement} element
+   * @returns {void}
+   */
   mount(element) {
-    if (this.elements.has(element)) return this.update(element);
-    const state = this._init(element);
-    this.elements.set(element, state);
+    if (this.elements.has(element) || this._initializing.has(element)) {
+      return this.update(element);
+    }
+
+    let state;
+    try {
+      state = this._init(element);
+    } catch (error) {
+      this._abortController(element);
+      throw error;
+    }
+
+    if (typeof state?.then !== 'function') {
+      this.elements.set(element, state);
+      return;
+    }
+
+    const pending = Promise.resolve(state).then(
+      resolved => {
+        if (this._initializing.get(element) !== pending) {
+          this._cleanupLate(element, resolved);
+          return;
+        }
+        this._initializing.delete(element);
+        this.elements.set(element, resolved);
+      },
+      error => {
+        if (this._initializing.get(element) === pending) {
+          this._initializing.delete(element);
+          this._abortController(element);
+        }
+        this.logger?.error('Component failed to initialize', { element, error });
+      }
+    );
+    this._initializing.set(element, pending);
   }
 
-  update(element) {
+  /**
+   * Called by mount() for an element the component is already mounted on
+   *
+   * @param {HTMLElement} _element
+   * @returns {void}
+   */
+  update(_element) {
     // Override in subclasses for update logic
   }
 
+  /**
+   * Unmount the component from an element.
+   *
+   * The state's cleanup() runs and the element's abort signal is aborted
+   * afterwards, even if cleanup throws.
+   *
+   * @param {HTMLElement} element
+   * @returns {void}
+   */
   unmount(element) {
+    if (this._initializing.has(element)) {
+      this._initializing.delete(element);
+      this._abortController(element);
+      return;
+    }
+
     const state = this.elements.get(element);
     if (!state) return;
-    try {
-      state.cleanup?.();
-    } finally {
-      this.elements.delete(element);
-    }
+
+    this.elements.delete(element);
+    this._controllers.delete(element);
+    this._runCleanup(state);
   }
 
+  /**
+   * Unmount the component from every element it is mounted on
+   *
+   * @returns {void}
+   */
   destroy() {
-    for (const element of this._elementsKeys()) {
+    for (const element of this.trackedElements()) {
       this.unmount(element);
     }
   }
 
+  /**
+   * Elements this component is mounted on, including ones still initializing.
+   *
+   * @returns {HTMLElement[]}
+   */
+  trackedElements() {
+    return [...this.elements.keys(), ...this._initializing.keys()];
+  }
+
+  /**
+   * @deprecated 0.5.0 Use trackedElements() instead. Will be removed in 0.6.0.
+   * @protected
+   * @returns {Set<HTMLElement>}
+   */
   _elementsKeys() {
-    if (!this._keys) this._keys = new Set();
-    return this._keys;
+    return new Set(this.trackedElements());
   }
 
-  _track(element) {
-    if (!this._keys) this._keys = new Set();
-    this._keys.add(element);
+  /** @internal */
+  _runCleanup(state) {
+    try {
+      state?.cleanup?.();
+    } finally {
+      state?.controller?.abort();
+    }
   }
 
-  _untrack(element) {
-    this._keys?.delete(element);
+  /** @internal */
+  _cleanupLate(element, state) {
+    try {
+      this._runCleanup(state);
+    } catch (error) {
+      this.logger?.error('Component cleanup failed', { element, error });
+    }
+  }
+
+  /** @internal */
+  _abortController(element) {
+    this._controllers.get(element)?.abort();
+    this._controllers.delete(element);
   }
 
   /**
    * Initialize per-element state. Called by mount() the first time an element
-   * is encountered; the returned object is stored in this.elements (a WeakMap)
+   * is encountered; the returned object is stored in this.elements (a Map)
    * and retrieved later by getState() / unmount().
    *
    * Subclasses MUST override and return a ComponentState object. The returned
@@ -90,7 +215,7 @@ export class BaseComponent {
    * observers, timers, DOM nodes, etc).
    *
    * Recommended pattern — call super._init(element) to inherit the base
-   * AbortController + element tracking, then extend the returned state and
+   * AbortController, then extend the returned state and
    * wrap cleanup so the base teardown still runs:
    *
    *   _init(element) {
@@ -103,7 +228,7 @@ export class BaseComponent {
    *
    *     state.cleanup = () => {
    *       state.observer.disconnect();
-   *       baseCleanup();   // aborts the controller and untracks the element
+   *       baseCleanup();   // aborts the controller
    *     };
    *     return state;
    *   }
@@ -112,41 +237,79 @@ export class BaseComponent {
    * automatically when baseCleanup() runs — no manual removeEventListener()
    * calls needed.
    *
+   * @protected
    * @param {HTMLElement} element - Element being mounted
    * @returns {ComponentState} State stored in this.elements for the element
    */
   _init(element) {
     const controller = new AbortController();
-    const cleanup = () => {
-      controller.abort();
-      this._untrack(element);
-    };
-    this._track(element);
-    return { cleanup, controller };
+    this._controllers.set(element, controller);
+    return { cleanup: () => controller.abort(), controller };
   }
 
-  // Helper method for getting state
+  /**
+   * The component's JavaScript state for a mounted element: the object `_init` returned, with its
+   * controller and cleanup
+   *
+   * This is not the `data-<component>-state` attribute; read that with getElementState() and write it
+   * with setState().
+   *
+   * @param {HTMLElement} element
+   * @returns {ComponentState|undefined}
+   */
   getState(element) {
     return this.elements.get(element);
   }
 
-  /* Wrapper methods that delegate to shared utilities */
+  /**
+   * @deprecated 0.5.0 Reads an unprefixed `data-<attr>` and guesses its type. Use getAttr(),
+   * getBoolAttr() or getNumberAttr(), which read `data-<component>-<attr>`. Removed in 0.6.0.
+   * @protected
+   * @param {HTMLElement} element
+   * @param {string} attr
+   * @param {unknown} [defaultValue]
+   * @returns {unknown}
+   */
   _getDataAttr(element, attr, defaultValue) {
     return getDataAttr(element, attr, defaultValue);
   }
 
+  /**
+   * @protected
+   * @param {string} str
+   * @returns {string}
+   */
   _camelCase(str) {
     return camelCase(str);
   }
 
+  /**
+   * @protected
+   * @template {(...args: any[]) => void} F
+   * @param {F} func
+   * @param {number} [wait=300] - Milliseconds to wait after the last call
+   * @returns {(...args: Parameters<F>) => void}
+   */
   _debounce(func, wait = 300) {
     return debounce(func, wait);
   }
 
+  /**
+   * @protected
+   * @template {(...args: any[]) => void} F
+   * @param {F} func
+   * @param {number} [limit=100] - Milliseconds between calls
+   * @returns {(...args: Parameters<F>) => void}
+   */
   _throttle(func, limit = 100) {
     return throttle(func, limit);
   }
 
+  /**
+   * @protected
+   * @param {number} ms
+   * @returns {Promise<void>}
+   */
   _delay(ms) {
     return delay(ms);
   }
@@ -155,10 +318,11 @@ export class BaseComponent {
    * Get target element from data attribute with validation
    * Supports both CSS selectors (data-*-target="#id") and data-view lookups (data-*-target-view="viewname")
    *
+   * @protected
    * @param {HTMLElement} element - Element containing the data attribute
    * @param {string} dataAttr - Data attribute name (without 'data-' prefix)
-   * @param {Object} options - Options for validation
-   * @param {boolean} options.required - Whether to warn if not found
+   * @param {Object} [options] - Options for validation
+   * @param {boolean} [options.required] - Whether to warn if not found
    * @returns {HTMLElement|null} Target element or null
    *
    * @example
@@ -180,7 +344,7 @@ export class BaseComponent {
         this.logger?.warn(`Target element with data-view="${viewName}" not found`, {
           viewName,
           element,
-          attribute: viewAttr
+          attribute: viewAttr,
         });
       }
       return target;
@@ -204,9 +368,15 @@ export class BaseComponent {
 
   /**
    * Parse multiple data attributes into configuration object
+   *
+   * Each value is converted to the type of the matching entry in
+   * `static defaults`: boolean defaults are read with getBoolAttr(), number
+   * defaults with getNumberAttr(), and everything else as a string.
+   *
+   * @protected
    * @param {HTMLElement} element - Element with data attributes
-   * @param {Object} mapping - Map of config keys to short attribute names (without component prefix)
-   * @returns {Object} Configuration object
+   * @param {Record<string, string>} mapping - Map of config keys to short attribute names (without component prefix)
+   * @returns {Record<string, string|number|boolean|null>} Configuration object
    * @example
    * // In SelectLoader component:
    * const config = this._getConfigFromAttrs(element, {
@@ -218,16 +388,23 @@ export class BaseComponent {
     const config = {};
     for (const [key, attrName] of Object.entries(mapping)) {
       const defaultValue = this.constructor.defaults?.[key];
-      config[key] = this.getAttr(element, attrName, defaultValue);
+      if (typeof defaultValue === 'boolean') {
+        config[key] = this.getBoolAttr(element, attrName, defaultValue);
+      } else if (typeof defaultValue === 'number') {
+        config[key] = this.getNumberAttr(element, attrName, defaultValue);
+      } else {
+        config[key] = this.getAttr(element, attrName, defaultValue);
+      }
     }
     return config;
   }
 
   /**
    * Validate and require state exists before proceeding
+   * @protected
    * @param {HTMLElement} element - Element to get state for
-   * @param {string} methodName - Name of calling method for error messages
-   * @returns {Object|null} State object or null
+   * @param {string} [methodName] - Name of calling method for error messages
+   * @returns {ComponentState|undefined} State object, or undefined after logging a warning
    */
   _requireState(element, methodName = 'method') {
     const state = this.getState(element);
@@ -237,39 +414,95 @@ export class BaseComponent {
     return state;
   }
 
+  /**
+   * @protected
+   * @param {string} [prefix='elem']
+   * @returns {string}
+   */
   _generateId(prefix = 'elem') {
     return generateId(prefix);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [timeout=2000] - Longest wait in milliseconds
+   * @returns {Promise<void>}
+   */
   async _waitForTransition(element, timeout = 2000) {
     return waitForTransition(element, timeout);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [duration=300] - Milliseconds
+   * @returns {Promise<void>}
+   */
   async _fadeIn(element, duration = 300) {
     return fadeIn(element, duration);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} element
+   * @param {number} [duration=300] - Milliseconds
+   * @returns {Promise<void>}
+   */
   async _fadeOut(element, duration = 300) {
     return fadeOut(element, duration);
   }
 
+  /**
+   * @protected
+   * @param {ParentNode} [container=document]
+   * @returns {HTMLElement[]}
+   */
   _getFocusableElements(container = document) {
     return getFocusableElements(container);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement} container
+   * @param {KeyboardEvent} event - The Tab keydown event
+   * @returns {void}
+   */
   _trapFocus(container, event) {
     return trapFocus(container, event);
   }
 
+  /**
+   * @protected
+   * @param {HTMLElement|null} element
+   * @returns {void}
+   */
   _restoreFocus(element) {
     return restoreFocus(element);
   }
 
+  /**
+   * @protected
+   * @param {string} tag
+   * @param {Record<string, string>} [attributes]
+   * @param {string|HTMLElement} [content] - Text content or a child element
+   * @returns {HTMLElement}
+   */
   _createElement(tag, attributes = {}, content = '') {
     return createElement(tag, attributes, content);
   }
 
-  // Dispatch custom events
+  /**
+   * Dispatch a bubbling, cancelable CustomEvent on an element, and emit it on the event bus with the
+   * element added to its detail
+   *
+   * @protected
+   * @template {Record<string, unknown>} [T=Record<string, unknown>]
+   * @param {HTMLElement} element
+   * @param {string} eventType
+   * @param {T} [detail]
+   * @returns {CustomEvent<T>}
+   */
   _dispatch(element, eventType, detail) {
     const event = new CustomEvent(eventType, {
       detail,
@@ -282,48 +515,65 @@ export class BaseComponent {
   }
 
   /**
-   * Get the component's data attribute selector
-   * Extracts from class name (e.g., "Toggle" -> "data-toggle")
-   * Can be overridden in subclasses if needed
-   * @returns {string} Data attribute selector
-   * @private
+   * The component's data attribute name, such as `data-toggle`
+   *
+   * Read from `static selector` on the component class, written as `'data-toggle'`, `'toggle'` or
+   * `'[data-toggle]'`. Without one the name comes from the class name, which minifiers change, so a
+   * warning is logged once per class.
+   *
+   * @protected
+   * @returns {string}
    */
   _getSelector() {
     if (this._selector) return this._selector;
 
-    // Extract component name from class name and convert to kebab-case
-    const className = this.constructor.name;
-    // Convert PascalCase to kebab-case: "DataTable" -> "data-table"
-    const kebab = className
-      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-      .toLowerCase();
+    const declared = this.constructor.selector;
+    if (declared) {
+      const name = String(declared).replace(/^\[|\]$/g, '');
+      this._selector = name.startsWith('data-') ? name : `data-${name}`;
+      return this._selector;
+    }
 
+    const className = this.constructor.name;
+    if (!classesWarnedAboutSelector.has(this.constructor)) {
+      classesWarnedAboutSelector.add(this.constructor);
+      this.logger?.warn(
+        `${className || 'A component'} has no static selector, so its data attribute is derived from a class name that minifiers can change. Declare static selector = 'data-…'.`
+      );
+    }
+
+    const kebab = className.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
     this._selector = `data-${kebab}`;
     return this._selector;
   }
 
   /**
-   * Set component state using data attribute (data-<component>="<state>")
-   * @param {HTMLElement} element - Target element
-   * @param {string} state - State value
+   * Set an element's state in `data-<component>-state`
+   *
+   * The value is also copied to the component's own `data-<component>` attribute, as before 0.5.0.
+   * That copy is deprecated and stops in 0.6.0; style and query the `-state` attribute instead.
+   *
+   * @param {HTMLElement} element
+   * @param {string} state
    * @example
-   * // In Toggle component:
-   * this.setState(element, ExtendedStates.OPEN);
-   * // Sets: <div data-toggle="open">
+   * this.setState(element, ExtendedStates.OPEN); // <div data-datatable-state="open">
    */
   setState(element, state) {
-    element.setAttribute(this._getSelector(), state);
+    const attribute = this._getSelector();
+    element.setAttribute(`${attribute}-state`, state);
+    element.setAttribute(attribute, state);
   }
 
   /**
-   * Get component state from data attribute
-   * @param {HTMLElement} element - Target element
-   * @returns {string|null} Current state value
-   * @example
-   * const state = this.getElementState(element); // "open"
+   * An element's state from `data-<component>-state`, or from the deprecated copy in
+   * `data-<component>` when the state attribute is missing
+   *
+   * @param {HTMLElement} element
+   * @returns {string|null}
    */
   getElementState(element) {
-    return element.getAttribute(this._getSelector());
+    const attribute = this._getSelector();
+    return element.getAttribute(`${attribute}-state`) ?? element.getAttribute(attribute);
   }
 
   /**
@@ -342,16 +592,62 @@ export class BaseComponent {
 
   /**
    * Get component attribute (data-<component>-<attr>)
+   *
+   * Always returns the raw string when the attribute is present. Use
+   * getBoolAttr() or getNumberAttr() for flags and numbers, because the
+   * string "false" is truthy.
+   *
+   * @template [T=null]
    * @param {HTMLElement} element - Target element
    * @param {string} attr - Attribute name (without data- prefix)
-   * @param {*} defaultValue - Default value if attribute doesn't exist
-   * @returns {string|null} Attribute value or null
+   * @param {T} [defaultValue=null] - Value when the attribute doesn't exist
+   * @returns {string|T} Attribute value, or the default
    * @example
    * const duration = this.getAttr(element, 'duration', '300'); // "300"
    */
   getAttr(element, attr, defaultValue = null) {
     const value = element.getAttribute(`${this._getSelector()}-${attr}`);
     return value !== null ? value : defaultValue;
+  }
+
+  /**
+   * Get a boolean component attribute (data-<component>-<attr>)
+   *
+   * A missing attribute returns the default. "false" and "0" (in any case)
+   * mean false; any other value, including an empty attribute, means true.
+   *
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {boolean|null} [defaultValue=false] - Value when the attribute is missing
+   * @returns {boolean|null}
+   * @example
+   * // <div data-toggle-animate="false">
+   * this.getBoolAttr(element, 'animate', true); // false
+   */
+  getBoolAttr(element, attr, defaultValue = false) {
+    const value = this.getAttr(element, attr);
+    if (value === null) return defaultValue;
+    return !['false', '0'].includes(value.trim().toLowerCase());
+  }
+
+  /**
+   * Get a numeric component attribute (data-<component>-<attr>)
+   *
+   * Returns the default when the attribute is missing, empty or not a finite number.
+   *
+   * @param {HTMLElement} element - Target element
+   * @param {string} attr - Attribute name (without data- prefix)
+   * @param {number|null} [defaultValue=null] - Value when the attribute is missing or invalid
+   * @returns {number|null}
+   * @example
+   * // <div data-scrollhide-scroll-threshold="80">
+   * this.getNumberAttr(element, 'scroll-threshold', 50); // 80
+   */
+  getNumberAttr(element, attr, defaultValue = null) {
+    const value = this.getAttr(element, attr);
+    if (value === null || value.trim() === '') return defaultValue;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : defaultValue;
   }
 
   /**

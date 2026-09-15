@@ -1,38 +1,32 @@
+import { injectScript } from './_script.js';
+
 /**
- * LinkedIn Insight Tag.
+ * LinkedIn Insight Tag
  *
- * config: `{ id: "1234567" }` — the LinkedIn partner id.
+ * config: `{ id: "1234567" }` — the LinkedIn partner id
  *
  * @param {{ id?: string|number }} config
- * @param {{ logger?: object }} [ctx]
+ * @param {{ nonce?: string }} [ctx]
+ * @returns {Promise<unknown>} settles when the tag loads
  */
-export default function linkedinInsightAdapter(config, { logger } = {}) {
+export default function linkedinInsightAdapter(config, { nonce } = {}) {
   if (!config.id) {
-    logger?.warn('linkedin-insight: no id in config');
-    return;
+    throw new Error('linkedin-insight: no id in config');
   }
 
-  window._linkedin_partner_id = String(config.id);
+  const id = String(config.id);
+  window._linkedin_partner_id = id;
   window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
-  window._linkedin_data_partner_ids.push(window._linkedin_partner_id);
+  if (!window._linkedin_data_partner_ids.includes(id)) {
+    window._linkedin_data_partner_ids.push(id);
+  }
 
-  if (window.lintrk) return;
+  if (!window.lintrk) {
+    window.lintrk = function (action, data) {
+      window.lintrk.q.push([action, data]);
+    };
+    window.lintrk.q = [];
+  }
 
-  /* eslint-disable */
-  (function (l) {
-    if (!l) {
-      window.lintrk = function (a, b) {
-        window.lintrk.q.push([a, b]);
-      };
-      window.lintrk.q = [];
-    }
-    var s = document.getElementsByTagName('script')[0];
-    var b = document.createElement('script');
-    b.type = 'text/javascript';
-    b.async = true;
-    b.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
-    if (s && s.parentNode) s.parentNode.insertBefore(b, s);
-    else document.head.appendChild(b);
-  })(window.lintrk);
-  /* eslint-enable */
+  return injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js', { nonce });
 }

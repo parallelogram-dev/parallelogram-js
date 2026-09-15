@@ -1,7 +1,7 @@
 /* ============================================
    LIGHTBOX COMPONENT
-   BEM-compliant styles for lightbox gallery viewer
-   State-based CSS using data-lightbox attribute
+   BEM-compliant styles for the lightbox gallery viewer, a native <dialog>
+   State-based CSS using the data-lightbox-state attribute
    ============================================ */
 
 :root {
@@ -11,18 +11,30 @@
 
 /* Base lightbox block */
 .lightbox {
+  /* The dialog covers the viewport and dims the page itself */
   &__overlay {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
     background: rgba(0, 0, 0, 0.9);
-    z-index: 9999;
-    display: flex;
+    color: white;
     align-items: center;
     justify-content: center;
     transition: opacity var(--lightbox-transition-duration) var(--lightbox-transition-easing);
+
+    &[open] {
+      display: flex;
+    }
+
+    &::backdrop {
+      background: transparent;
+    }
   }
 
   &__container {
@@ -43,7 +55,9 @@
     max-width: 100%;
     max-height: 90vh;
     object-fit: contain;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transition:
+      transform 0.3s ease-out,
+      opacity 0.3s ease-out;
 
     &.slide-left {
       transform: translateX(-100%);
@@ -58,23 +72,34 @@
     }
   }
 
-  &__close {
-    position: absolute;
-    top: -50px;
-    right: -10px;
-    background: rgba(255, 255, 255, 0.2);
+  &__close,
+  &__nav {
     color: white;
     border: none;
-    width: 40px;
-    height: 40px;
     border-radius: 50%;
-    font-size: 24px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    svg {
+      display: block;
+    }
+
+    &:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
     transition: background-color 0.2s;
-    z-index: 10001;
 
     &:hover {
       background: rgba(255, 255, 255, 0.3);
@@ -85,19 +110,12 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
     width: 50px;
     height: 50px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s, opacity 0.2s;
-    z-index: 10001;
+    background: rgba(0, 0, 0, 0.5);
+    transition:
+      background-color 0.2s,
+      opacity 0.2s;
 
     &:hover:not(:disabled) {
       background: rgba(0, 0, 0, 0.7);
@@ -109,17 +127,17 @@
     }
 
     &--prev {
-      left: -70px;
+      left: 1rem;
     }
 
     &--next {
-      right: -70px;
+      right: 1rem;
     }
   }
 
   &__counter {
     position: absolute;
-    bottom: -50px;
+    bottom: 1rem;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.7);
@@ -131,35 +149,27 @@
   }
 }
 
-
-/* State-based CSS using data-lightbox attribute */
-[data-lightbox="closed"] {
-  display: none;
-  opacity: 0;
-}
-
-[data-lightbox="opening"] {
-  display: flex;
+/* State-based CSS using data-lightbox-state attribute */
+[data-lightbox-state='opening'] {
   opacity: 0;
   will-change: opacity;
-  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  animation: lightboxFadeIn var(--lightbox-transition-duration) var(--lightbox-transition-easing)
+    forwards;
 }
 
-[data-lightbox="open"] {
-  display: flex;
+[data-lightbox-state='open'] {
   opacity: 1;
 }
 
-[data-lightbox="transitioning"] {
-  display: flex;
+[data-lightbox-state='transitioning'] {
   opacity: 1;
   will-change: opacity;
 }
 
-[data-lightbox="closing"] {
-  display: flex;
+[data-lightbox-state='closing'] {
   opacity: 1;
-  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing) forwards;
+  animation: lightboxFadeOut var(--lightbox-transition-duration) var(--lightbox-transition-easing)
+    forwards;
   pointer-events: none;
 }
 
@@ -192,7 +202,6 @@
     &__nav {
       width: 40px;
       height: 40px;
-      font-size: 20px;
 
       &--prev {
         left: 10px;
@@ -217,23 +226,24 @@
 
 /* Accessibility: Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  [data-lightbox] {
+  [data-lightbox-state],
+  .lightbox__image {
     animation: none !important;
     transition: none !important;
   }
 
-  [data-lightbox="opening"],
-  [data-lightbox="closing"] {
+  [data-lightbox-state='opening'],
+  [data-lightbox-state='closing'] {
     will-change: auto;
   }
 
   /* Instant state changes for reduced motion */
-  [data-lightbox="opening"] {
+  [data-lightbox-state='opening'] {
     opacity: 1;
     transform: none;
   }
 
-  [data-lightbox="closing"] {
+  [data-lightbox-state='closing'] {
     opacity: 0;
     transform: none;
   }

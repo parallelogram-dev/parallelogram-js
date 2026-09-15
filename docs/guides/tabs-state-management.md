@@ -1,5 +1,7 @@
 # Tabs State Management
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 ## Overview
 
 The Tabs component uses state-based CSS with data attributes to manage tab panel visibility and transitions. Individual tab buttons use standard ARIA attributes for accessibility.
@@ -25,17 +27,20 @@ stateDiagram-v2
 ### Panel States
 
 #### `inactive`
+
 - **Default state** - Panel is hidden from view
 - **CSS**: `display: none`
 - **Transitions to**: `transitioning` when tab is activated
 
 #### `transitioning`
+
 - **Transition state** - Panel is animating in or out
 - **CSS**: Opacity transition applied
 - **Duration**: Controlled by `Tabs.defaults.transitionDuration` (default: 200ms)
 - **Transitions to**: `active` or `inactive` after animation completes
 
 #### `active`
+
 - **Visible state** - Panel is displayed and visible
 - **CSS**: `display: block`
 - **Transitions to**: `transitioning` when different tab is activated
@@ -157,6 +162,7 @@ The Tabs component dispatches events at lifecycle points:
 - `tabs:change` - Fired when active tab changes
 
 Events include:
+
 ```javascript
 {
   element: HTMLElement,      /* Tabs container */
@@ -177,39 +183,17 @@ State changes are implicit through the tab change events.
 ```html
 <div data-tabs data-tabs-keyboard="true">
   <div data-tabs-list role="tablist" class="tabs__list">
-    <button data-tab="panel-1"
-            aria-selected="true"
-            class="tabs__tab">
-      Tab 1
-    </button>
-    <button data-tab="panel-2"
-            aria-selected="false"
-            class="tabs__tab">
-      Tab 2
-    </button>
-    <button data-tab="panel-3"
-            aria-selected="false"
-            class="tabs__tab">
-      Tab 3
-    </button>
+    <button data-tab="panel-1" aria-selected="true" class="tabs__tab">Tab 1</button>
+    <button data-tab="panel-2" aria-selected="false" class="tabs__tab">Tab 2</button>
+    <button data-tab="panel-3" aria-selected="false" class="tabs__tab">Tab 3</button>
   </div>
 
   <div data-tabs-panels>
-    <div id="panel-1"
-         data-tab-panel="active"
-         class="tabs__panel">
-      Panel 1 content
-    </div>
-    <div id="panel-2"
-         data-tab-panel="inactive"
-         class="tabs__panel"
-         style="display: none;">
+    <div id="panel-1" data-tab-panel="active" class="tabs__panel">Panel 1 content</div>
+    <div id="panel-2" data-tab-panel="inactive" class="tabs__panel" style="display: none;">
       Panel 2 content
     </div>
-    <div id="panel-3"
-         data-tab-panel="inactive"
-         class="tabs__panel"
-         style="display: none;">
+    <div id="panel-3" data-tab-panel="inactive" class="tabs__panel" style="display: none;">
       Panel 3 content
     </div>
   </div>
@@ -241,16 +225,19 @@ console.log(panel.getAttribute('data-tab-panel')); /* "active" */
 ## Benefits
 
 ### Code Simplicity
+
 - No CSS class management - states use data attributes
 - State visible in DevTools for debugging
 - Consistent with framework-wide patterns
 
 ### Accessibility
+
 - Uses standard ARIA attributes for tab buttons
 - Maintains keyboard navigation support
 - Proper focus management
 
 ### Performance
+
 - CSS-based transitions using opacity
 - Minimal JavaScript state management
 - No unnecessary DOM manipulation
@@ -302,6 +289,7 @@ The transition timing affects the `transitioning` state duration.
 ### From Class-Based Version
 
 Previous versions used CSS classes for state management:
+
 - `tab--active` class → Now uses `aria-selected="true"`
 - `tab-panel--active` class → Now uses `data-tab-panel="active"`
 - `tab-panel--transitioning` class → Now uses `data-tab-panel="transitioning"`
@@ -311,6 +299,7 @@ The migration is non-breaking as the component still functions correctly, but ex
 ### State Values
 
 All panel state values are lowercase strings:
+
 - `"active"` (not `"ACTIVE"`)
 - `"inactive"` (not `"INACTIVE"`)
 - `"transitioning"` (not `"TRANSITIONING"`)

@@ -1,59 +1,68 @@
-import { TransitionManager } from '../managers/index.js';
-import { default as PToasts } from './PToasts.js';
-
+import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
+
+const DEFAULT_PLACEHOLDER = 'Select…';
 
 /**
- * PSelect - Enhanced select/combobox web component
+ * PSelect - a select that can be searched, built as an editable combobox with a listbox popup
  *
- * A fully accessible, customizable select component that supports both local options
- * and remote data fetching. Uses <option> elements directly within the component.
+ * Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox
+ * role, `aria-expanded`, `aria-controls` and `aria-activedescendant`, and is named after the host's
+ * `aria-label` or its `<label for>`. Typing filters the options and announces how many match; the
+ * arrow keys, Home and End move through them; Enter or Tab chooses the highlighted option; Escape
+ * closes the list and puts the chosen label back. Focus passes from the host to the input.
+ *
+ * Options come from `<option>` and `<optgroup>` children, which are watched for changes, or from
+ * `data-select-src`, a URL where `{q}` is replaced by the typed text. It must return JSON: an array
+ * of `{ value, label, disabled?, group? }`, or an object with those in `options`.
+ *
+ * The element is form-associated: it submits its value under its `name`, supports `required`, and
+ * restores its initially selected option when the form resets.
  *
  * @example
- * <!-- Basic usage with option elements -->
- * <p-select name="country" placeholder="Choose a country">
+ * <label for="country">Country</label>
+ * <p-select id="country" name="country" placeholder="Choose a country">
  *   <option value="us">United States</option>
- *   <option value="ca">Canada</option>
  *   <option value="uk" selected>United Kingdom</option>
  *   <option value="de" disabled>Germany (unavailable)</option>
  * </p-select>
  *
- * <!-- Remote data source with search -->
- * <p-select
- *   name="user"
- *   placeholder="Search users..."
- *   data-select-src="/api/users?q={q}"
- *   data-select-min="2"
- *   data-select-debounce="300">
- * </p-select>
+ * <p-select name="user" aria-label="User" data-select-src="/api/users?q={q}" data-select-min="2"></p-select>
  *
- * <!-- With form validation -->
- * <p-select name="priority" required placeholder="Select priority level">
- *   <option value="">-- Select Priority --</option>
- *   <option value="high">High Priority</option>
- *   <option value="medium" selected>Medium Priority</option>
- *   <option value="low">Low Priority</option>
- * </p-select>
+ * @attributes
+ * - name, value, placeholder, disabled, required: as for a native select
+ * - aria-label: names the input when there is no label
+ * - data-select-src: URL for remote options, with `{q}` replaced by the search text
+ * - data-select-min: characters to type before a remote search (default 0)
+ * - data-select-debounce: milliseconds to wait after typing before a remote search (default 200)
+ * - data-select-open-on-focus: open the list when the input receives focus (default false)
  *
- * <!-- Disabled state -->
- * <p-select name="readonly-field" disabled>
- *   <option value="locked" selected>Locked Value</option>
- * </p-select>
+ * @events
+ * - input, change: dispatched when the user chooses an option
+ * - p-select:change: with `{ value, label }`, when an option is chosen
+ * - p-select:open, p-select:close: when the list opens or closes
  *
- * <!-- Grouped options -->
- * <p-select name="food" placeholder="Choose a food">
- *   <optgroup label="Fruits">
- *     <option value="apple">Apple</option>
- *     <option value="banana">Banana</option>
- *   </optgroup>
- *   <optgroup label="Vegetables">
- *     <option value="carrot">Carrot</option>
- *     <option value="lettuce">Lettuce</option>
- *   </optgroup>
- * </p-select>
+ * @csspart input - the text input
+ * @csspart listbox - the list of options
  */
 export default class PSelect extends HTMLElement {
   static formAssociated = true;
+
+  static get observedAttributes() {
+    return [
+      'value',
+      'placeholder',
+      'disabled',
+      'required',
+      'aria-label',
+      'data-select-src',
+      'data-select-min',
+      'data-select-debounce',
+      'data-select-open-on-focus',
+    ];
+  }
 
   constructor() {
     super();
@@ -63,7 +72,7 @@ export default class PSelect extends HTMLElement {
     }
 
     this._internals = this.attachInternals();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
     this.tm = new TransitionManager();
 
     this.state = {
@@ -75,46 +84,48 @@ export default class PSelect extends HTMLElement {
       src: null,
       debounce: 200,
       min: 0,
-      openOnFocus: true,
-      placeholder: this.getAttribute('placeholder') || 'Select…',
+      openOnFocus: false,
+      placeholder: DEFAULT_PLACEHOLDER,
       disabled: false,
       required: false,
       loading: false,
       error: null,
     };
 
+    this._selectedOption = null;
+    this._defaultValue = '';
     this._abortController = null;
     this._searchTimeout = null;
-    this._announcementRegion = null;
+    this._optionObserver = null;
+    this._parseQueued = false;
 
     this._render();
     this._setupEventListeners();
-    this._initializeFromAttributes();
   }
 
   connectedCallback() {
-    this._createAnnouncementRegion();
+    this._readConfig();
     this._parseOptionsFromDOM();
+    this._updateName();
+
+    this._optionObserver = new MutationObserver(() => this._queueParse());
+    this._optionObserver.observe(this, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['value', 'label', 'selected', 'disabled'],
+    });
 
     if (this.state.src && this.state.min === 0) {
-      this._fetchOptions('').catch(this._handleFetchError.bind(this));
+      this._fetchOptions('');
     }
   }
 
   disconnectedCallback() {
     this._cancelPendingRequest();
-
-    if (this._searchTimeout) {
-      clearTimeout(this._searchTimeout);
-    }
-
-    if (this._announcementRegion) {
-      this._announcementRegion.remove();
-    }
-  }
-
-  static get observedAttributes() {
-    return ['value', 'placeholder', 'disabled', 'name', 'required'];
+    this._optionObserver?.disconnect();
+    this._optionObserver = null;
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -125,217 +136,285 @@ export default class PSelect extends HTMLElement {
         this._updateValue(newValue);
         break;
       case 'placeholder':
-        this.state.placeholder = newValue || 'Select…';
-        this._updatePlaceholder();
+        this.state.placeholder = newValue || DEFAULT_PLACEHOLDER;
+        this._els.input.placeholder = this.state.placeholder;
         break;
       case 'disabled':
         this._updateDisabledState(newValue !== null);
         break;
-      case 'name':
-        this.name = newValue || '';
-        break;
       case 'required':
         this._updateRequiredState(newValue !== null);
         break;
+      case 'aria-label':
+        this._updateName();
+        break;
+      default:
+        this._readConfig();
     }
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <style>${styles}</style>
-
+    setStaticHTML(
+      this.shadowRoot,
+      `
       <div class="root">
-        <div
-          class="control"
-          role="combobox"
-          aria-expanded="false"
-          aria-haspopup="listbox"
-        >
+        <div class="control">
           <input
             class="input"
+            part="input"
             type="text"
+            role="combobox"
             autocomplete="off"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="listbox"
           />
           <span class="arrow" aria-hidden="true">▾</span>
         </div>
 
-        <div class="menu" role="listbox" hidden></div>
+        <div class="menu" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1" hidden></div>
+        <div class="live" role="status" aria-live="polite"></div>
       </div>
-    `;
+    `
+    );
+    adoptStyles(this.shadowRoot, styles);
 
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
+      live: this.shadowRoot.querySelector('.live'),
     };
-
-    this._updateDisplay();
+    this._els.input.placeholder = this.state.placeholder;
   }
 
   _setupEventListeners() {
-    // Prevent double-toggle issue by using mousedown instead of click
-    this._els.control.addEventListener('mousedown', e => {
-      if (e.target !== this._els.input) {
-        e.preventDefault();
-        this._els.input.focus();
+    const { control, input, menu } = this._els;
+
+    /* Mousedown rather than click, so the list doesn't open and close again as focus moves */
+    control.addEventListener('mousedown', event => {
+      if (event.target !== input) {
+        event.preventDefault();
+        input.focus();
         this.toggle();
       }
     });
 
-    this._els.input.addEventListener('focus', () => {
-      if (this.state.openOnFocus) {
-        this.open();
+    input.addEventListener('click', () => this.open());
+    input.addEventListener('focus', () => {
+      if (this.state.openOnFocus) this.open();
+    });
+    input.addEventListener('input', event => this._handleInput(event));
+    input.addEventListener('keydown', event => this._handleKeydown(event));
+
+    /* Keep focus on the input while an option is pressed */
+    menu.addEventListener('mousedown', event => event.preventDefault());
+    menu.addEventListener('click', event => {
+      const element = event.target.closest('[role="option"]');
+      const option = element && this.state.filtered[Number(element.dataset.index)];
+      if (option && !option.disabled) {
+        this.select(option.value);
       }
     });
 
-    this._els.input.addEventListener('input', e => {
-      this._handleInput(e);
-    });
-
-    this._els.input.addEventListener('keydown', e => {
-      this._handleKeydown(e);
-    });
-
-    // Global click handler to close dropdown
-    document.addEventListener('click', e => {
-      if (!this.contains(e.target) && !this.shadowRoot.contains(e.target)) {
+    this.addEventListener('focusout', event => {
+      const next = event.relatedTarget;
+      if (!next || (!this.contains(next) && !this.shadowRoot.contains(next))) {
         this.close();
       }
     });
   }
 
-  _initializeFromAttributes() {
-    const d = this.dataset;
-    this.state.src = d.selectSrc || null;
-    this.state.debounce = Number(d.selectDebounce || 200);
-    this.state.min = Number(d.selectMin || 0);
-    this.state.openOnFocus = (d.selectOpenOnFocus ?? 'true') !== 'false';
-    this.state.disabled = this.hasAttribute('disabled');
-    this.state.required = this.hasAttribute('required');
-
-    this.name = this.getAttribute('name') || '';
+  _readConfig() {
+    const data = this.dataset;
+    this.state.src = data.selectSrc || null;
+    this.state.debounce = Number(data.selectDebounce ?? 200) || 0;
+    this.state.min = Number(data.selectMin ?? 0) || 0;
+    this.state.openOnFocus =
+      data.selectOpenOnFocus !== undefined && data.selectOpenOnFocus !== 'false';
   }
 
-  _createAnnouncementRegion() {
-    this._announcementRegion = document.createElement('div');
-    this._announcementRegion.setAttribute('aria-live', 'polite');
-    this._announcementRegion.style.cssText =
-      'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';
-    document.body.appendChild(this._announcementRegion);
-  }
+  /**
+   * Name the input after the host's aria-label or the labels that point at the host
+   */
+  _updateName() {
+    const labelText = [...(this._internals.labels ?? [])]
+      .map(label => label.textContent.trim().replace(/\s*:$/, ''))
+      .filter(Boolean)
+      .join(' ');
+    const name = this.getAttribute('aria-label') || labelText;
 
-  _announce(message) {
-    if (this._announcementRegion) {
-      this._announcementRegion.textContent = message;
+    if (name) {
+      this._els.input.setAttribute('aria-label', name);
+    } else {
+      this._els.input.removeAttribute('aria-label');
     }
+  }
+
+  _queueParse() {
+    if (this._parseQueued) return;
+    this._parseQueued = true;
+    queueMicrotask(() => {
+      this._parseQueued = false;
+      if (this.isConnected) this._parseOptionsFromDOM();
+    });
   }
 
   _parseOptionsFromDOM() {
+    if (this.state.src) return;
+
     const options = [];
-    const optionElements = this.querySelectorAll('option');
+    let defaultValue = null;
 
-    optionElements.forEach((option, index) => {
-      const disabled = option.hasAttribute('disabled');
-      const selected = option.hasAttribute('selected');
-      const value = option.value || option.textContent.trim();
-      const label = option.textContent.trim();
-
-      const optionData = {
-        value,
-        label,
-        disabled,
-        selected,
-      };
-
-      options.push(optionData);
-
-      if (optionData.selected) {
-        this.state.value = optionData.value;
+    for (const option of this.querySelectorAll('option')) {
+      const parent = option.parentElement;
+      const group = parent?.localName === 'optgroup' ? parent.label || null : null;
+      options.push({
+        value: option.value,
+        label: option.label || option.textContent.trim(),
+        disabled: option.disabled || Boolean(parent?.disabled),
+        group,
+      });
+      if (option.hasAttribute('selected') && defaultValue === null) {
+        defaultValue = option.value;
       }
-
-      // Hide the original option
-      option.style.display = 'none';
-    });
-
-    if (options.length > 0) {
-      this.setOptions(options);
-      this._updateDisplay();
     }
+
+    this._defaultValue = defaultValue ?? '';
+    const keep = options.some(option => option.value === this.state.value);
+    if (!keep || (!this._selectedOption && defaultValue !== null)) {
+      this.state.value = defaultValue ?? '';
+    }
+
+    this.setOptions(options);
   }
 
-  _handleInput(e) {
-    const query = e.target.value;
+  _handleInput(event) {
+    const query = event.target.value;
+    this.open();
 
-    if (this.state.src && query.length >= this.state.min) {
+    if (this.state.src) {
       this._cancelPendingRequest();
-      this._searchTimeout = setTimeout(() => {
-        this._fetchOptions(query).catch(this._handleFetchError.bind(this));
-      }, this.state.debounce);
-    } else {
-      this._filterLocal(query);
+      if (query.length < this.state.min) {
+        this.state.filtered = [];
+        this._renderOptions();
+        return;
+      }
+      this._searchTimeout = setTimeout(() => this._fetchOptions(query), this.state.debounce);
+      return;
     }
+
+    this._filterLocal(query);
   }
 
-  _handleKeydown(e) {
+  _handleKeydown(event) {
+    const { key } = event;
+
     if (!this.state.open) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter') {
-        e.preventDefault();
+      if (key === 'ArrowDown' || key === 'ArrowUp') {
+        event.preventDefault();
         this.open();
+        if (this.state.highlightedIndex < 0) {
+          this._setHighlight(key === 'ArrowDown' ? 0 : this.state.filtered.length - 1);
+        }
       }
       return;
     }
 
-    const maxIndex = this.state.filtered.length - 1;
+    const last = this.state.filtered.length - 1;
+    const current = this.state.highlightedIndex;
 
-    switch (e.key) {
+    switch (key) {
       case 'ArrowDown':
-        e.preventDefault();
-        this.state.highlightedIndex = Math.min(maxIndex, this.state.highlightedIndex + 1);
-        this._renderOptions();
+        event.preventDefault();
+        this._setHighlight(Math.min(last, current + 1));
         break;
-
       case 'ArrowUp':
-        e.preventDefault();
-        this.state.highlightedIndex = Math.max(0, this.state.highlightedIndex - 1);
-        this._renderOptions();
+        event.preventDefault();
+        this._setHighlight(Math.max(0, current - 1));
         break;
-
+      case 'Home':
+        event.preventDefault();
+        this._setHighlight(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        this._setHighlight(last);
+        break;
       case 'Enter':
-        e.preventDefault();
-        if (
-          this.state.highlightedIndex >= 0 &&
-          this.state.highlightedIndex < this.state.filtered.length
-        ) {
-          const option = this.state.filtered[this.state.highlightedIndex];
-          if (option && !option.disabled) {
-            this.select(option.value);
-          }
-        }
+        event.preventDefault();
+        this._chooseHighlighted();
         break;
-
+      case 'Tab':
+        this._chooseHighlighted();
+        this.close();
+        break;
       case 'Escape':
-        e.preventDefault();
+        event.preventDefault();
         this.close();
         break;
     }
   }
 
-  _cancelPendingRequest() {
-    if (this._abortController) {
-      this._abortController.abort();
-      this._abortController = null;
-    }
-    if (this._searchTimeout) {
-      clearTimeout(this._searchTimeout);
-      this._searchTimeout = null;
+  _chooseHighlighted() {
+    const option = this.state.filtered[this.state.highlightedIndex];
+    if (option && !option.disabled) {
+      this.select(option.value);
     }
   }
 
+  _cancelPendingRequest() {
+    this._abortController?.abort();
+    this._abortController = null;
+    clearTimeout(this._searchTimeout);
+    this._searchTimeout = null;
+  }
+
+  /**
+   * Load options for a search from `data-select-src`
+   */
   async _fetchOptions(query) {
-    // Implementation for remote data fetching
-    this.state.loading = true;
-    // ... rest of fetch logic
+    this._cancelPendingRequest();
+    const controller = new AbortController();
+    this._abortController = controller;
+    const url = this.state.src.replaceAll('{q}', encodeURIComponent(query));
+
+    this._setBusy(true);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      const data = await response.json();
+      const items = Array.isArray(data) ? data : (data?.options ?? []);
+      this.state.error = null;
+      this.state.options = items.map(item => ({
+        value: String(item.value ?? ''),
+        label: String(item.label ?? item.value ?? ''),
+        disabled: Boolean(item.disabled),
+        group: item.group ?? null,
+      }));
+      this._filterLocal('', { announce: true });
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        this._handleFetchError(error);
+      }
+    } finally {
+      if (this._abortController === controller) {
+        this._abortController = null;
+        this._setBusy(false);
+      }
+    }
+  }
+
+  _setBusy(busy) {
+    this.state.loading = busy;
+    this._els.menu.setAttribute('aria-busy', String(busy));
   }
 
   _handleFetchError(error) {
@@ -343,113 +422,145 @@ export default class PSelect extends HTMLElement {
     this._announce(`Error: ${error.message}`);
   }
 
-  _filterLocal(query) {
-    const searchTerm = query.trim().toLowerCase();
-    this.state.filtered = this.state.options.filter(option =>
-      option.label.toLowerCase().includes(searchTerm)
-    );
+  /**
+   * Announce a message through the live region on the next frame
+   */
+  _announce(message) {
+    const { live } = this._els;
+    live.textContent = '';
+    requestAnimationFrame(() => {
+      live.textContent = message;
+    });
+  }
 
-    // If no search query, highlight selected item; otherwise highlight first result
-    if (!searchTerm && this.state.value) {
-      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
-      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
-    } else {
-      this.state.highlightedIndex = this.state.filtered.length > 0 ? 0 : -1;
-    }
+  _filterLocal(query, { announce = Boolean(query) } = {}) {
+    const searchTerm = query.trim().toLowerCase();
+    this.state.filtered = searchTerm
+      ? this.state.options.filter(option => option.label.toLowerCase().includes(searchTerm))
+      : this.state.options.slice();
 
     this._renderOptions();
+
+    const selectedIndex = this.state.filtered.findIndex(
+      option => option.value === this.state.value
+    );
+    if (searchTerm) {
+      this._setHighlight(this.state.filtered.length > 0 ? 0 : -1);
+    } else {
+      this._setHighlight(selectedIndex);
+    }
+
+    if (announce) {
+      const count = this.state.filtered.length;
+      this._announce(
+        count === 0
+          ? 'No results found'
+          : `${count} ${count === 1 ? 'result' : 'results'} available`
+      );
+    }
   }
 
   _updateDisplay() {
-    if (this.state.value) {
-      const selected = this.state.options.find(opt => opt.value === this.state.value);
-      this._els.input.value = selected ? selected.label : '';
-    } else {
-      this._els.input.value = '';
-      this._els.input.placeholder = this.state.placeholder;
-    }
+    this._els.input.value =
+      this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
   }
 
-  _updateValue(newValue) {
-    this.state.value = newValue;
+  /**
+   * Record a new value, submit it with the form and show its label, without dispatching events
+   */
+  _setValue(value) {
+    this.state.value = value ?? '';
+    this._selectedOption =
+      this.state.options.find(option => option.value === this.state.value) ??
+      (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
+
+    for (const element of this._els.menu.querySelectorAll('[role="option"]')) {
+      const option = this.state.filtered[Number(element.dataset.index)];
+      element.setAttribute('aria-selected', String(option?.value === this.state.value));
+    }
+
+    this._syncFormState();
     this._updateDisplay();
   }
 
-  _updatePlaceholder() {
-    this._els.input.placeholder = this.state.placeholder;
+  _updateValue(newValue) {
+    this._setValue(newValue);
   }
 
   _updateDisabledState(disabled) {
     this.state.disabled = disabled;
     this._els.input.disabled = disabled;
+    if (disabled) this.close();
   }
 
   _updateRequiredState(required) {
     this.state.required = required;
-    this._els.input.required = required;
+    this._syncFormState();
   }
 
-  // Public API
   open() {
     if (this.state.open || this.state.disabled) return;
 
     this.state.open = true;
-
-    // Set highlighted index to currently selected item, or -1 if no selection
-    if (this.state.value) {
-      const selectedIndex = this.state.filtered.findIndex(opt => opt.value === this.state.value);
-      this.state.highlightedIndex = selectedIndex >= 0 ? selectedIndex : -1;
-    } else {
-      this.state.highlightedIndex = -1;
-    }
-
-    this._els.control.setAttribute('aria-expanded', 'true');
+    this._els.input.setAttribute('aria-expanded', 'true');
+    this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
-    this._renderOptions();
+    this._filterLocal('');
 
     this.tm.enter(this._els.menu);
-    this.dispatchEvent(new CustomEvent('p-select:open', { bubbles: true }));
+    dispatchComponentEvent(this, 'p-select:open');
   }
 
   close() {
     if (!this.state.open) return;
 
     this.state.open = false;
-    this._els.control.setAttribute('aria-expanded', 'false');
+    this._els.input.setAttribute('aria-expanded', 'false');
+    this._els.input.removeAttribute('aria-activedescendant');
+    this._els.control.toggleAttribute('data-open', false);
+    this._updateDisplay();
 
     this.tm.exit(this._els.menu).then(() => {
-      this._els.menu.hidden = true;
+      if (!this.state.open) {
+        this._els.menu.hidden = true;
+      }
     });
 
-    this.dispatchEvent(new CustomEvent('p-select:close', { bubbles: true }));
+    dispatchComponentEvent(this, 'p-select:close');
   }
 
   toggle() {
     this.state.open ? this.close() : this.open();
   }
 
+  /**
+   * Choose an option as the user would, dispatching input, change and p-select:change
+   *
+   * @param {string} value
+   */
   select(value) {
-    const option = this.state.options.find(opt => opt.value == value);
+    const option = this.state.options.find(item => String(item.value) === String(value));
     if (!option || option.disabled) return;
 
-    this.state.value = option.value;
-    this._setFormValue(option.value, option.label);
-    this._els.input.value = option.label;
+    this._setValue(option.value);
 
-    this.dispatchEvent(
-      new CustomEvent('p-select:change', {
-        detail: { value: option.value, label: option.label },
-        bubbles: true,
-      })
-    );
+    this.dispatchEvent(new Event('input', { bubbles: true }));
+    this.dispatchEvent(new Event('change', { bubbles: true }));
+    dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
 
     this.close();
   }
 
-  setOptions(arr) {
-    this.state.options = Array.isArray(arr) ? arr.slice() : [];
+  /**
+   * Replace the options
+   *
+   * @param {Array<{value: string, label: string, disabled?: boolean, group?: string}>} options
+   */
+  setOptions(options) {
+    this.state.options = Array.isArray(options) ? options.slice() : [];
     this.state.filtered = this.state.options.slice();
     this._renderOptions();
+    this._setValue(this.state.value);
   }
 
   getValue() {
@@ -457,18 +568,15 @@ export default class PSelect extends HTMLElement {
   }
 
   clear() {
-    this.state.value = '';
-    this._setFormValue('', '');
-    this._els.input.value = '';
-    this._els.input.placeholder = this.state.placeholder;
+    this._setValue('');
   }
 
   get value() {
     return this.state.value;
   }
 
-  set value(val) {
-    this._updateValue(val);
+  set value(value) {
+    this._updateValue(value);
   }
 
   refreshOptions() {
@@ -476,8 +584,6 @@ export default class PSelect extends HTMLElement {
   }
 
   debug() {
-    // Debug information available via component inspection
-    // Use browser dev tools to inspect this.state for debugging
     return {
       options: this.state.options,
       filtered: this.state.filtered,
@@ -486,58 +592,171 @@ export default class PSelect extends HTMLElement {
     };
   }
 
-  _setFormValue(value, label) {
-    if (this._internals?.setFormValue) {
-      const formData = new FormData();
-      if (this.name) {
-        formData.set(this.name, value);
-      }
-      this._internals.setFormValue(formData, label);
+  /**
+   * Submit the current value with the form and report whether it is valid
+   *
+   * The host element's name attribute provides the field name.
+   */
+  _syncFormState() {
+    const { value, required } = this.state;
+    this._internals.setFormValue(value);
+
+    if (required && value === '') {
+      this._internals.setValidity(
+        { valueMissing: true },
+        'Please select an item in the list.',
+        this._els.input
+      );
+    } else {
+      this._internals.setValidity({});
     }
   }
 
+  formResetCallback() {
+    this._updateValue(this._defaultValue);
+  }
+
+  formDisabledCallback(disabled) {
+    this._updateDisabledState(disabled);
+  }
+
+  formStateRestoreCallback(state) {
+    this._updateValue(typeof state === 'string' ? state : '');
+  }
+
+  get form() {
+    return this._internals.form;
+  }
+
+  get labels() {
+    return this._internals.labels;
+  }
+
+  get validity() {
+    return this._internals.validity;
+  }
+
+  get validationMessage() {
+    return this._internals.validationMessage;
+  }
+
+  get willValidate() {
+    return this._internals.willValidate;
+  }
+
+  checkValidity() {
+    return this._internals.checkValidity();
+  }
+
+  reportValidity() {
+    return this._internals.reportValidity();
+  }
+
+  get name() {
+    return this.getAttribute('name') ?? '';
+  }
+
+  set name(value) {
+    this.setAttribute('name', value);
+  }
+
+  get required() {
+    return this.hasAttribute('required');
+  }
+
+  set required(value) {
+    this.toggleAttribute('required', Boolean(value));
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(value) {
+    this.toggleAttribute('disabled', Boolean(value));
+  }
+
+  /**
+   * Build the listbox for the filtered options, grouping them under their optgroup labels
+   */
   _renderOptions() {
-    const menu = this._els.menu;
-    menu.innerHTML = '';
+    const { menu } = this._els;
+    menu.replaceChildren();
+    this.state.highlightedIndex = -1;
+    this._els.input.removeAttribute('aria-activedescendant');
 
-    const options = this.state.filtered;
-
-    if (options.length === 0) {
-      const noResultsDiv = document.createElement('div');
-      noResultsDiv.className = 'noresults';
-      noResultsDiv.textContent = 'No results found';
-      menu.appendChild(noResultsDiv);
+    if (this.state.filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'noresults';
+      empty.textContent = 'No results found';
+      menu.append(empty);
       return;
     }
 
-    options.forEach((option, index) => {
-      const optionEl = document.createElement('div');
-      optionEl.className = 'option';
-      optionEl.setAttribute('role', 'option');
-      // Only mark as selected if both values are truthy and equal (don't mark empty placeholder as selected)
-      const isSelected = this.state.value && option.value === this.state.value;
-      optionEl.setAttribute('aria-selected', String(isSelected));
-      optionEl.textContent = option.label;
+    let groupElement = null;
+    let groupLabel = null;
+    let groupCount = 0;
 
-      // CRITICAL: Set aria-disabled attribute for disabled options
+    this.state.filtered.forEach((option, index) => {
+      if (option.group !== groupLabel) {
+        groupLabel = option.group;
+        groupElement = null;
+        if (groupLabel) {
+          groupCount += 1;
+          groupElement = document.createElement('div');
+          groupElement.className = 'group';
+          groupElement.setAttribute('role', 'group');
+          groupElement.setAttribute('aria-labelledby', `group-${groupCount}`);
+          const heading = document.createElement('div');
+          heading.className = 'group-label';
+          heading.id = `group-${groupCount}`;
+          heading.setAttribute('role', 'presentation');
+          heading.textContent = groupLabel;
+          groupElement.append(heading);
+          menu.append(groupElement);
+        }
+      }
+
+      const element = document.createElement('div');
+      element.className = 'option';
+      element.id = `option-${index}`;
+      element.dataset.index = String(index);
+      element.setAttribute('role', 'option');
+      element.setAttribute('aria-selected', String(option.value === this.state.value));
       if (option.disabled) {
-        optionEl.setAttribute('aria-disabled', 'true');
+        element.setAttribute('aria-disabled', 'true');
       }
-
-      if (index === this.state.highlightedIndex) {
-        optionEl.setAttribute('aria-current', 'true');
-      }
-
-      if (!option.disabled) {
-        optionEl.addEventListener('click', e => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.select(option.value);
-        });
-      }
-
-      menu.appendChild(optionEl);
+      element.textContent = option.label;
+      (groupElement ?? menu).append(element);
     });
+  }
+
+  /**
+   * Highlight an option by index, keeping the list's children as they are and scrolling it into view
+   */
+  _setHighlight(index) {
+    const { menu, input } = this._els;
+    const previous = menu.querySelector('[data-active]');
+    previous?.removeAttribute('data-active');
+
+    const element = index >= 0 ? menu.querySelector(`#option-${index}`) : null;
+    this.state.highlightedIndex = element ? index : -1;
+
+    if (!element) {
+      input.removeAttribute('aria-activedescendant');
+      return;
+    }
+
+    element.setAttribute('data-active', '');
+    input.setAttribute('aria-activedescendant', element.id);
+
+    const top = element.offsetTop;
+    const bottom = top + element.offsetHeight;
+    if (top < menu.scrollTop) {
+      menu.scrollTop = top;
+    } else if (bottom > menu.scrollTop + menu.clientHeight) {
+      menu.scrollTop = bottom - menu.clientHeight;
+    }
   }
 }
 

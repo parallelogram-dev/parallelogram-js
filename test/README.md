@@ -1,60 +1,30 @@
-# Test Files
+# Tests
 
-This directory contains test files and test documentation for the Parallelogram-JS framework.
+Automated tests run with [Vitest](https://vitest.dev) in two projects.
 
-## Test Pages
+| Folder          | Project   | Environment                                          | Use it for                                                                              |
+| --------------- | --------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `test/unit/`    | `unit`    | happy-dom in Node                                    | Pure logic and DOM behaviour that doesn't need layout or a browser                      |
+| `test/browser/` | `browser` | Real Chromium, Firefox and WebKit through Playwright | Custom elements, focus, keyboard, forms, CSS and anything else the platform must decide |
 
-### test-state-system.html
-Comprehensive test page for the component state management system. Tests:
-- Multiple components on the same element (Lazysrc + Reveal)
-- Component state transitions
-- State attribute updates
-- Multi-component compatibility
-- FIFO queue staggering for reveal animations
+Both folders mirror `src/`, so the tests for `src/managers/EventManager.js` live in `test/unit/managers/EventManager.test.js`. Name tests after the behaviour they check.
 
-**How to run:**
-```bash
-npm run demo
-# Then navigate to http://localhost:3000/test/test-state-system.html
-```
-
-### test-picture-lazysrc.html
-Test page specifically for lazy loading `<picture>` elements with Lazysrc component.
-
-**How to run:**
-```bash
-npm run demo
-# Then navigate to http://localhost:3000/test/test-picture-lazysrc.html
-```
-
-## Test Documentation
-
-### TEST-CHECKLIST.md
-Detailed test checklist and validation procedures for the state management system. Includes:
-- Step-by-step test procedures
-- Expected behaviors
-- Console inspection commands
-- Success criteria
-- Known issues to watch for
-
-**Use this checklist when:**
-- Testing state management changes
-- Validating multi-component functionality
-- Debugging component mounting issues
-- Verifying state transitions
-
-## Running Tests
-
-All test pages are served via the demo server:
+## Commands
 
 ```bash
-npm run demo
+npm test                # both projects
+npm run test:unit       # unit tests only
+npm run test:browser    # browser tests only
+npm run test:watch      # unit tests in watch mode
+npm run coverage        # unit tests with a coverage report in coverage/
 ```
 
-Then navigate to:
-- http://localhost:3000/test/test-state-system.html
-- http://localhost:3000/test/test-picture-lazysrc.html
+The first browser run needs the Playwright browsers:
 
-## Test Setup
+```bash
+npx playwright install chromium firefox webkit
+```
 
-The `setup.js` file contains any shared test utilities or configuration used across test files.
+## Manual checks
+
+`test/manual/` holds the older hand-run state-system page and its checklist. They predate the automated suites and are being replaced by browser tests.

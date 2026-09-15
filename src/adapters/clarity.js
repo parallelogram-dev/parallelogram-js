@@ -1,31 +1,24 @@
+import { injectScript } from './_script.js';
+
 /**
- * Microsoft Clarity (heatmaps + session replay).
+ * Microsoft Clarity (heatmaps and session replay)
  *
  * config: `{ id: "xxxxxxxxxx" }`
  *
  * @param {{ id?: string }} config
- * @param {{ logger?: object }} [ctx]
+ * @param {{ nonce?: string }} [ctx]
+ * @returns {Promise<unknown>} settles when the tag loads
  */
-export default function clarityAdapter(config, { logger } = {}) {
+export default function clarityAdapter(config, { nonce } = {}) {
   if (!config.id) {
-    logger?.warn('clarity: no id in config');
-    return;
+    throw new Error('clarity: no id in config');
   }
-  if (window.clarity) return;
 
-  /* eslint-disable */
-  (function (c, l, a, r, i, t, y) {
-    c[a] =
-      c[a] ||
-      function () {
-        (c[a].q = c[a].q || []).push(arguments);
-      };
-    t = l.createElement(r);
-    t.async = 1;
-    t.src = 'https://www.clarity.ms/tag/' + i;
-    y = l.getElementsByTagName(r)[0];
-    if (y && y.parentNode) y.parentNode.insertBefore(t, y);
-    else l.head.appendChild(t);
-  })(window, document, 'clarity', 'script', config.id);
-  /* eslint-enable */
+  window.clarity =
+    window.clarity ||
+    function () {
+      (window.clarity.q = window.clarity.q || []).push(arguments);
+    };
+
+  return injectScript(`https://www.clarity.ms/tag/${encodeURIComponent(config.id)}`, { nonce });
 }

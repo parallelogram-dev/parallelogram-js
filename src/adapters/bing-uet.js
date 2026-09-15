@@ -1,37 +1,42 @@
+import { injectScript } from './_script.js';
+
+const BAT_URL = 'https://bat.bing.com/bat.js';
+
 /**
- * Microsoft Advertising (Bing) Universal Event Tracking.
+ * Microsoft Advertising (Bing) Universal Event Tracking
  *
- * config: `{ id: "1234567" }` — the UET tag id.
+ * config: `{ id: "1234567", consentDefault?: object }` — the UET tag id
  *
- * @param {{ id?: string|number }} config
- * @param {{ logger?: object }} [ctx]
+ * Calls already queued on `window.uetq`, such as the consent default Microsoft's consent mode
+ * instructions put at the top of `<head>`, are kept and handed to UET when it starts.
+ * `consentDefault` queues one itself, for example `{ "ad_storage": "denied" }`. UET's SPA tracking
+ * records page views after router navigation.
+ *
+ * @param {{ id?: string|number, consentDefault?: object }} config
+ * @param {{ logger?: object, nonce?: string }} [ctx]
+ * @returns {Promise<unknown>|undefined} settles when bat.js loads and UET has started
  */
-export default function bingUetAdapter(config, { logger } = {}) {
+export default function bingUetAdapter(config, { logger, nonce } = {}) {
   if (!config.id) {
-    logger?.warn('bing-uet: no id in config');
+    throw new Error('bing-uet: no id in config');
+  }
+
+  window.uetq = window.uetq || [];
+  if (config.consentDefault) {
+    window.uetq.push('consent', 'default', config.consentDefault);
+  }
+
+  if (
+    typeof window.UET === 'function' ||
+    document.querySelector(`script[src$="//bat.bing.com/bat.js"]`)
+  ) {
+    logger?.info('bing-uet: UET is already on the page');
     return;
   }
-  if (window.uetq) return;
 
-  /* eslint-disable */
-  (function (w, d, t, r, u) {
-    var f, n, i;
-    ((w[u] = w[u] || []),
-      (f = function () {
-        var o = { ti: config.id, enableAutoSpaTracking: true };
-        ((o.q = w[u]), (w[u] = new UET(o)), w[u].push('pageLoad'));
-      }),
-      (n = d.createElement(t)),
-      (n.src = r),
-      (n.async = 1),
-      (n.onload = n.onreadystatechange =
-        function () {
-          var s = this.readyState;
-          (s && s !== 'loaded' && s !== 'complete') ||
-            (f(), (n.onload = n.onreadystatechange = null));
-        }),
-      (i = d.getElementsByTagName(t)[0]),
-      i && i.parentNode ? i.parentNode.insertBefore(n, i) : d.head.appendChild(n));
-  })(window, document, 'script', 'https://bat.bing.com/bat.js', 'uetq');
-  /* eslint-enable */
+  return injectScript(BAT_URL, { nonce }).then(() => {
+    const queue = window.uetq;
+    window.uetq = new window.UET({ ti: String(config.id), enableAutoSpaTracking: true, q: queue });
+    window.uetq.push('pageLoad');
+  });
 }

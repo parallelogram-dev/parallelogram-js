@@ -1,20 +1,36 @@
 import styles from '../styles/framework/components/PModal.scss';
+import { ExtendedStates } from '../core/ComponentStates.js';
+import { getFocusableElements } from '../utils/dom-utils.js';
+import { whenAnimationsFinish } from '../utils/motion.js';
+import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
+import { dispatchComponentEvent } from '../utils/events.js';
+
+/** Modals that are open, most recently opened last, shared by every p-modal on the page */
+const openModals = [];
+
+/** Page overflow to put back once the last modal closes */
+let lockedOverflow = null;
+
+const deepActiveElement = () => {
+  let active = document.activeElement;
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement;
+  }
+  return active;
+};
 
 /**
- * PModal - Modal dialog web component
- * Can be used standalone without the framework
- * Follows new naming conventions: data-modal-* attributes and BEM CSS classes
+ * PModal - modal dialog web component built on the native `<dialog>` element
+ *
+ * Opening calls `showModal()`, so the dialog renders in the top layer, the rest of the page is inert
+ * and focus stays inside it. The dialog is named after its title slot. Escape and the backdrop close
+ * it unless its settings say otherwise, focus returns to the element that had it before opening once
+ * no other modal is still open, and page scroll stays locked while any modal is open.
  *
  * @example
- * import './components/PModal.js';
- *
- * HTML:
  * <button data-modal data-modal-target="#example-modal">Open Modal</button>
  *
- * <p-modal id="example-modal"
- *          data-modal-closable="true"
- *          data-modal-backdrop-close="true"
- *          data-modal-keyboard="true">
+ * <p-modal id="example-modal" data-modal-size="md">
  *   <h2 slot="title">Modal Title</h2>
  *   <p>Modal content goes here.</p>
  *   <div slot="actions">
@@ -22,30 +38,55 @@ import styles from '../styles/framework/components/PModal.scss';
  *     <button class="btn btn--primary">Save</button>
  *   </div>
  * </p-modal>
+ *
+ * @attributes
+ * - open: present while the modal is open; set or remove it, or call open() and close()
+ * - data-modal-size: xs | sm | md (default) | lg | xl | fullscreen
+ * - data-modal-closable: "false" hides the close button and ignores Escape and the backdrop;
+ *   `[data-modal-close]` buttons still close the modal
+ * - data-modal-backdrop-close: "false" keeps the modal open when the backdrop is clicked
+ * - data-modal-keyboard: "false" ignores Escape
+ * - data-modal-state: set by the component to closed, opening, open or closing
+ *
+ * @slots
+ * - title: the title, which also names the dialog
+ * - (default): the content
+ * - actions: footer buttons; any element with `data-modal-close` closes the modal
+ *
+ * @events
+ * Events bubble out of shadow roots.
+ * - p-modal:open: dispatched when the modal opens, with `{ modal }`
+ * - p-modal:close: dispatched once the modal has closed, with `{ modal }`
+ * - modal:open, modal:close: the same events under their names before 0.5.0; deprecated, and no
+ *   longer dispatched from 0.6.0
+ *
+ * @csspart panel - the `<dialog>`; style the dimmed page with `::part(panel)::backdrop`
+ * @csspart header - the title row
+ * @csspart title - the title container
+ * @csspart close - the close button
+ * @csspart content - the scrolling content area
+ * @csspart footer - the actions row
+ *
+ * @cssprop --modal-animation-duration - length of the opening and closing animations (default 0.2s)
+ * @cssprop --modal-backdrop-bg - colour of the dimmed page behind the modal
  */
-
-import { getFocusableElements, trapFocus } from '../utils/dom-utils.js';
-import { ExtendedStates } from '../core/ComponentStates.js';
-
 export default class PModal extends HTMLElement {
   static get observedAttributes() {
-    return ['open', 'data-modal-size', 'data-modal-closable'];
+    return ['open'];
   }
 
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
 
-    // Use BEM-style CSS with CSS custom properties for theming
-    root.innerHTML = `
-      <style>${styles}</style>
-
-      <div class="modal__backdrop" data-modal-backdrop part="backdrop"></div>
-      <div class="modal__panel" data-modal-panel part="panel" role="dialog" aria-modal="true">
+    setStaticHTML(
+      root,
+      `
+      <dialog class="modal__panel" data-modal-panel part="panel" tabindex="-1">
         <header class="modal__header" data-modal-header part="header">
-          <slot name="title"><h2>Dialog</h2></slot>
+          <div class="modal__title" part="title"><slot name="title"><h2>Dialog</h2></slot></div>
           <div class="modal__spacer"></div>
-          <button class="modal__close" data-modal-close-btn aria-label="Close" part="close">×</button>
+          <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">×</button>
         </header>
         <section class="modal__content" data-modal-content part="content">
           <slot></slot>
@@ -53,100 +94,153 @@ export default class PModal extends HTMLElement {
         <footer class="modal__footer" data-modal-footer part="footer">
           <slot name="actions"></slot>
         </footer>
-      </div>
-    `;
+      </dialog>
+    `
+    );
+    adoptStyles(root, styles);
 
-    // Store element references using data attributes (following PDatetime pattern)
-    this._elements = {
-      backdrop: root.querySelector('[data-modal-backdrop]'),
-      panel: root.querySelector('[data-modal-panel]'),
-      close: root.querySelector('[data-modal-close-btn]'),
-    };
-
-    // Bind event handlers
-    this._onKeydown = this._onKeydown.bind(this);
-    this._onFocus = this._onFocus.bind(this);
-
-    // Initialize with closed state
-    this.setAttribute('data-modal', ExtendedStates.CLOSED);
+    this._dialog = root.querySelector('dialog');
+    this._closeButton = root.querySelector('[data-modal-close-btn]');
+    this._titleSlot = root.querySelector('slot[name="title"]');
+    this._returnFocus = null;
+    this._lastReturnFocus = null;
+    this._pendingReturnFocus = undefined;
+    this._closing = null;
   }
 
   connectedCallback() {
-    this._upgradeProperty('open');
+    /* Custom element constructors may not add attributes, so the initial state is set here */
+    if (!this.hasAttribute('data-modal-state')) {
+      this._setModalState(this.getAttribute('data-modal') || ExtendedStates.CLOSED);
+    }
 
-    // Set up event listeners
-    this._elements.backdrop.addEventListener('click', () => {
-      if (this._isBackdropClosable()) {
-        this.close();
-      }
-    });
+    this._listeners = new AbortController();
+    const { signal } = this._listeners;
 
-    this._elements.close.addEventListener('click', () => {
-      if (this._isClosable()) {
-        this.close();
-      }
-    });
+    this._closeButton.addEventListener(
+      'click',
+      () => {
+        if (this._isClosable()) this.close();
+      },
+      { signal }
+    );
 
-    // Global event listeners
-    document.addEventListener('keydown', this._onKeydown);
-    this.addEventListener('focusin', this._onFocus);
+    this.addEventListener(
+      'click',
+      event => {
+        /* A modal's own close buttons close it even when Escape and the backdrop can't */
+        if (event.target.closest?.('[data-modal-close]')) {
+          this.close();
+        }
+      },
+      { signal }
+    );
 
-    // Handle slotted buttons with data-modal-close attribute
-    this.addEventListener('click', (event) => {
-      if (event.target.hasAttribute('data-modal-close') && this._isClosable()) {
-        this.close();
-      }
-    });
+    this._dialog.addEventListener('click', event => this._onDialogClick(event), { signal });
 
-    // Set ARIA attributes
-    this._elements.panel.setAttribute('aria-labelledby', this._getTitleId());
+    this._dialog.addEventListener(
+      'cancel',
+      event => {
+        event.preventDefault();
+        if (this._isKeyboardEnabled() && this._isClosable()) {
+          this.close();
+        }
+      },
+      { signal }
+    );
+
+    /* The browser can close a modal dialog itself, for example on a repeated Escape */
+    this._dialog.addEventListener(
+      'close',
+      () => {
+        if (this.hasAttribute('open')) {
+          this.removeAttribute('open');
+        }
+      },
+      { signal }
+    );
+
+    this._titleSlot.addEventListener('slotchange', () => this._updateName(), { signal });
+    this._updateName();
+
+    this._upgradeOpenProperty();
+    if (this.hasAttribute('open')) {
+      this._onOpen();
+    }
   }
 
   disconnectedCallback() {
-    document.removeEventListener('keydown', this._onKeydown);
-    this.removeEventListener('focusin', this._onFocus);
+    this._listeners?.abort();
+    this._listeners = null;
+    if (this._dialog.open) {
+      this._dialog.close();
+    }
+    this._release();
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'open') {
-      if (this.hasAttribute('open')) {
-        this._onOpen();
-      } else {
-        this._onClose();
-      }
+    if (name !== 'open' || oldValue === newValue || !this.isConnected) return;
+
+    if (newValue !== null) {
+      this._onOpen();
+    } else {
+      this._onClose();
     }
   }
 
   /**
-   * Open the modal with state management
+   * Record the modal's state in `data-modal-state`
+   *
+   * The value is also copied to `data-modal`, which is deprecated and stops in 0.6.0 because it
+   * matches the `[data-modal]` trigger selector.
    */
-  open() {
-    /* Set opening state */
-    this.setAttribute('data-modal', ExtendedStates.OPENING);
-    this.setAttribute('open', '');
-
-    /* Transition to fully open after animation starts */
-    requestAnimationFrame(() => {
-      this.setAttribute('data-modal', ExtendedStates.OPEN);
-    });
+  _setModalState(value) {
+    this.setAttribute('data-modal-state', value);
+    this.setAttribute('data-modal', value);
   }
 
   /**
-   * Close the modal with state management
+   * Open the modal
+   *
+   * @param {Object} [options]
+   * @param {HTMLElement|null} [options.returnFocus] Element to focus when the modal closes. Defaults
+   *   to the element that had focus when it opened; null leaves focus alone.
+   */
+  open({ returnFocus } = {}) {
+    if (returnFocus !== undefined) {
+      this._pendingReturnFocus = returnFocus;
+    }
+
+    if (this._closing) {
+      this._closing = null;
+      this._setModalState(ExtendedStates.OPEN);
+      return;
+    }
+
+    this.setAttribute('open', '');
+  }
+
+  /**
+   * Close the modal once its closing animation has finished
    */
   close() {
-    /* Set closing state */
-    this.setAttribute('data-modal', ExtendedStates.CLOSING);
+    if (!this.hasAttribute('open') || this._closing) return;
 
-    /* Wait for closing animation before removing open attribute */
-    const duration =
-      parseFloat(getComputedStyle(this).getPropertyValue('--modal-animation-duration') || '0.2') *
-      1000;
-
-    setTimeout(() => {
+    if (!this._dialog.open) {
       this.removeAttribute('open');
-      this.setAttribute('data-modal', ExtendedStates.CLOSED);
-    }, duration);
+      this._setModalState(ExtendedStates.CLOSED);
+      return;
+    }
+
+    const closing = {};
+    this._closing = closing;
+    this._setModalState(ExtendedStates.CLOSING);
+
+    whenAnimationsFinish(this._dialog).then(() => {
+      if (this._closing === closing) {
+        this.removeAttribute('open');
+      }
+    });
   }
 
   /**
@@ -163,158 +257,174 @@ export default class PModal extends HTMLElement {
     }
   }
 
-  /**
-   * Check if modal can be closed
-   * @private
-   * @returns {boolean}
-   */
   _isClosable() {
     return this.getAttribute('data-modal-closable') !== 'false';
   }
 
-  /**
-   * Check if modal can be closed by clicking backdrop
-   * @private
-   * @returns {boolean}
-   */
   _isBackdropClosable() {
     return this._isClosable() && this.getAttribute('data-modal-backdrop-close') !== 'false';
   }
 
-  /**
-   * Check if keyboard navigation is enabled
-   * @private
-   * @returns {boolean}
-   */
   _isKeyboardEnabled() {
     return this.getAttribute('data-modal-keyboard') !== 'false';
   }
 
-  /**
-   * Handle modal opening
-   * @private
-   */
   _onOpen() {
-    // Dispatch open event
-    this.dispatchEvent(
-      new CustomEvent('modal:open', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
+    if (this._dialog.open) return;
 
-    // Focus management
-    requestAnimationFrame(() => {
-      const firstFocusable = this._getFirstFocusable();
-      const focusTarget = firstFocusable || this._elements.close;
-      focusTarget.focus({ preventScroll: true });
+    this._returnFocus =
+      this._pendingReturnFocus !== undefined ? this._pendingReturnFocus : deepActiveElement();
+    this._pendingReturnFocus = undefined;
+    this._closeButton.hidden = !this._isClosable();
+    this._updateName();
+    this._setModalState(ExtendedStates.OPENING);
+
+    this._dialog.showModal();
+    this._hold();
+    this._focusInitial();
+
+    dispatchComponentEvent(this, 'p-modal:open', { modal: this }, { legacy: 'modal:open' });
+
+    whenAnimationsFinish(this._dialog).then(() => {
+      if (this.hasAttribute('open') && !this._closing) {
+        this._setModalState(ExtendedStates.OPEN);
+      }
     });
-
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
   }
 
-  /**
-   * Handle modal closing
-   * @private
-   */
   _onClose() {
-    // Dispatch close event
-    this.dispatchEvent(
-      new CustomEvent('modal:close', {
-        bubbles: true,
-        detail: { modal: this },
-      })
-    );
+    this._closing = null;
+    if (this._dialog.open) {
+      this._dialog.close();
+    }
+    this._setModalState(ExtendedStates.CLOSED);
 
-    // Restore body scroll
-    document.body.style.overflow = '';
+    const returnFocus = this._resolveReturnFocus(this._returnFocus);
+    this._lastReturnFocus = this._returnFocus;
+    this._returnFocus = null;
+    const topModal = this._release();
+
+    if (returnFocus?.isConnected && (!topModal || topModal._contains(returnFocus))) {
+      returnFocus.focus({ preventScroll: true });
+    } else if (topModal && !topModal._contains(deepActiveElement())) {
+      topModal._focusInitial();
+    }
+
+    dispatchComponentEvent(this, 'p-modal:close', { modal: this }, { legacy: 'modal:close' });
   }
 
   /**
-   * Handle keyboard events
-   * @private
-   * @param {KeyboardEvent} event
+   * Close when the backdrop is clicked. Clicks on the backdrop target the dialog itself, outside its
+   * box; keyboard activation (detail 0) never counts.
    */
-  _onKeydown(event) {
-    if (!this.hasAttribute('open') || !this._isKeyboardEnabled()) return;
+  _onDialogClick(event) {
+    if (event.target !== this._dialog || event.detail === 0 || !this._isBackdropClosable()) return;
 
-    if (event.key === 'Escape' && this._isClosable()) {
-      event.preventDefault();
+    const box = this._dialog.getBoundingClientRect();
+    const inside =
+      event.clientX >= box.left &&
+      event.clientX <= box.right &&
+      event.clientY >= box.top &&
+      event.clientY <= box.bottom;
+    if (!inside) {
       this.close();
     }
+  }
 
-    if (event.key === 'Tab') {
-      this._trapTab(event);
+  /**
+   * Focus the first `[autofocus]` or focusable element in the content, else the close button, else
+   * the dialog
+   */
+  _focusInitial() {
+    const target =
+      this.querySelector('[autofocus]') ??
+      getFocusableElements(this)[0] ??
+      (this._closeButton.hidden ? this._dialog : this._closeButton);
+    target.focus({ preventScroll: true });
+  }
+
+  /**
+   * The element to return focus to: the one that opened this modal or, when that sits inside a modal
+   * that has since closed, the element that modal returned focus to
+   */
+  _resolveReturnFocus(element) {
+    const visited = new Set();
+    let target = element;
+
+    while (target && !visited.has(target)) {
+      visited.add(target);
+      const owner = target.closest?.('p-modal') ?? target.getRootNode?.().host;
+      if (!(owner instanceof PModal) || owner === this || owner.hasAttribute('open')) {
+        return target;
+      }
+      target = owner._lastReturnFocus;
+    }
+
+    return null;
+  }
+
+  _contains(element) {
+    return Boolean(element) && (this.contains(element) || this.shadowRoot.contains(element));
+  }
+
+  /**
+   * Name the dialog after the text of its title slot
+   */
+  _updateName() {
+    const title = this._titleSlot
+      .assignedNodes({ flatten: true })
+      .map(node => node.textContent)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    this._dialog.setAttribute('aria-label', title || 'Dialog');
+  }
+
+  /**
+   * Join the stack of open modals, locking page scroll for the first
+   */
+  _hold() {
+    if (openModals.includes(this)) return;
+
+    openModals.push(this);
+    if (openModals.length === 1) {
+      lockedOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
     }
   }
 
   /**
-   * Handle focus events for focus trapping
-   * @private
+   * Leave the stack of open modals, unlocking page scroll after the last
+   *
+   * @returns {PModal|undefined} The modal now on top, if any
    */
-  _onFocus() {
-    if (!this.contains(document.activeElement)) {
-      const focusTarget = this._getFirstFocusable() || this._elements.close;
-      focusTarget.focus({ preventScroll: true });
+  _release() {
+    const index = openModals.indexOf(this);
+    if (index !== -1) {
+      openModals.splice(index, 1);
     }
-  }
-
-  /**
-   * Get all focusable elements within the modal
-   * @private
-   * @returns {HTMLElement[]}
-   */
-  _getFocusableElements() {
-    return getFocusableElements(this);
-  }
-
-  /**
-   * Get the first focusable element
-   * @private
-   * @returns {HTMLElement|null}
-   */
-  _getFirstFocusable() {
-    return this._getFocusableElements()[0] || null;
-  }
-
-  /**
-   * Trap tab navigation within the modal
-   * @private
-   * @param {KeyboardEvent} event
-   */
-  _trapTab(event) {
-    trapFocus(this, event);
-  }
-
-  /**
-   * Get title element ID for ARIA labeling
-   * @private
-   * @returns {string}
-   */
-  _getTitleId() {
-    const titleSlot = this.querySelector('[slot="title"]');
-    if (titleSlot && titleSlot.id) {
-      return titleSlot.id;
+    if (openModals.length === 0 && lockedOverflow !== null) {
+      document.body.style.overflow = lockedOverflow;
+      lockedOverflow = null;
     }
-    return 'modal-title';
+    return openModals.at(-1);
   }
 
   /**
-   * Upgrade property for proper web component behavior
-   * @private
-   * @param {string} prop
+   * Open the modal when `open` was set as a property before the element was defined, without
+   * letting that property hide the open() method
    */
-  _upgradeProperty(prop) {
-    if (this.hasOwnProperty(prop)) {
-      const value = this[prop];
-      delete this[prop];
-      this[prop] = value;
+  _upgradeOpenProperty() {
+    if (!Object.hasOwn(this, 'open')) return;
+
+    const requested = this.open;
+    delete this.open;
+    if (requested && typeof requested !== 'function') {
+      this.setAttribute('open', '');
     }
   }
 }
 
-// Auto-register the web component if not already registered
 if (!customElements.get('p-modal')) {
   customElements.define('p-modal', PModal);
 }

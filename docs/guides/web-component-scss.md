@@ -1,5 +1,7 @@
 # Using SCSS in Web Components
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 This guide explains how to use SCSS for styling Web Components in Parallelogram-JS.
 
 ## Overview
@@ -169,6 +171,7 @@ Design tokens and shared variables are available in `src/styles/web-components/_
 ### Available Variables
 
 #### Colors
+
 - `$color-white`, `$color-black`
 - `$color-border`, `$color-border-hover`, `$color-border-active`
 - `$color-bg-light`, `$color-bg-lighter`, `$color-bg-hover`
@@ -177,23 +180,28 @@ Design tokens and shared variables are available in `src/styles/web-components/_
 - `$color-text-muted`
 
 #### Spacing
+
 - `$spacing-xs` (3px), `$spacing-sm` (6px), `$spacing-md` (8px)
 - `$spacing-lg` (12px), `$spacing-xl` (16px), `$spacing-2xl` (32px)
 
 #### Typography
+
 - `$font-family: inherit`
 - `$font-size-xs` (10px), `$font-size-sm` (12px), `$font-size-md` (14px), `$font-size-base` (16px)
 - `$font-weight-normal`, `$font-weight-semibold`, `$font-weight-bold`
 
 #### Borders
+
 - `$border-width-sm` (1px), `$border-width-md` (2px)
 - `$border-radius-sm` (0.125rem)
 
 #### Transitions
+
 - `$transition-fast` (0.2s), `$transition-normal` (0.375s), `$transition-slow` (0.4s)
 - `$easing-standard`, `$easing-ease-out`
 
 #### Z-index
+
 - `$z-overlay`, `$z-panel`, `$z-preview`
 
 ### Usage
@@ -228,7 +236,7 @@ const componentConfigs = componentFiles.map(file => ({
     format: 'esm',
   },
   plugins: [
-    scss({ loadPaths: ['src/styles'] }),  // Allow @use from src/styles
+    scss({ loadPaths: ['src/styles'] }), // Allow @use from src/styles
     resolve({
       extensions: ['.js', '.scss', '.css'],
     }),
@@ -240,28 +248,33 @@ const componentConfigs = componentFiles.map(file => ({
 ## Benefits
 
 ### 1. Better Organization
+
 - Styles live in dedicated `.scss` files
 - Easier to find and edit component styles
 - Clear separation between logic and presentation
 
 ### 2. SCSS Features
+
 - Variables for design consistency
 - Nesting for cleaner code
 - Mixins for reusable styles
 - Functions and calculations
 
 ### 3. Shared Design Tokens
+
 - Import `web-components/_variables.scss` in any component
 - Consistent spacing, colors, typography across all components
 - Update design tokens in one place
 
 ### 4. Better Developer Experience
+
 - Syntax highlighting in SCSS files
 - CSS linting and formatting
 - IDE autocomplete for variables
 - No escaping quotes in template literals
 
 ### 5. Build-time Optimization
+
 - SCSS compiled to CSS at build time
 - Automatic minification
 - No runtime CSS parsing overhead
@@ -345,9 +358,12 @@ export default class MyComponent extends HTMLElement {
 ### 1. Use BEM Methodology
 
 ```scss
-.component {           // Block
-  &__element {         // Element
-    &--modifier {      // Modifier
+.component {
+  // Block
+  &__element {
+    // Element
+    &--modifier {
+      // Modifier
       // styles
     }
   }
@@ -360,7 +376,7 @@ export default class MyComponent extends HTMLElement {
 @use '../styles/web-components/variables' as *;
 
 .my-component {
-  padding: $spacing-md;  // Use token
+  padding: $spacing-md; // Use token
   color: $color-primary; // Use token
 }
 ```

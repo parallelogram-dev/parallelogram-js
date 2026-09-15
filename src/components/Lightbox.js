@@ -1,22 +1,24 @@
-import { BaseComponent } from '@parallelogram-js/core';
-import { ExtendedStates } from '../core/ComponentStates.js';
+import { BaseComponent } from '../core/BaseComponent.js';
+import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
+import { setStaticHTML } from '../utils/shadow.js';
+
+const ICONS = {
+  close:
+    '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  prev: '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  next: '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+};
 
 /**
- * Lightbox Component - Image/media gallery viewer with proper state management
+ * Lightbox - image gallery viewer shown in a native modal `<dialog>`
  *
- * States:
- * - closed: Lightbox is not visible
- * - opening: Lightbox is transitioning in
- * - open: Lightbox is fully visible and interactive
- * - transitioning: Lightbox is changing images
- * - closing: Lightbox is transitioning out
+ * Links that share a `data-lightbox` gallery name open one viewer. It is named "Image viewer", takes
+ * focus on its close button, keeps the rest of the page inert and returns focus to the link when it
+ * closes. The arrow keys move between images, Escape and the backdrop close it, the counter is
+ * announced as it changes, and slides are skipped when the user prefers reduced motion.
  *
- * Features:
- * - BEM-compliant class naming
- * - Configurable via data attributes
- * - Gallery support with navigation
- * - Keyboard navigation
- * - State-based architecture
+ * The viewer's state is written to `data-lightbox-state`: closed, opening, open, transitioning or
+ * closing.
  *
  * @example
  * <a data-lightbox="gallery" href="large1.jpg">
@@ -24,14 +26,7 @@ import { ExtendedStates } from '../core/ComponentStates.js';
  * </a>
  */
 export class Lightbox extends BaseComponent {
-  /**
-   * Override _getSelector to prevent minification issues
-   * @returns {string} Data attribute selector
-   * @private
-   */
-  _getSelector() {
-    return 'data-lightbox';
-  }
+  static selector = 'data-lightbox';
 
   static get defaults() {
     return {
@@ -68,70 +63,75 @@ export class Lightbox extends BaseComponent {
   constructor(options = {}) {
     super(options);
     this.lightboxElement = null;
-    this.keyHandler = null;
+    this.currentTriggerElement = null;
+  }
+
+  /**
+   * Mount on a gallery link, ignoring the lightbox's own overlay
+   *
+   * The overlay carries the deprecated `data-lightbox` state copy, so a page observer watching for
+   * `[data-lightbox]` would otherwise mount it as another gallery link.
+   */
+  mount(element) {
+    if (
+      element === this.lightboxElement ||
+      element.classList.contains(Lightbox.defaults.overlayClass)
+    ) {
+      return undefined;
+    }
+    return super.mount(element);
   }
 
   _init(element) {
     const state = super._init(element);
 
-    const config = this._getConfiguration(element);
-    const gallery = element.dataset.lightbox;
-
-    /* Initialize state with config and gallery info */
-    state.config = config;
-    state.gallery = gallery;
+    state.config = this._getConfiguration(element);
+    state.gallery = element.dataset.lightbox;
     state.lightboxState = 'closed';
     state.currentIndex = 0;
     state.galleryElements = [];
+    state.preloadedAll = false;
 
-    /* Bind click handler */
-    element.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this._openLightbox(element);
-    });
+    element.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
+        this._openLightbox(element);
+      },
+      { signal: state.controller.signal }
+    );
 
-    this.eventBus?.emit('lightbox:mounted', { element, gallery });
+    /* Unmounting the link that opened the viewer closes it */
+    const baseCleanup = state.cleanup;
+    state.cleanup = () => {
+      if (this.currentTriggerElement === element) {
+        this._teardown(element, state, { restoreFocus: false });
+      }
+      baseCleanup?.();
+    };
+
+    this.eventBus?.emit('lightbox:mounted', { element, gallery: state.gallery });
     return state;
   }
 
   _getConfiguration(element) {
     return {
-      closeOnEscape: this.getAttr(
-        element,
-        'close-escape',
-        Lightbox.defaults.closeOnEscape
-      ),
-      closeOnBackdrop: this.getAttr(
+      closeOnEscape: this.getBoolAttr(element, 'close-escape', Lightbox.defaults.closeOnEscape),
+      closeOnBackdrop: this.getBoolAttr(
         element,
         'close-backdrop',
         Lightbox.defaults.closeOnBackdrop
       ),
-      showCounter: this.getAttr(
-        element,
-        'show-counter',
-        Lightbox.defaults.showCounter
-      ),
-      showNavigation: this.getAttr(
-        element,
-        'show-nav',
-        Lightbox.defaults.showNavigation
-      ),
-      keyNavigation: this.getAttr(
-        element,
-        'key-nav',
-        Lightbox.defaults.keyNavigation
-      ),
-      useDirectionalTransitions: this.getAttr(
+      showCounter: this.getBoolAttr(element, 'show-counter', Lightbox.defaults.showCounter),
+      showNavigation: this.getBoolAttr(element, 'show-nav', Lightbox.defaults.showNavigation),
+      keyNavigation: this.getBoolAttr(element, 'key-nav', Lightbox.defaults.keyNavigation),
+      useDirectionalTransitions: this.getBoolAttr(
         element,
         'directional-transitions',
         Lightbox.defaults.useDirectionalTransitions
       ),
-      preloadStrategy: this.getAttr(
-        element,
-        'preload',
-        Lightbox.defaults.preloadStrategy
-      ),
+      preloadStrategy: this.getAttr(element, 'preload', Lightbox.defaults.preloadStrategy),
       /* BEM class names */
       baseClass: this.getAttr(element, 'base-class', Lightbox.defaults.baseClass),
       overlayClass: this.getAttr(element, 'overlay-class', Lightbox.defaults.overlayClass),
@@ -143,14 +143,34 @@ export class Lightbox extends BaseComponent {
       imageClass: this.getAttr(element, 'image-class', Lightbox.defaults.imageClass),
       counterClass: this.getAttr(element, 'counter-class', Lightbox.defaults.counterClass),
       /* State classes */
-      stateClosedClass: this.getAttr(element, 'state-closed-class', Lightbox.defaults.stateClosedClass),
-      stateOpeningClass: this.getAttr(element, 'state-opening-class', Lightbox.defaults.stateOpeningClass),
+      stateClosedClass: this.getAttr(
+        element,
+        'state-closed-class',
+        Lightbox.defaults.stateClosedClass
+      ),
+      stateOpeningClass: this.getAttr(
+        element,
+        'state-opening-class',
+        Lightbox.defaults.stateOpeningClass
+      ),
       stateOpenClass: this.getAttr(element, 'state-open-class', Lightbox.defaults.stateOpenClass),
-      stateTransitioningClass: this.getAttr(element, 'state-transitioning-class', Lightbox.defaults.stateTransitioningClass),
-      stateClosingClass: this.getAttr(element, 'state-closing-class', Lightbox.defaults.stateClosingClass),
+      stateTransitioningClass: this.getAttr(
+        element,
+        'state-transitioning-class',
+        Lightbox.defaults.stateTransitioningClass
+      ),
+      stateClosingClass: this.getAttr(
+        element,
+        'state-closing-class',
+        Lightbox.defaults.stateClosingClass
+      ),
       showClass: this.getAttr(element, 'show-class', Lightbox.defaults.showClass),
       slideLeftClass: this.getAttr(element, 'slide-left-class', Lightbox.defaults.slideLeftClass),
-      slideRightClass: this.getAttr(element, 'slide-right-class', Lightbox.defaults.slideRightClass),
+      slideRightClass: this.getAttr(
+        element,
+        'slide-right-class',
+        Lightbox.defaults.slideRightClass
+      ),
     };
   }
 
@@ -176,34 +196,32 @@ export class Lightbox extends BaseComponent {
 
   _openLightbox(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'closed') return;
+    if (!state || state.lightboxState !== 'closed' || this.lightboxElement) return;
 
-    /* Build gallery from all elements with same gallery name */
     state.galleryElements = Array.from(
-      document.querySelectorAll(`[data-lightbox="${state.gallery}"]`)
-    );
+      document.querySelectorAll(`[data-lightbox="${CSS.escape(state.gallery ?? '')}"]`)
+    ).filter(element => !element.classList.contains(state.config.overlayClass));
+    state.currentIndex = Math.max(0, state.galleryElements.indexOf(triggerElement));
+    this.currentTriggerElement = triggerElement;
 
-    state.currentIndex = state.galleryElements.indexOf(triggerElement);
-
+    const overlay = this._createLightboxElement(triggerElement);
     this._setState(triggerElement, 'opening');
-    this._createLightboxElement(triggerElement);
     this._showImage(triggerElement, state.currentIndex);
-    this._setupEventListeners(triggerElement);
 
-    /* Calculate and set scrollbar width */
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
     document.body.classList.add('overflow--hidden');
 
-    /* Transition to open state */
+    overlay.showModal();
+    overlay.querySelector('[data-lightbox-action="close"]')?.focus({ preventScroll: true });
+
+    /* Become fully open once the overlay's own opening animation has finished */
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (this.lightboxElement && state.config) {
-          this.lightboxElement.classList.add(state.config.showClass);
-          /* After transition completes, set to fully open */
-          this.lightboxElement.addEventListener('transitionend', () => {
-            this._setState(triggerElement, 'open');
-          }, { once: true });
+      if (this.lightboxElement !== overlay) return;
+      overlay.classList.add(state.config.showClass);
+      whenAnimationsFinish(overlay).then(() => {
+        if (this.lightboxElement === overlay && state.lightboxState === 'opening') {
+          this._setState(triggerElement, 'open');
         }
       });
     });
@@ -213,69 +231,57 @@ export class Lightbox extends BaseComponent {
       index: state.currentIndex,
       total: state.galleryElements.length,
     });
-
-    /* Eager load adjacent images for smooth navigation */
-    this._eagerLoadAdjacentImages(triggerElement);
   }
 
   _eagerLoadAdjacentImages(triggerElement) {
     const state = this.getState(triggerElement);
     if (!state || !state.galleryElements) return;
 
-    const config = state.config;
-    const currentIndex = state.currentIndex;
-    const gallery = state.galleryElements;
+    const { config, currentIndex, galleryElements: gallery } = state;
 
-    /* Check preload strategy */
     if (config.preloadStrategy === 'none') {
-      return; // Don't preload anything
+      return;
     }
 
-    /* Determine which images to preload based on strategy */
-    let indicesToLoad = [];
+    let indicesToLoad;
 
     if (config.preloadStrategy === 'all') {
-      /* Preload all images in the gallery */
+      if (state.preloadedAll) return;
+      state.preloadedAll = true;
       indicesToLoad = gallery.map((_, index) => index);
     } else {
-      /* Default: 'adjacent' - preload current, previous, and next */
+      /* 'adjacent': the current image and its neighbours */
       indicesToLoad = [currentIndex];
 
       if (config.showNavigation) {
-        /* Preload previous image if exists */
         if (currentIndex > 0) {
           indicesToLoad.push(currentIndex - 1);
         }
-        /* Preload next image if exists */
         if (currentIndex < gallery.length - 1) {
           indicesToLoad.push(currentIndex + 1);
         }
       }
     }
 
-    /* Preload each image in the load set */
-    indicesToLoad.forEach((index) => {
+    indicesToLoad.forEach(index => {
       const element = gallery[index];
-      const imageData = this._getImageData(element);
 
-      /* Find any lazy-loaded images within the trigger element */
-      const lazyImages = element.querySelectorAll('[data-lazysrc]');
-      lazyImages.forEach((lazyImg) => {
-        /* Trigger custom event on the lazy image element */
-        const event = new CustomEvent('lazysrc:forceLoad', {
-          bubbles: true,
-          detail: {
-            source: 'lightbox',
-            gallery: state.gallery,
-            index: index,
-            strategy: config.preloadStrategy,
-          },
-        });
-        lazyImg.dispatchEvent(event);
+      /* Ask lazily loaded thumbnails inside the link to load too */
+      element.querySelectorAll('[data-lazysrc]').forEach(lazyImg => {
+        lazyImg.dispatchEvent(
+          new CustomEvent('lazysrc:forceLoad', {
+            bubbles: true,
+            detail: {
+              source: 'lightbox',
+              gallery: state.gallery,
+              index,
+              strategy: config.preloadStrategy,
+            },
+          })
+        );
       });
 
-      /* Also preload the main image, honouring srcset when provided */
-      this._preloadImage(imageData);
+      this._preloadImage(this._getImageData(element));
     });
   }
 
@@ -314,147 +320,148 @@ export class Lightbox extends BaseComponent {
     img.src = data.src;
   }
 
+  /**
+   * Load and decode an image, so swapping it in doesn't stutter
+   *
+   * @returns {Promise<void>} Resolves when the image is ready or has failed
+   */
   _preloadImage(data) {
-    const img = new Image();
-    if (data.srcset) {
-      img.sizes = data.sizes;
-      img.srcset = data.srcset;
-    }
-    img.src = data.src;
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => (img.decode?.() ?? Promise.resolve()).then(resolve, resolve);
+      img.onerror = () => resolve();
+      if (data.srcset) {
+        img.sizes = data.sizes;
+        img.srcset = data.srcset;
+      }
+      img.src = data.src;
+    });
   }
 
+  /**
+   * Build the viewer dialog and append it to the page
+   *
+   * @returns {HTMLDialogElement}
+   */
   _createLightboxElement(triggerElement) {
+    const { config } = this.getState(triggerElement);
+
+    const overlay = document.createElement('dialog');
+    overlay.className = config.overlayClass;
+    overlay.setAttribute('aria-label', 'Image viewer');
+
+    const button = (action, className, label) => {
+      const control = document.createElement('button');
+      control.type = 'button';
+      control.className = className;
+      control.dataset.lightboxAction = action;
+      control.setAttribute('aria-label', label);
+      setStaticHTML(control, ICONS[action]);
+      return control;
+    };
+
+    overlay.append(button('close', config.closeClass, 'Close'));
+    if (config.showNavigation) {
+      overlay.append(
+        button('prev', config.prevClass, 'Previous image'),
+        button('next', config.nextClass, 'Next image')
+      );
+    }
+
+    const container = document.createElement('div');
+    container.className = config.containerClass;
+    const content = document.createElement('div');
+    content.className = config.contentClass;
+    const image = document.createElement('img');
+    image.className = config.imageClass;
+    image.alt = '';
+    content.append(image);
+    container.append(content);
+    overlay.append(container);
+
+    if (config.showCounter) {
+      const counter = document.createElement('div');
+      counter.className = config.counterClass;
+      counter.setAttribute('aria-live', 'polite');
+      overlay.append(counter);
+    }
+
+    overlay.addEventListener('click', event => {
+      const action = event.target.closest('[data-lightbox-action]')?.dataset.lightboxAction;
+      if (action === 'close') {
+        this._closeLightbox(triggerElement);
+      } else if (action === 'prev') {
+        this._previousImage(triggerElement);
+      } else if (action === 'next') {
+        this._nextImage(triggerElement);
+      } else if (event.target === overlay && config.closeOnBackdrop) {
+        this._closeLightbox(triggerElement);
+      }
+    });
+
+    overlay.addEventListener('keydown', event => this._onKeydown(triggerElement, event));
+
+    overlay.addEventListener('cancel', event => {
+      event.preventDefault();
+      if (config.closeOnEscape) {
+        this._closeLightbox(triggerElement);
+      }
+    });
+
+    /* The browser can close a modal dialog itself, for example on a repeated Escape */
+    overlay.addEventListener('close', () => {
+      if (this.lightboxElement === overlay) {
+        this._teardown(triggerElement, this.getState(triggerElement));
+      }
+    });
+
+    document.body.append(overlay);
+    this.lightboxElement = overlay;
+    return overlay;
+  }
+
+  _onKeydown(triggerElement, event) {
     const state = this.getState(triggerElement);
     if (!state) return;
 
-    const config = state.config;
+    const { config } = state;
+    const actions = {
+      Escape: config.closeOnEscape && (() => this._closeLightbox(triggerElement)),
+      ArrowLeft: config.keyNavigation && (() => this._previousImage(triggerElement)),
+      ArrowRight: config.keyNavigation && (() => this._nextImage(triggerElement)),
+    };
 
-    this.lightboxElement = document.createElement('div');
-    this.lightboxElement.className = config.overlayClass;
-    this.setState(this.lightboxElement, 'opening');
-    this.lightboxElement.innerHTML = `
-      <div class="${config.containerClass}">
-        <button class="${config.closeClass}" data-lightbox-action="close" aria-label="Close"></button>
-        ${
-          config.showNavigation
-            ? `
-          <button class="${config.prevClass}" data-lightbox-action="prev" aria-label="Previous"></button>
-          <button class="${config.nextClass}" data-lightbox-action="next" aria-label="Next"></button>
-        `
-            : ''
-        }
-        <div class="${config.contentClass}">
-          <img class="${config.imageClass}" alt="">
-        </div>
-        ${config.showCounter ? `<div class="${config.counterClass}"></div>` : ''}
-      </div>
-    `;
-
-    document.body.appendChild(this.lightboxElement);
-
-    /* Store reference to trigger element using WeakMap would be cleaner, but for simplicity just store directly */
-    this.currentTriggerElement = triggerElement;
-
-    /* Setup button handlers */
-    const closeBtn = this.lightboxElement.querySelector('[data-lightbox-action="close"]');
-    closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this._closeLightbox(triggerElement);
-    });
-
-    if (config.showNavigation) {
-      const prevBtn = this.lightboxElement.querySelector('[data-lightbox-action="prev"]');
-      const nextBtn = this.lightboxElement.querySelector('[data-lightbox-action="next"]');
-
-      prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this._previousImage(triggerElement);
-      });
-
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this._nextImage(triggerElement);
-      });
-
-      prevBtn.disabled = true;
-      nextBtn.disabled = true;
-    }
-
-    if (config.closeOnBackdrop) {
-      this.lightboxElement.addEventListener('click', (e) => {
-        if (e.target === this.lightboxElement) {
-          this._closeLightbox(triggerElement);
-        }
-      });
+    const action = actions[event.key];
+    if (action) {
+      event.preventDefault();
+      action();
     }
   }
 
   _showImage(triggerElement, index, direction = null) {
     const state = this.getState(triggerElement);
-    if (!state) return;
+    if (!state || !this.lightboxElement) return;
 
-    const config = state.config;
-    const element = state.galleryElements[index];
-    const imageData = this._getImageData(element);
-
+    const { config } = state;
+    const imageData = this._getImageData(state.galleryElements[index]);
     const img = this.lightboxElement.querySelector(`.${config.imageClass.split(' ')[0]}`);
 
-    /* Apply directional transition if configured */
-    if (config.useDirectionalTransitions && direction && state.lightboxState === 'open') {
-      this._setState(triggerElement, 'transitioning');
-
-      const slideOutClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
-      const slideInClass = direction === 'next' ? config.slideRightClass : config.slideLeftClass;
-
-      img.classList.add(slideOutClass);
-
-      img.addEventListener(
-        'transitionend',
-        () => {
-          const loader = new Image();
-          loader.onload = () => {
-            this._applyImageData(img, imageData);
-            img.style.transition = 'none';
-            img.classList.add(slideInClass);
-            img.offsetHeight;
-            img.classList.remove(slideOutClass);
-
-            requestAnimationFrame(() => {
-              img.style.transition = '';
-              img.classList.remove(slideInClass);
-
-              img.addEventListener(
-                'transitionend',
-                () => {
-                  this._setState(triggerElement, 'open');
-                },
-                { once: true }
-              );
-            });
-          };
-          loader.onerror = () => {
-            this._applyImageData(img, imageData);
-            this._setState(triggerElement, 'open');
-          };
-          if (imageData.srcset) {
-            loader.sizes = imageData.sizes;
-            loader.srcset = imageData.srcset;
-          }
-          loader.src = imageData.src;
-        },
-        { once: true }
-      );
+    const slide =
+      config.useDirectionalTransitions &&
+      direction &&
+      state.lightboxState === 'open' &&
+      !prefersReducedMotion();
+    if (slide) {
+      this._slideToImage(triggerElement, img, imageData, direction);
     } else {
       this._applyImageData(img, imageData);
     }
 
-    /* Update counter */
     if (config.showCounter) {
       const counter = this.lightboxElement.querySelector(`.${config.counterClass.split(' ')[0]}`);
       counter.textContent = `${index + 1} / ${state.galleryElements.length}`;
     }
 
-    /* Update navigation buttons */
     if (config.showNavigation) {
       const prevBtn = this.lightboxElement.querySelector('[data-lightbox-action="prev"]');
       const nextBtn = this.lightboxElement.querySelector('[data-lightbox-action="next"]');
@@ -462,11 +469,51 @@ export class Lightbox extends BaseComponent {
       if (prevBtn) prevBtn.disabled = index === 0;
       if (nextBtn) nextBtn.disabled = index === state.galleryElements.length - 1;
     }
+
+    this._eagerLoadAdjacentImages(triggerElement);
+  }
+
+  /**
+   * Slide the current image out and the next one in.
+   *
+   * The new image is swapped in once it has loaded or failed, and the lightbox
+   * always returns to 'open' afterwards, so a broken image or a transition that
+   * never ends cannot block further navigation.
+   */
+  async _slideToImage(triggerElement, img, imageData, direction) {
+    const state = this.getState(triggerElement);
+    const { config } = state;
+    const overlay = this.lightboxElement;
+    const slideOutClass = direction === 'next' ? config.slideLeftClass : config.slideRightClass;
+    const slideInClass = direction === 'next' ? config.slideRightClass : config.slideLeftClass;
+
+    this._setState(triggerElement, 'transitioning');
+
+    try {
+      img.classList.add(slideOutClass);
+      await Promise.all([whenAnimationsFinish(img), this._preloadImage(imageData)]);
+      if (this.lightboxElement !== overlay) return;
+
+      this._applyImageData(img, imageData);
+      img.style.transition = 'none';
+      img.classList.add(slideInClass);
+      img.classList.remove(slideOutClass);
+      img.getBoundingClientRect();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+
+      img.style.transition = '';
+      img.classList.remove(slideInClass);
+      await whenAnimationsFinish(img);
+    } finally {
+      if (this.lightboxElement === overlay && state.lightboxState === 'transitioning') {
+        this._setState(triggerElement, 'open');
+      }
+    }
   }
 
   _previousImage(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (state.currentIndex > 0) {
       state.currentIndex--;
@@ -476,7 +523,7 @@ export class Lightbox extends BaseComponent {
 
   _nextImage(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (state.currentIndex < state.galleryElements.length - 1) {
       state.currentIndex++;
@@ -484,95 +531,54 @@ export class Lightbox extends BaseComponent {
     }
   }
 
-  _setupEventListeners(triggerElement) {
-    const state = this.getState(triggerElement);
-    if (!state) return;
-
-    const config = state.config;
-
-    if (config.closeOnEscape || config.keyNavigation) {
-      this.keyHandler = (e) => {
-        /* Check if this lightbox is currently open */
-        if (state.lightboxState !== 'open' && state.lightboxState !== 'transitioning') return;
-
-        let handled = false;
-        switch (e.key) {
-          case 'Escape':
-            if (config.closeOnEscape) {
-              this._closeLightbox(triggerElement);
-              handled = true;
-            }
-            break;
-          case 'ArrowLeft':
-            if (config.keyNavigation) {
-              this._previousImage(triggerElement);
-              handled = true;
-            }
-            break;
-          case 'ArrowRight':
-            if (config.keyNavigation) {
-              this._nextImage(triggerElement);
-              handled = true;
-            }
-            break;
-        }
-        if (handled) {
-          e.preventDefault();
-        }
-      };
-
-      document.addEventListener('keydown', this.keyHandler);
-    }
-  }
-
   _closeLightbox(triggerElement) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState === 'closed' || state.lightboxState === 'closing') return;
+    const overlay = this.lightboxElement;
+    if (!state || !overlay || ['closed', 'closing'].includes(state.lightboxState)) return;
 
     this._setState(triggerElement, 'closing');
+    overlay.classList.remove(state.config.showClass);
 
-    /* Remove show class to trigger close transition */
-    this.lightboxElement.classList.remove(state.config.showClass);
-
-    let cleanupDone = false;
-    const cleanup = () => {
-      if (cleanupDone) return;
-      cleanupDone = true;
-
-      /* Remove event listeners */
-      if (this.keyHandler) {
-        document.removeEventListener('keydown', this.keyHandler);
-        this.keyHandler = null;
+    whenAnimationsFinish(overlay).then(() => {
+      if (this.lightboxElement === overlay) {
+        this._teardown(triggerElement, state);
       }
+    });
+  }
 
-      /* Remove lightbox element */
-      if (this.lightboxElement) {
-        this.lightboxElement.remove();
-        this.lightboxElement = null;
-      }
+  /**
+   * Remove the viewer, unlock page scroll and, unless told otherwise, return focus to the link
+   */
+  _teardown(triggerElement, state, { restoreFocus = true } = {}) {
+    const overlay = this.lightboxElement;
+    if (!overlay) return;
 
-      /* Restore body scroll */
-      document.body.classList.remove('overflow--hidden');
+    this.lightboxElement = null;
+    this.currentTriggerElement = null;
+    if (overlay.open) {
+      overlay.close();
+    }
+    overlay.remove();
 
-      /* Reset state */
+    document.body.classList.remove('overflow--hidden');
+    document.documentElement.style.removeProperty('--scrollbar-width');
+
+    if (this.getState(triggerElement)) {
       this._setState(triggerElement, 'closed');
+    } else if (state) {
+      state.lightboxState = 'closed';
+    }
+    if (state) {
       state.currentIndex = 0;
       state.galleryElements = [];
+      state.preloadedAll = false;
+    }
 
-      this.eventBus?.emit('lightbox:closed', {});
-    };
+    if (restoreFocus && triggerElement.isConnected) {
+      triggerElement.focus({ preventScroll: true });
+    }
 
-    /* Wait for transition */
-    const handleTransitionEnd = (event) => {
-      if (event && event.target !== this.lightboxElement) return;
-      cleanup();
-    };
-
-    this.lightboxElement.addEventListener('transitionend', handleTransitionEnd, { once: true });
-    this.lightboxElement.addEventListener('animationend', handleTransitionEnd, { once: true });
-
-    /* Fallback */
-    setTimeout(cleanup, 1000);
+    this.eventBus?.emit('lightbox:closed', {});
   }
 
   /* Public API */
@@ -594,7 +600,7 @@ export class Lightbox extends BaseComponent {
 
   goTo(triggerElement, index) {
     const state = this.getState(triggerElement);
-    if (!state || state.lightboxState !== 'open') return;
+    if (!state || !['opening', 'open'].includes(state.lightboxState)) return;
 
     if (index >= 0 && index < state.galleryElements.length) {
       state.currentIndex = index;
@@ -616,7 +622,7 @@ export class Lightbox extends BaseComponent {
 
   static enhanceAll(selector = '[data-lightbox]', options) {
     const instance = new Lightbox(options);
-    document.querySelectorAll(selector).forEach((el) => instance.mount(el));
+    document.querySelectorAll(selector).forEach(el => instance.mount(el));
     return instance;
   }
 }

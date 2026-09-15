@@ -1,75 +1,167 @@
 /* PToasts Web Component Styles */
 @use '../../design-system' as *;
 
+/* Also resets the user agent's popover box, since the host is shown as a manual popover */
 :host {
   position: fixed;
-  inset: auto auto auto 0;
-  padding: #{$space-lg};
-  z-index: #{$z-toast};
-  display: grid;
-  gap: #{$space-md};
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: auto;
+  z-index: var(--toast-z-index, #{$z-toast});
+  display: block;
+  box-sizing: border-box;
+  width: max-content;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--toast-padding, #{$space-lg});
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
   pointer-events: none;
-
-  /* Toast surface styling using panel tokens */
-  --toast-border-radius: var(--surface-panel-radius);
-  --toast-shadow: var(--surface-panel-shadow);
-  --toast-padding-x: #{$space-lg};
-  --toast-padding-y: #{$space-sm};
 }
 
-:host([placement="top-left"]) { top: 0; left: 0; }
-:host([placement="top-right"]) { top: 0; right: 0; left: auto; }
-:host([placement="bottom-right"]) { bottom: 0; right: 0; left: auto; }
-:host([placement="bottom-left"]) { bottom: 0; left: 0; }
+:host([placement='top-left']),
+:host([placement='bottom-left']) {
+  right: auto;
+  left: 0;
+}
+
+:host([placement='top-center']),
+:host([placement='bottom-center']) {
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+}
+
+:host([placement^='bottom']) {
+  top: auto;
+  bottom: 0;
+}
+
+.stack {
+  display: grid;
+  gap: var(--toast-gap, #{$space-md});
+}
 
 .toast {
-  padding: var(--toast-padding-y) var(--toast-padding-x);
-  border-radius: var(--toast-border-radius);
-  color: #fff;
-  box-shadow: var(--toast-shadow);
-  opacity: 0;
-  transform: translateY(-6px);
-  animation: toast-in $duration-fast ease-out forwards;
-  cursor: pointer;
-  font: #{$font-sm}/1.4 system-ui, -apple-system, sans-serif;
-  outline: none;
+  box-sizing: border-box;
+  min-width: min(
+    var(--toast-min-width, 300px),
+    calc(100vw - 2 * var(--toast-padding, #{$space-lg}))
+  );
+  max-width: var(--toast-max-width, 500px);
+  padding: var(--toast-item-padding, #{$space-sm} #{$space-lg});
+  border-radius: var(--toast-border-radius, var(--surface-panel-radius, #{$radius-md}));
+  background: var(--toast-bg-info, #{$neutral-900});
+  color: var(--toast-text-color, #fff);
+  box-shadow: var(--toast-shadow, var(--surface-panel-shadow, #{$shadow-md}));
+  font: var(--toast-font, #{$font-sm}/ 1.4 system-ui, -apple-system, sans-serif);
   pointer-events: auto;
-  min-width: 300px;
 }
 
-/* Toast type backgrounds - intentionally opinionated dark colors for visibility */
-.toast.info { background: #{$neutral-900}; }
-.toast.success { background: #{$success-dark}; }
-.toast.warning { background: #{$warning-dark}; }
-.toast.error { background: #{$error-dark}; }
+/* Type backgrounds, intentionally dark for contrast with the white text */
+.toast.success {
+  background: var(--toast-bg-success, #{$success-dark});
+}
 
-@keyframes toast-in {
-  to { opacity: 1; transform: none; }
+.toast.warning {
+  background: var(--toast-bg-warning, var(--toast-bg-warn, #{$warning-dark}));
+}
+
+.toast.error {
+  background: var(--toast-bg-error, #{$error-dark});
 }
 
 .row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: #{$space-md};
+}
+
+.body {
+  flex: 1;
+  display: grid;
+  gap: 0.125em;
+}
+
+.title {
+  font-weight: 600;
 }
 
 .msg {
   white-space: pre-wrap;
-  flex: 1;
 }
 
 .btn.close {
   all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin: -2px -4px -2px 0;
+  border-radius: #{$radius-sm};
   font-size: 1.25em;
   line-height: 1;
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: pointer;
-  transition: opacity $duration-fast ease;
 }
 
 .btn.close:hover {
   opacity: 1;
+}
+
+.btn.close:focus-visible {
+  opacity: 1;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in var(--toast-animation-duration, #{$duration-fast}) ease-out;
+  }
+
+  .toast[data-state='leaving'] {
+    animation: toast-out var(--toast-animation-duration, #{$duration-fast}) ease-in forwards;
+  }
+
+  .btn.close {
+    transition: opacity #{$duration-fast} ease;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Forced colours drop the backgrounds, so outline each toast instead */
+@media (forced-colors: active) {
+  .toast {
+    border: 1px solid CanvasText;
+  }
 }

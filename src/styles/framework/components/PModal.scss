@@ -6,9 +6,9 @@
   display: none !important;
 }
 
-/* Host & Core Properties */
+/* Host & Core Properties. The dialog renders in the top layer, so the host itself takes no space. */
 :host {
-  display: none;
+  display: contents;
   box-sizing: border-box;
 
   /* Colors using surface-dialog tokens and design system variables */
@@ -17,13 +17,13 @@
   --modal-accent: #{$primary};
   --modal-hover: #{$color-bg-hover};
   --modal-backdrop-bg: #{$color-bg-overlay};
-  --modal-panel-bg: var(--surface-dialog-color-bg);
-  --modal-panel-color: var(--surface-dialog-color-text);
-  --modal-panel-border: var(--surface-dialog-border-color);
-  --modal-header-bg: var(--surface-dialog-color-bg);
-  --modal-header-border: var(--surface-dialog-border-color);
-  --modal-footer-bg: var(--surface-dialog-color-bg);
-  --modal-footer-border: var(--surface-dialog-border-color);
+  --modal-panel-bg: var(--surface-dialog-color-bg, #ffffff);
+  --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
+  --modal-panel-border: var(--surface-dialog-border-color, #{$color-border});
+  --modal-header-bg: var(--surface-dialog-color-bg, #ffffff);
+  --modal-header-border: var(--surface-dialog-border-color, #{$color-border});
+  --modal-footer-bg: var(--surface-dialog-color-bg, #ffffff);
+  --modal-footer-border: var(--surface-dialog-border-color, #{$color-border});
   --modal-close-hover-bg: #{$color-bg-hover};
   --modal-btn-primary-bg: #{$primary};
   --modal-btn-primary-color: #ffffff;
@@ -40,19 +40,19 @@
   --modal-disabled-opacity: #{$opacity-disabled};
 
   /* Spacing (em-based for scalability) */
-  --modal-space-xs: 0.125em;    /* 2px at 16px base */
-  --modal-space-sm: 0.25em;     /* 4px */
-  --modal-space-md: 0.5em;      /* 8px */
-  --modal-space-lg: 0.75em;     /* 12px */
-  --modal-space-xl: 1em;        /* 16px */
-  --modal-padding-x: 0.875em;   /* 14px */
-  --modal-padding-y: 0.75em;    /* 12px */
-  --modal-gap: 0.5em;           /* 8px */
+  --modal-space-xs: 0.125em; /* 2px at 16px base */
+  --modal-space-sm: 0.25em; /* 4px */
+  --modal-space-md: 0.5em; /* 8px */
+  --modal-space-lg: 0.75em; /* 12px */
+  --modal-space-xl: 1em; /* 16px */
+  --modal-padding-x: 0.875em; /* 14px */
+  --modal-padding-y: 0.75em; /* 12px */
+  --modal-gap: 0.5em; /* 8px */
 
   /* Border Radius using surface-dialog tokens */
-  --modal-radius: 0.5em;        /* 8px */
-  --modal-radius-lg: var(--surface-dialog-radius, 0.625em);   /* 10px */
-  --modal-radius-xl: 1em;       /* 16px */
+  --modal-radius: 0.5em; /* 8px */
+  --modal-radius-lg: var(--surface-dialog-radius, 0.625em); /* 10px */
+  --modal-radius-xl: 1em; /* 16px */
 
   /* Borders using surface-dialog tokens */
   --modal-border-width: var(--surface-dialog-border-width, 1px);
@@ -67,27 +67,75 @@
   --modal-animation-easing: ease-out;
 
   /* Sizes */
-  --modal-size-xs: 18.75em;     /* 300px */
-  --modal-size-sm: 25em;        /* 400px */
-  --modal-size-md: 40em;        /* 640px - default */
-  --modal-size-lg: 50em;        /* 800px */
-  --modal-size-xl: 62.5em;      /* 1000px */
+  --modal-size-xs: 18.75em; /* 300px */
+  --modal-size-sm: 25em; /* 400px */
+  --modal-size-md: 40em; /* 640px - default */
+  --modal-size-lg: 50em; /* 800px */
+  --modal-size-xl: 62.5em; /* 1000px */
   --modal-max-width: 92vw;
   --modal-max-height: 86vh;
   --modal-fullscreen-inset: 3em; /* 48px */
-  --modal-close-size: 1.75em;   /* 28px */
-  --modal-font-sm: 0.875em;     /* 14px */
-  --modal-font-md: 1.125em;     /* 18px */
+  --modal-close-size: 1.75em; /* 28px */
+  --modal-font-sm: 0.875em; /* 14px */
+  --modal-font-md: 1.125em; /* 18px */
   --modal-btn-min-height: 3.125em; /* 50px */
 }
 
-/* Shared - Border Properties */
+/* Block: Modal panel, the <dialog> */
 .modal__panel {
+  box-sizing: border-box;
+  flex-direction: column;
+  min-width: min(var(--modal-max-width), var(--modal-size-md));
+  max-width: var(--modal-max-width);
+  max-height: var(--modal-max-height);
+  margin: auto;
+  padding: 0;
   border: var(--modal-border-width) solid var(--modal-panel-border);
+  border-radius: var(--modal-radius-lg);
+  background: var(--modal-panel-bg);
+  color: var(--modal-panel-color);
+  box-shadow: var(--modal-shadow);
+  overflow: hidden;
+}
+
+.modal__panel[open] {
+  display: flex;
+}
+
+.modal__panel:focus-visible {
+  outline: none;
+}
+
+.modal__panel::backdrop {
+  background: var(--modal-backdrop-bg, rgba(15, 23, 42, 0.5));
+}
+
+/* Panel size modifiers */
+:host([data-modal-size='xs']) .modal__panel {
+  min-width: min(var(--modal-max-width), var(--modal-size-xs));
+}
+
+:host([data-modal-size='sm']) .modal__panel {
+  min-width: min(var(--modal-max-width), var(--modal-size-sm));
+}
+
+:host([data-modal-size='lg']) .modal__panel {
+  min-width: min(var(--modal-max-width), var(--modal-size-lg));
+}
+
+:host([data-modal-size='xl']) .modal__panel {
+  min-width: min(var(--modal-max-width), var(--modal-size-xl));
+}
+
+:host([data-modal-size='fullscreen']) .modal__panel {
+  width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
+  height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
+  max-width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
+  max-height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
+  border-radius: var(--modal-radius-xl);
 }
 
 /* Shared - Border Radius */
-.modal__panel,
 .modal__close,
 ::slotted(.btn) {
   border-radius: var(--modal-radius-lg);
@@ -101,94 +149,6 @@
   align-items: center;
 }
 
-/* Shared - Transitions (only for users who prefer motion) */
-@media (prefers-reduced-motion: no-preference) {
-  .modal__backdrop {
-    transition: opacity var(--modal-transition);
-  }
-
-  .modal__panel {
-    transition: opacity var(--modal-transition),
-                transform var(--modal-transition);
-  }
-
-  .modal__close {
-    transition: background-color var(--modal-transition);
-  }
-
-  ::slotted(.btn) {
-    transition: background-color var(--modal-transition),
-                color var(--modal-transition),
-                transform var(--modal-transition);
-  }
-}
-
-/* Host states */
-:host {
-  display: none;
-}
-
-:host([open]) {
-  display: block;
-  position: fixed;
-  inset: 0;
-  z-index: #{$z-modal};
-  animation: modal-fade-in var(--modal-animation-duration) var(--modal-animation-easing);
-}
-
-/* Block: Modal backdrop */
-.modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: var(--modal-backdrop-bg);
-  animation: modal-backdrop-in var(--modal-animation-duration) var(--modal-animation-easing);
-}
-
-/* Block: Modal panel */
-.modal__panel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  min-width: min(var(--modal-max-width), var(--modal-size-md));
-  max-width: var(--modal-max-width);
-  max-height: var(--modal-max-height);
-  background: var(--modal-panel-bg);
-  color: var(--modal-panel-color);
-  box-shadow: var(--modal-shadow);
-  animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
-}
-
-/* Panel size modifiers */
-:host([data-modal-size="xs"]) .modal__panel {
-  min-width: min(var(--modal-max-width), var(--modal-size-xs));
-}
-
-:host([data-modal-size="sm"]) .modal__panel {
-  min-width: min(var(--modal-max-width), var(--modal-size-sm));
-}
-
-:host([data-modal-size="lg"]) .modal__panel {
-  min-width: min(var(--modal-max-width), var(--modal-size-lg));
-}
-
-:host([data-modal-size="xl"]) .modal__panel {
-  min-width: min(var(--modal-max-width), var(--modal-size-xl));
-}
-
-:host([data-modal-size="fullscreen"]) .modal__panel {
-  width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
-  height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
-  max-width: calc(100vw - calc(var(--modal-fullscreen-inset) * 2));
-  max-height: calc(100vh - calc(var(--modal-fullscreen-inset) * 2));
-  border-radius: var(--modal-radius-xl);
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
-}
-
 /* Element: Modal header */
 .modal__header {
   flex-shrink: 0;
@@ -196,7 +156,10 @@
   padding: var(--modal-padding-y) var(--modal-padding-x);
   background: var(--modal-header-bg);
   border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
-  border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+}
+
+.modal__title {
+  min-width: 0;
 }
 
 .modal__header h2 {
@@ -251,7 +214,6 @@
   justify-content: flex-end;
   background: var(--modal-footer-bg);
   border-top: var(--modal-border-width) solid var(--modal-panel-border);
-  border-radius: 0 0 var(--modal-radius) var(--modal-radius);
 }
 
 /* Slotted button styles (BEM classes) */
@@ -266,7 +228,6 @@
   font-size: var(--modal-font-sm);
   font-weight: 500;
   min-height: var(--modal-btn-min-height);
-  transition: all var(--modal-transition);
 }
 
 ::slotted(.btn:hover) {
@@ -297,36 +258,73 @@
   cursor: not-allowed;
 }
 
-/* Animations */
-@keyframes modal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Motion, only for users who have not asked for less */
+@media (prefers-reduced-motion: no-preference) {
+  .modal__panel[open] {
+    animation: modal-panel-in var(--modal-animation-duration) var(--modal-animation-easing);
+  }
+
+  .modal__panel[open]::backdrop {
+    animation: modal-fade-in var(--modal-animation-duration) var(--modal-animation-easing);
+  }
+
+  :host([data-modal-state='closing']) .modal__panel[open] {
+    animation: modal-panel-out var(--modal-animation-duration) var(--modal-animation-easing)
+      forwards;
+  }
+
+  :host([data-modal-state='closing']) .modal__panel[open]::backdrop {
+    animation: modal-fade-out var(--modal-animation-duration) var(--modal-animation-easing) forwards;
+  }
+
+  .modal__close {
+    transition: background-color var(--modal-transition);
+  }
+
+  ::slotted(.btn) {
+    transition:
+      background-color var(--modal-transition),
+      color var(--modal-transition),
+      transform var(--modal-transition);
+  }
 }
 
-@keyframes modal-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes modal-panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  :host([open]),
-  .modal__backdrop,
-  .modal__panel,
-  .modal__close,
-  ::slotted(.btn) {
-    animation: none;
-    transition: none;
+@keyframes modal-panel-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
   }
 }
