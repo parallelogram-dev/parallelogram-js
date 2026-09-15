@@ -216,7 +216,7 @@
     "core/WebComponentLoader.js": 1048,
     "managers/AlertManager.js": 3690,
     "managers/EventManager.js": 428,
-    "managers/PageManager.js": 8006,
+    "managers/PageManager.js": 8489,
     "managers/RouterManager.js": 3883,
     "managers/TransitionManager.js": 1016,
     "styles/index.min.css": 4244
