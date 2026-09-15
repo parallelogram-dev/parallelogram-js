@@ -58,7 +58,6 @@ The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`
 | `scrollElement`          | `string \| null`                     | `null`          | The selector scrolled to when `scrollPosition` is `'element'`.                                                                |
 | `retryFailedLoads`       | `boolean`                            | `true`          | Retry a component whose module fails to load.                                                                                 |
 | `maxRetryAttempts`       | `number`                             | `3`             | Retries for a component module.                                                                                               |
-| `trackPerformance`       | `boolean`                            | `false`         | Record swap durations and counts.                                                                                             |
 
 `observeRoot` defaults to `document.body` when you use `Parallelogram.create()`. A `PageManager` you construct yourself defaults it to `null`, which means the `containerSelector` element.
 
@@ -332,7 +331,7 @@ These are emitted on the event bus, not as DOM events. [Events and alerts](event
 | `page:fragment-transition-out` | A fragment's `out` transition finished.                                        | `{ fragment, viewTarget, transitionType, duration }`                                                                      |
 | `page:fragment-did-replace`    | A fragment's content was replaced, before its `in` transition.                 | `{ targetFragment, viewTarget, options, transitionConfig }`                                                               |
 | `page:fragment-transition-in`  | A fragment's `in` transition finished.                                         | `{ fragment, viewTarget, transitionType, duration }`                                                                      |
-| `page:fragments-replaced`      | Every requested fragment has been processed.                                   | `{ results, viewTargets, duration, options }`                                                                             |
+| `page:fragments-replaced`      | Every requested fragment has been processed.                                   | `{ results, viewTargets, options }`                                                                                       |
 | `page:fragments-replace-error` | A swap failed, such as a missing fragment or changed tracked assets.           | `{ viewTargets, error, options }`                                                                                         |
 | `page:head-updated`            | The head was reconciled after `main` was replaced.                             | `{ updatedElements, newTitle }`                                                                                           |
 | `page:head-update-error`       | Reconciling the head threw.                                                    | `{ error }`                                                                                                               |
@@ -352,7 +351,7 @@ In `router:navigate-success`:
 
 `router:navigate-end` has a `status` of `'success'`, `'full-load'` (handed to the browser because the response couldn't be shown in place), `'aborted'` (replaced by a newer navigation) or `'error'`. Its `url` is the requested URL.
 
-Each entry in the `results` of `page:fragments-replaced` has `viewTarget` and `success`. A replaced fragment also has `sourceFragment`, `targetFragment` and `transitionConfig`, a fragment skipped because a newer navigation started has `aborted: true`, and a failed one has an `error` message. `duration` is `null` unless `trackPerformance` is on.
+Each entry in the `results` of `page:fragments-replaced` has `viewTarget` and `success`. A replaced fragment also has `sourceFragment`, `targetFragment` and `transitionConfig`, a fragment skipped because a newer navigation started has `aborted: true`, and a failed one has an `error` message.
 
 ## A server-rendered page
 

@@ -30,10 +30,7 @@ export class RouterManager {
     this.eventBus = eventBus;
     this.logger = logger;
     this.options = {
-      baseUrl: '',
       timeout: 10000,
-      retryAttempts: 0,
-      fragmentSelector: '[data-router-fragment]',
       loadingClass: 'router-loading',
       errorClass: 'router-error',
       fullLoadOnError: true,

@@ -51,7 +51,7 @@ export class BaseComponent {
     this.router = router;
     /** @type {Map<HTMLElement, ComponentState>} Mounted elements and their state */
     this.elements = new Map();
-    // Backward-compat alias for older components expecting `states`
+    /* Backward-compat alias for older components expecting `states` */
     this.states = this.elements;
     /**
      * Elements whose asynchronous _init is still running
@@ -124,7 +124,7 @@ export class BaseComponent {
    * @returns {void}
    */
   update(_element) {
-    // Override in subclasses for update logic
+    /* Override in subclasses for update logic */
   }
 
   /**

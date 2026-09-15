@@ -32,7 +32,7 @@ const jsSubpaths = [
   ...modules('components', file => !file.endsWith('.contract.js')),
   ...modules('adapters', file => !file.startsWith('_')),
   ...modules('core'),
-  ...modules('managers', file => file !== 'index.js'),
+  ...modules('managers'),
 ];
 
 const cases = [
