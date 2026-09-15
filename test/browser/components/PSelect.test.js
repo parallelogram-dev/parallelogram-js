@@ -338,6 +338,23 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change', 'p-select:change']);
   });
 
+  it('dispatches input and change events that cross an enclosing shadow root', () => {
+    const outer = document.createElement('div');
+    document.body.append(outer);
+    const root = outer.attachShadow({ mode: 'open' });
+    root.innerHTML = COUNTRIES;
+    const select = root.querySelector('p-select');
+    const seen = [];
+    for (const type of ['input', 'change']) {
+      outer.addEventListener(type, () => seen.push(type));
+    }
+    press(select, 'ArrowDown');
+
+    optionsOf(select)[0].click();
+
+    expect(seen).toEqual(['input', 'change']);
+  });
+
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
     const select = mountSelect(COUNTRIES);
     const seen = [];

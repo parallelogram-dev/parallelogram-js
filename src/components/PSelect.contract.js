@@ -110,8 +110,14 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
   ],
   events: [
-    { name: 'input', description: 'The user chose a different option' },
-    { name: 'change', description: 'The user chose a different option' },
+    {
+      name: 'input',
+      description: 'The user chose a different option; bubbles out of shadow roots',
+    },
+    {
+      name: 'change',
+      description: 'The user chose a different option; bubbles out of shadow roots',
+    },
     {
       name: 'p-select:change',
       detail: '{ value: string; label: string }',

@@ -40,7 +40,8 @@ const DEFAULT_PLACEHOLDER = 'Select…';
  * - data-select-open-on-focus: open the list when the input receives focus (default false)
  *
  * @events
- * - input, change: dispatched when the user chooses a different option
+ * - input, change: dispatched when the user chooses a different option; they bubble out of shadow
+ *   roots, as a native select's do
  * - p-select:change: with `{ value, label }`, when a different option is chosen
  * - p-select:open, p-select:close: when the list opens or closes
  *
@@ -546,8 +547,8 @@ export default class PSelect extends HTMLElement {
     if (option.value !== this.state.value) {
       this._setValue(option.value);
 
-      this.dispatchEvent(new Event('input', { bubbles: true }));
-      this.dispatchEvent(new Event('change', { bubbles: true }));
+      this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
       dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
     }
 
