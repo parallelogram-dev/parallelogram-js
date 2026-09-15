@@ -152,6 +152,31 @@ describe('Tabs panels and styles', () => {
     expect(shownPanels(container)).toEqual(['panel-shipping']);
   });
 
+  it('shows only the panel the markup marks active before Tabs has loaded', () => {
+    const container = render();
+    document.getElementById('panel-returns').setAttribute('data-tab-panel', 'active');
+
+    expect(shownPanels(container)).toEqual(['panel-returns']);
+  });
+
+  it('keeps showing the panel the markup marks active once Tabs has loaded', () => {
+    const container = render();
+    document.getElementById('panel-returns').setAttribute('data-tab-panel', 'active');
+
+    mount(container);
+
+    expect(shownPanels(container)).toEqual(['panel-returns']);
+  });
+
+  it('shows every panel when Tabs fails to load, even with one marked active', () => {
+    const container = render();
+    document.getElementById('panel-returns').setAttribute('data-tab-panel', 'active');
+
+    container.classList.add('component-error');
+
+    expect(shownPanels(container)).toEqual(['panel-shipping', 'panel-returns', 'panel-contact']);
+  });
+
   it('hides inactive panels with the hidden attribute rather than inline styles', () => {
     const container = mount(render());
 

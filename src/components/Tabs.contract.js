@@ -6,7 +6,7 @@ export default {
   module: 'components/Tabs',
   stylesheet: 'styles/tabs.css',
   summary: 'Tabbed panels built from a list of tab buttons or in-page links',
-  description: `Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them. While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first panel, so the page doesn't jump when it does. If Tabs fails to load, every panel shows again; if it is never registered, the other panels stay hidden.
+  description: `Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them. While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first panel, so the page doesn't jump when it does. When another tab starts selected, through \`aria-selected="true"\` or \`data-tabs-default-tab\`, write \`data-tab-panel="active"\` on its panel too: the stylesheet shows that panel instead, and Tabs selects it when no tab has \`aria-selected="true"\`. CSS can't match a tab to its panel, so without the marker the first panel shows until Tabs mounts. If Tabs fails to load, every panel shows again; if it is never registered, the other panels stay hidden.
 
 Once mounted, Tabs follows the WAI-ARIA tabs pattern: arrow keys, Home and End move focus between tabs, inactive panels get the \`hidden\` attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting puts the markup back as it was.
 
@@ -32,7 +32,8 @@ Deep links keep working: when the address names a panel, or an element inside on
       type: 'enum',
       options: ['active', 'entering', 'inactive'],
       on: 'each panel',
-      description: "Marks a panel; Tabs sets it to the panel's state",
+      description:
+        "Marks a panel; Tabs sets it to the panel's state. Write active on the panel that starts selected to show it before Tabs loads",
     },
     {
       name: 'data-tabs-default-tab',
