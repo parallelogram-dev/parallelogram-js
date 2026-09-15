@@ -17,6 +17,7 @@ const guideAndComponentUrls = [...guides.map(guide => guide.slug), ...contracts.
 );
 const builtPages = new Set([
   'index',
+  'design-system',
   ...guides.map(guide => guide.slug),
   ...contracts.map(slugFor),
 ]);

@@ -29,8 +29,8 @@ const linkText = contract =>
   contract.kind === 'element' ? `\`${titleFor(contract)}\`` : titleFor(contract);
 
 /**
- * The site's pages in the order llms.txt lists them: the home page, the guides, then the
- * enhancement components and the web components by name
+ * The site's pages in sitemap order: the home page, the design system workbench, the guides, then
+ * the enhancement components and the web components by name
  *
  * @param {import('../../src/contract.js').ComponentContract[]} contracts
  * @param {import('./guides.js').Guide[]} guides
@@ -39,6 +39,7 @@ const linkText = contract =>
 export function pageSlugs(contracts, guides) {
   return [
     'index',
+    'design-system',
     ...guides.map(guide => guide.slug),
     ...componentsOfKind(contracts, 'enhancement').map(slugFor),
     ...componentsOfKind(contracts, 'element').map(slugFor),
@@ -76,6 +77,11 @@ export function llmsTxt(contracts, guides) {
         'Custom Elements Manifest',
         MANIFEST_URL,
         'The web components as custom-elements.json'
+      ),
+      item(
+        'Design system workbench',
+        pageUrl('design-system'),
+        'Every component in a light and a dark frame, with live controls for the design tokens'
       ),
       item('GitHub repository', REPOSITORY, 'Source, issues and the changelog'),
     ].join('\n'),
