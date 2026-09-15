@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
 - A Deferred trackers guide documents DeferTracker's set-up: each adapter's config keys, `configureDeferTracker()` with its `events`, `idleTimeout` and `nonce` options, consent through `setTrackerConsent()`, `requireCategory` and `reevaluateTrackerConsent()`, and the adapter API with its optional `page` and `block` steps, which were only described in JSDoc.
 - `<p-select>` follows more of the WAI-ARIA combobox keyboard pattern: Page Up and Page Down move the highlight ten options at a time, Alt+Down Arrow opens the list without moving the highlight, and Alt+Up Arrow chooses the highlighted option and closes the list.
+- `ComponentHost#retry(name)` loads an enhancement component that failed to load for good again, with a fresh set of retries, retrying its failed dependencies too. Call it as `app.pageManager.host.retry(name)`, for example once the connection is back. It returns `false` when that component hasn't failed.
 
 ### Fixed
 
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A component whose `_init` returns no state object no longer keeps the element tracked forever. The logger warns, a state holding the element's controller is stored, and unmounting aborts that controller, so the host emits `page:component-unmounted` once instead of on every later removal from the page. `unmount()` returns whether the component was mounted on the element, and the host only reports unmounts that happened.
 - Scanning the page again while a component's asynchronous `_init` is still running no longer calls `update()` and emits a second `page:component-mounted` for that element.
 - A component whose asynchronous `_init` rejects is reported with `page:component-mount-error` instead of `page:component-mounted`, and the host emits `page:component-mounted` for an asynchronous `_init` once its state has resolved. `BaseComponent#mount()` returns the Promise for an asynchronous `_init`, which rejects when it fails.
+- Elements added to the page after their component failed to load for good get the `component-error` class, as the elements waiting at the time did, so stylesheets show their content instead of leaving it hidden.
 
 ## [0.5.3] - 2026-09-15
 

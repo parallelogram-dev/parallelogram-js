@@ -86,6 +86,10 @@ export function components(counter: Counter, element: HTMLElement, router: Route
   return new Toggle({ router }).trackedElements().length;
 }
 
+export function retryComponent(app: Parallelogram): boolean {
+  return app.pageManager?.host.retry('[data-tabs]') ?? false;
+}
+
 export function alerts(manager: AlertManager): void {
   const close = manager.success('Saved', { timeout: 3000 });
   close();

@@ -197,6 +197,26 @@ export class ComponentHost {
     return true;
   }
 
+  /**
+   * Load a component that failed to load for good again, with a fresh set of retries
+   *
+   * Failed dependencies are retried too, and matching elements in the root wait for the new load.
+   *
+   * @param {string} name
+   * @returns {boolean} False when no component with that name has failed to load
+   */
+  retry(name) {
+    const entry = this.entries.get(name);
+    if (!entry || this.records.get(name)?.status !== 'failed') return false;
+
+    (entry.dependsOn ?? []).forEach(dependency => this.retry(dependency));
+    this.records.delete(name);
+    if (this.root) {
+      this._mountEntry(entry, this._matching(entry, [this.root]), null);
+    }
+    return true;
+  }
+
   getInstance(name) {
     return this.records.get(name)?.instance ?? null;
   }
@@ -309,7 +329,10 @@ export class ComponentHost {
       return;
     }
 
-    if (record.status === 'failed') return;
+    if (record.status === 'failed') {
+      elements.forEach(element => element.classList.add('component-error'));
+      return;
+    }
 
     elements.forEach(element => {
       record.pending.set(element, fragmentTarget);
