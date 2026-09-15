@@ -35,6 +35,7 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import './PModal.js';
 import { generateId, createElement } from '../utils/dom-utils.js';
+import { trustedHTML } from '../utils/trusted.js';
 
 /* The trigger whose open() call is opening each modal */
 const openers = new WeakMap();
@@ -362,8 +363,9 @@ export default class Modal extends BaseComponent {
    *
    * @param {Object} config - Modal configuration
    * @param {string} config.title - Modal title
-   * @param {string|Node} config.content - Modal content. Strings are inserted as HTML,
-   *   so only pass trusted markup; pass a Node for anything built from user data.
+   * @param {string|Node} config.content - Modal content. Strings are inserted as HTML, through
+   *   the `parallelogram` Trusted Types policy where the page enforces Trusted Types, so only pass
+   *   trusted markup; pass a Node for anything built from user data.
    * @param {Array<{label: string, type?: string, close?: boolean, onClick?: Function}>} [config.actions]
    *   Action buttons. Buttons close the modal unless close is false.
    * @param {string} [config.size='md'] - Modal size: xs, sm, md, lg, xl or fullscreen
@@ -393,7 +395,7 @@ export default class Modal extends BaseComponent {
       if (content instanceof Node) {
         contentElement.append(content);
       } else {
-        contentElement.innerHTML = content;
+        contentElement.innerHTML = trustedHTML(content);
       }
       modal.appendChild(contentElement);
     }
