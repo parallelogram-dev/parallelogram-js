@@ -159,7 +159,7 @@
     "components/PSelect.js": 6820,
     "components/PToasts.js": 3314,
     "components/PUploader.js": 11245,
-    "components/PUploaderFile.js": 6564,
+    "components/PUploaderFile.js": 6993,
     "components/Scrollhide.js": 3930,
     "components/Scrollreveal.js": 4491,
     "components/SelectLoader.js": 4854,
@@ -192,6 +192,6 @@
     "managers/PageManager.js": 8489,
     "managers/RouterManager.js": 3883,
     "managers/TransitionManager.js": 1016,
-    "styles/index.min.css": 4626
+    "styles/index.min.css": 4918
   }
 }
