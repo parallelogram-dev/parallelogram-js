@@ -5,7 +5,7 @@ export default {
   tag: 'p-select',
   module: 'components/PSelect',
   summary: 'A select that can be searched, built as an editable combobox',
-  description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them; Enter or Tab chooses the highlighted option; Escape closes the list and puts the chosen label back.
+  description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them, and Page Up and Page Down move ten at a time; Enter or Tab chooses the highlighted option; Alt+Down Arrow opens the list without moving the highlight and Alt+Up Arrow chooses the highlighted option and closes it; Escape closes the list and puts the chosen label back.
 
 Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its \`value\` attribute, or else its selected option, when the form resets.`,
   attributes: [
