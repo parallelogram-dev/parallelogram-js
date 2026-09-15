@@ -326,11 +326,14 @@ export default class DeferTracker extends BaseComponent {
     if (this._navigation || !this.eventBus) return;
 
     this._navigation = new AbortController();
+    /* The navigation ends once the new page is swapped in and its blocks have mounted, so those
+       blocks run their own page step first and are not handed the old page's */
     this.eventBus.on(
-      'router:navigate-success',
-      () => {
-        /* Let blocks in the new page mount first, so their own page step isn't repeated */
-        setTimeout(() => this._onNavigate());
+      'router:navigate-end',
+      ({ status }) => {
+        if (status === 'success') {
+          this._onNavigate();
+        }
       },
       { signal: this._navigation.signal }
     );
