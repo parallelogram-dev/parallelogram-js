@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - DataTable's pagination and status text can be translated: `data-datatable-status-message` (with `{from}`, `{to}` and `{total}`), `data-datatable-pagination-label`, `data-datatable-previous-text`, `data-datatable-previous-label`, `data-datatable-next-text`, `data-datatable-next-label` and `data-datatable-page-label` (with `{page}`). The English defaults are unchanged.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
+- A Deferred trackers guide documents DeferTracker's set-up: each adapter's config keys, `configureDeferTracker()` with its `events`, `idleTimeout` and `nonce` options, consent through `setTrackerConsent()`, `requireCategory` and `reevaluateTrackerConsent()`, and the adapter API with its optional `page` and `block` steps, which were only described in JSDoc.
 
 ### Fixed
 
