@@ -58,6 +58,26 @@ describe('Toggle', () => {
     ]).toEqual(['#settings', 'open']);
   });
 
+  it('hides a closed target with the hidden attribute and shows it as soon as it starts opening', () => {
+    document.body.innerHTML = `
+      <button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu">Links</nav>
+    `;
+    const toggle = new Toggle();
+    const trigger = document.querySelector('#menu-button');
+    const menu = document.querySelector('#site-menu');
+    toggle.mount(trigger);
+    const hiddenWhileClosed = menu.hidden;
+
+    toggle.show(trigger);
+
+    expect([hiddenWhileClosed, menu.hidden, menu.getAttribute('data-toggle-state')]).toEqual([
+      true,
+      false,
+      'opening',
+    ]);
+  });
+
   it('writes target state to data-toggle-state and the deprecated data-toggle-target', () => {
     document.body.innerHTML = `
       <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-animate="false">Account</button>

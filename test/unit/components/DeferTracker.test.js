@@ -147,8 +147,7 @@ describe('DeferTracker trackers', () => {
     await vi.advanceTimersByTimeAsync(0);
 
     history.pushState(null, '', '/menu');
-    eventBus.emit('router:navigate-success', { url: '/menu' });
-    await vi.advanceTimersByTimeAsync(0);
+    eventBus.emit('router:navigate-end', { url: '/menu', status: 'success' });
 
     expect([boot.mock.calls.length, boot.page.mock.calls]).toEqual([
       1,
@@ -180,6 +179,123 @@ describe('DeferTracker trackers', () => {
         ],
       ],
     ]);
+  });
+
+  describe('through router navigations', () => {
+    let pages;
+
+    afterEach(() => {
+      pages?.destroy();
+      pages = null;
+    });
+
+    const adsBlock = config =>
+      `<script type="application/json" data-defer-tracker="google-ads">${JSON.stringify(config)}</script>`;
+
+    const startPages = async (html, boot) => {
+      const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+      const { EventManager } = await import('../../../src/managers/EventManager.js');
+      const { PageManager } = await import('../../../src/managers/PageManager.js');
+      /* Load the swapper up front, as a router does, so the swap isn't left waiting on the import */
+      await import('../../../src/core/FragmentSwapper.js');
+      registerTrackerAdapter('google-ads', boot);
+      document.body.innerHTML = html;
+      const eventBus = new EventManager();
+      pages = new PageManager({
+        containerSelector: '#app',
+        eventBus,
+        registry: [
+          {
+            name: 'defer-tracker',
+            selector: '[data-defer-tracker]',
+            loader: () => ({ default: DeferTracker }),
+          },
+        ],
+      });
+      interact();
+      await vi.advanceTimersByTimeAsync(0);
+      return eventBus;
+    };
+
+    /* Navigate as RouterManager does: update the address, wait for the swap, then end */
+    const navigate = async (eventBus, path, html) => {
+      history.pushState(null, '', path);
+      const url = new URL(path, location.href);
+      const pending = [];
+      eventBus.emit('router:navigate-success', {
+        html,
+        url,
+        trigger: 'link-click',
+        waitUntil: promise => pending.push(promise),
+      });
+      const ended = Promise.allSettled(pending).then(() =>
+        eventBus.emit('router:navigate-end', { url, trigger: 'link-click', status: 'success' })
+      );
+      await vi.advanceTimersByTimeAsync(20);
+      await ended;
+      /* Past PageManager's default mountDelay */
+      await vi.advanceTimersByTimeAsync(2000);
+    };
+
+    const pageBoot = () => {
+      const boot = vi.fn();
+      boot.page = vi.fn();
+      return boot;
+    };
+
+    const conversion = { id: 'AW-1', conversion: { send_to: 'AW-1/abc' } };
+
+    it("sends the new page's conversion when the previous page had a block for the tracker", async () => {
+      const boot = pageBoot();
+      const eventBus = await startPages(
+        `<div id="app"><main data-view="main">${adsBlock({ id: 'AW-1' })}</main></div>`,
+        boot
+      );
+
+      await navigate(
+        eventBus,
+        '/confirmation',
+        `<main data-view="main">${adsBlock(conversion)}</main>`
+      );
+
+      expect(boot.page.mock.calls).toEqual([
+        [conversion, expect.any(Object), { url: location.href, mounted: true }],
+      ]);
+    });
+
+    it("sends the new page's conversion when the previous page's block stays on the page", async () => {
+      const boot = pageBoot();
+      const eventBus = await startPages(
+        `<div id="app"><header data-view="header">${adsBlock({ id: 'AW-1' })}</header>` +
+          '<main data-view="main"></main></div>',
+        boot
+      );
+
+      await navigate(
+        eventBus,
+        '/confirmation',
+        `<main data-view="main">${adsBlock(conversion)}</main>`
+      );
+
+      expect(boot.page.mock.calls).toEqual([
+        [conversion, expect.any(Object), { url: location.href, mounted: true }],
+      ]);
+    });
+
+    it('runs the page step once for a block that stays when the new page has none', async () => {
+      const boot = pageBoot();
+      const eventBus = await startPages(
+        `<div id="app"><header data-view="header">${adsBlock({ id: 'AW-1' })}</header>` +
+          '<main data-view="main"></main></div>',
+        boot
+      );
+
+      await navigate(eventBus, '/menu', '<main data-view="main">Menu</main>');
+
+      expect(boot.page.mock.calls).toEqual([
+        [{ id: 'AW-1' }, expect.any(Object), { url: location.href, mounted: false }],
+      ]);
+    });
   });
 
   it("reports loading until the adapter's script has loaded", async () => {

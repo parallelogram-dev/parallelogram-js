@@ -147,17 +147,17 @@ A loader returns the module, usually with a dynamic `import()`. It can also retu
 
 ### Enhancement component options
 
-| Option       | Type                     | Default      | What it does                                                              |
-| ------------ | ------------------------ | ------------ | ------------------------------------------------------------------------- |
-| `loader`     | `function`               |              | Loads the component, when the second argument is an options object        |
-| `name`       | `string`                 | The selector | The name `dependsOn` lists and `app.pageManager.instances` use            |
-| `priority`   | `'critical' \| 'normal'` | `'normal'`   | Critical components mount before the others on every pass                 |
-| `dependsOn`  | `string[]`               |              | Names of components whose modules must load before this one's loader runs |
-| `exportName` | `string`                 |              | The named export to use when the module has no default export             |
+| Option       | Type                     | Default      | What it does                                                       |
+| ------------ | ------------------------ | ------------ | ------------------------------------------------------------------ |
+| `loader`     | `function`               |              | Loads the component, when the second argument is an options object |
+| `name`       | `string`                 | The selector | The name `dependsOn` lists and `app.pageManager.instances` use     |
+| `priority`   | `'critical' \| 'normal'` | `'normal'`   | Critical components mount before the others on every pass          |
+| `dependsOn`  | `string[]`               |              | Names of components that must load before this one's loader runs   |
+| `exportName` | `string`                 |              | The named export to use when the module has no default export      |
 
 You can also pass the loader as the second argument and the options as the third.
 
-Registering two enhancement components with the same name throws `A component named "…" is already registered`. Give components that share a selector different names. A `dependsOn` name that isn't registered logs a warning and is ignored.
+Registering two enhancement components with the same name throws `A component named "…" is already registered`. Give components that share a selector different names. A `dependsOn` name that isn't registered logs a warning and is ignored. A component waits while its dependencies retry; if one fails for good, the component isn't loaded either, its elements get the `component-error` class, and `page:component-load-error` is emitted for it with the dependency's error as the `cause`. Components that depend on each other in a cycle throw when the entry that closes the cycle is registered.
 
 `priority: 'critical'` orders mounting: critical components mount before the others on every pass. After a page swap the page manager mounts critical components first and waits `mountDelay` for the rest, but with `Parallelogram.create()` the whole body is watched, so components in the new content usually mount as soon as it is added. Web components don't take options other than `loader`.
 
