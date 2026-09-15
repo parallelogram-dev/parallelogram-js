@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The package no longer includes `src`. Source maps in `dist` embed their sources instead of pointing to those files.
+- The package no longer includes `src`. The development build's source maps embed their sources; the production build's maps name the source files without including them.
 
 ### Fixed
 
