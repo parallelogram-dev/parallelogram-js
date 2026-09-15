@@ -35,11 +35,57 @@ describe('Modal', () => {
     expect(modal.getAttribute('data-modal-backdrop-close')).toBe('false');
   });
 
-  it('applies settings that the trigger sets explicitly', () => {
-    const { modal } = mountTrigger({}, { 'data-modal-size': 'lg', 'data-modal-keyboard': 'false' });
+  it('leaves the settings a trigger overrides off p-modal until the trigger opens it', () => {
+    const { modal } = mountTrigger(
+      { 'data-modal-size': 'sm' },
+      { 'data-modal-size': 'lg', 'data-modal-keyboard': 'false' }
+    );
 
-    expect(modal.getAttribute('data-modal-size')).toBe('lg');
-    expect(modal.getAttribute('data-modal-keyboard')).toBe('false');
+    expect([
+      modal.getAttribute('data-modal-size'),
+      modal.hasAttribute('data-modal-keyboard'),
+    ]).toEqual(['sm', false]);
+  });
+
+  it('applies the settings a trigger sets while it has the modal open, then restores them', async () => {
+    document.body.innerHTML = `
+      <button id="large" data-modal data-modal-target="#terms" data-modal-size="lg">Terms</button>
+      <button id="plain" data-modal data-modal-target="#terms">Read the terms</button>
+      <p-modal id="terms" data-modal-size="sm"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#large'));
+    modals.mount(document.querySelector('#plain'));
+    const terms = document.querySelector('#terms');
+    const size = () => terms.getAttribute('data-modal-size');
+
+    document.querySelector('#large').click();
+    const openedFromLarge = size();
+    terms.close();
+    await vi.waitFor(() => expect(terms.hasAttribute('open')).toBe(false), { timeout: 2000 });
+    const afterClose = size();
+    document.querySelector('#plain').click();
+    const openedFromPlain = size();
+    terms.close();
+
+    expect([openedFromLarge, afterClose, openedFromPlain]).toEqual(['lg', 'sm', 'sm']);
+  });
+
+  it('uses the closable setting of the trigger that opened the modal, not the last one mounted', () => {
+    document.body.innerHTML = `
+      <button id="locked" data-modal data-modal-target="#payment" data-modal-closable="false">Pay</button>
+      <button id="review" data-modal data-modal-target="#payment" data-modal-closable="true">Review</button>
+      <p-modal id="payment"><h2 slot="title">Payment</h2><button>Confirm</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#locked'));
+    modals.mount(document.querySelector('#review'));
+    const payment = document.querySelector('#payment');
+
+    document.querySelector('#locked').click();
+
+    expect(payment.shadowRoot.querySelector('[data-modal-close-btn]').hidden).toBe(true);
+    payment.removeAttribute('open');
   });
 
   it('points aria-controls at the modal even when targeted by class', () => {

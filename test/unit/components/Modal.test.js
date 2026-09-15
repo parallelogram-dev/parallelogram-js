@@ -46,4 +46,36 @@ describe('Modal', () => {
 
     expect(received).toEqual(['first']);
   });
+
+  it('hides the close button when opened from an unclosable trigger that mounted before a closable one', () => {
+    document.body.innerHTML = `
+      <button id="locked" data-modal data-modal-target="#payment" data-modal-closable="false">Pay</button>
+      <button id="review" data-modal data-modal-target="#payment" data-modal-closable="true">Review</button>
+      <p-modal id="payment"><h2 slot="title">Payment</h2><button>Confirm</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#locked'));
+    modals.mount(document.querySelector('#review'));
+    const payment = document.querySelector('#payment');
+
+    document.querySelector('#locked').click();
+
+    expect(payment.shadowRoot.querySelector('[data-modal-close-btn]').hidden).toBe(true);
+  });
+
+  it("puts the modal's own size back once the trigger that overrode it closes the modal", async () => {
+    document.body.innerHTML = `
+      <button id="large" data-modal data-modal-target="#terms" data-modal-size="lg">Terms</button>
+      <p-modal id="terms" data-modal-size="sm"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    new Modal().mount(document.querySelector('#large'));
+    const terms = document.querySelector('#terms');
+
+    document.querySelector('#large').click();
+    const whileOpen = terms.getAttribute('data-modal-size');
+    terms.close();
+    await vi.waitFor(() => expect(terms.hasAttribute('open')).toBe(false));
+
+    expect([whileOpen, terms.getAttribute('data-modal-size')]).toEqual(['lg', 'sm']);
+  });
 });

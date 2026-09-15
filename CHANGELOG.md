@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The TypeScript declarations for DevLogger, Lightbox and PageManager use real types where they had `any`. DevLogger's `debug`, `log`, `info`, `warn` and `error` are always defined and take `unknown` arguments, Lightbox's methods take the gallery link and a number, `Lightbox.getStatus()` returns its state names, index, size and gallery, and `PageManager.replaceFragments()` takes a string and the swap options.
 - A `<p-modal>` panel shows a focus outline when it takes focus because it has nothing focusable inside, using `--framework-focus-color` and `--framework-focus-width`, and `Highlight` in forced colours. The outline was removed.
 - Tabs gives its tab list `aria-orientation="horizontal"` unless the markup sets one, and the Up and Down arrow keys move between tabs only in a list marked `aria-orientation="vertical"`. They moved between horizontal tabs too, so the page couldn't be scrolled with them from a tab.
+- A Modal trigger's `data-modal-size`, `data-modal-closable`, `data-modal-backdrop-close` and `data-modal-keyboard` apply to its `<p-modal>` only while that trigger has it open, and the modal's own values come back when it closes. Each trigger wrote its settings onto the shared modal when it mounted, so with several triggers the last one mounted decided for all of them. `updateConfig()` changes the modal straight away only while that trigger has it open.
 
 ## [0.5.3] - 2026-09-15
 

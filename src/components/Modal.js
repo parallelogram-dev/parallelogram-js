@@ -19,7 +19,8 @@
  * </p-modal>
  *
  * Settings belong on <p-modal>. A trigger only overrides the ones it sets itself
- * (data-modal-size, data-modal-closable, data-modal-backdrop-close, data-modal-keyboard).
+ * (data-modal-size, data-modal-closable, data-modal-backdrop-close, data-modal-keyboard), while it
+ * has the modal open; the modal's own values come back when it closes.
  * Opening a modal closes the others unless the trigger sets data-modal-multiple, and focus returns
  * to the trigger on close unless it sets data-modal-focus="false".
  *
@@ -43,6 +44,16 @@ const openers = new WeakMap();
 const reportedOn = new WeakMap();
 /* p-modal:open and p-modal:close events one of the modal's triggers has already reported */
 const reported = new WeakSet();
+/* The trigger whose settings each modal has, and the values they replaced, until it closes */
+const replaced = new WeakMap();
+
+/* Options a trigger can override, with the data-modal-* attribute each one sets on the modal */
+const SETTINGS = {
+  size: 'size',
+  closable: 'closable',
+  backdropClose: 'backdrop-close',
+  keyboard: 'keyboard',
+};
 
 export default class Modal extends BaseComponent {
   static selector = 'data-modal';
@@ -108,13 +119,12 @@ export default class Modal extends BaseComponent {
       return state;
     }
 
-    /* Forward only the settings this trigger sets, so <p-modal>'s own attributes win otherwise */
-    const overrides = {};
-    if (this.hasAttr(element, 'size')) overrides.size = size;
-    if (this.hasAttr(element, 'closable')) overrides.closable = closable;
-    if (this.hasAttr(element, 'backdrop-close')) overrides.backdropClose = backdropClose;
-    if (this.hasAttr(element, 'keyboard')) overrides.keyboard = keyboard;
-    this._configureModal(modalElement, overrides);
+    /* Only the settings this trigger sets are applied, and only while it has the modal open */
+    const values = { size, closable, 'backdrop-close': backdropClose, keyboard };
+    state.overrides = {};
+    for (const [name, value] of Object.entries(values)) {
+      if (this.hasAttr(element, name)) state.overrides[name] = String(value);
+    }
 
     /* Store state */
     state.target = target;
@@ -148,6 +158,14 @@ export default class Modal extends BaseComponent {
       element.setAttribute('aria-controls', modalElement.id);
     }
 
+    const baseCleanup = state.cleanup;
+    state.cleanup = () => {
+      if (replaced.get(modalElement)?.trigger === element) {
+        this._restoreSettings(modalElement);
+      }
+      baseCleanup();
+    };
+
     this.logger?.info('Modal trigger initialized', {
       element,
       target,
@@ -170,6 +188,8 @@ export default class Modal extends BaseComponent {
     if (!state.multiple) {
       this._closeOtherModals(state.modalElement);
     }
+
+    this._applySettings(triggerElement, state);
 
     /* p-modal returns focus to the trigger when it closes, unless data-modal-focus="false" */
     openers.set(state.modalElement, triggerElement);
@@ -228,26 +248,42 @@ export default class Modal extends BaseComponent {
   }
 
   /**
-   * Configure modal element with data attributes
+   * Give the modal the settings this trigger overrides, first putting back any another trigger
+   * applied, and record the values they replace
    * @private
-   * @param {PModal} modalElement - Modal element
-   * @param {Object} config - Configuration object
+   * @param {HTMLElement} triggerElement - Trigger element
+   * @param {Object} state - The trigger's state
    */
-  _configureModal(modalElement, config) {
-    if (config.size) {
-      this.setAttr(modalElement, 'size', config.size);
-    }
+  _applySettings(triggerElement, state) {
+    const modal = state.modalElement;
+    this._restoreSettings(modal);
 
-    if (config.closable !== undefined) {
-      this.setAttr(modalElement, 'closable', String(config.closable));
+    const previous = new Map();
+    for (const [name, value] of Object.entries(state.overrides)) {
+      previous.set(name, this.getAttr(modal, name));
+      this.setAttr(modal, name, value);
     }
-
-    if (config.backdropClose !== undefined) {
-      this.setAttr(modalElement, 'backdrop-close', String(config.backdropClose));
+    if (previous.size > 0) {
+      replaced.set(modal, { trigger: triggerElement, previous });
     }
+  }
 
-    if (config.keyboard !== undefined) {
-      this.setAttr(modalElement, 'keyboard', String(config.keyboard));
+  /**
+   * Put back the modal's own settings where a trigger replaced them
+   * @private
+   * @param {PModal} modal - Modal element
+   */
+  _restoreSettings(modal) {
+    const entry = replaced.get(modal);
+    if (!entry) return;
+
+    replaced.delete(modal);
+    for (const [name, value] of entry.previous) {
+      if (value === null) {
+        this.removeAttr(modal, name);
+      } else {
+        this.setAttr(modal, name, value);
+      }
     }
   }
 
@@ -300,6 +336,7 @@ export default class Modal extends BaseComponent {
     const trigger = reportedOn.get(modal) ?? triggerElement;
     trigger.setAttribute('aria-expanded', 'false');
     reportedOn.delete(modal);
+    this._restoreSettings(modal);
 
     /* Dispatches on the trigger and emits on the event bus */
     this._dispatch(trigger, 'modal:closed', { trigger, modal });
@@ -322,7 +359,8 @@ export default class Modal extends BaseComponent {
   }
 
   /**
-   * Update modal configuration
+   * Update a trigger's configuration. Settings it overrides apply from its next open, or straight
+   * away when it has the modal open.
    * @param {HTMLElement} triggerElement - Trigger element
    * @param {Object} newConfig - New configuration
    */
@@ -332,9 +370,14 @@ export default class Modal extends BaseComponent {
 
     /* Update state */
     Object.assign(state, newConfig);
+    for (const [option, name] of Object.entries(SETTINGS)) {
+      if (newConfig[option] !== undefined) state.overrides[name] = String(newConfig[option]);
+    }
 
-    /* Update modal element */
-    this._configureModal(state.modalElement, newConfig);
+    /* Update the modal when this trigger's settings are the ones it has */
+    if (replaced.get(state.modalElement)?.trigger === triggerElement) {
+      this._applySettings(triggerElement, state);
+    }
 
     this.logger?.info('Modal configuration updated', { triggerElement, newConfig });
   }
