@@ -13,7 +13,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
  *
  * The component mounts one instance per `[data-defer-tracker]` node, parses its
  * JSON config, and defers booting the named adapter until the first genuine user
- * interaction. Without interaction, trackers boot after a fallback: once the page
+ * interaction: a pointer press, touch, key press or click. Without interaction, trackers boot after a fallback: once the page
  * has loaded, then `idleTimeout` milliseconds (5 seconds by default), then the
  * browser's next idle period where `requestIdleCallback` is supported. Tracker
  * cost therefore stays off the main thread during page load, and out of cold lab
@@ -51,7 +51,12 @@ import { BaseComponent } from '../core/BaseComponent.js';
  * @module @parallelogram-js/core/components/DeferTracker
  */
 
-const DEFAULT_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'mousemove', 'scroll', 'click'];
+/**
+ * Input that only a person can cause. Scroll and mousemove are left out: scroll restoration on
+ * reload or back and forward, a jump to a `#hash`, and a pointer resting over the page as it loads
+ * fire them without a gesture. Sites can add them back through `configureDeferTracker({ events })`.
+ */
+const DEFAULT_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'];
 
 /**
  * capture: see the gesture as early as possible. passive: never delay scroll.
@@ -85,8 +90,10 @@ class InteractionGate {
    * Override the gate's interaction events and idle fallback. Only effective
    * before the gate arms (i.e. before the first `until()` call).
    *
-   * `idleTimeout` is the minimum delay after the page's load event before
-   * trackers boot without interaction; `null` or `0` disables the fallback.
+   * `events` replaces the window events that count as interaction, which are
+   * pointerdown, touchstart, keydown and click by default. `idleTimeout` is the
+   * minimum delay after the page's load event before trackers boot without
+   * interaction; `null` or `0` disables the fallback.
    *
    * @param {{ events?: string[], idleTimeout?: number|null }} [options]
    */

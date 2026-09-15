@@ -39,6 +39,25 @@ describe('DeferTracker', () => {
     expect(boot).toHaveBeenCalledOnce();
   });
 
+  it('does not boot on scrolling or pointer movement alone', async () => {
+    const boot = await armTracker();
+
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('mousemove'));
+
+    expect(boot).not.toHaveBeenCalled();
+  });
+
+  it('boots on scrolling when a site adds scroll to the interaction events', async () => {
+    const { configureDeferTracker } = await import('../../../src/components/DeferTracker.js');
+    configureDeferTracker({ events: ['scroll'] });
+    const boot = await armTracker();
+
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(boot).toHaveBeenCalledOnce();
+  });
+
   it('does not boot before the idle delay has passed', async () => {
     const boot = await armTracker();
 
