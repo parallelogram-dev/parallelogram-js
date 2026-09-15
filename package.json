@@ -14,6 +14,7 @@
     "build:site": "vite build --config site/vite.config.js",
     "preview:site": "vite preview --config site/vite.config.js",
     "check:exports": "node scripts/check-exports.mjs",
+    "check:logger": "node scripts/check-logger.mjs",
     "check:package": "publint --strict",
     "check:size": "node scripts/check-size.mjs",
     "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./dev/components/PModal ./custom-elements.json",
