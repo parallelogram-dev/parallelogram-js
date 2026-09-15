@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lazysrc's `loadElement()` and `loadAll()` resolve for an element with nothing to load, such as an image without any source or an element that is neither an image nor has `data-lazysrc-bg`, which they waited on forever. The element settles in the `error` state and dispatches `lazysrc:error`.
 - Lightbox puts the class from `data-lightbox-state-opening-class`, `-open-class`, `-transitioning-class` and `-closing-class` on the viewer while it is in that state, replacing the previous state's class, as documented. They were read but never applied. `data-lightbox-state-closed-class` is deprecated and removed in 0.6.0, because the viewer is removed when it closes and there is nothing to put the class on.
 - Lightbox shows a short message naming the image, from its thumbnail's `alt` text, in place of a gallery image that fails to load, where it showed the browser's broken image. The message is a `.lightbox__error` paragraph, styled by the lightbox stylesheet.
+- The TypeScript declarations for DevLogger, Lightbox and PageManager use real types where they had `any`. DevLogger's `debug`, `log`, `info`, `warn` and `error` are always defined and take `unknown` arguments, Lightbox's methods take the gallery link and a number, `Lightbox.getStatus()` returns its state names, index, size and gallery, and `PageManager.replaceFragments()` takes a string and the swap options.
 
 ## [0.5.3] - 2026-09-15
 
