@@ -29,6 +29,14 @@
 
 const isThenable = value => typeof value?.then === 'function';
 
+/* Whether a node, or one of its ancestors, is in a set of nodes */
+const isInside = (node, nodes) => {
+  for (let current = node; current; current = current.parentNode) {
+    if (nodes.has(current)) return true;
+  }
+  return false;
+};
+
 export class ComponentHost {
   /**
    * @param {Object} options
@@ -143,13 +151,13 @@ export class ComponentHost {
     }
 
     const scopes = nodes ?? [root];
-    const pass = this._pass(priority);
-    const found = pass.selector ? this._matching(pass.selector, scopes) : [];
+    const { entries, valid, selector } = this._pass(priority);
+    const found = selector ? this._matching(selector, scopes) : [];
 
-    for (const { entry, valid } of pass.entries) {
+    for (const entry of entries) {
       let elements;
       try {
-        elements = valid
+        elements = valid.includes(entry)
           ? found.filter(element => element.matches(entry.selector))
           : this._matching(entry.selector, scopes);
       } catch (error) {
@@ -170,22 +178,7 @@ export class ComponentHost {
    * @param {Element} root
    */
   unmountWithin(root) {
-    for (const [name, record] of this.records) {
-      if (record.instance) {
-        for (const element of this._trackedElements(record.instance)) {
-          if (root === element || root.contains(element)) {
-            this._unmountElement(name, record.instance, element);
-          }
-        }
-      }
-
-      for (const element of [...record.pending.keys()]) {
-        if (root === element || root.contains(element)) {
-          record.pending.delete(element);
-          element.classList.remove('component-loading');
-        }
-      }
-    }
+    this._unmountWhere(element => root.contains(element));
   }
 
   /**
@@ -304,33 +297,27 @@ export class ComponentHost {
   }
 
   /**
-   * The entries a mount pass covers, and one selector joining the valid selectors among them so
+   * The entries a mount pass covers, those with valid selectors, and one selector joining theirs so
    * each scope is searched once
    */
   _pass(priority) {
-    let pass = this.passes.get(priority);
-    if (!pass) {
-      const entries = this._entriesFor(priority).map(entry => ({
-        entry,
-        valid: this._isValidSelector(entry.selector),
-      }));
-      const selector = entries
-        .filter(({ valid }) => valid)
-        .map(({ entry }) => entry.selector)
-        .join(',');
-      pass = { entries, selector };
-      this.passes.set(priority, pass);
+    if (!this.passes.has(priority)) {
+      const entries = this._entriesFor(priority);
+      const valid = entries.filter(entry => {
+        try {
+          document.createDocumentFragment().querySelector(entry.selector);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      this.passes.set(priority, {
+        entries,
+        valid,
+        selector: valid.map(entry => entry.selector).join(','),
+      });
     }
-    return pass;
-  }
-
-  _isValidSelector(selector) {
-    try {
-      document.createDocumentFragment().querySelector(selector);
-      return true;
-    } catch {
-      return false;
-    }
+    return this.passes.get(priority);
   }
 
   _matching(selector, scopes) {
@@ -597,56 +584,43 @@ export class ComponentHost {
 
   _onMutations(mutations) {
     const added = new Set();
-    const removed = [];
+    const removed = new Set();
 
-    for (const mutation of mutations) {
-      mutation.addedNodes.forEach(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) added.add(node);
-      });
-      mutation.removedNodes.forEach(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) removed.push(node);
-      });
+    for (const { addedNodes, removedNodes } of mutations) {
+      addedNodes.forEach(node => added.add(node));
+      removedNodes.forEach(node => removed.add(node));
     }
 
-    this._unmountRemoved(removed);
+    /* An element moved within the page is connected again by now, so it stays mounted */
+    if (removed.size > 0) {
+      this._unmountWhere(element => !element.isConnected && isInside(element, removed));
+    }
 
-    const roots = [...added].filter(node => {
-      if (!node.isConnected) return false;
-      for (let parent = node.parentNode; parent; parent = parent.parentNode) {
-        if (added.has(parent)) return false;
-      }
-      return true;
-    });
+    const roots = [...added].filter(
+      node =>
+        node.nodeType === Node.ELEMENT_NODE && node.isConnected && !isInside(node.parentNode, added)
+    );
     if (roots.length > 0 && this.root) {
       this.mountWithin(this.root, { nodes: roots });
     }
   }
 
   /**
-   * Unmount components from removed elements and the elements inside them. An element moved within
-   * the page is connected again by the time the records arrive, so it stays mounted.
+   * Unmount components from, and stop waiting on, the tracked elements that pass a test
    */
-  _unmountRemoved(nodes) {
-    const removed = new Set(nodes.filter(node => !node.isConnected));
-    if (removed.size === 0) return;
-
-    const wasRemoved = element => {
-      if (element.isConnected) return false;
-      for (let node = element; node; node = node.parentNode) {
-        if (removed.has(node)) return true;
-      }
-      return false;
-    };
-
+  _unmountWhere(test) {
     for (const [name, record] of this.records) {
       if (record.instance) {
         for (const element of this._trackedElements(record.instance)) {
-          if (wasRemoved(element)) this._unmountElement(name, record.instance, element);
+          if (test(element)) this._unmountElement(name, record.instance, element);
         }
       }
 
       for (const element of [...record.pending.keys()]) {
-        if (wasRemoved(element)) record.pending.delete(element);
+        if (test(element)) {
+          record.pending.delete(element);
+          element.classList.remove('component-loading');
+        }
       }
     }
   }
