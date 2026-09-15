@@ -197,6 +197,20 @@ describe('RouterManager', () => {
       expect([server.fetch.mock.calls.length, assign.mock.calls.length]).toEqual([2, 0]);
     });
 
+    it('can retry an address whose page failed to swap in after the address changed', async () => {
+      start({ fullLoadOnError: false });
+      bus.on('router:navigate-success', ({ waitUntil }) =>
+        waitUntil(Promise.reject(new Error('swap failed')))
+      );
+
+      const first = router.navigate('/flaky');
+      server.requests[0].respond(htmlResponse('<main>'));
+      await first.catch(error => error);
+      router.navigate('/flaky');
+
+      expect([location.pathname, server.fetch.mock.calls.length]).toEqual(['/flaky', 2]);
+    });
+
     it('keeps the error class on the page until the next navigation starts', async () => {
       start({ fullLoadOnError: false });
 
