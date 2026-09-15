@@ -1,35 +1,28 @@
 /**
  * ComponentRegistry - Core utility for building component registries
- * Provides a fluent API for defining component loader configurations
- * with sensible defaults and path conventions.
+ * Provides a fluent API for defining component loader configurations,
+ * with a default priority for components that don't set their own.
  */
 export class ComponentRegistry {
   /**
    * Create a new ComponentRegistry instance
-   * @param {Object} options - Configuration options
-   * @param {string} [options.basePath='./components/'] - Base path for component imports
+   * @param {Object} [options={}] - Configuration options
    * @param {string} [options.defaultPriority='normal'] - Default priority for components
-   * @param {string} [options.fileExtension='.js'] - Default file extension
-   * @param {boolean} [options.useMinified=false] - Whether to use .min.js files by default
    */
   constructor(options = {}) {
-    this.basePath = options.basePath || '../components/';
     this.defaultPriority = options.defaultPriority || 'normal';
-    this.fileExtension = options.fileExtension || '.js';
-    this.useMinified = options.useMinified || false;
     this.registry = [];
   }
 
   /**
    * Add a component to the registry
-   * @param {string} name - Component name (used for filename convention)
+   * @param {string} name - Component name, which `dependsOn` refers to
    * @param {string} selector - CSS selector for component elements
-   * @param {Object} [options={}] - Component configuration options
-   * @param {string} [options.priority] - Component loading priority ('critical', 'normal', 'low')
+   * @param {Object} options - Component configuration options
+   * @param {Function} options.loader - Loads the component's module or class
+   * @param {string} [options.priority] - Component loading priority; the registry's default priority when not set
    * @param {string[]} [options.dependsOn] - Array of component names this depends on
-   * @param {string} [options.exportName] - Name of the export (defaults to PascalCase of name)
-   * @param {string} [options.path] - Custom import path (overrides convention)
-   * @param {string} [options.filename] - Custom filename (overrides convention)
+   * @param {string} [options.exportName] - The named export to use when the module has no default export
    * @returns {ComponentRegistry} This instance for chaining
    * @throws {Error} If no loader is given or the name is already registered.
    */
@@ -100,7 +93,6 @@ export class ComponentRegistry {
       totalComponents: this.registry.length,
       priorities,
       withDependencies,
-      basePath: this.basePath,
     };
   }
 
@@ -113,7 +105,7 @@ export class ComponentRegistry {
     const errors = [];
     const warnings = [];
 
-    // Check for missing dependencies
+    /* Check for missing dependencies */
     this.registry.forEach(comp => {
       if (comp.dependsOn) {
         comp.dependsOn.forEach(dep => {
@@ -126,13 +118,13 @@ export class ComponentRegistry {
       }
     });
 
-    // Check for circular dependencies (simplified check)
+    /* Check for circular dependencies (simplified check) */
     const hasCycles = this.detectCycles();
     if (hasCycles.length > 0) {
       errors.push(`Circular dependencies detected: ${hasCycles.join(', ')}`);
     }
 
-    // Check for duplicate selectors
+    /* Check for duplicate selectors */
     const selectors = new Map();
     this.registry.forEach(comp => {
       if (selectors.has(comp.selector)) {
@@ -195,42 +187,25 @@ export class ComponentRegistry {
   }
 
   /**
-   * Create a new registry with different base configuration
-   * @param {Object} options - New configuration options
+   * Create a new, empty registry with this registry's configuration, overridden by the given options
+   * @param {Object} [options={}] - Configuration options to override
+   * @param {string} [options.defaultPriority] - Default priority for components
    * @returns {ComponentRegistry} New registry instance
    */
   fork(options = {}) {
     return new ComponentRegistry({
-      basePath: this.basePath,
       defaultPriority: this.defaultPriority,
-      fileExtension: this.fileExtension,
-      useMinified: this.useMinified,
       ...options,
     });
   }
 
   /**
-   * Static factory method for creating a registry with common configurations
-   * @param {'dev'|'prod'|'custom'} preset - Configuration preset
-   * @param {Object} [options={}] - Additional options
-   * @returns {ComponentRegistry} Configured registry instance
+   * Create a registry; a shortcut for `new ComponentRegistry(options)`
+   * @param {Object} [options={}] - Configuration options
+   * @param {string} [options.defaultPriority='normal'] - Default priority for components
+   * @returns {ComponentRegistry} New registry instance
    */
-  static create(preset = 'dev', options = {}) {
-    const presets = {
-      dev: {
-        basePath: '/dist/esm/components/',
-        useMinified: false,
-        fileExtension: '.js',
-      },
-      production: {
-        basePath: '/dist/esm/components/',
-        useMinified: true,
-        fileExtension: '.js',
-      },
-      custom: {},
-    };
-
-    const config = { ...presets[preset], ...options };
-    return new ComponentRegistry(config);
+  static create(options = {}) {
+    return new ComponentRegistry(options);
   }
 }

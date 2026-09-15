@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
-import scss from '../rollup-plugin-scss.js';
+import scss from '../scripts/rollup-plugin-scss.js';
 import { componentsDir, guidesDir, repoRoot, siteRoot, writePages } from './build/pages.js';
 
 const styles = path.join(repoRoot, 'src/styles');

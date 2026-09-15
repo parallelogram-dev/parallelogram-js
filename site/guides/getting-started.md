@@ -73,13 +73,12 @@ await app.run();
 
 `Parallelogram.create(config)` takes these options. All are optional.
 
-| Option        | Type                            | Default        | What it does                                                                                                                                            |
-| ------------- | ------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`        | `'development' \| 'production'` | `'production'` | Recorded in the start-up log. It doesn't choose a build: the export condition does that                                                                 |
-| `debug`       | `boolean`                       | `false`        | Shows `debug`, `log`, `info` and `group` output from `app.logger`. The framework's own debug calls only exist in the development build                  |
-| `silent`      | `boolean`                       | `false`        | Hides all logger output, including warnings and errors. Overrides `debug`                                                                               |
-| `router`      | `object`                        | `null`         | Router options. The router is only created when this is set, so without it links load pages normally. See [Pages and the router](pages-and-router.html) |
-| `pageManager` | `object`                        | `{}`           | PageManager options, plus `containerSelector`. See [Pages and the router](pages-and-router.html) for the options that affect navigation                 |
+| Option        | Type      | Default | What it does                                                                                                                                            |
+| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `debug`       | `boolean` | `false` | Shows `debug`, `log`, `info` and `group` output from `app.logger`. The framework's own debug calls only exist in the development build                  |
+| `silent`      | `boolean` | `false` | Hides all logger output, including warnings and errors. Overrides `debug`                                                                               |
+| `router`      | `object`  | `null`  | Router options. The router is only created when this is set, so without it links load pages normally. See [Pages and the router](pages-and-router.html) |
+| `pageManager` | `object`  | `{}`    | PageManager options, plus `containerSelector`. See [Pages and the router](pages-and-router.html) for the options that affect navigation                 |
 
 `pageManager.containerSelector` names the page manager's container, `body` by default. Components mount in it, and it is watched for added elements, only when `observeRoot` isn't set. The framework sets `observeRoot` to `document.body`, so components mount anywhere in the body, including a header or footer outside the container, unless you pass your own `observeRoot`. The router finds fragments by their `data-view` names anywhere in the page, whatever the container is.
 

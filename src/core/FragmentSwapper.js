@@ -27,7 +27,6 @@ const DEFAULTS = {
   scrollElement: null,
   focusTarget: 'h1',
   announce: true,
-  trackPerformance: false,
   fragmentFallbacks: false,
   runScripts: true,
   assetTimeout: 3000,
@@ -87,10 +86,9 @@ export class FragmentSwapper {
       preserveScroll = false,
       url = null,
       trigger = 'unknown',
-      viewTargets = ['main'], // Array of fragment targets
+      /* Array of fragment targets */
+      viewTargets = ['main'],
     } = options;
-
-    const startTime = this.options.trackPerformance ? performance.now() : 0;
 
     this.logger?.group('Multiple fragments replacement', {
       fromNavigation,
@@ -139,20 +137,10 @@ export class FragmentSwapper {
         });
         return { viewTarget: viewTargets[index], success: false, error: outcome.reason?.message };
       });
-      const successfulTargets = replacementResults.filter(result => result.success);
-
-      if (this.options.trackPerformance) {
-        this.logger?.info('Multiple fragments replacement completed', {
-          duration: `${(performance.now() - startTime).toFixed(2)}ms`,
-          targetsProcessed: viewTargets.length,
-          successfulReplacements: successfulTargets.length,
-        });
-      }
 
       this.eventBus.emit('page:fragments-replaced', {
         results: replacementResults,
         viewTargets,
-        duration: this.options.trackPerformance ? performance.now() - startTime : null,
         options,
       });
     } catch (error) {
@@ -185,7 +173,7 @@ export class FragmentSwapper {
       ? undefined
       : this.options.targetGroupTransitions?.[viewTarget];
 
-    // Emit pre-unmount event
+    /* Emit pre-unmount event */
     this.eventBus.emit('page:fragment-will-replace', {
       sourceFragment,
       targetFragment,
@@ -313,7 +301,7 @@ export class FragmentSwapper {
     });
 
     try {
-      // Check if it's a CSS class-based transition
+      /* Check if it's a CSS class-based transition */
       if (typeof transitionType === 'string' && !transitionType.includes('(')) {
         /* Pass the out class name to the in transition so it can remove it */
         const outClassName = direction === 'in' ? config.out : null;
@@ -325,7 +313,7 @@ export class FragmentSwapper {
           outClassName
         );
       } else {
-        // Use TransitionManager or inline styles
+        /* Use TransitionManager or inline styles */
         await this._performJSTransition(fragment, direction, config);
       }
 
@@ -395,26 +383,26 @@ export class FragmentSwapper {
     const duration = config.duration || 300;
     const easing = config.easing || 'ease';
 
-    // Apply transition styles
+    /* Apply transition styles */
     fragment.style.transition = `opacity ${duration}ms ${easing}, transform ${duration}ms ${easing}`;
 
     if (direction === 'out') {
-      // Fade out with slide
+      /* Fade out with slide */
       fragment.style.opacity = '0';
       fragment.style.transform = 'translateX(-20px)';
     } else {
-      // Reset and fade in
+      /* Reset and fade in */
       fragment.style.opacity = '0';
       fragment.style.transform = 'translateX(20px)';
 
-      // Force reflow then animate in
+      /* Force reflow then animate in */
       fragment.getBoundingClientRect();
 
       fragment.style.opacity = '1';
       fragment.style.transform = 'translateX(0)';
     }
 
-    // Wait for transition to complete
+    /* Wait for transition to complete */
     await new Promise(resolve => {
       setTimeout(() => {
         fragment.style.transition = '';
@@ -668,15 +656,15 @@ export class FragmentSwapper {
     }
 
     if (options.preserveScroll && storedPosition) {
-      // Restore exact scroll position
+      /* Restore exact scroll position */
       window.scrollTo({ top: storedPosition.y, left: storedPosition.x, behavior: 'instant' });
       return;
     }
 
     switch (this.options.scrollPosition) {
       case 'top':
-        // Scroll to top is now handled in _processSingleFragment after out transition
-        // Only scroll here for popstate events (browser back/forward)
+        /* Scroll to top is now handled in _processSingleFragment after out transition
+           Only scroll here for popstate events (browser back/forward) */
         if (options.fromPopstate) {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         }
@@ -690,7 +678,7 @@ export class FragmentSwapper {
         }
         break;
       case 'preserve':
-        // Do nothing - keep current position
+        /* Do nothing - keep current position */
         break;
     }
   }

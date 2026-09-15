@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CONTRIBUTING.md`, with setup, the conventions the code follows, and how changes are tested and released.
+
+### Changed
+
+- The README is a short introduction with links to the documentation site and its guides, instead of repeating them. The generated component tables and `npm run readme` are gone.
+- `page:fragments-replaced` no longer has a `duration`, which was always `null` unless performance tracking was on.
+
+### Removed
+
+- PageManager's demo dashboard leftovers: `getPerformanceMetrics()`, `getMetrics()`, `getSessionTracking()` and the `trackPerformance` option, which FragmentSwapper also no longer takes.
+- `PageManager#replaceFragment()`. Use `replaceFragments()`.
+- PageManager's `component:lazy-load` listener, which nothing emitted.
+- The `mode` option of `Parallelogram.create()`, which only reached the start-up log. The `development` export condition chooses the build.
+- ComponentRegistry's `basePath`, `fileExtension` and `useMinified` options, and the `dev`, `production` and `custom` presets of `ComponentRegistry.create()`, none of which changed anything. `ComponentRegistry.create(options)` now returns `new ComponentRegistry(options)`.
+- RouterManager's `baseUrl`, `retryAttempts` and `fragmentSelector` defaults, which were never read.
+- The unused `src/core.js` and `src/managers/index.js` files, which were never built or exported.
+- The superseded `docs/` guides, `DESIGN_SYSTEM_PLAN.md`, `SIMPLIFIED_DESIGN_SYSTEM.md`, `TODO.md` and the hand-run pages in `test/manual`. The documentation site replaces them.
+
 ## [0.5.0] - 2026-09-15
 
 Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://github.com/parallelogram-dev/parallelogram-js/blob/main/site/guides/upgrading.md) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.

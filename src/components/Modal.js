@@ -40,13 +40,20 @@ export default class Modal extends BaseComponent {
    */
   static get defaults() {
     return {
-      size: 'md', // Modal size: xs, sm, md, lg, xl, fullscreen
-      closable: true, // Whether modal can be closed
-      backdropClose: true, // Close on backdrop click
-      keyboard: true, // Enable keyboard navigation
-      focus: true, // Auto-focus when opened
-      multiple: false, // Allow multiple modals
-      appendTo: 'body', // Where to append modal elements
+      /* Modal size: xs, sm, md, lg, xl, fullscreen */
+      size: 'md',
+      /* Whether modal can be closed */
+      closable: true,
+      /* Close on backdrop click */
+      backdropClose: true,
+      /* Enable keyboard navigation */
+      keyboard: true,
+      /* Auto-focus when opened */
+      focus: true,
+      /* Allow multiple modals */
+      multiple: false,
+      /* Where to append modal elements */
+      appendTo: 'body',
     };
   }
 
@@ -59,8 +66,10 @@ export default class Modal extends BaseComponent {
   _init(element) {
     const state = super._init(element);
 
-    // Get configuration from data attributes
-    // Note: getAttr automatically adds component prefix (data-modal-)
+    /*
+     * Get configuration from data attributes
+     * Note: getAttr automatically adds component prefix (data-modal-)
+     */
     const target = this.getAttr(element, 'target');
     const size = this.getAttr(element, 'size', Modal.defaults.size);
     const closable = this.getBoolAttr(element, 'closable', Modal.defaults.closable);
@@ -74,20 +83,20 @@ export default class Modal extends BaseComponent {
       return state;
     }
 
-    // Find or create target modal
+    /* Find or create target modal */
     let modalElement = document.querySelector(target);
     if (!modalElement) {
       this.logger?.warn('Modal: Target modal not found', { target, element });
       return state;
     }
 
-    // Ensure it's an p-modal element
+    /* Ensure it's an p-modal element */
     if (modalElement.tagName.toLowerCase() !== 'p-modal') {
       this.logger?.warn('Modal: Target is not an p-modal element', { target, element });
       return state;
     }
 
-    // Forward only the settings this trigger sets, so <p-modal>'s own attributes win otherwise
+    /* Forward only the settings this trigger sets, so <p-modal>'s own attributes win otherwise */
     const overrides = {};
     if (this.hasAttr(element, 'size')) overrides.size = size;
     if (this.hasAttr(element, 'closable')) overrides.closable = closable;
@@ -95,7 +104,7 @@ export default class Modal extends BaseComponent {
     if (this.hasAttr(element, 'keyboard')) overrides.keyboard = keyboard;
     this._configureModal(modalElement, overrides);
 
-    // Store state
+    /* Store state */
     state.target = target;
     state.modalElement = modalElement;
     state.size = size;
@@ -105,12 +114,12 @@ export default class Modal extends BaseComponent {
     state.focus = focus;
     state.multiple = multiple;
 
-    // Set up event listeners
+    /* Set up event listeners */
     element.addEventListener('click', this._handleTriggerClick.bind(this, element), {
       signal: state.controller.signal,
     });
 
-    // Listen for modal events
+    /* Listen for modal events */
     modalElement.addEventListener('p-modal:open', this._handleModalOpen.bind(this, element), {
       signal: state.controller.signal,
     });
@@ -119,7 +128,7 @@ export default class Modal extends BaseComponent {
       signal: state.controller.signal,
     });
 
-    // Set up ARIA attributes
+    /* Set up ARIA attributes */
     element.setAttribute('aria-haspopup', 'dialog');
     element.setAttribute('aria-expanded', 'false');
     if (!element.getAttribute('aria-controls')) {
@@ -145,12 +154,12 @@ export default class Modal extends BaseComponent {
     const state = this.getState(triggerElement);
     if (!state?.modalElement) return;
 
-    // Close other modals if multiple is not allowed
+    /* Close other modals if multiple is not allowed */
     if (!state.multiple) {
       this._closeOtherModals(state.modalElement);
     }
 
-    // p-modal returns focus to the trigger when it closes, unless data-modal-focus="false"
+    /* p-modal returns focus to the trigger when it closes, unless data-modal-focus="false" */
     state.modalElement.open({ returnFocus: state.focus ? triggerElement : null });
   }
 
@@ -243,16 +252,16 @@ export default class Modal extends BaseComponent {
    * @param {CustomEvent} event - Modal open event
    */
   _handleModalOpen(triggerElement, event) {
-    // Update ARIA attributes
+    /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'true');
 
-    // Dispatch enhancement event
+    /* Dispatch enhancement event */
     this._dispatch(triggerElement, 'modal:opened', {
       trigger: triggerElement,
       modal: event.detail.modal,
     });
 
-    // Emit to event bus if available
+    /* Emit to event bus if available */
     this.eventBus?.emit('modal:opened', {
       trigger: triggerElement,
       modal: event.detail.modal,
@@ -268,16 +277,16 @@ export default class Modal extends BaseComponent {
    * @param {CustomEvent} event - Modal close event
    */
   _handleModalClose(triggerElement, event) {
-    // Update ARIA attributes
+    /* Update ARIA attributes */
     triggerElement.setAttribute('aria-expanded', 'false');
 
-    // Dispatch enhancement event
+    /* Dispatch enhancement event */
     this._dispatch(triggerElement, 'modal:closed', {
       trigger: triggerElement,
       modal: event.detail.modal,
     });
 
-    // Emit to event bus if available
+    /* Emit to event bus if available */
     this.eventBus?.emit('modal:closed', {
       trigger: triggerElement,
       modal: event.detail.modal,
@@ -309,10 +318,10 @@ export default class Modal extends BaseComponent {
     const state = this.getState(triggerElement);
     if (!state?.modalElement) return;
 
-    // Update state
+    /* Update state */
     Object.assign(state, newConfig);
 
-    // Update modal element
+    /* Update modal element */
     this._configureModal(state.modalElement, newConfig);
 
     this.logger?.info('Modal configuration updated', { triggerElement, newConfig });
@@ -351,23 +360,23 @@ export default class Modal extends BaseComponent {
    * @returns {Promise<PModal>} Modal element
    */
   static async create({ title, content, actions = [], size = 'md', options = {} }) {
-    // Create modal element
+    /* Create modal element */
     const modal = document.createElement('p-modal');
     modal.id = generateId('modal');
 
-    // Configure attributes
+    /* Configure attributes */
     modal.setAttribute('data-modal-size', size);
     Object.entries(options).forEach(([key, value]) => {
       modal.setAttribute(`data-modal-${key}`, String(value));
     });
 
-    // Create title
+    /* Create title */
     if (title) {
       const titleElement = createElement('h2', { slot: 'title' }, title);
       modal.appendChild(titleElement);
     }
 
-    // Create content
+    /* Create content */
     if (content) {
       const contentElement = document.createElement('div');
       if (content instanceof Node) {
@@ -378,7 +387,7 @@ export default class Modal extends BaseComponent {
       modal.appendChild(contentElement);
     }
 
-    // Create actions
+    /* Create actions */
     if (actions.length > 0) {
       const actionsContainer = document.createElement('div');
       actionsContainer.slot = 'actions';
@@ -404,7 +413,7 @@ export default class Modal extends BaseComponent {
       modal.appendChild(actionsContainer);
     }
 
-    // Append to document
+    /* Append to document */
     document.body.appendChild(modal);
     return modal;
   }

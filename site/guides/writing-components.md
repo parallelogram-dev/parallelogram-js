@@ -348,7 +348,7 @@ export default class CharacterCount extends BaseComponent {
 
 Contracts apply to components inside the `@parallelogram-js/core` repository, not to components on your own site. Each one has a `<Name>.contract.js` beside it in `src/components`, whose default export describes its markup API in the shape `src/contract.js` defines. Components never import their contracts.
 
-A contract generates the component's page on the documentation site, named after the kebab-cased class name, and its row in the README's component table. For web components it also generates the TypeScript declarations and `custom-elements.json` entry. Run `npm run readme` after changing a contract; a unit test fails while the README table is out of date.
+A contract generates the component's page on the documentation site, named after the kebab-cased class name. For web components it also generates the TypeScript declarations and `custom-elements.json` entry.
 
 | Field         | What it holds                                                                                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |

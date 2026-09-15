@@ -17,7 +17,6 @@
  * @example
  * // Full configuration
  * const app = Parallelogram.create({
- *   mode: 'development',
  *   debug: true,
  *   router: {
  *     timeout: 10000,
@@ -41,7 +40,6 @@ import { PageManager } from '../managers/PageManager.js';
 
 /**
  * @typedef {Object} ParallelogramConfig
- * @property {'development'|'production'} [mode='production'] - Framework mode
  * @property {boolean} [debug=false] - Enable debug/log/info/group output. The package's default
  *   build leaves out the framework's own debug output, so it only appears when the bundler resolves
  *   the `development` export condition (Vite does during development; esbuild needs
@@ -85,14 +83,13 @@ export class Parallelogram {
    */
   constructor(config = {}) {
     this.config = {
-      mode: config.mode || 'production',
       debug: config.debug || false,
       silent: config.silent || false,
       router: config.router || null,
       pageManager: config.pageManager || {},
     };
 
-    // Core instances (will be initialized in init())
+    /* Core instances (will be initialized in init()) */
     this.logger = null;
     this.eventBus = null;
     this.router = null;
@@ -101,7 +98,7 @@ export class Parallelogram {
     this.componentRegistry = null;
     this.webComponentLoader = null;
 
-    // Component registration helper
+    /* Component registration helper */
     this.components = new ComponentRegistrationHelper(this);
 
     /** @internal */
@@ -114,14 +111,14 @@ export class Parallelogram {
    * @returns {Promise<Parallelogram>}
    */
   run() {
-    // Check if DOM is already ready
+    /* Check if DOM is already ready */
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      // DOM is ready, initialize immediately
+      /* DOM is ready, initialize immediately */
       this.init();
       return Promise.resolve(this);
     }
 
-    // DOM not ready yet, wait for DOMContentLoaded
+    /* DOM not ready yet, wait for DOMContentLoaded */
     return new Promise(resolve => {
       document.addEventListener('DOMContentLoaded', () => {
         this.init();
@@ -142,25 +139,24 @@ export class Parallelogram {
       return this;
     }
 
-    // Create logger
+    /* Create logger */
     this.logger = new DevLogger('parallelogram', this.config.debug, this.config.silent);
     this.logger?.info('Parallelogram initializing', {
-      mode: this.config.mode,
       debug: this.config.debug,
       routerEnabled: !!this.config.router,
     });
 
-    // Create event bus
+    /* Create event bus */
     this.eventBus = new EventManager({ logger: this.logger });
 
-    // Create component registry for enhancement components
-    const registry = ComponentRegistry.create(this.config.mode);
+    /* Create component registry for enhancement components */
+    const registry = ComponentRegistry.create();
     this.components._configs.enhancementComponents.forEach(({ name, selector, options }) => {
       registry.component(name, selector, options);
     });
     this.componentRegistry = registry.build();
 
-    // Create router if configured
+    /* Create router if configured */
     if (this.config.router) {
       this.router = new RouterManager({
         eventBus: this.eventBus,
@@ -169,7 +165,7 @@ export class Parallelogram {
       });
     }
 
-    // Create page manager
+    /* Create page manager */
     const pageManagerConfig = {
       containerSelector: this.config.pageManager.containerSelector || 'body',
       registry: this.componentRegistry,
@@ -180,14 +176,15 @@ export class Parallelogram {
     };
     this.pageManager = new PageManager(pageManagerConfig);
 
-    // Create web component loader
+    /* Create web component loader */
     const webComponentMap = {};
     this.components._configs.webComponents.forEach(({ name, loader }) => {
       webComponentMap[name] = loader;
     });
 
     this.webComponentLoader = new WebComponentLoader(webComponentMap, {
-      observeDOM: true, // Watch for dynamically added web components
+      /* Watch for dynamically added web components */
+      observeDOM: true,
       logger: this.logger,
       onLoad: tagName => {
         this.logger?.info(`Web component loaded: ${tagName}`);
@@ -197,7 +194,7 @@ export class Parallelogram {
       },
     });
 
-    // Initialize web component loader
+    /* Initialize web component loader */
     this.webComponentLoader.init();
 
     this._initialized = true;
@@ -216,22 +213,22 @@ export class Parallelogram {
 
     this.logger?.info('Parallelogram destroying');
 
-    // Clean up web component loader
+    /* Clean up web component loader */
     if (this.webComponentLoader) {
       this.webComponentLoader.destroy();
     }
 
-    // Clean up page manager
+    /* Clean up page manager */
     if (this.pageManager) {
       this.pageManager.destroy?.();
     }
 
-    // Clean up router
+    /* Clean up router */
     if (this.router) {
       this.router.destroy?.();
     }
 
-    // Clear event bus
+    /* Clear event bus */
     if (this.eventBus) {
       this.eventBus.clear();
     }
