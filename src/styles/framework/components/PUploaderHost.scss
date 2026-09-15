@@ -104,6 +104,11 @@
   display: block;
 }
 
+/* The selector sits the same distance below the last file as files sit from each other */
+:host(:not([full])) ::slotted(p-uploader-file:last-of-type) {
+  margin-bottom: var(--puploader-files-gap, #{$space-sm});
+}
+
 ::slotted(p-uploader-fields) {
   display: none;
 }
@@ -131,4 +136,9 @@
 
 :host([stacked]) ::slotted(p-uploader-file:last-of-type) {
   --uploader-file-radius-end: var(--surface-card-radius, #{$radius-xs});
+}
+
+/* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
+:host([data-focus-source='pointer']) :focus {
+  outline: none;
 }

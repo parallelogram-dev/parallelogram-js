@@ -202,3 +202,9 @@
     outline-offset: -2px;
   }
 }
+
+/* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
+:host([data-focus-source='pointer']) :focus,
+:host([data-focus-source='pointer']) .control:focus-within {
+  outline: none;
+}

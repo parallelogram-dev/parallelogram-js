@@ -2,6 +2,7 @@ import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
+import { followFocusSource } from '../utils/focus-source.js';
 
 const DEFAULT_PLACEHOLDER = 'Select…';
 
@@ -110,6 +111,7 @@ export default class PSelect extends HTMLElement {
   }
 
   connectedCallback() {
+    followFocusSource(this);
     this._readConfig();
     this._parseOptionsFromDOM();
     this._updateName();
@@ -542,6 +544,9 @@ export default class PSelect extends HTMLElement {
     this._els.input.setAttribute('aria-expanded', 'false');
     this._els.input.removeAttribute('aria-activedescendant');
     this._els.control.toggleAttribute('data-open', false);
+    if (this._els.input.value.trim() === '' && this.state.value !== '' && !this.state.required) {
+      this._choose('');
+    }
     this._updateDisplay();
 
     this.tm.exit(this._els.menu).then(() => {
@@ -567,15 +572,23 @@ export default class PSelect extends HTMLElement {
     const option = this.state.options.find(item => String(item.value) === String(value));
     if (!option || option.disabled) return;
 
-    if (option.value !== this.state.value) {
-      this._setValue(option.value);
-
-      this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
-      this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-      dispatchComponentEvent(this, 'p-select:change', { value: option.value, label: option.label });
-    }
-
+    this._choose(option.value, option.label);
     this.close();
+  }
+
+  /**
+   * Record a value the user chose, dispatching input, change and p-select:change when it changes
+   *
+   * @param {string} value
+   * @param {string} [label]
+   */
+  _choose(value, label = '') {
+    if (value === this.state.value) return;
+    this._setValue(value);
+
+    this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+    dispatchComponentEvent(this, 'p-select:change', { value, label });
   }
 
   /**

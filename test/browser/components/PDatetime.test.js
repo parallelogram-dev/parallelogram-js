@@ -205,6 +205,36 @@ describe('p-datetime', () => {
     expect(panel(picker).hidden).toBe(false);
   });
 
+  it('opens below its field when the panel fits neither below nor above it', async () => {
+    const picker = renderPicker();
+    trigger(picker).click();
+    await nextFrame();
+    const height = panel(picker).getBoundingClientRect().height;
+    picker.close();
+    await wait(200);
+
+    picker.style.cssText = `position: fixed; left: 0; top: ${Math.min(height - 40, innerHeight - 80)}px`;
+    trigger(picker).click();
+    await nextFrame();
+
+    expect(panel(picker).classList.contains('panel--above')).toBe(false);
+  });
+
+  it('stays open when focus moves to its panel, as Safari does for a click on a button', async () => {
+    const container = document.createElement('main');
+    container.tabIndex = -1;
+    document.body.append(container);
+    const picker = renderPicker({ mode: 'date' });
+    container.append(picker);
+    picker.open();
+    await nextFrame();
+
+    panel(picker).focus();
+    await wait(200);
+
+    expect([picker.shadowRoot.activeElement, panel(picker).hidden]).toEqual([panel(picker), false]);
+  });
+
   it('closes after a click outside it', async () => {
     const picker = renderPicker({ mode: 'date' });
     const outside = document.createElement('p');
