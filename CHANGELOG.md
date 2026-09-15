@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<p-uploader>`'s `allow-edit` and `allow-sort`, and `<p-uploader-file>`'s `allow-edit`, read `"0"` as false, as enhancement components' boolean attributes do, where only `"false"` turned them off.
 - `custom-elements.json` and the documentation list `<p-uploader-file>`'s default slot, which holds its `<p-uploader-data>` elements.
 - Videoplay removes a managed video's `autoplay` attribute when it mounts and starts playback itself. While the attribute stayed, browsers downloaded every autoplay video at page load, however far below the fold, ignoring `preload`, and could start one off screen or for a user who prefers reduced motion. Without JavaScript the attribute still autoplays the video, and unmounting puts it back.
+- Scrollreveal reveals an element with `data-reveal-once="false"` again when it scrolls back into view while its hide animation is running, where it stayed hidden in view.
 
 ## [0.5.3] - 2026-09-15
 
