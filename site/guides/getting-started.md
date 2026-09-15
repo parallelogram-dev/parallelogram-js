@@ -271,19 +271,21 @@ The package stylesheet declares these custom properties on `:root`. Set them in 
 
 Colours come from a small set of roles, and the surface, form control, button and panel properties above read them. Set a role to change everything that uses it, or a surface property to change one surface.
 
-| Role                                                                      | What it colours                                                              |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `--color-accent`, `--color-accent-hover`                                  | Primary buttons, focus rings and focused field borders, and selected options |
-| `--color-accent-contrast`                                                 | Text on the accent                                                           |
-| `--color-text-muted`                                                      | Placeholders and secondary text                                              |
-| `--color-surface`, `--color-surface-muted`                                | Backgrounds of fields, panels, dialogs and dropdowns, and quieter areas      |
-| `--color-hover`                                                           | Tint behind hovered items                                                    |
-| `--color-border`, `--color-border-strong`                                 | Borders, and borders that need to stand out, such as cards and buttons       |
-| `--color-control-border`                                                  | Form field borders, which need 3:1 contrast to be seen                       |
-| `--color-overlay`, `--color-shadow`                                       | Modal backdrops and shadows                                                  |
-| `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg` | Status colours and their backgrounds                                         |
-| `--color-danger-contrast`                                                 | Text on a danger fill, such as the danger button                             |
-| `--color-inverse-surface`, `--color-inverse-text`                         | Toasts, which stand out from the page as a darker surface in both themes     |
+| Role                                                                        | What it colours                                                               |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `--color-accent`, `--color-accent-hover`                                    | Primary buttons, focus rings and focused field borders, and selected options  |
+| `--color-accent-contrast`                                                   | Text on the accent                                                            |
+| `--color-text-muted`                                                        | Placeholders and secondary text                                               |
+| `--color-surface`, `--color-surface-muted`                                  | Backgrounds of fields, panels, dialogs and dropdowns, and quieter areas       |
+| `--color-hover`                                                             | Tint behind hovered items                                                     |
+| `--color-border`, `--color-border-strong`                                   | Borders, and borders that need to stand out, such as cards and buttons        |
+| `--color-control-border`                                                    | Form field borders, which need 3:1 contrast to be seen                        |
+| `--color-overlay`, `--color-shadow`                                         | Modal backdrops and shadows                                                   |
+| `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg`   | Status colours and their backgrounds                                          |
+| `--color-danger-contrast`                                                   | Text on a danger fill, such as the danger button                              |
+| `--color-inverse-surface`, `--color-inverse-text`                           | Info toasts, which stand out from the page as a darker surface in both themes |
+| `--color-success-strong`, `--color-warning-strong`, `--color-danger-strong` | Solid status fills, such as success, warning and error toasts                 |
+| `--color-on-status`                                                         | Text on the solid status fills                                                |
 
 Text colour isn't a role: surfaces inherit it from the page.
 
