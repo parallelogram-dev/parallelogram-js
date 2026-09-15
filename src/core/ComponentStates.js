@@ -2,24 +2,23 @@
  * ComponentStates - Standard state values for component lifecycle
  *
  * These states are used in data attributes to track component initialization
- * and lifecycle. Each component uses its selector attribute (e.g., data-lazysrc)
- * to store its current state.
+ * and lifecycle. Each component writes its current state to
+ * `data-<component>-state` (e.g., data-lazysrc-state) with setState().
  *
  * @example
- * // Initial HTML
+ * <!-- Initial HTML -->
  * <img data-lazysrc data-lazysrc-src="/image.jpg">
  *
- * // After mounting
- * <img data-lazysrc="mounted" data-lazysrc-src="/image.jpg">
+ * <!-- While loading -->
+ * <img data-lazysrc data-lazysrc-state="loading" data-lazysrc-src="/image.jpg" src="/image.jpg">
  *
- * // After loading
- * <img data-lazysrc="loaded" data-lazysrc-src="/image.jpg" src="/image.jpg">
+ * <!-- After loading -->
+ * <img data-lazysrc data-lazysrc-state="loaded" data-lazysrc-src="/image.jpg" src="/image.jpg">
  *
  * @example
- * // CSS Hooks
- * [data-lazysrc="loading"] { opacity: 0.5; }
- * [data-lazysrc="loaded"] { opacity: 1; }
- * [data-lazysrc="error"] { border: 2px solid red; }
+ * [data-lazysrc-state="loading"] { opacity: 0.5; }
+ * [data-lazysrc-state="loaded"] { opacity: 1; }
+ * [data-lazysrc-state="error"] { border: 2px solid red; }
  */
 
 /**
