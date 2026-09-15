@@ -36,11 +36,15 @@ const cssUrl = url =>
  *      sizes="(max-width: 640px) 100vw, 640px"
  *      width="640" height="480" alt="Harbour at dawn">
  *
- * <!-- Sources held in data attributes -->
+ * <!-- Sources held in data attributes; without JavaScript the image stays empty, so follow it with
+ *      a <noscript> copy that has real sources -->
  * <picture>
  *   <source data-lazysrc-srcset="harbour.avif" type="image/avif">
  *   <img data-lazysrc data-lazysrc-src="harbour.jpg" width="640" height="480" alt="Harbour at dawn">
  * </picture>
+ * <noscript>
+ *   <img src="harbour.jpg" width="640" height="480" alt="Harbour at dawn">
+ * </noscript>
  *
  * <!-- Background image; give the element a background colour for when scripts don't run -->
  * <div class="hero" data-lazysrc data-lazysrc-bg="hero.jpg"></div>
