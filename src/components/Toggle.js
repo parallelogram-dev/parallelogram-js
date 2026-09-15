@@ -120,6 +120,7 @@ export default class Toggle extends BaseComponent {
 
   _init(element) {
     const state = super._init(element);
+    const { defaults } = this.constructor;
 
     const targetSelector = this.getAttr(element, 'target');
     if (!targetSelector) {
@@ -141,19 +142,19 @@ export default class Toggle extends BaseComponent {
     state.target = target;
     state.targetSelector = targetSelector;
     state.group = this.getAttr(element, 'group');
-    state.capture = this.getBoolAttr(element, 'capture', Toggle.defaults.capture);
+    state.capture = this.getBoolAttr(element, 'capture', defaults.capture);
     state.manual =
       this.getBoolAttr(target, 'manual', false) ||
-      this.getBoolAttr(element, 'manual', Toggle.defaults.manual);
-    state.animateToggle = this.getBoolAttr(element, 'animate', Toggle.defaults.animateToggle);
+      this.getBoolAttr(element, 'manual', defaults.manual);
+    state.animateToggle = this.getBoolAttr(element, 'animate', defaults.animateToggle);
     state.closeOnNavigation = this.getBoolAttr(
       element,
       'close-navigation',
-      Toggle.defaults.closeOnNavigation
+      defaults.closeOnNavigation
     );
-    state.closeOnEscape = this.getBoolAttr(element, 'close-escape', Toggle.defaults.closeOnEscape);
+    state.closeOnEscape = this.getBoolAttr(element, 'close-escape', defaults.closeOnEscape);
 
-    const isOpen = this._open.has(target) || target.classList.contains(Toggle.defaults.openClass);
+    const isOpen = this._open.has(target) || target.classList.contains(defaults.openClass);
     if (isOpen && !this._open.has(target)) {
       this._open.set(target, element);
     }
@@ -352,7 +353,7 @@ export default class Toggle extends BaseComponent {
     this._open.delete(target);
     this._open.set(target, element);
     this._syncTriggers(target, true);
-    target.classList.add(Toggle.defaults.openClass);
+    target.classList.add(this.constructor.defaults.openClass);
     this._transition(target, state, ExtendedStates.OPENING, ExtendedStates.OPEN);
 
     this._dispatch(element, 'toggle:show', {
@@ -385,7 +386,7 @@ export default class Toggle extends BaseComponent {
 
     this._open.delete(target);
     this._syncTriggers(target, false);
-    target.classList.remove(Toggle.defaults.openClass);
+    target.classList.remove(this.constructor.defaults.openClass);
     this._transition(target, state, ExtendedStates.CLOSING, ExtendedStates.CLOSED);
 
     this._dispatch(element, 'toggle:hide', {
@@ -510,7 +511,7 @@ export default class Toggle extends BaseComponent {
       openCount: states.filter(state => this._isTargetOpen(state.target)).length,
       captureCount: states.filter(state => state.capture).length,
       manualCount: states.filter(state => state.manual).length,
-      defaults: Toggle.defaults,
+      defaults: this.constructor.defaults,
     };
   }
 

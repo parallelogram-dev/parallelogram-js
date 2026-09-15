@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A fragment whose swap fails after its content was replaced, for example on an invalid `focusTarget` selector, is no longer swapped a second time, which ran its scripts and mounted its components again, and is reported with `success: false` in `page:fragments-replaced`.
 - The router leaves clicks to the browser for links inside a shadow root whose host, or one of its ancestors, has `data-router-skip`. It only checked ancestors within the shadow root.
 - A navigation in a background tab finishes straight away instead of when the tab is shown. Scrolling to the top and class-based fragment transitions waited on animation frames, which browsers pause in hidden tabs, and now fall back to a short timeout while the document is hidden.
+- Toggle, Tabs, Modal, Lightbox and DataTable read their defaults through the instance's class, so a subclass that overrides `static get defaults()` gets its own defaults instead of the parent's.
 
 ## [0.5.3] - 2026-09-15
 
