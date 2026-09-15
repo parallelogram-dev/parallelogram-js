@@ -509,9 +509,11 @@ export class ComponentHost {
 
   _unmountElement(name, instance, element) {
     try {
-      instance.unmount(element);
+      const unmounted = instance.unmount(element);
       element.removeAttribute('data-fragment-target');
-      this.eventBus.emit('page:component-unmounted', { componentName: name, element, instance });
+      if (unmounted !== false) {
+        this.eventBus.emit('page:component-unmounted', { componentName: name, element, instance });
+      }
     } catch (error) {
       this.logger?.error(`Failed to unmount ${name}`, { error, element });
     }
