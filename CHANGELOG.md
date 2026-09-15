@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DataTable number columns sort by the first number in each cell, so values followed by words such as "12 users" or "5 minutes" sort numerically instead of last. Numbers in parentheses or after a minus sign, including "−", sort as negative, and the decimal separator comes from the table's `lang`, so "1.234,56" reads as 1234.56 in a German table. A cell's `data-sort-value` always uses "." as its decimal separator.
 - A `<p-modal>` with several Modal triggers dispatches `modal:opened` and `modal:closed` once per open and close, on the trigger that opened it, instead of on every trigger. When a script opens the modal, they go to its first mounted trigger. Every trigger's `aria-expanded` still follows the modal.
 - The Bing UET adapter starts every tag id on a page. A second tag id, or a tag on a page that already has its own UET snippet, gets its own UET instance at `window.uetq_<id>` with its `consentDefault`, where it was marked booted without ever starting. A tag id that has already started isn't started again.
+- Screen readers hear SelectLoader's and CopyToClipboard's announcements, and the page title after a navigation, while a `<p-modal>`, Lightbox or other modal `<dialog>` is open. The shared live region moves inside the open modal, where it isn't inert, and back to the body once no modal is open. CopyToClipboard announces through this region instead of its own `[data-copytoclipboard-status]` element.
 
 ## [0.5.2] - 2026-09-15
 

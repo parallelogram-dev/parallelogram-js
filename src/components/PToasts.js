@@ -2,6 +2,7 @@ import styles from '../styles/framework/components/PToasts.scss';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
+import { getOpenModal } from '../utils/modal.js';
 
 /** Alternative type names, normalised to the four styled types */
 const TYPE_ALIASES = { warn: 'warning', danger: 'error' };
@@ -236,7 +237,7 @@ export default class PToasts extends HTMLElement {
    * Move inside the most recently opened modal, where the toasts can be announced and dismissed
    */
   _followModal() {
-    const modal = [...document.querySelectorAll('p-modal[open], dialog:modal')].at(-1) ?? null;
+    const modal = getOpenModal();
     if (!modal || modal === this._modal || modal.contains(this)) return;
 
     if (!this._modal) {
