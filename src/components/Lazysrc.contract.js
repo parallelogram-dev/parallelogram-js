@@ -129,7 +129,7 @@ Failed loads are retried with a growing delay. Don't lazy load the largest image
       name: 'lazysrc:error',
       channel: 'both',
       detail: '{ element: HTMLElement; error: string; timestamp: number }',
-      description: 'Every retry failed',
+      description: 'Every retry failed, or the element has no source to load',
     },
     {
       name: 'lazysrc:detached',

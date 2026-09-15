@@ -99,6 +99,36 @@ describe('Lazysrc', () => {
     ]);
   });
 
+  it('settles loading an image with no source in the error state', async () => {
+    const lazysrc = new Lazysrc();
+    const img = document.createElement('img');
+    img.setAttribute('data-lazysrc', '');
+    document.body.append(img);
+    lazysrc.mount(img);
+
+    const outcome = await Promise.race([
+      lazysrc.loadElement(img).then(() => 'settled'),
+      new Promise(resolve => setTimeout(() => resolve('pending'), 200)),
+    ]);
+
+    expect([outcome, img.getAttribute('data-lazysrc-state')]).toEqual(['settled', 'error']);
+  });
+
+  it('finishes loading everything when an image has no source', async () => {
+    const lazysrc = new Lazysrc();
+    const img = document.createElement('img');
+    img.setAttribute('data-lazysrc', '');
+    document.body.append(img);
+    lazysrc.mount(img);
+
+    const outcome = await Promise.race([
+      lazysrc.loadAll().then(() => 'settled'),
+      new Promise(resolve => setTimeout(() => resolve('pending'), 200)),
+    ]);
+
+    expect(outcome).toBe('settled');
+  });
+
   it('counts the images it manages in its status', () => {
     const lazysrc = new Lazysrc();
     ['harbour', 'market'].map(lazyBackground).forEach(panel => lazysrc.mount(panel));

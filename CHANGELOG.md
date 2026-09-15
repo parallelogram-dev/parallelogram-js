@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `custom-elements.json` and the documentation list `<p-uploader-file>`'s default slot, which holds its `<p-uploader-data>` elements.
 - Videoplay removes a managed video's `autoplay` attribute when it mounts and starts playback itself. While the attribute stayed, browsers downloaded every autoplay video at page load, however far below the fold, ignoring `preload`, and could start one off screen or for a user who prefers reduced motion. Without JavaScript the attribute still autoplays the video, and unmounting puts it back.
 - Scrollreveal reveals an element with `data-reveal-once="false"` again when it scrolls back into view while its hide animation is running, where it stayed hidden in view.
+- Lazysrc's `loadElement()` and `loadAll()` resolve for an element with nothing to load, such as an image without any source or an element that is neither an image nor has `data-lazysrc-bg`, which they waited on forever. The element settles in the `error` state and dispatches `lazysrc:error`.
 
 ## [0.5.3] - 2026-09-15
 
