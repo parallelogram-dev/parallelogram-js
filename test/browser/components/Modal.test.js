@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Modal from '../../../src/components/Modal.js';
 import PModal from '../../../src/components/PModal.js';
+import { EventManager } from '../../../src/managers/EventManager.js';
 
 const mountTrigger = (modalAttributes = {}, triggerAttributes = {}) => {
   const modal = document.createElement('p-modal');
@@ -46,6 +47,26 @@ describe('Modal', () => {
 
     expect(modal.id).not.toBe('');
     expect(trigger.getAttribute('aria-controls')).toBe(modal.id);
+  });
+
+  it('reports each open and close to the event bus once', async () => {
+    document.body.innerHTML = `
+      <button id="open-terms" data-modal data-modal-target="#terms">Terms</button>
+      <p-modal id="terms"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const eventBus = new EventManager();
+    const events = [];
+    eventBus.on('modal:opened', () => events.push('opened'));
+    eventBus.on('modal:closed', () => events.push('closed'));
+    new Modal({ eventBus }).mount(document.querySelector('#open-terms'));
+    const terms = document.querySelector('#terms');
+
+    document.querySelector('#open-terms').click();
+    await vi.waitFor(() => expect(events).toContain('opened'), { timeout: 2000 });
+    terms.close();
+    await vi.waitFor(() => expect(events).toContain('closed'), { timeout: 2000 });
+
+    expect(events).toEqual(['opened', 'closed']);
   });
 
   it('creates a working modal programmatically', async () => {
