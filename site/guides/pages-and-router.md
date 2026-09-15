@@ -30,13 +30,14 @@ app.eventBus.on('router:navigate-end', ({ url, status }) => {
 
 ### Router options
 
-| Option                  | Type       | Default            | What it does                                                                                              |
-| ----------------------- | ---------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
-| `timeout`               | `number`   | `10000`            | Milliseconds before a page request is abandoned with a `TimeoutError`.                                    |
-| `loadingClass`          | `string`   | `'router-loading'` | Class on the body and the followed link while a navigation is in progress.                                |
-| `errorClass`            | `string`   | `'router-error'`   | Class on the body and the followed link after a navigation fails.                                         |
-| `fullLoadOnError`       | `boolean`  | `true`             | Load the page normally when a request or swap fails.                                                      |
-| `nonRoutableExtensions` | `string[]` | See below          | Lowercase file extensions, without the dot, that links open natively. Setting it replaces the whole list. |
+| Option                  | Type       | Default            | What it does                                                                                                                    |
+| ----------------------- | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout`               | `number`   | `10000`            | Milliseconds before a page request is abandoned with a `TimeoutError`.                                                          |
+| `loadingClass`          | `string`   | `'router-loading'` | Class on the body and the followed link while a navigation is in progress.                                                      |
+| `errorClass`            | `string`   | `'router-error'`   | Class on the body and the followed link after a navigation fails.                                                               |
+| `fullLoadOnError`       | `boolean`  | `true`             | Load the page normally when a request or swap fails.                                                                            |
+| `historyCache`          | `number`   | `5`                | Pages kept in memory for Back and Forward to show without fetching. `0` fetches every time. See History and scroll restoration. |
+| `nonRoutableExtensions` | `string[]` | See below          | Lowercase file extensions, without the dot, that links open natively. Setting it replaces the whole list.                       |
 
 The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `doc`, `docx`, `xls`, `xlsx`, `ppt`, `pptx`, `csv`, `rtf`, `txt`, `dmg`, `exe`, `pkg`, `apk`, `mp3`, `mp4`, `wav`, `avi`, `mov`, `mkv`, `webm`, `jpg`, `jpeg`, `png`, `gif`, `svg`, `webp`, `avif`, `xml`, `rss` and `ics`.
 
@@ -308,6 +309,10 @@ Scroll only changes when the `main` fragment is replaced.
 The router sets `history.scrollRestoration` to `'manual'` and restores the previous value when destroyed. It remembers each entry's scroll position while the page scrolls, and saves it into `history.state` before adding an entry and when the page is hidden. After a reload, the saved position is restored once the page loads, unless the visitor has already scrolled.
 
 Moving through history within the same document, such as between hash entries, restores the saved position without fetching anything. `router:popstate` isn't emitted for those moves.
+
+The router keeps the HTML of the last `historyCache` pages it showed, 5 by default, in memory. Back and Forward to one of those pages shows it again without a request, and still emits the same events, scrolls and moves focus. Following a link or calling `navigate()` always fetches. Only pages that were shown in place are kept, so failed requests, error statuses and pages that failed to swap in are fetched again. Kept pages last until the visitor leaves the site or reloads.
+
+Pages that must always be fresh on Back, such as a basket or an account page that changes after a form is sent, should turn it off with `historyCache: 0`.
 
 When the browser restores the page from the back/forward cache, the router emits `router:bfcache-restore` and fetches nothing. `router:bfcache-store` is emitted on every `pagehide`, whether or not the browser keeps the page in the cache.
 

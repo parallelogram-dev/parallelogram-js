@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ComponentHost#retry(name)` loads an enhancement component that failed to load for good again, with a fresh set of retries, retrying its failed dependencies too. Call it as `app.pageManager.host.retry(name)`, for example once the connection is back. It returns `false` when that component hasn't failed.
 - `AlertManager#destroy()` removes the listeners that forward `p-toasts:show` and `p-toasts:close` to the event bus, which couldn't be removed before. The `<p-toasts>` element stays, and the shared manager behind `AlertManager.notify()` is unchanged.
 - The `viewTransitions` page manager option swaps a navigation's fragments inside `document.startViewTransition()`, styled with `::view-transition-*` CSS and `view-transition-name`. It is off by default. Browsers without view transitions, users who prefer reduced motion and fragments with a `targetGroupTransitions` entry swap straight away as before.
+- The router keeps the last 5 pages it showed in memory, and Back and Forward show them again without fetching them. Following a link still fetches. Set the `historyCache` router option to the number of pages to keep, or to `0` for pages that must always be fresh on Back.
 
 ### Changed
 
