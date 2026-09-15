@@ -138,12 +138,13 @@ const mountSelect = (markup, container = document.body) => {
 const inputOf = select => select.shadowRoot.querySelector('input');
 const listboxOf = select => select.shadowRoot.querySelector('[role="listbox"]');
 const optionsOf = select => [...select.shadowRoot.querySelectorAll('[role="option"]')];
-const press = (select, key) => {
+const press = (select, key, options = {}) => {
   const event = new KeyboardEvent('keydown', {
     key,
     bubbles: true,
     composed: true,
     cancelable: true,
+    ...options,
   });
   inputOf(select).dispatchEvent(event);
   return event;
@@ -231,6 +232,40 @@ describe('p-select combobox', () => {
     press(select, 'Home');
 
     expect([afterEnd, active()]).toEqual([optionsOf(select).at(-1).id, optionsOf(select)[0].id]);
+  });
+
+  it('moves ten options at a time with Page Down and Page Up', () => {
+    const many = Array.from(
+      { length: 30 },
+      (_, index) => `<option value="${index}">Seat ${index}</option>`
+    ).join('');
+    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    press(select, 'ArrowDown');
+    const active = () => inputOf(select).getAttribute('aria-activedescendant');
+
+    press(select, 'PageDown');
+    const afterPageDown = active();
+    press(select, 'PageUp');
+
+    expect([afterPageDown, active()]).toEqual([optionsOf(select)[10].id, optionsOf(select)[0].id]);
+  });
+
+  it('opens with Alt+Down Arrow and chooses the highlighted option with Alt+Up Arrow', () => {
+    const select = mountSelect(COUNTRIES);
+
+    press(select, 'ArrowDown', { altKey: true });
+    const opened = [
+      inputOf(select).getAttribute('aria-expanded'),
+      inputOf(select).getAttribute('aria-activedescendant'),
+    ];
+    press(select, 'Home');
+    press(select, 'ArrowUp', { altKey: true });
+
+    expect([opened, select.value, inputOf(select).getAttribute('aria-expanded')]).toEqual([
+      ['true', optionsOf(select)[1].id],
+      'us',
+      'false',
+    ]);
   });
 
   it('keeps the highlighted option scrolled into view', () => {
