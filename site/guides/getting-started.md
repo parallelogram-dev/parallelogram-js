@@ -48,10 +48,6 @@ The production build differs from the development build in these ways:
 
 Both builds include source maps. Because the production build has no debug calls, `debug: true` only shows the framework's debug output in the development build. Your own calls to `app.logger.info()` are not removed.
 
-### Deprecated `dev/*` paths
-
-`@parallelogram-js/core/dev/components/*`, `dev/core/*` and `dev/adapters/*` load the development build directly. They are deprecated and removed in 0.6.0. Use the normal paths with the `development` export condition.
-
 ## Start the framework
 
 Create an instance with `Parallelogram.create()`, register components, then call `run()`.
