@@ -70,4 +70,29 @@ describe('web component tokens', () => {
 
     expect(surfaces).toEqual(Array(4).fill('rgb(23, 29, 38)'));
   });
+
+  it('draws the modal panel and toasts with the dark surface and status colours when data-theme is dark', () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    document.documentElement.dataset.theme = 'dark';
+    const toasts = document.createElement('p-toasts');
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = '<h2 slot="title">Release this table?</h2>';
+    document.body.append(toasts, modal);
+    /* Toasts only exist once shown, and the panel only renders once open */
+    toasts.toast({ message: 'Booking saved', timeout: 0 });
+    toasts.toast({ message: 'Payment declined', type: 'error', timeout: 0 });
+    modal.open();
+
+    const colours = [
+      shadowStyle(modal, 'dialog').backgroundColor,
+      shadowStyle(toasts, '.toast.info').backgroundColor,
+      shadowStyle(toasts, '.toast.error').borderTopColor,
+    ];
+    delete document.documentElement.dataset.theme;
+    style.remove();
+
+    expect(colours).toEqual(['rgb(23, 29, 38)', 'rgb(23, 29, 38)', 'rgb(248, 113, 113)']);
+  });
 });
