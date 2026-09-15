@@ -15,6 +15,7 @@ npm install
 | `npm run site`              | Serves the documentation site at `localhost:3000`, rebuilding pages as contracts change                           |
 | `npm run build`             | Builds the library, stylesheets, TypeScript declarations and `custom-elements.json`                               |
 | `npm run test:unit`         | Runs the unit tests in happy-dom                                                                                  |
+| `npm run coverage`          | Runs the unit tests with coverage, failing below the thresholds in `vitest.config.js`                             |
 | `npm run test:browser`      | Runs the browser tests in Chromium, Firefox and WebKit through Playwright                                         |
 | `npm run lint`              | Runs ESLint, including browser compatibility checks against Baseline 2023                                         |
 | `npm run format`            | Formats the repository with Prettier                                                                              |
