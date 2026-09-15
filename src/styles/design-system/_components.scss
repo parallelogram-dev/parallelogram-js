@@ -61,13 +61,13 @@
 @mixin form-control-placeholder {
   &::placeholder {
     color: var(--form-control-placeholder-color);
-    opacity: #{$opacity-muted};
+    opacity: 1;
   }
 
   &[data-placeholder]:empty::before {
     content: attr(data-placeholder);
     color: var(--form-control-placeholder-color);
-    opacity: #{$opacity-muted};
+    opacity: 1;
   }
 }
 

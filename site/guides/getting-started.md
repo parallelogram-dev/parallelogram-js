@@ -279,6 +279,7 @@ Colours come from a small set of roles, and the surface, form control, button an
 | `--color-surface`, `--color-surface-muted`                                | Backgrounds of fields, panels, dialogs and dropdowns, and quieter areas      |
 | `--color-hover`                                                           | Tint behind hovered items                                                    |
 | `--color-border`, `--color-border-strong`                                 | Borders, and borders that need to stand out, such as cards and buttons       |
+| `--color-control-border`                                                  | Form field borders, which need 3:1 contrast to be seen                       |
 | `--color-overlay`, `--color-shadow`                                       | Modal backdrops and shadows                                                  |
 | `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg` | Status colours and their backgrounds                                         |
 | `--color-danger-contrast`                                                 | Text on a danger fill, such as the danger button                             |

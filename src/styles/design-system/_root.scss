@@ -20,6 +20,7 @@
   --color-hover: #{$color-bg-hover};
   --color-border: #{$color-border};
   --color-border-strong: #{$neutral-300};
+  --color-control-border: #{$color-control-border};
   --color-overlay: #{$color-bg-overlay};
   --color-shadow: #{$color-shadow};
   --color-danger: #{$error-dark};
@@ -41,6 +42,7 @@
   --color-hover: rgba(255, 255, 255, 0.08);
   --color-border: rgba(255, 255, 255, 0.14);
   --color-border-strong: #3a4350;
+  --color-control-border: rgba(255, 255, 255, 0.36);
   --color-overlay: rgba(0, 0, 0, 0.6);
   --color-shadow: rgba(0, 0, 0, 0.5);
   --color-danger: #f87171;
@@ -56,7 +58,7 @@
   /* Control surfaces (form inputs, selects, textareas) */
   --surface-control-radius: #{$radius-sm};
   --surface-control-border-width: #{$border-width};
-  --surface-control-border-color: var(--color-border);
+  --surface-control-border-color: var(--color-control-border);
   --surface-control-color-bg: var(--color-surface);
   --surface-control-color-text: #{$color-text};
   --surface-control-shadow: none;
@@ -146,7 +148,7 @@
   --form-control-focus-border-color: var(--color-accent);
 
   /* Hover state */
-  --form-control-hover-border-color: var(--color-border-strong);
+  --form-control-hover-border-color: var(--color-text-muted);
 
   /* Disabled state */
   --form-control-disabled-opacity: #{$opacity-disabled};
