@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Parallelogram` loads `RouterManager` with a dynamic `import()`, and only when `router` options are given, so pages without the router don't download its code. The promise `run()` returns resolves once the router has loaded and started, with `app.router` set. After calling `init()` directly, `app.router` is `null` until then, `router:initialized` is emitted when it starts, and links followed in the meantime load pages normally. Components that mounted before it loaded are given the router. `RouterManager` is still exported from the package root.
 - `PageManager` no longer subscribes to router events or mounts components in its constructor. Call the new `pageManager.start()` after creating it. A second call does nothing, a destroyed manager can't be started again, and `destroy()` works whether or not it started. `Parallelogram` calls `start()` for you.
 - `setState()` writes state only to `data-<component>-state`, and `getElementState()` reads only that attribute.
+- `<p-datetime>` stores, submits and reports local date and time strings like the native inputs: `yyyy-mm-ddThh:mm` in datetime mode and `hh:mm` in time mode, with seconds only when they aren't zero, instead of UTC instants such as `2024-01-15T03:30:00.000Z`. Values, `min`, `max` and linked fields given as ISO instants are still read, as the local date and time they stand for. `format` still decides what is submitted.
 
 ### Removed
 
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `<p-datetime>`'s panel no longer closes when picking a month in the month view, or when another click inside it re-renders the grid before the outside-click check runs.
 - `<p-uploader>`'s hint text set `opacity` to a colour, which browsers ignored; it now uses the muted opacity token.
 
 ## [0.5.4] - 2026-09-15
