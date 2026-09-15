@@ -246,6 +246,7 @@ export default class PDatetime extends HTMLElement {
     this._renderQueued = false;
     this._timeLists = null;
     this._presets = null;
+    this._dayLayout = null;
 
     /* Listeners on the component's own shadow nodes are added once; document listeners are added
        on connect and removed on disconnect */
@@ -1128,17 +1129,32 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * Render the day grid as rows of gridcells, each holding a named day button with a roving tabindex
+   * Render the day grid as rows of gridcells, each holding a named day button with a roving tabindex.
+   * The grid is built only when the month shown, the week start or the min and max change; otherwise
+   * its day buttons are updated in place.
    */
   _renderDays(year, month) {
-    const today = this._dateString(new Date());
     const effMin = this._effectiveMin();
     const effMax = this._effectiveMax();
-    const from = this._parseValue(this.value);
-    const to = this.range ? this._parseValue(this.rangeToValue) : null;
     const hadFocus = this._grid.contains(this.shadowRoot.activeElement);
-    const active = this._resolveActiveDate(year, month);
+    const layout = [year, month, this._weekStart, effMin?.getTime(), effMax?.getTime()].join('|');
 
+    if (layout !== this._dayLayout) {
+      this._dayLayout = layout;
+      this._buildDays(year, month, effMin, effMax);
+    }
+    this._updateDays(this._resolveActiveDate(year, month));
+
+    if (hadFocus) {
+      this._focusActiveCell();
+    }
+  }
+
+  /**
+   * Build the weekday headers and a gridcell for each day of the month, with the days outside min and
+   * max disabled
+   */
+  _buildDays(year, month, effMin, effMax) {
     this._grid.classList.remove('month-view', 'year-view');
     this._grid.setAttribute('role', 'grid');
     this._grid.replaceChildren();
@@ -1176,44 +1192,60 @@ export default class PDatetime extends HTMLElement {
       if (index < leading) continue;
 
       const dt = new Date(year, month, index - leading + 1);
-      const date = this._dateString(dt);
       const button = node(
         'button',
         {
           type: 'button',
           class: 'day',
-          'data-date': date,
-          tabindex: date === active ? '0' : '-1',
+          'data-date': this._dateString(dt),
           'aria-label': dateFormat({ dateStyle: 'full' }).format(dt),
         },
         String(dt.getDate())
       );
 
-      if (date === today) {
-        button.classList.add('today');
-        button.setAttribute('aria-current', 'date');
-      }
       if (this._isDayOutOfRange(dt, effMin, effMax)) {
         button.classList.add('disabled');
         button.setAttribute('aria-disabled', 'true');
       }
 
-      const isFrom = Boolean(from) && this._dateString(from) === date;
-      const isTo = Boolean(to) && this._dateString(to) === date;
-      if (!this.range) {
-        button.classList.toggle('selected', isFrom);
-      } else {
-        button.classList.toggle('range-start', isFrom);
-        button.classList.toggle('range-end', isTo);
-        button.classList.toggle('in-range', Boolean(from && to && dt > from && dt < to));
-      }
-      cell.setAttribute('aria-selected', String(isFrom || isTo));
-
       cell.append(button);
     }
+  }
 
-    if (hadFocus) {
-      this._focusActiveCell();
+  /**
+   * Mark today, the selected day or range, and the day holding the roving tabindex
+   *
+   * @param {string} active - The `yyyy-mm-dd` date that takes focus in the grid
+   */
+  _updateDays(active) {
+    const today = this._dateString(new Date());
+    const from = this._parseValue(this.value);
+    const to = this.range ? this._parseValue(this.rangeToValue) : null;
+    const fromDate = from && this._dateString(from);
+    const toDate = to && this._dateString(to);
+
+    for (const button of this._grid.querySelectorAll('.day')) {
+      const { date } = button.dataset;
+      const dt = this._parseValue(date);
+      const isFrom = date === fromDate;
+      const isTo = date === toDate;
+
+      button.tabIndex = date === active ? 0 : -1;
+      button.classList.toggle('today', date === today);
+      if (date === today) {
+        button.setAttribute('aria-current', 'date');
+      } else {
+        button.removeAttribute('aria-current');
+      }
+
+      button.classList.toggle('selected', !this.range && isFrom);
+      button.classList.toggle('range-start', this.range && isFrom);
+      button.classList.toggle('range-end', this.range && isTo);
+      button.classList.toggle(
+        'in-range',
+        Boolean(this.range && from && to && dt > from && dt < to)
+      );
+      button.parentElement.setAttribute('aria-selected', String(isFrom || isTo));
     }
   }
 
@@ -1363,6 +1395,7 @@ export default class PDatetime extends HTMLElement {
     this._grid.classList.add(viewClass);
     this._grid.setAttribute('role', 'grid');
     this._grid.replaceChildren();
+    this._dayLayout = null;
 
     buttons.forEach((button, index) => {
       if (index % 3 === 0) {
