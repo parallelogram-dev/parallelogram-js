@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A component whose asynchronous `_init` rejects is reported with `page:component-mount-error` instead of `page:component-mounted`, and the host emits `page:component-mounted` for an asynchronous `_init` once its state has resolved. `BaseComponent#mount()` returns the Promise for an asynchronous `_init`, which rejects when it fails.
 - Elements added to the page after their component failed to load for good get the `component-error` class, as the elements waiting at the time did, so stylesheets show their content instead of leaving it hidden.
 - A fragment whose swap fails after its content was replaced, for example on an invalid `focusTarget` selector, is no longer swapped a second time, which ran its scripts and mounted its components again, and is reported with `success: false` in `page:fragments-replaced`.
+- The router leaves clicks to the browser for links inside a shadow root whose host, or one of its ancestors, has `data-router-skip`. It only checked ancestors within the shadow root.
 
 ## [0.5.3] - 2026-09-15
 

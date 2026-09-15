@@ -285,6 +285,15 @@ describe('RouterManager', () => {
       expect(click(document.querySelector('a'), init)).toBe(false);
     });
 
+    it("leaves a click to the browser when an ancestor outside the link's shadow root opts out", () => {
+      document.body.innerHTML = '<nav data-router-skip><div id="menu"></div></nav>';
+      const shadow = document.getElementById('menu').attachShadow({ mode: 'open' });
+      shadow.innerHTML = '<a href="/about">About</a>';
+      start();
+
+      expect(click(shadow.querySelector('a'), { composed: true })).toBe(false);
+    });
+
     it('ignores clicks another handler has already cancelled', () => {
       start();
       const navigateStart = record('router:navigate-start');
