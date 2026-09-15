@@ -63,11 +63,7 @@
 @media (scripting: enabled) {
   [data-tabs]:not([data-tabs-enhanced], .component-error)
     [data-tab-panel]
-    ~ [data-tab-panel]:not([data-tab-panel='active']) {
-    display: none;
-  }
-
-  /* Panels before the active one, in a rule of its own so browsers without :has() keep the one above */
+    ~ [data-tab-panel]:not([data-tab-panel='active']),
   [data-tabs]:not([data-tabs-enhanced], .component-error)
     [data-tab-panel]:has(~ [data-tab-panel='active']) {
     display: none;
