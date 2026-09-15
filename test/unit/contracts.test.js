@@ -50,7 +50,10 @@ async function componentOf(contract) {
 describe.each(contracts.map(contract => [contract.name, contract]))(
   '%s contract',
   (_, contract) => {
-    const source = read(`src/${contract.module}.js`);
+    /* A child element defined in its own module contributes that module's source */
+    const source = [...new Set(itemsOf(contract).map(item => item.module ?? contract.module))]
+      .map(module => read(`src/${module}.js`))
+      .join('\n');
     const attributes = itemsOf(contract).flatMap(item => item.attributes ?? []);
     const attributeNames = new Set(attributes.map(attribute => attribute.name));
     const events = itemsOf(contract).flatMap(item => item.events ?? []);
