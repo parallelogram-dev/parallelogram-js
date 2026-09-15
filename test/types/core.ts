@@ -5,7 +5,6 @@ import Toggle from '@parallelogram-js/core/components/Toggle';
 
 export function configure(): Parallelogram {
   const app = Parallelogram.create({
-    mode: 'development',
     router: { timeout: 5000, loadingClass: 'is-loading' },
     pageManager: {
       containerSelector: 'main',
@@ -25,8 +24,8 @@ export function configure(): Parallelogram {
       dependsOn: ['[data-toggle]'],
     });
 
-  /* @ts-expect-error mode is development or production */
-  Parallelogram.create({ mode: 'staging' });
+  /* @ts-expect-error silent is a boolean */
+  Parallelogram.create({ silent: 'yes' });
 
   app.components.add('[data-lazysrc]', {
     loader: () => import('@parallelogram-js/core/components/Lazysrc'),

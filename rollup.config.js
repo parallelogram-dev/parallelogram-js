@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { babel } from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
-import scss from './rollup-plugin-scss.js';
-import stripLogger from './babel-plugin-strip-logger.js';
+import scss from './scripts/rollup-plugin-scss.js';
+import stripLogger from './scripts/babel-plugin-strip-logger.js';
 
 const entries = (folder, keep = () => true) =>
   fs
@@ -21,7 +21,7 @@ const input = Object.fromEntries([
   ...entries('components', file => !file.endsWith('.contract.js')),
   ...entries('adapters', file => !file.startsWith('_')),
   ...entries('core'),
-  ...entries('managers', file => file !== 'index.js'),
+  ...entries('managers'),
 ]);
 
 const build = ({ dir, production }) => ({

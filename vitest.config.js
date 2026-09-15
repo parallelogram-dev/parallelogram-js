@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
-import scss from './rollup-plugin-scss.js';
+import scss from './scripts/rollup-plugin-scss.js';
 
 export default defineConfig({
   plugins: [scss({ loadPaths: ['src/styles'] })],

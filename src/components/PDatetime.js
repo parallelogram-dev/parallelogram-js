@@ -124,9 +124,9 @@ export default class PDatetime extends HTMLElement {
     this._view = new Date();
     this._step = 15;
     this._weekStart = 1;
-    this._viewMode = 'day'; // 'day', 'month', 'year'
+    this._viewMode = 'day'; /* 'day', 'month', 'year' */
     this._animating = false;
-    this._navigationDirection = null; // 'next' or 'prev'
+    this._navigationDirection = null; /* 'next' or 'prev' */
     this._touchStartX = 0;
     this._touchEndX = 0;
 
@@ -231,7 +231,7 @@ export default class PDatetime extends HTMLElement {
     this._quickDates = this.shadowRoot.querySelector('[data-datetime-quick-dates]');
     this._rangeInfo = this.shadowRoot.querySelector('[data-datetime-range-info]');
     this._currentField = 'from';
-    this._rangeState = null; // 'selecting-from', 'selecting-to', or null
+    this._rangeState = null; /* 'selecting-from', 'selecting-to', or null */
     this._open = false;
     this._openedWith = null;
     this._hideTimer = null;
@@ -943,11 +943,11 @@ export default class PDatetime extends HTMLElement {
     this._panel.setAttribute('aria-label', this.range ? `Choose ${noun} range` : `Choose ${noun}`);
 
     if (this.range) {
-      this._input.hidden = false; // Show first input (from date)
-      this._toInput.hidden = false; // Show second input (to date)
+      this._input.hidden = false; /* Show first input (from date) */
+      this._toInput.hidden = false; /* Show second input (to date) */
       this._rangeInfo.hidden = false;
 
-      // Update range info text based on current state
+      /* Update range info text based on current state */
       if (!this.value) {
         this._rangeInfo.textContent = `Click to select start date`;
       } else if (!this.rangeToValue) {
@@ -956,8 +956,8 @@ export default class PDatetime extends HTMLElement {
         this._rangeInfo.textContent = `Range selected. Click dates to modify.`;
       }
     } else {
-      this._input.hidden = false; // Show first input
-      this._toInput.hidden = true; // Hide second input
+      this._input.hidden = false; /* Show first input */
+      this._toInput.hidden = true; /* Hide second input */
       this._rangeInfo.hidden = true;
     }
   }
@@ -1727,16 +1727,16 @@ export default class PDatetime extends HTMLElement {
   }
 
   _updateFocusRing() {
-    // Remove focused class from both inputs
+    /* Remove focused class from both inputs */
     this._input.classList.remove('is-focused');
     this._toInput.classList.remove('is-focused');
 
-    // Add focused class to the current field
+    /* Add focused class to the current field */
     if (this.range) {
       if (this._currentField === 'to') {
         this._toInput.classList.add('is-focused');
       } else {
-        this._input.classList.add('is-focused'); // First input is "from" in range mode
+        this._input.classList.add('is-focused'); /* First input is "from" in range mode */
       }
     } else {
       this._input.classList.add('is-focused');

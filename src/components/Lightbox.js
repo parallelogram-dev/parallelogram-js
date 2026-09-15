@@ -36,7 +36,8 @@ export class Lightbox extends BaseComponent {
       showNavigation: true,
       keyNavigation: true,
       useDirectionalTransitions: true,
-      preloadStrategy: 'adjacent', // 'adjacent' | 'all' | 'none'
+      /* 'adjacent' | 'all' | 'none' */
+      preloadStrategy: 'adjacent',
       /* BEM class names */
       baseClass: 'lightbox',
       overlayClass: 'lightbox__overlay',

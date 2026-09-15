@@ -62,28 +62,28 @@ export const ComponentStates = {
  * Components can use these in addition to core states
  */
 export const ExtendedStates = {
-  // Loading states (for Lazysrc, async components)
+  /* Loading states (for Lazysrc, async components) */
   LOADING: 'loading',
   LOADED: 'loaded',
 
-  // Animation/reveal states (for Scrollreveal, transitions)
+  /* Animation/reveal states (for Scrollreveal, transitions) */
   HIDDEN: 'hidden',
   REVEALING: 'revealing',
   REVEALED: 'revealed',
 
-  // Interactive states (for Toggle, Modal, etc.)
+  /* Interactive states (for Toggle, Modal, etc.) */
   OPEN: 'open',
   CLOSED: 'closed',
   OPENING: 'opening',
   CLOSING: 'closing',
 
-  // Processing states (for forms, uploaders)
+  /* Processing states (for forms, uploaders) */
   PROCESSING: 'processing',
   COMPLETE: 'complete',
   VALIDATING: 'validating',
   VALIDATED: 'validated',
 
-  // Media states (for video, audio)
+  /* Media states (for video, audio) */
   PLAYING: 'playing',
   PAUSED: 'paused',
   BUFFERING: 'buffering',
@@ -97,14 +97,15 @@ export const ExtendedStates = {
 export function isMountedState(stateValue) {
   if (!stateValue) return false;
 
-  // Core mounted states
+  /* Core mounted states */
   const mountedStates = [
     ComponentStates.INITIALIZING,
     ComponentStates.MOUNTED,
-    ComponentStates.ERROR, // Error state still means component tried to mount
+    /* Error state still means component tried to mount */
+    ComponentStates.ERROR,
   ];
 
-  // Extended states also indicate mounted
+  /* Extended states also indicate mounted */
   const extendedMountedStates = Object.values(ExtendedStates);
 
   return mountedStates.includes(stateValue) || extendedMountedStates.includes(stateValue);
@@ -135,12 +136,12 @@ export function isInitializingState(stateValue) {
  * @returns {string}
  */
 export function getInitialState(currentValue) {
-  // If empty or already a state value, return pending
+  /* If empty or already a state value, return pending */
   if (!currentValue || isMountedState(currentValue) || currentValue === ComponentStates.PENDING) {
     return ComponentStates.PENDING;
   }
 
-  // Preserve original value (might be legacy configuration)
+  /* Preserve original value (might be legacy configuration) */
   return currentValue;
 }
 
