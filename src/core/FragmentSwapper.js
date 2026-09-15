@@ -192,11 +192,12 @@ export class FragmentSwapper {
 
       /* The main fragment scrolls to the top between the out transition and the swap, so old
          content fades out, the page snaps up and the new content fades in. 'instant' overrides any
-         CSS scroll-behavior: smooth on the document. */
+         CSS scroll-behavior: smooth on the document. A hash naming an element in the new page
+         scrolls to that element after the swap instead. */
       if (
         viewTarget === 'main' &&
         !options.preserveScroll &&
-        !options.url?.hash &&
+        !this._hashTarget(options.url, options.doc) &&
         this.options.scrollPosition === 'top' &&
         !options.fromPopstate
       ) {
@@ -721,13 +722,13 @@ export class FragmentSwapper {
     );
   }
 
-  _hashTarget(url) {
-    if (!url?.hash || url.hash === '#') {
+  _hashTarget(url, root = document) {
+    if (!url?.hash || url.hash === '#' || !root) {
       return null;
     }
 
     try {
-      return document.getElementById(decodeURIComponent(url.hash.slice(1)));
+      return root.getElementById(decodeURIComponent(url.hash.slice(1)));
     } catch {
       return null;
     }

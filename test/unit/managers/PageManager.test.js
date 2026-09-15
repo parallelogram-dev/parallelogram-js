@@ -128,6 +128,37 @@ describe('PageManager', () => {
     expect(document.querySelector('main').textContent).toBe('Home');
   });
 
+  it('leaves the page alone when a newer navigation replaces one before it swaps', async () => {
+    document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
+    const bus = new EventManager();
+    start([], bus, { mountDelay: 0 });
+    const navigation = new AbortController();
+
+    const swap = emitNavigation(bus, '<main data-view="main">Pricing</main>', {
+      signal: navigation.signal,
+    });
+    navigation.abort();
+    await swap;
+
+    expect(document.querySelector('main').textContent).toBe('Home');
+  });
+
+  it('mounts nothing more once destroyed while a swap waits to mount components', async () => {
+    document.body.innerHTML = '<main id="app" data-view="main">Home</main>';
+    const bus = new EventManager();
+    const mounted = [];
+    const destroyed = start([component('widget', 'normal', mounted)], bus, { mountDelay: 20 });
+
+    await emitNavigation(bus, '<main data-view="main"><div data-widget></div></main>');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const beforeDestroy = mounted.length;
+    destroyed.destroy();
+    manager = null;
+    await new Promise(resolve => setTimeout(resolve, 40));
+
+    expect(mounted.length).toBe(beforeDestroy);
+  });
+
   it('requests a history entry once when used with the router', async () => {
     document.body.innerHTML = '<main id="app" data-view="main">Start</main>';
     history.replaceState(null, '', '/start');
@@ -230,6 +261,17 @@ describe('PageManager', () => {
         'plans',
         'plans',
       ]);
+    });
+
+    it('scrolls to the top when the address names an element the new page lacks', async () => {
+      start([], bus, options);
+      window.scrollTo(0, 480);
+
+      await navigate('<main data-view="main"><h1>Pricing</h1></main>', {
+        url: new URL('/pricing#plans', location.href),
+      });
+
+      expect(window.scrollY).toBe(0);
     });
 
     it('focuses a field marked autofocus in the new content', async () => {
