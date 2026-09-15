@@ -12,12 +12,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  check:
     runs-on: ubuntu-latest
-    environment: npm
-    permissions:
-      contents: read
-      id-token: write
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      tarball: ${{ steps.pack.outputs.tarball }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -25,10 +24,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Check the tag, the branch and npm
+      - name: Check the tag and the branch
+        id: tag
         run: |
           version=$(node -p "require('./package.json').version")
           if [ "$GITHUB_REF_NAME" != "v$version" ]; then
@@ -39,13 +38,7 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME points at a commit that isn't on main"
             exit 1
           fi
-          node -e "
-            const [major, minor, patch] = process.argv[1].split('.').map(Number);
-            if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) {
-              console.error('::error::Trusted publishing needs npm 11.5.1 or later, found ' + process.argv[1]);
-              process.exit(1);
-            }
-          " "$(npm --version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - run: npm ci
       - run: npm run lint
@@ -59,10 +52,51 @@ jobs:
       - run: npm run check:types
       - run: npm run check:size
 
-      - name: Publish to npm
+      - name: Pack
+        id: pack
         run: |
-          version=$(node -p "require('./package.json').version")
-          case "$version" in
-            *-*) npm publish --tag next ;;
-            *) npm publish ;;
+          tarball=$(npm pack --ignore-scripts --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: package
+          path: ${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Check npm
+        run: |
+          node -e "
+            const [major, minor, patch] = process.argv[1].split('.').map(Number);
+            if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) {
+              console.error('::error::Trusted publishing needs npm 11.5.1 or later, found ' + process.argv[1]);
+              process.exit(1);
+            }
+          " "$(npm --version)"
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: package
+
+      - name: Publish to npm
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          TARBALL: ${{ needs.check.outputs.tarball }}
+        run: |
+          case "$VERSION" in
+            *-*) npm publish "./$TARBALL" --tag next ;;
+            *) npm publish "./$TARBALL" ;;
           esac
