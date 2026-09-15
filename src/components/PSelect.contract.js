@@ -132,16 +132,52 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
-    { name: '--select-text', description: 'Text colour' },
-    { name: '--select-border-color', description: 'Input border colour' },
-    { name: '--select-focus-color', description: 'Focus ring colour' },
-    { name: '--select-hover-bg', description: 'Background of a hovered option' },
-    { name: '--select-current-bg', description: 'Background of the highlighted option' },
-    { name: '--select-selected-bg', description: 'Background of the chosen option' },
-    { name: '--menu-bg', description: 'List background' },
-    { name: '--menu-border-color', description: 'List border colour' },
+    {
+      name: '--select-text',
+      default: 'var(--surface-control-color-text)',
+      description: 'Text colour',
+    },
+    {
+      name: '--select-border-color',
+      default: 'var(--surface-control-border-color)',
+      description: 'Input border colour',
+    },
+    {
+      name: '--select-focus-color',
+      default: 'var(--color-accent)',
+      description: 'Focus ring colour',
+    },
+    {
+      name: '--select-hover-bg',
+      default: 'var(--surface-dropdown-item-hover-bg)',
+      description: 'Background of a hovered option',
+    },
+    {
+      name: '--select-current-bg',
+      default: 'var(--surface-dropdown-item-current-bg)',
+      description: 'Background of the highlighted option',
+    },
+    {
+      name: '--select-selected-bg',
+      default: 'var(--surface-dropdown-item-selected-bg)',
+      description: 'Background of the chosen option',
+    },
+    {
+      name: '--menu-bg',
+      default: 'var(--surface-dropdown-color-bg)',
+      description: 'List background',
+    },
+    {
+      name: '--menu-border-color',
+      default: 'var(--surface-dropdown-border-color)',
+      description: 'List border colour',
+    },
     { name: '--menu-border-radius', description: 'List corner radius' },
-    { name: '--menu-shadow', description: 'List shadow' },
+    {
+      name: '--menu-shadow',
+      default: 'var(--surface-dropdown-shadow)',
+      description: 'List shadow',
+    },
   ],
   examples: [
     {
