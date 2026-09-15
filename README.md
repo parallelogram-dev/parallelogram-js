@@ -16,6 +16,7 @@ The package is ESM only and targets Baseline 2023 browsers: Chrome and Edge 120,
 - [Writing a component](https://dev.parallelogram.com.au/writing-components.html)
 - [Events and alerts](https://dev.parallelogram.com.au/events-and-alerts.html)
 - [Upgrading from 0.4 to 0.5](https://dev.parallelogram.com.au/upgrading.html)
+- [llms.txt](https://dev.parallelogram.com.au/llms.txt), the documentation index for coding agents
 - [Changelog](CHANGELOG.md)
 
 ## License

@@ -1,7 +1,14 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import scss from '../scripts/rollup-plugin-scss.js';
-import { componentsDir, guidesDir, repoRoot, siteRoot, writePages } from './build/pages.js';
+import {
+  componentsDir,
+  guidesDir,
+  loadDiscoveryFiles,
+  repoRoot,
+  siteRoot,
+  writePages,
+} from './build/pages.js';
 
 const styles = path.join(repoRoot, 'src/styles');
 
@@ -40,13 +47,43 @@ function contractPages() {
   };
 }
 
+const CONTENT_TYPES = {
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+};
+
+/**
+ * Serve llms.txt, llms-full.txt, sitemap.xml and robots.txt during development, generated afresh
+ * for each request, and emit them at the root of the built site
+ */
+function discoveryFiles() {
+  return {
+    name: 'discovery-files',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        const name = new URL(request.url, 'http://localhost').pathname.slice(1);
+        if (!Object.hasOwn(CONTENT_TYPES, path.extname(name))) return next();
+        const files = await loadDiscoveryFiles();
+        if (!Object.hasOwn(files, name)) return next();
+        response.setHeader('Content-Type', CONTENT_TYPES[path.extname(name)]);
+        response.end(files[name]);
+      });
+    },
+    async generateBundle() {
+      for (const [fileName, source] of Object.entries(await loadDiscoveryFiles())) {
+        this.emitFile({ type: 'asset', fileName, source });
+      }
+    },
+  };
+}
+
 const input = await writePages();
 
 export default defineConfig({
   root: siteRoot,
   base: './',
   publicDir: 'public',
-  plugins: [componentStyles(), contractPages()],
+  plugins: [componentStyles(), contractPages(), discoveryFiles()],
   css: {
     preprocessorOptions: {
       scss: { loadPaths: [styles] },
