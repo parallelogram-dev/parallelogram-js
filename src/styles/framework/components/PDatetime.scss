@@ -28,7 +28,7 @@
 
   /* Colors — follow the colour roles and dark theme; override at the host with --datetime-*. */
   --datetime-text: currentColor;
-  --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.5));
+  --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.55));
   --datetime-accent: var(--color-accent, #3b82f6);
   --datetime-hover: var(--color-hover, rgba(0, 0, 0, 0.05));
   --datetime-bg: var(--surface-dropdown-color-bg, var(--color-surface, #fff));
@@ -255,7 +255,6 @@ button:disabled {
 .input[data-placeholder]:empty::before {
   content: attr(data-placeholder);
   color: var(--datetime-muted);
-  opacity: var(--datetime-placeholder-opacity);
 }
 
 /* Buttons - Base Reset */
