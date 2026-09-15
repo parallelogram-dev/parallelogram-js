@@ -30,3 +30,50 @@ describe('SelectLoader in a form', () => {
     await vi.waitFor(() => expect(target.textContent).toBe('/fragments/laptop.html'));
   });
 });
+
+describe('SelectLoader before the router loads', () => {
+  const mountWithoutRouter = eventBus => {
+    document.body.innerHTML = `
+      <select data-selectloader data-selectloader-target="#product-details" data-selectloader-transition="none">
+        <option value="">Choose a product</option>
+        <option value="/fragments/laptop.html" selected>Laptop</option>
+      </select>
+      <div id="product-details"></div>`;
+    const select = document.querySelector('select');
+    const loader = new SelectLoader({ eventBus });
+    loader.mount(select);
+    return { loader, select, target: document.querySelector('#product-details') };
+  };
+
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('loads the selected fragment once the router starts', async () => {
+    const eventBus = new EventManager();
+    const router = { get: vi.fn(async url => ({ data: `<p>${url}</p>` })) };
+    const { loader, target } = mountWithoutRouter(eventBus);
+
+    loader.router = router;
+    eventBus.emit('router:initialized', { currentUrl: new URL(location.href) });
+
+    await vi.waitFor(() => expect(target.textContent).toBe('/fragments/laptop.html'));
+    expect([router.get.mock.calls.length, target.querySelector('.select-loader__error')]).toEqual([
+      1,
+      null,
+    ]);
+  });
+
+  it('does not load when unmounted before the router starts', async () => {
+    const eventBus = new EventManager();
+    const router = { get: vi.fn(async url => ({ data: `<p>${url}</p>` })) };
+    const { loader, select, target } = mountWithoutRouter(eventBus);
+
+    loader.unmount(select);
+    loader.router = router;
+    eventBus.emit('router:initialized', { currentUrl: new URL(location.href) });
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect([router.get.mock.calls.length, target.textContent.trim()]).toEqual([0, '']);
+  });
+});
