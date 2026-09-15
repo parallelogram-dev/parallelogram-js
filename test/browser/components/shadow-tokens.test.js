@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import '../../../src/components/PDatetime.js';
 import '../../../src/components/PModal.js';
 import '../../../src/components/PSelect.js';
 import '../../../src/components/PToasts.js';
 import '../../../src/components/PUploader.js';
+import datetimeStyles from '../../../src/styles/framework/components/PDatetime.scss';
 import modalStyles from '../../../src/styles/framework/components/PModal.scss';
 import selectStyles from '../../../src/styles/framework/components/PSelect.scss';
 import toastStyles from '../../../src/styles/framework/components/PToasts.scss';
 import fileStyles from '../../../src/styles/framework/components/PUploader.scss';
 import hostStyles from '../../../src/styles/framework/components/PUploaderHost.scss';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const shadowStyle = (host, selector) => getComputedStyle(host.shadowRoot.querySelector(selector));
 
@@ -17,6 +20,7 @@ describe('web component tokens', () => {
   });
 
   it.each([
+    ['PDatetime', datetimeStyles],
     ['PModal', modalStyles],
     ['PSelect', selectStyles],
     ['PToasts', toastStyles],
@@ -43,5 +47,27 @@ describe('web component tokens', () => {
         getComputedStyle(uploader).borderTopLeftRadius,
       ].filter(value => value === 'rgba(0, 0, 0, 0)' || value === '0px')
     ).toEqual([]);
+  });
+
+  it('draws form control fields and panels with the dark surface when data-theme is dark', () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    document.documentElement.dataset.theme = 'dark';
+    const select = document.createElement('p-select');
+    select.append(new Option('Canada', 'ca'));
+    const datetime = document.createElement('p-datetime');
+    document.body.append(select, datetime);
+
+    const surfaces = [
+      getComputedStyle(select).backgroundColor,
+      shadowStyle(select, '.menu').backgroundColor,
+      getComputedStyle(datetime).backgroundColor,
+      shadowStyle(datetime, '.panel').backgroundColor,
+    ];
+    delete document.documentElement.dataset.theme;
+    style.remove();
+
+    expect(surfaces).toEqual(Array(4).fill('rgb(23, 29, 38)'));
   });
 });

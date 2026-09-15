@@ -185,15 +185,32 @@ export default {
   cssProperties: [
     {
       name: '--datetime-accent',
+      default: 'var(--color-accent)',
       description: 'Selected days, focus rings and primary buttons',
     },
-    { name: '--datetime-bg', description: 'Panel background' },
-    { name: '--datetime-text', description: 'Text colour' },
-    { name: '--datetime-muted', description: 'Muted text' },
-    { name: '--datetime-border', description: 'Field and panel border' },
+    {
+      name: '--datetime-bg',
+      default: 'var(--surface-dropdown-color-bg)',
+      description: 'Field and panel background',
+    },
+    { name: '--datetime-text', default: 'currentColor', description: 'Text colour' },
+    { name: '--datetime-muted', default: 'var(--color-text-muted)', description: 'Muted text' },
+    {
+      name: '--datetime-border',
+      default: 'var(--color-border)',
+      description: 'Field and panel border',
+    },
     { name: '--datetime-radius', description: 'Corner radius' },
-    { name: '--datetime-shadow', description: 'Panel shadow' },
-    { name: '--datetime-hover', description: 'Background of hovered days and buttons' },
+    {
+      name: '--datetime-shadow',
+      default: '0 4px 6px var(--color-shadow)',
+      description: 'Panel shadow',
+    },
+    {
+      name: '--datetime-hover',
+      default: 'var(--color-hover)',
+      description: 'Background of hovered days and buttons',
+    },
     { name: '--datetime-cell-size', description: 'Size of each day in the grid' },
     { name: '--datetime-panel-min-width', description: 'Narrowest the panel gets' },
     { name: '--datetime-animation-duration', description: 'Length of the panel animation' },

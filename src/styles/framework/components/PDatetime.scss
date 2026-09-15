@@ -1,9 +1,8 @@
 /* PDatetime Web Component Styles
  *
- * Self-contained — no SCSS or CSS imports. Every token has a concrete
- * default on `:host` so the component drops in anywhere. Consumers
- * override behaviour via the `--datetime-*` custom properties, never
- * by reaching for unrelated design-system tokens. */
+ * Self-contained — no SCSS or CSS imports. Colours default to the design system's surface tokens
+ * and colour roles, with light fallbacks so the component drops in anywhere. Consumers override
+ * them via the `--datetime-*` custom properties. */
 
 /* Global Hidden Rule */
 [hidden] {
@@ -27,15 +26,15 @@
   border-radius: var(--datetime-radius);
   background: var(--datetime-bg);
 
-  /* Colors — concrete defaults; override at the host with --datetime-*. */
+  /* Colors — follow the colour roles and dark theme; override at the host with --datetime-*. */
   --datetime-text: currentColor;
-  --datetime-muted: rgba(0, 0, 0, 0.5);
-  --datetime-accent: #3b82f6;
-  --datetime-hover: rgba(0, 0, 0, 0.05);
-  --datetime-bg: #fff;
-  --datetime-border: rgba(0, 0, 0, 0.1);
-  --datetime-shadow-color: rgba(0, 0, 0, 0.12);
-  --datetime-btn-hover-bg: rgba(0, 0, 0, 0.05);
+  --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.5));
+  --datetime-accent: var(--color-accent, #3b82f6);
+  --datetime-hover: var(--color-hover, rgba(0, 0, 0, 0.05));
+  --datetime-bg: var(--surface-dropdown-color-bg, var(--color-surface, #fff));
+  --datetime-border: var(--color-border, rgba(0, 0, 0, 0.1));
+  --datetime-shadow-color: var(--color-shadow, rgba(0, 0, 0, 0.12));
+  --datetime-btn-hover-bg: var(--color-hover, rgba(0, 0, 0, 0.05));
 
   /* Opacity */
   --datetime-placeholder-opacity: 0.6;
@@ -62,7 +61,7 @@
   --datetime-today-border-width: 2px;
 
   /* Shadow */
-  --datetime-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  --datetime-shadow: 0 4px 6px var(--datetime-shadow-color);
 
   /* Timing */
   --datetime-transition: 0.15s ease;
