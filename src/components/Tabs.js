@@ -15,6 +15,7 @@ const MANAGED_ATTRIBUTES = [
   'aria-selected',
   'aria-controls',
   'aria-labelledby',
+  'aria-orientation',
   'data-tab-panel',
 ];
 
@@ -46,7 +47,8 @@ const MANAGED_ATTRIBUTES = [
  *
  * @attributes
  * - data-tabs: on the container; Tabs adds data-tabs-enhanced and the tabs--enhanced class
- * - data-tabs-list: the element that holds the tabs
+ * - data-tabs-list: the element that holds the tabs; Tabs gives it aria-orientation="horizontal"
+ *   unless it has one, and the Up and Down arrow keys move between tabs only when it is "vertical"
  * - data-tab: on each tab button or link, the id of its panel
  * - data-tabs-panels: the element that holds the panels
  * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive
@@ -226,6 +228,9 @@ export default class Tabs extends BaseComponent {
     });
 
     state.tabsList.setAttribute('role', 'tablist');
+    if (!state.tabsList.hasAttribute('aria-orientation')) {
+      state.tabsList.setAttribute('aria-orientation', 'horizontal');
+    }
   }
 
   /**
@@ -295,6 +300,10 @@ export default class Tabs extends BaseComponent {
   _handleKeyDown(event, element, state) {
     const currentIndex = state.tabs.findIndex(tab => tab === event.currentTarget);
     let targetIndex = -1;
+
+    /* Up and Down only move between tabs stacked vertically, and scroll the page otherwise */
+    const upOrDown = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+    if (upOrDown && state.tabsList.getAttribute('aria-orientation') !== 'vertical') return;
 
     switch (event.key) {
       case 'ArrowRight':
