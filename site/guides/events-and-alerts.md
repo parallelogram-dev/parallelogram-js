@@ -99,10 +99,10 @@ Sent when the router is enabled with the `router` option.
 
 ### PageManager
 
-| Event                      | When it fires                                             | Payload                          |
-| -------------------------- | --------------------------------------------------------- | -------------------------------- |
-| `page-manager:initialized` | The page manager finished setting up and mounted the page | `{ containerSelector, options }` |
-| `page-manager:destroyed`   | The page manager was destroyed                            | `{}`                             |
+| Event                      | When it fires                                      | Payload                          |
+| -------------------------- | -------------------------------------------------- | -------------------------------- |
+| `page-manager:initialized` | `start()` finished setting up and mounted the page | `{ containerSelector, options }` |
+| `page-manager:destroyed`   | The page manager was destroyed                     | `{}`                             |
 
 ### Components (ComponentHost)
 
