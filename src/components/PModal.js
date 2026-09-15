@@ -141,11 +141,17 @@ export default class PModal extends HTMLElement {
       { signal }
     );
 
-    /* The browser can close a modal dialog itself, for example on a repeated Escape */
+    /* The browser can close a modal dialog itself without a cancel event, as Chromium does on a
+       repeated Escape. A modal Escape can't close opens again; any other records that it closed. */
     this._dialog.addEventListener(
       'close',
       () => {
-        if (this.hasAttribute('open')) {
+        if (!this.hasAttribute('open')) return;
+
+        if (!this._closing && !(this._isKeyboardEnabled() && this._isClosable())) {
+          this._dialog.showModal();
+          this._focusInitial();
+        } else {
           this.removeAttribute('open');
         }
       },

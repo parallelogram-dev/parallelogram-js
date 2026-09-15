@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `<p-modal>` panel shows a focus outline when it takes focus because it has nothing focusable inside, using `--framework-focus-color` and `--framework-focus-width`, and `Highlight` in forced colours. The outline was removed.
 - Tabs gives its tab list `aria-orientation="horizontal"` unless the markup sets one, and the Up and Down arrow keys move between tabs only in a list marked `aria-orientation="vertical"`. They moved between horizontal tabs too, so the page couldn't be scrolled with them from a tab.
 - A Modal trigger's `data-modal-size`, `data-modal-closable`, `data-modal-backdrop-close` and `data-modal-keyboard` apply to its `<p-modal>` only while that trigger has it open, and the modal's own values come back when it closes. Each trigger wrote its settings onto the shared modal when it mounted, so with several triggers the last one mounted decided for all of them. `updateConfig()` changes the modal straight away only while that trigger has it open.
+- A `<p-modal>` with `data-modal-closable="false"` or `data-modal-keyboard="false"` opens again when the browser closes its dialog without a cancel event, as Chromium does when Escape is pressed again without user activation. It could be dismissed that way.
 
 ## [0.5.3] - 2026-09-15
 
