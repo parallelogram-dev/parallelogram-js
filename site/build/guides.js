@@ -17,6 +17,7 @@ const markdown = new Marked({ gfm: true });
  * @property {string} description - The summary as plain text
  * @property {string} summary - The summary as HTML
  * @property {string} content - The sections as HTML
+ * @property {string} markdown - The guide's Markdown, as written
  */
 
 /** The order guides appear in, by slug; guides not listed follow in title order */
@@ -99,5 +100,6 @@ ${withTableWrappers(markdown.parser(tokens))}</section>`;
     description: plainText(summary.text),
     summary: markdown.parseInline(summary.text),
     content,
+    markdown: source.trim(),
   };
 }
