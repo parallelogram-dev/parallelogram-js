@@ -267,7 +267,44 @@ The package stylesheet declares these custom properties on `:root`. Set them in 
 | `--framework-focus-color`, `--framework-focus-width`, `--framework-focus-offset`                                                    | Focus outlines on framework components                                                                                                                                                                                                                               |
 | `--framework-transition-duration`, `--framework-transition-easing`                                                                  | How focus outlines transition                                                                                                                                                                                                                                        |
 
-When the user prefers a dark colour scheme, form fields, secondary button hovers and panels switch to dark values; set the same properties inside `@media (prefers-color-scheme: dark)` to change them. Properties for one component, such as `--modal-panel-bg` or `--toggle-transition-duration`, are listed under CSS custom properties on that component's page.
+### Colour tokens and dark mode
+
+Colours come from a small set of roles, and the surface, form control, button and panel properties above read them. Set a role to change everything that uses it, or a surface property to change one surface.
+
+| Role                                                                      | What it colours                                                              |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `--color-accent`, `--color-accent-hover`                                  | Primary buttons, focus rings and focused field borders, and selected options |
+| `--color-accent-contrast`                                                 | Text on the accent                                                           |
+| `--color-text-muted`                                                      | Placeholders and secondary text                                              |
+| `--color-surface`, `--color-surface-muted`                                | Backgrounds of fields, panels, dialogs and dropdowns, and quieter areas      |
+| `--color-hover`                                                           | Tint behind hovered items                                                    |
+| `--color-border`, `--color-border-strong`                                 | Borders, and borders that need to stand out, such as cards and buttons       |
+| `--color-overlay`, `--color-shadow`                                       | Modal backdrops and shadows                                                  |
+| `--color-danger`, `--color-success`, `--color-warning`, each with a `-bg` | Status colours and their backgrounds                                         |
+
+Text colour isn't a role: surfaces inherit it from the page.
+
+The dark theme redefines only the roles. It applies when the operating system prefers a dark colour scheme, and `data-theme` on `<html>` forces either theme: `data-theme="dark"` always uses it, and `data-theme="light"` never does. Set roles for the dark theme in the same places.
+
+```css
+:root {
+  --color-accent: #7c3aed;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-accent: #a78bfa;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-accent: #a78bfa;
+}
+```
+
+Set roles on `:root`. The surface properties read them there, so a role set on an element further down the page doesn't reach them. The stylesheet doesn't set `color-scheme` or the page's own text and background colours, so set `color-scheme: light dark`, or match it to `data-theme`, and style the page to match.
+
+Properties for one component, such as `--modal-panel-bg` or `--toggle-transition-duration`, are listed under CSS custom properties on that component's page.
 
 Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. A target the markup marks `data-toggle-state="closed"` is hidden before Toggle mounts, but only while scripts are enabled. Tabs' stylesheet shows only the first panel until Tabs mounts, or the panel the markup marks `data-tab-panel="active"`, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
 

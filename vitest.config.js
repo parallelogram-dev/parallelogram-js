@@ -32,6 +32,9 @@ export default defineConfig({
             enabled: true,
             headless: true,
             provider: playwright(),
+            commands: {
+              emulateColorScheme: ({ page }, colorScheme) => page.emulateMedia({ colorScheme }),
+            },
             instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
           },
         },
