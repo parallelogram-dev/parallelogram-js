@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Colour roles on `:root` in the package stylesheet: `--color-accent`, `--color-accent-hover`, `--color-accent-contrast`, `--color-text-muted`, `--color-surface`, `--color-surface-muted`, `--color-hover`, `--color-border`, `--color-border-strong`, `--color-overlay`, `--color-shadow`, and `--color-danger`, `--color-success` and `--color-warning` with a `-bg` for each. The surface, form control, button, panel and modal tokens now read them, so setting a role changes every surface that uses it. Text colour is still inherited.
+- A dark theme that redefines only the colour roles. It applies when the operating system prefers a dark colour scheme, unless `<html>` has `data-theme="light"`, and whenever `<html>` has `data-theme="dark"`. It replaces the dark values the stylesheet set for form fields, secondary button hovers and panels. Pages still set `color-scheme` themselves.
+
+### Changed
+
+- The default light values are unchanged except where tokens now share a role: the danger button is `#dc2626` instead of `#ef4444`, and 15% darker on hover instead of `#dc2626`; hovered dropdown options use a 5% black tint instead of `#f5f5f5`; selected dropdown options use 12% of the accent instead of 10%; and the dialog shadow uses the 12% black shadow colour instead of 50% black.
+
 ## [0.6.1] - 2026-09-15
 
 ### Fixed
