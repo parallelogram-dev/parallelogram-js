@@ -63,7 +63,8 @@ const addMonths = (date, months) => {
  * @attributes
  * - mode: "date" | "datetime" | "time" (default: "date") - Controls picker type (date, datetime, or time only)
  * - value: string - Current value (or start of the range): `yyyy-mm-dd` in date mode, an ISO
- *   instant in datetime and time modes. Date-only values are always read as local dates.
+ *   instant in datetime and time modes. Date-only values are always read as local dates, and time
+ *   mode also reads `HH:mm` or `HH:mm:ss` as that time today.
  * - name: string - Form field name. The element is form-associated and submits its own value.
  * - time-format: "12" | "24" (default: "24") - Time display format
  * - show-quick-dates: boolean - Shows quick date preset buttons
@@ -1429,9 +1430,8 @@ export default class PDatetime extends HTMLElement {
       valueToUse = this.value;
     }
 
-    if (valueToUse) {
-      const date = this._parseValue(valueToUse);
-
+    const date = this._parseValue(valueToUse);
+    if (date) {
       if (is12Hour) {
         let hours = date.getHours();
         this._ampm.value = hours >= 12 ? 'PM' : 'AM';
@@ -1639,13 +1639,20 @@ export default class PDatetime extends HTMLElement {
   }
 
   /**
-   * A Date for a stored value. `yyyy-mm-dd` is read as a local date; anything else goes to Date.
+   * A Date for a stored value. `yyyy-mm-dd` is read as a local date, and in time mode `HH:mm` or
+   * `HH:mm:ss` as that time today; anything else goes to Date.
    *
    * @param {string} value
    * @returns {Date|null}
    */
   _parseValue(value) {
     if (!value) return null;
+    const time = this.mode === 'time' && /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/.exec(value);
+    if (time) {
+      const today = new Date();
+      today.setHours(Number(time[1]), Number(time[2]), Number(time[3] ?? 0), 0);
+      return today;
+    }
     const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
     const date = dateOnly
       ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))

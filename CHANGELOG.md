@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `<p-select>` given its value in its `value` attribute, such as one rendered by a server, keeps that value when a form resets, where it cleared it, and shows it when an `<option selected>` names a different option. The attribute is the default when it names an option; otherwise the selected option is.
 - A disabled `<p-datetime>`, or one in a disabled fieldset, disables its value fields as well as its calendar button, so they can't be focused or open the panel, and looks dimmed through `--datetime-disabled-opacity`.
 - A `<p-toasts>` that moved inside an open modal returns to its place when the next toast is shown after that modal was removed from the page without closing. It was removed along with the modal, so a page keeping its own reference to the element showed later toasts nowhere.
+- `<p-datetime>` in datetime or time mode no longer throws while rendering a value it can't read, such as `value="14:30"` in datetime mode; the time selects are left at their first options. Time mode reads a plain `HH:mm` or `HH:mm:ss` value as that time today.
 
 ## [0.5.3] - 2026-09-15
 

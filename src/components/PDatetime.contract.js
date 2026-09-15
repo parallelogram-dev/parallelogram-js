@@ -33,7 +33,8 @@ export default {
       name: 'value',
       type: 'string',
       property: 'value',
-      description: 'The value, or the start of the range: yyyy-mm-dd in date mode, otherwise ISO',
+      description:
+        'The value, or the start of the range: yyyy-mm-dd in date mode, otherwise ISO; time mode also reads HH:mm or HH:mm:ss as that time today',
     },
     { name: 'name', type: 'string', property: 'name', description: 'The form field name' },
     {

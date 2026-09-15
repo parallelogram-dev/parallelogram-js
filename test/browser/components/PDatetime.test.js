@@ -129,6 +129,34 @@ describe('p-datetime', () => {
     expect([picker.value, picker.rangeToValue]).toEqual(['', '']);
   });
 
+  it.each([
+    ['date', 'someday'],
+    ['datetime', '14:30'],
+    ['time', 'half past two'],
+  ])('opens in %s mode with a value it cannot read, %s', (mode, value) => {
+    const picker = renderPicker({ mode, value });
+
+    expect(() => picker.open()).not.toThrow();
+  });
+
+  it('reads a plain HH:mm value in time mode as that time today', () => {
+    const picker = renderPicker({ mode: 'time', value: '14:30' });
+
+    picker.open();
+
+    expect([
+      shadow(picker, '[data-datetime-hour]').value,
+      shadow(picker, '[data-datetime-minute]').value,
+      shadow(picker, '[data-datetime-input]').textContent,
+    ]).toEqual([
+      '14',
+      '30',
+      new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(
+        new Date(2020, 0, 1, 14, 30)
+      ),
+    ]);
+  });
+
   it('leaves the host element’s attributes and styles alone', async () => {
     const picker = renderPicker({ mode: 'date' });
 
