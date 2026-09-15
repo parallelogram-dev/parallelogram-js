@@ -77,7 +77,7 @@ Every component has a contract, `src/components/<Name>.contract.js`, describing 
 
 - Class names follow BEM: `block`, `block__element` and `block--modifier`.
 - Use `@use`, not `@import`, and design tokens as custom properties with fallbacks.
-- Sizes are `xs`, `sm`, `md`, `lg` and `xl`, in class modifiers and attribute values alike.
+- Graded sizes are `xs`, `sm`, `md`, `lg` and `xl`, in class modifiers and attribute values alike. A size outside that scale gets a descriptive name, such as `<p-modal>`'s `data-modal-size="fullscreen"`.
 - Focus stays visible with a solid outline, works in forced colours, and motion is skipped when the user prefers reduced motion.
 
 ## Accessibility
