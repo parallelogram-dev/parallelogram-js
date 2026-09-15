@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `registerTrackerAdapter()` takes an optional third argument, `{ ids, origins }`, limiting what DeferTracker's blocks can load. With `ids`, a block whose tracker id (`id`, `site`, `domain` or `scriptId`) isn't listed is marked `error`, logs a warning and its adapter isn't called. Register Tag Manager with `ids`, since a container's Custom HTML tags run any script; DeferTracker warns once when `gtm` starts without them. Calls without options behave as before.
+- `<p-uploader-file>` has its own import path, `@parallelogram-js/core/components/PUploaderFile`, which defines only that element. `components/PUploader` still defines it and exports `PUploaderFile`, and custom-elements.json lists it under its new module.
 
 - DataTable's pagination and status text can be translated: `data-datatable-status-message` (with `{from}`, `{to}` and `{total}`), `data-datatable-pagination-label`, `data-datatable-previous-text`, `data-datatable-previous-label`, `data-datatable-next-text`, `data-datatable-next-label` and `data-datatable-page-label` (with `{page}`). The English defaults are unchanged.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.

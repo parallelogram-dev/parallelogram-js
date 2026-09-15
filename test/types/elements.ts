@@ -1,6 +1,7 @@
 import PModal from '@parallelogram-js/core/components/PModal';
 import PSelect from '@parallelogram-js/core/components/PSelect.js';
 import PUploader, { PUploaderFile } from '@parallelogram-js/core/components/PUploader';
+import { PUploaderFile as UploaderFile } from '@parallelogram-js/core/components/PUploaderFile';
 import '@parallelogram-js/core/components/PDatetime';
 import '@parallelogram-js/core/components/PToasts';
 
@@ -23,6 +24,8 @@ export function tagNameMap(): void {
   const uploader: PUploader = document.createElement('p-uploader');
   uploader.requestHeaders = () => ({ 'X-CSRF-Token': 'token' });
   const file: PUploaderFile | null = uploader.querySelector('p-uploader-file');
+  const sameFile: UploaderFile | null = file;
+  sameFile?.setAttribute('filename', 'photo.jpg');
   file?.addEventListener('p-uploader-file:delete', event => event.detail.fileId.trim());
 
   const datetime = document.createElement('p-datetime');

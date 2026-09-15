@@ -181,6 +181,7 @@
     "components/PSelect.js": 6354,
     "components/PToasts.js": 3314,
     "components/PUploader.js": 11245,
+    "components/PUploaderFile.js": 6564,
     "components/Scrollhide.js": 3930,
     "components/Scrollreveal.js": 4491,
     "components/SelectLoader.js": 4854,
