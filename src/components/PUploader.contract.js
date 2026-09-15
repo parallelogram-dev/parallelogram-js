@@ -162,6 +162,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
   elements: [
     {
       tag: 'p-uploader-file',
+      module: 'components/PUploaderFile',
       description: 'A file, uploaded or existing, with its preview, fields and actions',
       attributes: [
         { name: 'file-id', type: 'string', description: "The file's id on the server" },
