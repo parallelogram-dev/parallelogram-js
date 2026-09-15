@@ -242,4 +242,14 @@ describe('Tabs orientation', () => {
       false
     );
   });
+
+  it('selects the tab whose panel the markup marks active', () => {
+    const container = mount();
+    tabs.unmount(container);
+    container.querySelector('#billing').setAttribute('data-tab-panel', 'active');
+
+    tabs.mount(container);
+
+    expect(tabs.getActiveTab(container)).toBe('billing');
+  });
 });

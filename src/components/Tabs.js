@@ -24,7 +24,7 @@ const MANAGED_ATTRIBUTES = [
  *
  * Without JavaScript the panels are ordinary stacked sections, and links used as tabs jump to them.
  * While scripts are enabled but Tabs hasn't loaded yet, the shipped stylesheet shows only the first
- * panel, so the page doesn't jump when it does. Once mounted, Tabs follows the WAI-ARIA tabs
+ * panel, or the one the markup marks `data-tab-panel="active"`, so the page doesn't jump when it does. Once mounted, Tabs follows the WAI-ARIA tabs
  * pattern: arrow keys, Home and End move focus between tabs, inactive panels get the `hidden`
  * attribute, and a newly chosen panel fades in unless the user prefers reduced motion. Unmounting
  * puts the markup back as it was.
@@ -51,7 +51,9 @@ const MANAGED_ATTRIBUTES = [
  *   unless it has one, and the Up and Down arrow keys move between tabs only when it is "vertical"
  * - data-tab: on each tab button or link, the id of its panel
  * - data-tabs-panels: the element that holds the panels
- * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive
+ * - data-tab-panel: on each panel; Tabs sets it to active, entering or inactive. Write active on the
+ *   panel that starts selected to show it first, before and after Tabs loads, when no tab has
+ *   aria-selected="true"
  * - data-tabs-default-tab: id of the panel to show first when the address names no panel and no tab
  *   has aria-selected="true"
  * - data-tabs-keyboard: "false" turns off arrow key, Home and End navigation (default true)
@@ -127,7 +129,7 @@ export default class Tabs extends BaseComponent {
 
     const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
     const linkedTab = this._getLinkedTab(state);
-    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab);
+    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab, panels);
     if (initialTab) {
       this._activateTab(element, initialTab.dataset.tab, state, false);
     }
@@ -236,9 +238,13 @@ export default class Tabs extends BaseComponent {
   /**
    * Determine which tab should be active initially
    */
-  _getInitialTab(tabs, defaultTab) {
+  _getInitialTab(tabs, defaultTab, panels = []) {
     const selectedTab = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
     if (selectedTab) return selectedTab;
+
+    const activePanel = panels.find(panel => panel.getAttribute('data-tab-panel') === 'active');
+    const activeTab = activePanel && tabs.find(tab => tab.dataset.tab === activePanel.id);
+    if (activeTab) return activeTab;
 
     if (defaultTab) {
       const defaultTabElement = tabs.find(tab => tab.dataset.tab === defaultTab);
