@@ -191,6 +191,41 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
       description: 'Length of the open, close and slide animations',
     },
     { name: '--lightbox-transition-easing', description: 'Easing of the animations' },
+    {
+      name: '--lightbox-overlay-bg',
+      default: 'rgba(0, 0, 0, 0.9)',
+      description: "Background of the viewer, dark in both themes so it doesn't follow the page",
+    },
+    {
+      name: '--lightbox-color',
+      default: 'white',
+      description: 'Colour of the buttons, counter, error message and focus outlines',
+    },
+    {
+      name: '--lightbox-close-bg',
+      default: 'rgba(255, 255, 255, 0.2)',
+      description: 'Close button background',
+    },
+    {
+      name: '--lightbox-close-hover-bg',
+      default: 'rgba(255, 255, 255, 0.3)',
+      description: 'Close button background on hover',
+    },
+    {
+      name: '--lightbox-nav-bg',
+      default: 'rgba(0, 0, 0, 0.5)',
+      description: 'Previous and next button background',
+    },
+    {
+      name: '--lightbox-nav-hover-bg',
+      default: 'rgba(0, 0, 0, 0.7)',
+      description: 'Previous and next button background on hover',
+    },
+    {
+      name: '--lightbox-counter-bg',
+      default: 'rgba(0, 0, 0, 0.7)',
+      description: 'Counter background',
+    },
   ],
   examples: [
     {
