@@ -109,7 +109,7 @@ Fixes from the post-0.5.0 audit, and a clean-up of options and methods that neve
 
 ## [0.5.0] - 2026-09-15
 
-Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://github.com/parallelogram-dev/parallelogram-js/blob/main/site/guides/upgrading.md) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
+Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
 
 ### Added
 
