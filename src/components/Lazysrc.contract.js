@@ -9,7 +9,7 @@ export default {
   module: 'components/Lazysrc',
   stylesheet: 'styles/lazysrc.css',
   summary: 'Lazy image loading built on the browser\'s own loading="lazy"',
-  description: `The browser decides when images load. Markup that already has a real \`src\` or \`srcset\` is never stripped, so it works without JavaScript; Lazysrc only adds \`loading="lazy"\` and \`decoding="async"\` when they are missing. Sources held in data attributes, on the image or on the \`<source>\` elements of its \`<picture>\`, are copied onto the elements as soon as the image mounts. Background images have no native lazy loading, so they load through an IntersectionObserver shortly before they scroll into view.
+  description: `The browser decides when images load. Markup that already has a real \`src\` or \`srcset\` is never stripped, so it works without JavaScript; Lazysrc only adds \`loading="lazy"\` and \`decoding="async"\` when they are missing. Sources held in data attributes, on the image or on the \`<source>\` elements of its \`<picture>\`, are copied onto the elements as soon as the image mounts. Without JavaScript those images stay empty, so follow them with a \`<noscript>\` copy that has real sources, such as \`<noscript><img src="harbour.jpg" alt="Harbour at dawn"></noscript>\`. Background images have no native lazy loading, so they load through an IntersectionObserver shortly before they scroll into view.
 
 Failed loads are retried with a growing delay. Don't lazy load the largest image above the fold: give it a plain \`src\` and \`fetchpriority="high"\` instead.`,
   states: ['loading', 'loaded', 'error'],
