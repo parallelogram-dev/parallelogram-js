@@ -49,8 +49,6 @@ let lockedOverflow = null;
  * Events bubble out of shadow roots.
  * - p-modal:open: dispatched when the modal opens, with `{ modal }`
  * - p-modal:close: dispatched once the modal has closed, with `{ modal }`
- * - modal:open, modal:close: the same events under their names before 0.5.0; deprecated, and no
- *   longer dispatched from 0.6.0
  *
  * @csspart panel - the `<dialog>`; style the dimmed page with `::part(panel)::backdrop`
  * @csspart header - the title row
@@ -281,7 +279,7 @@ export default class PModal extends HTMLElement {
     this._hold();
     this._focusInitial();
 
-    dispatchComponentEvent(this, 'p-modal:open', { modal: this }, { legacy: 'modal:open' });
+    dispatchComponentEvent(this, 'p-modal:open', { modal: this });
 
     whenAnimationsFinish(this._dialog).then(() => {
       if (this.hasAttribute('open') && !this._closing) {
@@ -308,7 +306,7 @@ export default class PModal extends HTMLElement {
       topModal._focusInitial();
     }
 
-    dispatchComponentEvent(this, 'p-modal:close', { modal: this }, { legacy: 'modal:close' });
+    dispatchComponentEvent(this, 'p-modal:close', { modal: this });
   }
 
   /**
