@@ -138,6 +138,20 @@ export class FragmentSwapper {
         return { viewTarget: viewTargets[index], success: false, error: outcome.reason?.message };
       });
 
+      /* Without main, focus is only moved when it was lost with the content it was in */
+      const firstReplaced = replacementResults.find(result => result.success)?.targetFragment;
+      if (
+        fromNavigation &&
+        firstReplaced &&
+        !viewTargets.includes('main') &&
+        !options.signal?.aborted
+      ) {
+        this._completeNavigation(firstReplaced, url, {
+          title: doc.title || document.title,
+          moveFocus: this._focusLost(),
+        });
+      }
+
       this.eventBus.emit('page:fragments-replaced', {
         results: replacementResults,
         viewTargets,
@@ -686,9 +700,15 @@ export class FragmentSwapper {
 
   /**
    * Move focus into the new page and announce its title, as a full page load would
+   *
+   * @param {Element} fragment
+   * @param {URL|null} url
+   * @param {Object} [options]
+   * @param {string} [options.title] Title to announce; the document's title by default
+   * @param {boolean} [options.moveFocus=true]
    */
-  _completeNavigation(fragment, url) {
-    const target = this._navigationFocusTarget(fragment, url);
+  _completeNavigation(fragment, url, { title = document.title, moveFocus = true } = {}) {
+    const target = moveFocus ? this._navigationFocusTarget(fragment, url) : null;
     if (target) {
       if (!target.matches(NATIVELY_FOCUSABLE)) {
         target.setAttribute('tabindex', '-1');
@@ -697,11 +717,19 @@ export class FragmentSwapper {
     }
 
     if (this.options.announce) {
-      const title = document.title || fragment.querySelector('h1')?.textContent.trim();
+      title ||= fragment.querySelector('h1')?.textContent.trim();
       if (title) {
         announce(title);
       }
     }
+  }
+
+  /**
+   * Whether nothing on the page has focus, as when the focused element was replaced
+   */
+  _focusLost() {
+    const active = document.activeElement;
+    return !active || active === document.body || !active.isConnected;
   }
 
   /**
