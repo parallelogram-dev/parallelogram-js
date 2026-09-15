@@ -201,6 +201,33 @@ export function deepActiveElement() {
 }
 
 /**
+ * The current values of some attributes, null for those that are absent
+ *
+ * @param {Element} element
+ * @param {string[]} names
+ * @returns {Map<string, string|null>}
+ */
+export function rememberAttributes(element, names) {
+  return new Map(names.map(name => [name, element.getAttribute(name)]));
+}
+
+/**
+ * Put attributes back to remembered values, removing those that were absent
+ *
+ * @param {Element} element
+ * @param {Iterable<[string, string|null]>} [attributes]
+ */
+export function restoreAttributes(element, attributes = []) {
+  for (const [name, value] of attributes) {
+    if (value === null) {
+      element.removeAttribute(name);
+    } else {
+      element.setAttribute(name, value);
+    }
+  }
+}
+
+/**
  * Trap focus within a container (for modals, dialogs, etc.)
  * @param {HTMLElement} container - Container to trap focus within
  * @param {KeyboardEvent} event - Tab key event
