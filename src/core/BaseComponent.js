@@ -74,12 +74,14 @@ export class BaseComponent {
    *
    * If _init throws, the element is not tracked and its abort signal is aborted
    * before the error is rethrown. An _init that returns a Promise is tracked
-   * straight away, and its state is stored once the Promise resolves. An _init
-   * that returns no state object logs a warning, and a state with the element's
-   * controller is stored instead, so unmount() still releases it.
+   * straight away, and its state is stored once the Promise resolves; mount()
+   * then returns a Promise that settles when _init does and rejects when it
+   * fails. An _init that returns no state object logs a warning, and a state
+   * with the element's controller is stored instead, so unmount() still
+   * releases it.
    *
    * @param {HTMLElement} element
-   * @returns {void}
+   * @returns {void|Promise<void>}
    */
   mount(element) {
     if (this.elements.has(element) || this._initializing.has(element)) {
@@ -109,14 +111,16 @@ export class BaseComponent {
         this._store(element, resolved);
       },
       error => {
-        if (this._initializing.get(element) === pending) {
-          this._initializing.delete(element);
-          this._abortController(element);
-        }
         this.logger?.error('Component failed to initialize', { element, error });
+        if (this._initializing.get(element) !== pending) return;
+        this._initializing.delete(element);
+        this._abortController(element);
+        throw error;
       }
     );
+    pending.catch(() => {});
     this._initializing.set(element, pending);
+    return pending;
   }
 
   /**

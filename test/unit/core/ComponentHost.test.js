@@ -373,6 +373,51 @@ describe('ComponentHost', () => {
     expect(mounted).toHaveBeenCalledOnce();
   });
 
+  it('reports an element mounted only once its asynchronous _init has finished', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    const ready = deferred();
+    class MapView extends BaseComponent {
+      _init(element) {
+        const state = super._init(element);
+        return ready.promise.then(() => state);
+      }
+    }
+    start([{ name: 'map', selector: '[data-map]', loader: () => MapView }]);
+
+    const whileInitialising = mounted.mock.calls.length;
+    ready.resolve();
+    await flush();
+
+    expect([whileInitialising, mounted.mock.calls.length]).toEqual([0, 1]);
+  });
+
+  it('reports a mount error instead of a mount when an asynchronous _init rejects', async () => {
+    root.innerHTML = '<div id="map" data-map></div>';
+    const mounted = vi.fn();
+    const mountError = vi.fn();
+    bus.on('page:component-mounted', mounted);
+    bus.on('page:component-mount-error', mountError);
+    class MapView extends BaseComponent {
+      async _init() {
+        throw new Error('tiles unavailable');
+      }
+    }
+    host = new ComponentHost({
+      registry: [{ name: 'map', selector: '[data-map]', loader: () => MapView }],
+      eventBus: bus,
+      logger: { error() {} },
+    });
+    host.start(root);
+    await flush();
+
+    expect([mounted.mock.calls.length, mountError.mock.calls[0]?.[0].error.message]).toEqual([
+      0,
+      'tiles unavailable',
+    ]);
+  });
+
   it('refuses two components with the same name', () => {
     expect(() => start([syncEntry('toggle'), syncEntry('toggle')])).toThrow(/toggle/);
   });

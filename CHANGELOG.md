@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A Toggle target the markup marks `data-toggle-state="closed"` stays visible when scripts are disabled, or when Toggle fails to load and its triggers get `component-error`. The stylesheet hid it in every case; it still hides it before Toggle mounts while scripts are enabled, so marking targets that start closed, such as header navigation or accordion answers, keeps the page from jumping when Toggle loads.
 - A component whose `_init` returns no state object no longer keeps the element tracked forever. The logger warns, a state holding the element's controller is stored, and unmounting aborts that controller, so the host emits `page:component-unmounted` once instead of on every later removal from the page. `unmount()` returns whether the component was mounted on the element, and the host only reports unmounts that happened.
 - Scanning the page again while a component's asynchronous `_init` is still running no longer calls `update()` and emits a second `page:component-mounted` for that element.
+- A component whose asynchronous `_init` rejects is reported with `page:component-mount-error` instead of `page:component-mounted`, and the host emits `page:component-mounted` for an asynchronous `_init` once its state has resolved. `BaseComponent#mount()` returns the Promise for an asynchronous `_init`, which rejects when it fails.
 
 ## [0.5.3] - 2026-09-15
 
