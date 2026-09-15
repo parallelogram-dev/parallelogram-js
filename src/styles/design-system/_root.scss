@@ -30,6 +30,12 @@
   --color-success-bg: #{$color-success-bg};
   --color-warning: #{$warning-dark};
   --color-warning-bg: #{$color-warning-bg};
+  --color-inverse-surface: #111827;
+  --color-inverse-text: #ffffff;
+  --color-success-strong: #065f46;
+  --color-warning-strong: #7c2d12;
+  --color-danger-strong: #7f1d1d;
+  --color-on-status: #ffffff;
 }
 
 @include mix.dark-theme {
@@ -52,6 +58,11 @@
   --color-success-bg: rgba(74, 222, 128, 0.16);
   --color-warning: #fb923c;
   --color-warning-bg: rgba(251, 146, 60, 0.16);
+  --color-inverse-surface: #2a3342;
+  --color-inverse-text: #e4e8ee;
+  --color-success-strong: #166534;
+  --color-warning-strong: #9a3412;
+  --color-danger-strong: #991b1b;
 }
 
 :root {

@@ -55,24 +55,33 @@
   max-width: var(--toast-max-width, 500px);
   padding: var(--toast-item-padding, #{$space-sm} #{$space-lg});
   border-radius: var(--toast-border-radius, var(--surface-panel-radius, #{$radius-md}));
-  background: var(--toast-bg-info, #{$neutral-900});
-  color: var(--toast-text-color, #fff);
-  box-shadow: var(--toast-shadow, var(--surface-panel-shadow, #{$shadow-md}));
+  background: var(--toast-bg-info, var(--color-inverse-surface, #{$neutral-900}));
+  color: var(--toast-text-color, var(--color-inverse-text, #fff));
+  box-shadow: var(
+    --toast-shadow,
+    var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
+  );
   font: var(--toast-font, #{$font-sm}/ 1.4 system-ui, -apple-system, sans-serif);
   pointer-events: auto;
 }
 
-/* Type backgrounds, intentionally dark for contrast with the white text */
+/* Types fill with the strong status colours behind white text in both themes */
+.toast.success,
+.toast.warning,
+.toast.error {
+  color: var(--toast-text-color, var(--color-on-status, #fff));
+}
+
 .toast.success {
-  background: var(--toast-bg-success, #{$success-dark});
+  background: var(--toast-bg-success, var(--color-success-strong, #065f46));
 }
 
 .toast.warning {
-  background: var(--toast-bg-warning, var(--toast-bg-warn, #{$warning-dark}));
+  background: var(--toast-bg-warning, var(--toast-bg-warn, var(--color-warning-strong, #7c2d12)));
 }
 
 .toast.error {
-  background: var(--toast-bg-error, #{$error-dark});
+  background: var(--toast-bg-error, var(--color-danger-strong, #7f1d1d));
 }
 
 .row {
