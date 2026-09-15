@@ -15,15 +15,16 @@ $size-icon-md: 1.25rem;
   display: block;
   position: relative;
 
-  /* Use surface-card tokens for nested items within panels */
+  /* Use surface-card tokens for nested items within panels. Colours default to the card surface
+     tokens, then the colour roles, then light values */
   border-radius: var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}));
   border-width: var(--surface-card-border-width, #{$border-width});
   border-style: solid;
-  border-color: var(--surface-card-border-color, #{$neutral-300});
-  background: var(--surface-card-color-bg, #ffffff);
+  border-color: var(--surface-card-border-color, var(--color-border-strong, #{$neutral-300}));
+  background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
   color: var(--surface-card-color-text, #{$color-text});
   box-shadow: var(--surface-card-shadow, none);
 
@@ -42,8 +43,8 @@ $size-icon-md: 1.25rem;
 }
 
 :host([drag-over]) {
-  border-color: $primary;
-  background: $color-bg-hover;
+  border-color: var(--color-accent, #{$primary});
+  background: var(--color-hover, #{$color-bg-hover});
   transform: translateY(-4px);
 }
 
@@ -64,10 +65,11 @@ input {
 }
 
 .uploader {
+  /* The page surface at 95%: white in light mode, the dark surface in dark mode */
   &__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: color-mix(in srgb, var(--color-surface, #ffffff) 95%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,7 +129,7 @@ input {
     flex-direction: column;
     pointer-events: auto;
     height: $size-preview;
-    background: var(--surface-card-color-bg, #ffffff);
+    background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
     transform: translateY(-100%);
     transition: transform $duration-normal $ease-standard;
     will-change: transform;
@@ -211,7 +213,7 @@ input {
     border: none;
     background-size: contain;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: white;
+    background-color: var(--surface-card-color-bg, var(--color-surface, #ffffff));
     background-repeat: no-repeat;
     background-position: center;
     cursor: pointer;
@@ -234,8 +236,9 @@ input {
 
   &__btn {
     padding: $space-sm $space-lg;
-    border: $border-width solid $color-border-hover;
-    background: white;
+    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
+    background: var(--color-surface, #ffffff);
+    color: inherit;
     cursor: pointer;
     font-size: $font-sm;
     transition: all $duration-fast;
@@ -243,7 +246,7 @@ input {
     flex-shrink: 0;
 
     &:hover {
-      background: $neutral-100;
+      background: var(--color-surface-muted, #{$neutral-100});
     }
 
     &--secondary {
@@ -252,21 +255,22 @@ input {
     }
 
     &--delete {
-      color: $error-dark;
-      border-color: $error-dark;
+      color: var(--color-danger, #{$error-dark});
+      border-color: var(--color-danger, #{$error-dark});
 
       &:hover {
-        background: $color-error-bg;
+        background: var(--color-danger-bg, #{$color-error-bg});
       }
     }
 
+    /* Filled with the stronger accent so the label meets 4.5:1 */
     &--primary {
-      background: $primary;
-      color: white;
-      border-color: $primary;
+      background: var(--color-accent-hover, #{$primary-dark});
+      color: var(--color-accent-contrast, #ffffff);
+      border-color: var(--color-accent-hover, #{$primary-dark});
 
       &:hover {
-        background: $primary-dark;
+        background: color-mix(in srgb, var(--color-accent-hover, #{$primary-dark}) 85%, black);
       }
     }
   }
@@ -276,7 +280,9 @@ input {
     flex: 1 0 auto;
     height: 100%;
     padding: $space-sm;
-    border: $border-width solid $color-border-hover;
+    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
+    background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
+    color: var(--surface-control-color-text, currentColor);
     margin: 0;
     font-family: inherit;
     font-size: $font-sm;
@@ -311,8 +317,8 @@ input {
 }
 
 .error-message {
-  color: $error-dark;
-  background: $color-error-bg;
+  color: var(--color-danger, #{$error-dark});
+  background: var(--color-danger-bg, #{$color-error-bg});
   padding: $space-md;
   font-size: $font-sm;
 }
@@ -337,7 +343,8 @@ slot {
 .uploader__dialog {
   width: min(32rem, calc(100vw - 2rem));
   padding: $space-lg;
-  border: $border-width solid $color-border-hover;
+  border: $border-width solid var(--color-border-strong, #{$color-border-hover});
+  background: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
   color: inherit;
 
   &::backdrop {
@@ -380,7 +387,7 @@ slot {
 
 .uploader__dialog-message {
   margin: 0;
-  color: $error-dark;
+  color: var(--color-danger, #{$error-dark});
   font-size: $font-sm;
 
   &:empty {
@@ -391,7 +398,7 @@ slot {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid $primary;
+  outline: 2px solid var(--framework-focus-color, var(--color-accent, #{$primary}));
   outline-offset: 2px;
 }
 

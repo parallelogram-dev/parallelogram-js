@@ -1,3 +1,4 @@
+@use 'example-stage-controls';
 @use 'framework/index';
 
 /* Haffer by Displaay, licensed to PeptoLab for web use (invoice DP15764) */
@@ -335,20 +336,6 @@ pre {
   color: #1f2430;
   color-scheme: light;
 
-  button {
-    padding: 0.45rem 0.9rem;
-    border: 1px solid #c3c9d4;
-    border-radius: 6px;
-    background: #fff;
-    color: #1f2430;
-    font: inherit;
-    cursor: pointer;
-
-    &:hover {
-      border-color: #4453c4;
-    }
-  }
-
   img,
   video {
     max-width: 100%;
@@ -455,25 +442,10 @@ pre {
       font-weight: 400;
     }
 
-    input {
-      padding: 0.45rem 0.6rem;
-      border: 1px solid #c3c9d4;
-      border-radius: 6px;
-      font: inherit;
-    }
-
-    input.is-invalid {
-      border-color: #b42318;
-    }
-
     [data-error-for] {
       margin: 0;
       color: #b42318;
       font-size: 0.85rem;
-    }
-
-    button {
-      justify-self: start;
     }
   }
 

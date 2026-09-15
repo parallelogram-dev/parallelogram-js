@@ -1,36 +1,52 @@
+@use '../../design-system' as *;
+
 /* DataTable Component Styles
  *
  * Selectors are wrapped in :where() so page styles override them easily; focus outlines keep normal
- * specificity so a page reset can't remove them by accident. Colours that fill an area follow the
- * page's own text and background, so a dark page gets a dark pager without a colour scheme query.
+ * specificity so a page reset can't remove them by accident. Pagination buttons take the page's own
+ * text colour on a transparent background. Other colours default to the control surface tokens,
+ * then the colour roles, then light values, so they follow the dark theme and still render without
+ * the package stylesheet.
  */
 
 :where(.datatable-filter) {
   margin-bottom: 1rem;
 }
 
+/* A form control, so it takes the control surface and a border with 3:1 contrast */
 :where(.datatable-search) {
   width: 100%;
   max-width: 300px;
   padding: 0.5rem;
-  border: 1px solid var(--datatable-border-color, #d1d5db);
+  border: 1px solid
+    var(
+      --datatable-border-color,
+      var(--surface-control-border-color, var(--color-control-border, rgba(0, 0, 0, 0.45)))
+    );
   border-radius: 4px;
+  background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
+  color: var(--surface-control-color-text, currentColor);
   font-size: 0.875rem;
+}
+
+:where(.datatable-search)::placeholder {
+  color: var(--form-control-placeholder-color, var(--color-text-muted, rgba(0, 0, 0, 0.55)));
+  opacity: 1;
 }
 
 .datatable-search:focus-visible,
 .datatable__sort:focus-visible,
 .datatable__pagination button:focus-visible {
-  outline: 2px solid var(--framework-focus-color, #3b82f6);
+  outline: 2px solid var(--framework-focus-color, var(--color-accent, #3b82f6));
   outline-offset: 1px;
 }
 
 .datatable-search:focus-visible {
-  border-color: var(--framework-focus-color, #3b82f6);
+  border-color: var(--framework-focus-color, var(--color-accent, #3b82f6));
 }
 
 :where(th.sortable):hover {
-  background-color: var(--datatable-header-hover-bg, rgba(128, 128, 128, 0.12));
+  background-color: var(--datatable-header-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.12)));
 }
 
 :where(.datatable__sort) {
@@ -48,7 +64,7 @@
 }
 
 :where(.sort-icon) {
-  color: var(--datatable-muted-color, #6b7280);
+  color: var(--datatable-muted-color, var(--color-text-muted, #6b7280));
   font-size: 0.8em;
 }
 
@@ -69,7 +85,7 @@
 :where(.datatable__pagination button) {
   min-width: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--datatable-border-color, #d1d5db);
+  border: 1px solid var(--datatable-border-color, var(--color-border-strong, #d1d5db));
   border-radius: 4px;
   background: var(--datatable-button-bg, transparent);
   color: var(--datatable-button-color, inherit);
@@ -79,8 +95,8 @@
 }
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
-  background: var(--datatable-button-hover-bg, rgba(128, 128, 128, 0.15));
-  border-color: var(--datatable-button-hover-border-color, #9ca3af);
+  background: var(--datatable-button-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)));
+  border-color: var(--datatable-button-hover-border-color, var(--color-border-strong, #d1d5db));
 }
 
 :where(.datatable__pagination button:disabled) {
@@ -88,35 +104,40 @@
   cursor: not-allowed;
 }
 
-/* Dark enough for white text to reach 4.5:1 */
+/* The stronger accent, so its text reaches 4.5:1 */
 :where(.datatable__pagination button[aria-current='page']) {
-  background: var(--datatable-current-bg, #1d4ed8);
-  border-color: var(--datatable-current-bg, #1d4ed8);
-  color: var(--datatable-current-color, #ffffff);
+  background: var(--datatable-current-bg, var(--color-accent-hover, #1d4ed8));
+  border-color: var(--datatable-current-bg, var(--color-accent-hover, #1d4ed8));
+  color: var(--datatable-current-color, var(--color-accent-contrast, #ffffff));
 }
 
 :where(.datatable__gap) {
   padding: 0 0.25rem;
-  color: var(--datatable-muted-color, #6b7280);
+  color: var(--datatable-muted-color, var(--color-text-muted, #6b7280));
 }
 
 :where(.datatable__message td) {
   padding: 2rem 1rem;
   text-align: center;
-  color: var(--datatable-muted-color, #6b7280);
+  color: var(--datatable-muted-color, var(--color-text-muted, #6b7280));
   font-style: italic;
 }
 
+/* Light pages keep the darker red, which reaches 4.5:1 on tinted backgrounds; dark pages take the role */
 :where(.datatable__message td[role='alert']) {
-  color: var(--brand-danger, #b91c1c);
+  color: var(--datatable-error-color, var(--brand-danger, #b91c1c));
   font-style: normal;
   font-weight: 500;
 }
 
 .datatable__status {
   margin-top: 0.5rem;
-  color: var(--datatable-muted-color, #6b7280);
+  color: var(--datatable-muted-color, var(--color-text-muted, #6b7280));
   font-size: 0.875em;
+}
+
+@include dark-theme {
+  --datatable-error-color: var(--brand-danger, var(--color-danger));
 }
 
 /* State-based styling */
@@ -126,7 +147,7 @@
 }
 
 :where([data-datatable-state='error']) {
-  outline: 2px solid var(--brand-danger, #ef4444);
+  outline: 2px solid var(--brand-danger, var(--color-danger, #ef4444));
   outline-offset: -2px;
 }
 
