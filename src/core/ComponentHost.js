@@ -226,7 +226,8 @@ export class ComponentHost {
   }
 
   /**
-   * @throws {Error} If the entry is invalid or its name is already registered.
+   * @throws {Error} If the entry is invalid, its name is already registered, or its dependencies
+   *   lead back to it.
    */
   _register(entry) {
     if (!entry?.name || !entry.selector || typeof entry.loader !== 'function') {
@@ -235,7 +236,34 @@ export class ComponentHost {
     if (this.entries.has(entry.name)) {
       throw new Error(`A component named "${entry.name}" is already registered`);
     }
+    const cycle = this._dependencyCycle(entry);
+    if (cycle) {
+      throw new Error(`Components can't depend on each other in a cycle: ${cycle.join(' → ')}`);
+    }
     this.entries.set(entry.name, entry);
+  }
+
+  /**
+   * The names on a path from an entry back to itself through registered dependencies, or null
+   *
+   * @returns {string[]|null}
+   */
+  _dependencyCycle(entry) {
+    const visit = (name, path) => {
+      if (name === entry.name) return [...path, name];
+      if (path.includes(name)) return null;
+      for (const next of this.entries.get(name)?.dependsOn ?? []) {
+        const cycle = visit(next, [...path, name]);
+        if (cycle) return cycle;
+      }
+      return null;
+    };
+
+    for (const name of entry.dependsOn ?? []) {
+      const cycle = visit(name, [entry.name]);
+      if (cycle) return cycle;
+    }
+    return null;
   }
 
   _entriesFor(priority) {
@@ -260,7 +288,12 @@ export class ComponentHost {
   _record(entry) {
     let record = this.records.get(entry.name);
     if (!record) {
-      record = { status: 'idle', instance: null, pending: new Map(), attempts: 0, promise: null };
+      record = { status: 'idle', instance: null, pending: new Map(), attempts: 0 };
+      /* Settles once the component has loaded or has failed for good, after any retries */
+      record.ready = new Promise((resolve, reject) => {
+        record.settle = { resolve, reject };
+      });
+      record.ready.catch(() => {});
       this.records.set(entry.name, record);
     }
     return record;
@@ -295,14 +328,33 @@ export class ComponentHost {
       dependency => dependency.status !== 'loaded'
     );
 
+    if (waitingFor.length === 0) {
+      this._loadModule(entry, record);
+      return;
+    }
+
+    /* Dependencies are waited on through their retries; one that fails for good fails this one */
+    Promise.all(waitingFor.map(dependency => dependency.ready)).then(
+      () => this._loadModule(entry, record),
+      error => {
+        if (this.records.get(entry.name) !== record) return;
+        this._fail(
+          entry,
+          record,
+          new Error(`Component ${entry.name} was not loaded because a dependency failed to load`, {
+            cause: error,
+          })
+        );
+      }
+    );
+  }
+
+  _loadModule(entry, record) {
+    if (this.records.get(entry.name) !== record) return;
+
     let result;
     try {
-      result =
-        waitingFor.length === 0
-          ? entry.loader()
-          : Promise.all(waitingFor.map(dependency => dependency.promise)).then(() =>
-              entry.loader()
-            );
+      result = entry.loader();
     } catch (error) {
       this._onLoadFailed(entry, record, error);
       return;
@@ -313,7 +365,7 @@ export class ComponentHost {
       return;
     }
 
-    record.promise = result.then(
+    result.then(
       module => this._onLoaded(entry, record, module),
       error => this._onLoadFailed(entry, record, error)
     );
@@ -346,6 +398,7 @@ export class ComponentHost {
 
     record.instance = instance;
     record.status = 'loaded';
+    record.settle.resolve();
 
     const waiting = [...record.pending];
     record.pending.clear();
@@ -388,6 +441,7 @@ export class ComponentHost {
 
   _fail(entry, record, error) {
     record.status = 'failed';
+    record.settle.reject(error);
 
     for (const element of record.pending.keys()) {
       element.classList.remove('component-loading');
