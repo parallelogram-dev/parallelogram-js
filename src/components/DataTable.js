@@ -12,6 +12,9 @@ const rowsOf = section => childrenNamed(section, 'tr');
 
 const cellsOf = row => childrenNamed(row, 'td', 'th');
 
+/** The number of columns cells cover, counting their colspan */
+const spanOf = cells => cells.reduce((total, cell) => total + (cell.colSpan || 1), 0);
+
 /** Replace `{name}` placeholders with values */
 const fill = (template, values) =>
   template.replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
@@ -119,8 +122,8 @@ export class DataTable extends BaseComponent {
     state.columns = this._readColumns(element);
     state.decimal = this._decimalSeparator(element);
     state.columnCount =
-      cellsOf(rowsOf(childrenNamed(element, 'thead')[0]).at(-1)).length ||
-      cellsOf(state.originalRows[0]).length ||
+      spanOf(cellsOf(rowsOf(childrenNamed(element, 'thead')[0]).at(-1))) ||
+      spanOf(cellsOf(state.originalRows[0])) ||
       1;
     state.rows = this._buildRows(state.originalRows, state);
     state.filteredRows = [...state.originalRows];
@@ -199,14 +202,16 @@ export class DataTable extends BaseComponent {
   }
 
   /**
-   * The sortable columns, taken from the header row that holds the `th[data-sort]` cells
+   * The sortable columns, taken from the header row that holds the `th[data-sort]` cells, with each
+   * column's position counting the colspan of the header cells before it
    */
   _readColumns(element) {
     const headerRow = element.querySelector('th[data-sort]')?.parentElement;
     if (!headerRow) return [];
 
-    return cellsOf(headerRow)
-      .map((cell, index) => ({ cell, index }))
+    const cells = cellsOf(headerRow);
+    return cells
+      .map((cell, position) => ({ cell, index: spanOf(cells.slice(0, position)) }))
       .filter(({ cell }) => cell.dataset.sort)
       .map(({ cell, index }) => ({
         cell,
