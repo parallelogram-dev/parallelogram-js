@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-15
+
 Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, component state moves to `data-<component>-state` attributes, web component events are renamed `<tag>:<verb>`, `<p-modal>` and Lightbox use the native `<dialog>` element, and `<p-datetime>` submits plain `yyyy-mm-dd` dates in date mode. The [upgrade guide](https://github.com/parallelogram-dev/parallelogram-js/blob/main/site/guides/upgrading.md) covers each change, what it means for your markup, and the deprecated names that keep working until 0.6.0.
 
 ### Added
@@ -191,6 +193,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 ### Changed
 
+- `<p-modal>` with `data-modal-closable="false"` still closes from its own `data-modal-close` buttons, so a confirmation that must be answered can be answered. It ignores only Escape, the backdrop and its close button; in 0.4 those buttons did nothing and only script could close the modal.
 - The README starts from `Parallelogram.create()`, states the Baseline 2023 browser floor, and lists every component in tables generated from the contracts by `npm run readme`, which a unit test keeps current.
 - Router history entries store `key`, `position`, `viewTarget` and `scroll` in `history.state`, and the router adds a `key` and `position` to entries it did not create (the first page and native hash navigations).
 - Fragment swapping moved out of PageManager into `FragmentSwapper` (`@parallelogram-js/core/core/FragmentSwapper`), which can also be used on its own. PageManager loads it when a router is present or on the first `replaceFragments()` call, so pages without a router no longer download the swapping, head and transition code. A PageManager destroyed while a navigation is under way no longer changes the page afterwards.
