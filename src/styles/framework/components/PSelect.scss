@@ -15,38 +15,30 @@
   color: var(--select-text);
 }
 
-/* CSS custom properties using surface tokens */
+/* Custom properties default to the surface tokens, then the colour roles, then light values */
 :host {
-  /* Control uses surface-control tokens */
-  --select-border-color: var(--surface-control-border-color, #{$color-border});
-  --select-focus-color: #{$primary};
-  --select-bg: var(--surface-control-color-bg, #ffffff);
+  --select-border-color: var(--surface-control-border-color, var(--color-border, #{$color-border}));
+  --select-focus-color: var(--color-accent, #{$primary});
+  --select-bg: var(--surface-control-color-bg, var(--color-surface, #ffffff));
   --select-text: var(--surface-control-color-text, #{$color-text});
-  --select-placeholder: #{$color-text-muted};
+  --select-placeholder: var(--color-text-muted, #{$color-text-muted});
 
-  /* Menu hover/selection states using surface-dropdown-item tokens */
-  --select-hover-bg: var(--surface-dropdown-item-hover-bg, #{$neutral-100});
+  --select-hover-bg: var(--surface-dropdown-item-hover-bg, var(--color-hover, #{$neutral-100}));
   --select-selected-bg: var(--surface-dropdown-item-selected-bg, rgba(59, 130, 246, 0.1));
-  --select-current-bg: var(--surface-dropdown-item-current-bg, #{$neutral-100});
+  --select-current-bg: var(
+    --surface-dropdown-item-current-bg,
+    var(--color-surface-muted, #{$neutral-100})
+  );
 
   --select-padding: 0.45rem 0.6rem;
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
   --select-border: var(--surface-control-border-width, #{$border-width}) solid
     var(--select-border-color);
 
-  /* Dropdown menu surface tokens */
   --menu-border-radius: var(--surface-dropdown-radius, #{$radius-sm});
-  --menu-border-color: var(--surface-dropdown-border-color, #{$color-border});
-  --menu-bg: var(--surface-dropdown-color-bg, #ffffff);
-  --menu-shadow: var(--surface-dropdown-shadow, #{$shadow-md});
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --select-placeholder: #{$color-text-muted-dark};
-    --select-hover-bg: #{$color-bg-hover-dark};
-  }
+  --menu-border-color: var(--surface-dropdown-border-color, var(--color-border, #{$color-border}));
+  --menu-bg: var(--surface-dropdown-color-bg, var(--color-surface, #ffffff));
+  --menu-shadow: var(--surface-dropdown-shadow, 0 4px 6px var(--color-shadow, #{$color-shadow}));
 }
 
 .root {
