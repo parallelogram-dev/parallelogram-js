@@ -14,7 +14,7 @@
   --tabs-hover-color: var(--surface-panel-color-text, #374151);
   --tabs-hover-bg: var(--color-hover, #f9fafb);
   --tabs-selected-color: var(--color-accent-hover, #0369a1);
-  --tabs-selected-bg: var(--surface-dropdown-item-selected-bg, #f0f9ff);
+  --tabs-selected-bg: transparent;
   --tabs-transition-duration: 0.2s;
 }
 

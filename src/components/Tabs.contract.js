@@ -109,8 +109,9 @@ Deep links keep working: when the address names a panel, or an element inside on
     },
     {
       name: '--tabs-selected-bg',
-      default: 'var(--surface-dropdown-item-selected-bg, #f0f9ff)',
-      description: "The chosen tab's background: the selected option tint, 12% of the accent",
+      default: 'transparent',
+      description:
+        "The chosen tab's background, transparent so its label keeps 4.5:1 contrast on light and grey pages",
     },
     {
       name: '--tabs-border-color',
