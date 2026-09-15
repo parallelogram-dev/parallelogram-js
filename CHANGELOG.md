@@ -9,12 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `registerTrackerAdapter()` takes an optional third argument, `{ ids, origins }`, limiting what DeferTracker's blocks can load. With `ids`, a block whose tracker id (`id`, `site`, `domain` or `scriptId`) isn't listed is marked `error`, logs a warning and its adapter isn't called. Register Tag Manager with `ids`, since a container's Custom HTML tags run any script; DeferTracker warns once when `gtm` starts without them. Calls without options behave as before.
+
 - DataTable's pagination and status text can be translated: `data-datatable-status-message` (with `{from}`, `{to}` and `{total}`), `data-datatable-pagination-label`, `data-datatable-previous-text`, `data-datatable-previous-label`, `data-datatable-next-text`, `data-datatable-next-label` and `data-datatable-page-label` (with `{page}`). The English defaults are unchanged.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
 - A Deferred trackers guide documents DeferTracker's set-up: each adapter's config keys, `configureDeferTracker()` with its `events`, `idleTimeout` and `nonce` options, consent through `setTrackerConsent()`, `requireCategory` and `reevaluateTrackerConsent()`, and the adapter API with its optional `page` and `block` steps, which were only described in JSDoc.
 - `<p-select>` follows more of the WAI-ARIA combobox keyboard pattern: Page Up and Page Down move the highlight ten options at a time, Alt+Down Arrow opens the list without moving the highlight, and Alt+Up Arrow chooses the highlighted option and closes the list.
 - `ComponentHost#retry(name)` loads an enhancement component that failed to load for good again, with a fresh set of retries, retrying its failed dependencies too. Call it as `app.pageManager.host.retry(name)`, for example once the connection is back. It returns `false` when that component hasn't failed.
 - `AlertManager#destroy()` removes the listeners that forward `p-toasts:show` and `p-toasts:close` to the event bus, which couldn't be removed before. The `<p-toasts>` element stays, and the shared manager behind `AlertManager.notify()` is unchanged.
+
+### Changed
+
+- DeferTracker loads a block's `src`, such as Fathom's or Plausible's custom script address, only from the page's own origin or the vendor's origin the adapter declares; any other `src` marks the block `error` and nothing loads, so a block injected into a page can't load its own script with the site's nonce. To allow a proxy or self-hosted copy on another origin, pass it at registration, such as `registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] })`.
 
 ### Fixed
 

@@ -9,6 +9,10 @@ import { injectScript } from './_script.js';
  * The CSP nonce is set on the container script, as in Google's nonce-aware snippet, so Tag Manager
  * can pass it on to Custom HTML tags.
  *
+ * A container's Custom HTML tags run any script with that nonce, so register GTM with the
+ * containers the site uses, such as `registerTrackerAdapter('gtm', gtm, { ids: ['GTM-XXXXXX'] })`,
+ * and a block injected into the page can't load another. Without `ids`, DeferTracker warns once.
+ *
  * @param {{ id?: string }} config
  * @param {{ nonce?: string }} [ctx]
  * @returns {Promise<unknown>|undefined} settles when the container loads

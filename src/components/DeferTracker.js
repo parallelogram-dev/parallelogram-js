@@ -191,6 +191,9 @@ class InteractionGate {
 /** Shared adapter registry: adapter name -> boot fn, which may carry `page` and `block` steps. */
 const adapters = new Map();
 
+/** The `ids` and `origins` each adapter was registered with, keyed by adapter name. */
+const allowlists = new Map();
+
 /** Trackers that have started loading this page session, keyed by name and id. */
 const trackers = new Map();
 
@@ -204,6 +207,7 @@ let consentResolver = null;
 let requireConsentCategory = false;
 let trackerNonce;
 let placementChecked = false;
+let gtmWarned = false;
 
 /**
  * Register a tracker adapter under a name matching the `data-defer-tracker`
@@ -217,12 +221,26 @@ let placementChecked = false;
  * from the blocks already there; without it, that block is marked `duplicate`. Leave
  * it out when a second block would only repeat the tracker's page view.
  *
+ * Tracker blocks are markup, so `options` limit what a block can load. With `ids`, a
+ * block whose tracker id (its `id`, `site`, `domain` or `scriptId`) isn't listed is
+ * marked `error` and its adapter isn't called; without it, any id is accepted. A block's
+ * `src` must be on the page's own origin, an origin the adapter declares as
+ * `boot.origins`, or one listed in `origins`; otherwise the block is marked `error` and
+ * nothing loads. Pass `ids` when registering Tag Manager, whose containers can run any
+ * script.
+ *
+ * @example
+ * registerTrackerAdapter('gtm', gtm, { ids: ['GTM-XXXXXX'] });
+ * registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] });
+ *
  * @param {string} name
  * @param {(config: object, ctx: { logger?: object, eventBus?: object, nonce?: string }) => void|Promise<unknown>} boot
+ * @param {{ ids?: string[], origins?: string[] }} [options]
  */
-export function registerTrackerAdapter(name, boot) {
+export function registerTrackerAdapter(name, boot, { ids, origins } = {}) {
   if (typeof name === 'string' && typeof boot === 'function') {
     adapters.set(name, boot);
+    allowlists.set(name, { ids, origins });
   }
 }
 
@@ -276,15 +294,19 @@ export function configureDeferTracker({ nonce, ...options } = {}) {
 export function _resetTrackers() {
   trackers.clear();
   adapters.clear();
+  allowlists.clear();
   waitingForConsent.clear();
   consentResolver = null;
   requireConsentCategory = false;
   trackerNonce = undefined;
   placementChecked = false;
+  gtmWarned = false;
 }
 
+const trackerId = config => config.id ?? config.site ?? config.domain ?? config.scriptId;
+
 const trackerKey = (name, config) => {
-  const id = config.id ?? config.site ?? config.domain ?? config.scriptId;
+  const id = trackerId(config);
   return id === undefined ? name : `${name}:${id}`;
 };
 
@@ -389,6 +411,11 @@ export default class DeferTracker extends BaseComponent {
       return;
     }
 
+    if (!this._allowed(name, config)) {
+      this.setAttr(element, 'status', 'error');
+      return;
+    }
+
     if (!this._consentGranted(name, config)) {
       this._waitForConsent(element, state);
       return;
@@ -433,6 +460,42 @@ export default class DeferTracker extends BaseComponent {
         { elements: [...unmounted] }
       );
     }
+  }
+
+  /**
+   * Check a block's tracker id and script address against its adapter's registration
+   *
+   * @returns {boolean} false, after logging why, when the block may not load
+   */
+  _allowed(name, config) {
+    const { ids, origins = [] } = allowlists.get(name);
+    const id = trackerId(config);
+
+    if (ids && (id === undefined || !ids.map(String).includes(String(id)))) {
+      this.logger?.warn('Tracker id not in the ids it was registered with', { name, id });
+      return false;
+    }
+
+    if (name === 'gtm' && !ids && !gtmWarned && this.logger) {
+      gtmWarned = true;
+      this.logger.warn('Register gtm with ids, or any container id in the page can load', {
+        name,
+      });
+    }
+
+    if (config.src === undefined) return true;
+
+    const allowed = [location.origin, ...(adapters.get(name).origins ?? []), ...origins];
+    let origin;
+    try {
+      origin = new URL(config.src, document.baseURI).origin;
+    } catch {
+      origin = null;
+    }
+    if (origin !== 'null' && allowed.includes(origin)) return true;
+
+    this.logger?.warn('Tracker src not on an allowed origin', { name, src: config.src });
+    return false;
   }
 
   _consentGranted(name, config) {

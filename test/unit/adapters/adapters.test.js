@@ -296,6 +296,18 @@ describe('tracker adapters', () => {
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('hash'));
   });
 
+  it.each([
+    ['fathom', { site: 'ABC' }, /usefathom/],
+    ['plausible', { domain: 'shop.example' }, /plausible\.io/],
+    ['plausible', { scriptId: 'pa-abc' }, /plausible\.io/],
+  ])('%s declares the origin of the script it loads by default', async (name, config, pattern) => {
+    const { default: adapter } = await import(`../../../src/adapters/${name}.js`);
+
+    adapter(config);
+
+    expect(adapter.origins).toContain(new URL(scripts(pattern)[0].src).origin);
+  });
+
   it('plausible adds a proxied script once', async () => {
     const { default: plausible } = await import('../../../src/adapters/plausible.js');
 
