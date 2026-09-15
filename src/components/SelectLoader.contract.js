@@ -7,7 +7,7 @@ export default {
   summary: "Load an HTML fragment into a target when a select's choice changes",
   description: `Each option's value is the URL of a fragment, fetched through RouterManager, so the page needs the framework's router. A newer choice cancels a load that is still running, the target is marked \`aria-busy\` while loading, and the loaded content is announced.
 
-Fragments are inserted as HTML, so they must come from a trusted, same-origin source; sanitise anything else first, for example with DOMPurify.`,
+Fragments are inserted as HTML, through the \`parallelogram\` policy on pages that enforce Trusted Types, so they must come from a trusted, same-origin source; sanitise anything else first, for example with DOMPurify.`,
   attributes: [
     { name: 'data-selectloader', type: 'flag', on: 'a <select>', description: 'Marks the select' },
     {

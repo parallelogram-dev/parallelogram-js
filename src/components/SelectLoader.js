@@ -1,6 +1,7 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { announce } from '../utils/announce.js';
 import { prefersReducedMotion } from '../utils/motion.js';
+import { trustedHTML } from '../utils/trusted.js';
 
 /**
  * SelectLoader - load an HTML fragment into a target when a select's choice changes
@@ -195,7 +196,7 @@ export default class SelectLoader extends BaseComponent {
         request.signal.throwIfAborted();
       }
 
-      targetElement.innerHTML = html;
+      targetElement.innerHTML = trustedHTML(html);
       targetElement.classList.remove(config.errorClass);
 
       if (config.retainScroll) {
