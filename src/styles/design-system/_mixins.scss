@@ -15,7 +15,7 @@
 }
 
 /* Focus visible styles (keyboard focus only) */
-@mixin focus-visible($color: $primary) {
+@mixin focus-visible($color: var(--color-accent, #{$primary})) {
   &:focus-visible {
     outline: 2px solid $color;
     outline-offset: 2px;
@@ -42,6 +42,20 @@
 /* Simplified dark mode wrapper */
 @mixin dark-mode {
   @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+/* Dark theme declarations for :root, applied when the OS prefers dark unless the page sets
+   data-theme="light", and whenever the page sets data-theme="dark" */
+@mixin dark-theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      @content;
+    }
+  }
+
+  :root[data-theme='dark'] {
     @content;
   }
 }
@@ -79,7 +93,7 @@
   appearance: none;
 
   &:focus-visible {
-    outline: 2px solid $primary;
+    outline: 2px solid var(--color-accent, #{$primary});
     outline-offset: 2px;
   }
 }
