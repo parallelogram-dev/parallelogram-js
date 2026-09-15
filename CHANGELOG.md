@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<p-uploader-file>` has its own import path, `@parallelogram-js/core/components/PUploaderFile`, which defines only that element. `components/PUploader` still defines it and exports `PUploaderFile`, and custom-elements.json lists it under its new module.
 - The documentation site publishes `llms.txt`, an index of its guides and component pages for coding agents, and `llms-full.txt`, with every guide and each component's attributes, events, CSS custom properties and first example in one file. It also publishes `sitemap.xml` and `robots.txt`. All four are generated from the guides and component contracts, like the pages.
 - `package.json` names the documentation site as the package's `homepage` and GitHub issues as its `bugs` URL.
-
 - DataTable's pagination and status text can be translated: `data-datatable-status-message` (with `{from}`, `{to}` and `{total}`), `data-datatable-pagination-label`, `data-datatable-previous-text`, `data-datatable-previous-label`, `data-datatable-next-text`, `data-datatable-next-label` and `data-datatable-page-label` (with `{page}`). The English defaults are unchanged.
 - The Pages and the router guide covers Content Security Policy and Trusted Types: the policies the library creates, what each one covers and the directive a page needs.
 - A Deferred trackers guide documents DeferTracker's set-up: each adapter's config keys, `configureDeferTracker()` with its `events`, `idleTimeout` and `nonce` options, consent through `setTrackerConsent()`, `requireCategory` and `reevaluateTrackerConsent()`, and the adapter API with its optional `page` and `block` steps, which were only described in JSDoc.
@@ -24,9 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - DeferTracker loads a block's `src`, such as Fathom's or Plausible's custom script address, only from the page's own origin or the vendor's origin the adapter declares; any other `src` marks the block `error` and nothing loads, so a block injected into a page can't load its own script with the site's nonce. To allow a proxy or self-hosted copy on another origin, pass it at registration, such as `registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] })`.
-
-### Changed
-
 - The package no longer includes `src`. The development build's source maps embed their sources; the production build's maps name the source files without including them.
 
 ### Fixed
