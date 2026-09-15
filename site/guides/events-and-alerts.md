@@ -266,22 +266,35 @@ Tie bus listeners to an `AbortController` and abort it to remove them all at onc
 const controller = new AbortController();
 const { signal } = controller;
 const progress = document.querySelector('.progress');
+const message = document.querySelector('.navigation-message');
 
-app.eventBus.on('router:navigate-start', () => progress.removeAttribute('hidden'), { signal });
+app.eventBus.on(
+  'router:navigate-start',
+  () => {
+    progress.hidden = false;
+    message.textContent = '';
+  },
+  { signal }
+);
 
 app.eventBus.on(
   'router:navigate-end',
   ({ status }) => {
-    progress.setAttribute('hidden', '');
+    progress.hidden = true;
     if (status === 'error') {
-      progress.textContent = 'That page could not be loaded.';
+      message.textContent = 'That page could not be loaded.';
     }
   },
   { signal }
 );
 
-controller.abort();
+/* Later, when the progress bar is removed from the page */
+function stopFollowingNavigations() {
+  controller.abort();
+}
 ```
+
+Give `.navigation-message` `role="status"` so the message is announced. Navigations only end with `'error'` when the router's `fullLoadOnError` option is `false`; otherwise a failed page loads normally.
 
 ### Listening to a web component on the document
 

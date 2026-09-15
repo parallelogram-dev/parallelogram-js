@@ -104,7 +104,7 @@ export class PageManager {
     /* Router event handlers */
     this._subscribe(
       'router:navigate-success',
-      ({ html, url, trigger, viewTarget, viewTargets, scroll, waitUntil }) => {
+      ({ html, url, trigger, viewTarget, viewTargets, scroll, signal, waitUntil }) => {
         const fromPopstate = trigger === 'popstate';
         const swap = this.replaceFragments(html, {
           fromNavigation: true,
@@ -114,6 +114,7 @@ export class PageManager {
           viewTargets: this._resolveTargetGroups(viewTargets || [viewTarget || 'main']),
           preserveScroll: fromPopstate && this.options.scrollPosition === 'preserve',
           scroll,
+          signal,
         });
 
         if (waitUntil) {
@@ -194,18 +195,44 @@ export class PageManager {
    * Replace fragments of the page with the matching fragments of a fetched document
    *
    * The swapping code is loaded when a router is present or on first use, so pages that never
-   * navigate do not download it. Options are described on FragmentSwapper#replaceFragments; unless
-   * a `signal` is given, the swap stops before changing the page once this manager is destroyed.
+   * navigate do not download it. Options are described on FragmentSwapper#replaceFragments. The
+   * swap stops before changing the page when `signal` aborts or this manager is destroyed.
    *
    * @throws {Error} When a fragment is missing or tracked assets changed, before anything changes.
    */
   async replaceFragments(html, options = {}) {
     const swapper = await this._loadSwapper();
-    const signal = options.signal ?? this._listeners.signal;
-    if (signal.aborted) {
-      return undefined;
+    const { signal, release } = this._swapSignal(options.signal);
+    try {
+      if (signal.aborted) {
+        return undefined;
+      }
+      return await swapper.replaceFragments(html, { ...options, signal });
+    } finally {
+      release();
     }
-    return swapper.replaceFragments(html, { ...options, signal });
+  }
+
+  /**
+   * A signal that aborts when the given signal does or when this manager is destroyed, and a
+   * function that removes the listeners joining them once the swap is over
+   */
+  _swapSignal(given) {
+    const own = this._listeners.signal;
+    if (!given) {
+      return { signal: own, release() {} };
+    }
+
+    const controller = new AbortController();
+    const joined = new AbortController();
+    const abort = () => controller.abort();
+    for (const source of [given, own]) {
+      if (source.aborted) {
+        abort();
+      }
+      source.addEventListener('abort', abort, { signal: joined.signal });
+    }
+    return { signal: controller.signal, release: () => joined.abort() };
   }
 
   _loadSwapper() {

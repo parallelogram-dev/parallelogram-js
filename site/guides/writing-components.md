@@ -299,7 +299,8 @@ export default class CharacterCount extends BaseComponent {
     state.output.textContent =
       remaining < 0 ? `${-remaining} characters over` : `${remaining} characters left`;
 
-    if (this.getElementState(element) !== next) {
+    if (state.current !== next) {
+      state.current = next;
       this.setState(element, next);
       this._dispatch(element, 'charcount:change', { state: next, remaining });
     }

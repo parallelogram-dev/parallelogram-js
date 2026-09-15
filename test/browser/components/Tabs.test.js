@@ -187,6 +187,46 @@ describe('Tabs panels and styles', () => {
     expect([location.hash, shownPanels(container)]).toEqual([hash, ['panel-contact']]);
   });
 
+  it("leaves a nested tab set's panels alone when the outer tabs change", () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<div data-tabs id="outer">
+        <div data-tabs-list>
+          <button data-tab="outer-specs">Specs</button>
+          <button data-tab="outer-reviews">Reviews</button>
+        </div>
+        <div data-tabs-panels>
+          <div id="outer-specs" data-tab-panel>
+            <div data-tabs id="inner">
+              <div data-tabs-list>
+                <button data-tab="inner-size">Size</button>
+                <button data-tab="inner-weight">Weight</button>
+              </div>
+              <div data-tabs-panels>
+                <div id="inner-size" data-tab-panel>42 cm</div>
+                <div id="inner-weight" data-tab-panel>3 kg</div>
+              </div>
+            </div>
+          </div>
+          <div id="outer-reviews" data-tab-panel>No reviews yet.</div>
+        </div>
+      </div>`
+    );
+    const outer = document.getElementById('outer');
+    const inner = document.getElementById('inner');
+    tabs = new Tabs();
+    tabs.mount(outer);
+    tabs.mount(inner);
+
+    outer.querySelector('[data-tab="outer-reviews"]').click();
+    outer.querySelector('[data-tab="outer-specs"]').click();
+
+    expect([...inner.querySelectorAll('[data-tab-panel]')].map(panel => panel.hidden)).toEqual([
+      false,
+      true,
+    ]);
+  });
+
   it('reports each change to the event bus once', () => {
     const container = mount(render());
     const changes = [];

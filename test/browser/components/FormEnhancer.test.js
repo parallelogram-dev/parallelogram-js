@@ -62,6 +62,20 @@ describe('FormEnhancer', () => {
     ]);
   });
 
+  it('lets a formnovalidate button submit without checking the fields', () => {
+    const form = build(`
+      <form data-form-enhancer>
+        <input name="title" required>
+        <button>Publish</button>
+        <button formnovalidate>Save draft</button>
+      </form>`);
+    enhancer.mount(form);
+
+    form.requestSubmit(form.querySelector('[formnovalidate]'));
+
+    expect([submissions, errorFor(form.elements.title)]).toEqual([[false], null]);
+  });
+
   it('links the error message to its field', () => {
     const form = build(`
       <form data-form-enhancer>
