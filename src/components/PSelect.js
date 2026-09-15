@@ -19,7 +19,7 @@ const DEFAULT_PLACEHOLDER = 'Select…';
  * of `{ value, label, disabled?, group? }`, or an object with those in `options`.
  *
  * The element is form-associated: it submits its value under its `name`, supports `required`, and
- * restores its initially selected option when the form resets.
+ * restores its `value` attribute, or else its selected option, when the form resets.
  *
  * @example
  * <label for="country">Country</label>
@@ -267,7 +267,7 @@ export default class PSelect extends HTMLElement {
     if (this.state.src) return;
 
     const options = [];
-    let defaultValue = null;
+    let selectedValue = null;
 
     for (const option of this.querySelectorAll('option')) {
       const parent = option.parentElement;
@@ -278,11 +278,16 @@ export default class PSelect extends HTMLElement {
         disabled: option.disabled || Boolean(parent?.disabled),
         group,
       });
-      if (option.hasAttribute('selected') && defaultValue === null) {
-        defaultValue = option.value;
+      if (option.hasAttribute('selected') && selectedValue === null) {
+        selectedValue = option.value;
       }
     }
 
+    /* The value attribute is the default when it names an option, as it does for a native input */
+    const attribute = this.getAttribute('value');
+    const defaultValue = options.some(option => option.value === attribute)
+      ? attribute
+      : selectedValue;
     this._defaultValue = defaultValue ?? '';
     const keep = options.some(option => option.value === this.state.value);
     if (!keep || (!this._selectedOption && defaultValue !== null)) {
