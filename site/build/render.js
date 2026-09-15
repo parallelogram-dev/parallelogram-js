@@ -1,3 +1,5 @@
+import { TOKEN_GROUPS } from '../src/workbench/tokens.js';
+
 /**
  * HTML for the documentation site, rendered from component contracts
  *
@@ -55,7 +57,7 @@ export function sidebar(contracts, current, guides = []) {
       .map(contract => link(slugFor(contract), escapeHtml(titleFor(contract))));
 
   return [
-    group('Start', [link('index', 'Overview')]),
+    group('Start', [link('index', 'Overview'), link('design-system', 'Design system')]),
     ...(guides.length
       ? [group('Guides', guides.map(guide => link(guide.slug, escapeHtml(guide.title))))]
       : []),
@@ -432,4 +434,138 @@ ${[...contracts].sort(byName).map(card).join('\n')}
 <p>Each component page is generated from the contract that sits beside the component's source, and a test checks every contract against the code. The examples are live: change their attributes, watch the events they send and copy the markup. This site runs on Parallelogram too, so following a link here uses the framework's own router.</p>
 </section>
 </article>`;
+}
+
+/**
+ * The design system workbench: token controls beside every component in a light and a dark frame
+ *
+ * @returns {string}
+ */
+export function designSystemPage() {
+  const tokenId = name => `token${name.replace(/^-+/, '-')}`;
+  const field = token => {
+    const id = tokenId(token.name);
+    if (token.kind !== 'colour') {
+      return `<div class="workbench__token">
+  <label for="${id}"><code>${escapeHtml(token.name)}</code></label>
+  <input id="${id}" name="${escapeHtml(token.name)}" data-token-input="both" autocomplete="off" spellcheck="false" disabled>
+</div>`;
+    }
+    const theme = mode => `<span class="workbench__value">
+    <span class="workbench__swatch" data-token-swatch="${mode}" aria-hidden="true"></span>
+    <input id="${id}-${mode}" name="${escapeHtml(token.name)}" data-token-input="${mode}" aria-label="${escapeHtml(token.name)}, ${mode} theme" autocomplete="off" spellcheck="false" disabled>
+  </span>`;
+    return `<div class="workbench__token workbench__token--colour">
+  <span class="workbench__name"><code>${escapeHtml(token.name)}</code></span>
+  ${theme('light')}
+  ${theme('dark')}
+</div>`;
+  };
+  const group = (tokenGroup, index) => `<details class="workbench__group"${index === 1 ? ' open' : ''}>
+<summary>${escapeHtml(tokenGroup.title)}</summary>
+${tokenGroup.note ? `<p class="workbench__note">${inline(tokenGroup.note)}</p>` : ''}
+${tokenGroup.tokens.map(field).join('\n')}
+</details>`;
+
+  return `<article class="workbench" data-design-workbench aria-labelledby="doc-title">
+<header class="doc__header">
+  <p class="doc__eyebrow">Design system</p>
+  <h1 id="doc-title">Design system workbench</h1>
+  <p class="doc__summary">Every component example in a light and a dark frame. Change a token and both frames follow; colours take a separate value for each theme. Copy the changed values as CSS when they look right.</p>
+</header>
+<div class="workbench__layout">
+<aside class="workbench__panel" aria-labelledby="workbench-tokens">
+  <h2 id="workbench-tokens">Tokens</h2>
+  <form class="workbench__controls" data-workbench-controls aria-labelledby="workbench-tokens">
+${TOKEN_GROUPS.map(group).join('\n')}
+<button type="reset" class="tool-button">Reset all</button>
+  </form>
+  <section class="workbench__export" aria-labelledby="workbench-export">
+    <h2 id="workbench-export">Changed values <span class="badge" data-workbench-count>0</span></h2>
+    <pre><code id="workbench-css" data-workbench-output>/* No changes yet */</code></pre>
+    <button type="button" class="tool-button" data-copytoclipboard data-copytoclipboard-target="#workbench-css"><span data-copytoclipboard-label>Copy CSS</span></button>
+  </section>
+</aside>
+<div class="workbench__frames">
+  <figure class="workbench__frame">
+    <figcaption>Light</figcaption>
+    <iframe src="design-system-preview.html?theme=light" data-workbench-frame="light" title="Every component in the light theme"></iframe>
+  </figure>
+  <figure class="workbench__frame">
+    <figcaption>Dark</figcaption>
+    <iframe src="design-system-preview.html?theme=dark" data-workbench-frame="dark" title="Every component in the dark theme"></iframe>
+  </figure>
+</div>
+</div>
+</article>`;
+}
+
+/** Components in the preview, grouped by the kind of surface they are made of */
+const PREVIEW_GROUPS = [
+  ['Form controls', ['PSelect', 'PDatetime', 'FormEnhancer', 'SelectLoader', 'CopyToClipboard']],
+  ['Dialogs and messages', ['PModal', 'Modal', 'Lightbox', 'PToasts', 'Toast']],
+  ['Disclosure', ['Accordion', 'Toggle', 'Tabs']],
+  ['Panels and data', ['PUploader', 'DataTable']],
+  ['Media and motion', ['Lazysrc', 'Videoplay', 'Scrollreveal', 'Scrollhide']],
+  ['Background', ['DeferTracker']],
+];
+
+/**
+ * The document each workbench frame shows: every example of every component, grouped by surface,
+ * in the theme named by the `theme` query parameter
+ *
+ * @param {import('../../src/contract.js').ComponentContract[]} contracts
+ * @returns {string}
+ */
+export function previewDocument(contracts) {
+  const withExamples = new Map(
+    contracts.filter(contract => contract.examples?.length).map(contract => [contract.name, contract])
+  );
+  const grouped = new Set(PREVIEW_GROUPS.flatMap(([, names]) => names));
+  const groups = [
+    ...PREVIEW_GROUPS,
+    ['Other', [...withExamples.keys()].filter(name => !grouped.has(name)).sort()],
+  ];
+
+  const specimen = (contract, example) => `<section class="specimen" data-specimen="${escapeHtml(contract.name)}:${escapeHtml(example.id)}" aria-label="${escapeHtml(titleFor(contract))}: ${escapeHtml(example.title)}">
+<p class="specimen__label">${escapeHtml(example.title)} <small>${escapeHtml(titleFor(contract))}</small></p>
+<div class="specimen__stage">
+${example.markup}
+</div>
+</section>`;
+
+  const sections = groups
+    .map(([title, names]) => {
+      const specimens = names
+        .map(name => withExamples.get(name))
+        .filter(Boolean)
+        .flatMap(contract => contract.examples.map(example => specimen(contract, example)));
+      return specimens.length
+        ? `<section class="preview-group" aria-label="${escapeHtml(title)}">
+<h2>${escapeHtml(title)}</h2>
+${specimens.join('\n')}
+</section>`
+        : '';
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  return `<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Design system preview · Parallelogram</title>
+<script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light';</script>
+<link rel="stylesheet" href="/src/styles/preview.scss">
+<script type="module" src="/src/preview.js"></script>
+</head>
+<body>
+<main class="preview">
+${sections}
+</main>
+</body>
+</html>
+`;
 }
