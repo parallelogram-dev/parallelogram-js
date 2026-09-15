@@ -65,30 +65,23 @@
   pointer-events: auto;
 }
 
-/* Types keep the inverse surface and mark it with a strip in the status colour. Without the package
-   stylesheet the strip has no width and they fall back to solid fills behind the white text */
+/* Types fill with the strong status colours behind white text in both themes */
 .toast.success,
 .toast.warning,
 .toast.error {
-  border-inline-start: var(--toast-accent-width, 0) solid var(--toast-accent);
+  color: var(--toast-text-color, var(--color-on-status, #fff));
 }
 
 .toast.success {
-  --toast-accent: var(--color-success, #{$success-dark});
-  background: var(--toast-bg-success, var(--color-inverse-surface, #{$success-dark}));
+  background: var(--toast-bg-success, var(--color-success-strong, #065f46));
 }
 
 .toast.warning {
-  --toast-accent: var(--color-warning, #{$warning-dark});
-  background: var(
-    --toast-bg-warning,
-    var(--toast-bg-warn, var(--color-inverse-surface, #{$warning-dark}))
-  );
+  background: var(--toast-bg-warning, var(--toast-bg-warn, var(--color-warning-strong, #7c2d12)));
 }
 
 .toast.error {
-  --toast-accent: var(--color-danger, #{$error-dark});
-  background: var(--toast-bg-error, var(--color-inverse-surface, #{$error-dark}));
+  background: var(--toast-bg-error, var(--color-danger-strong, #7f1d1d));
 }
 
 .row {
