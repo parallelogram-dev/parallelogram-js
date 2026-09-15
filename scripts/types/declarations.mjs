@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   elementsOf,
   eventType,
@@ -118,11 +119,10 @@ function classDeclaration({ name, item, isDefault }) {
  * The global augmentation: the module's tags in HTMLElementTagNameMap, and its framework events in
  * GlobalEventHandlersEventMap, because they bubble to the document
  *
- * @param {import('../../src/contract.js').ComponentContract} contract
+ * @param {ReturnType<typeof elementsOf>} elements - The elements the module defines
  * @returns {string}
  */
-function globalDeclarations(contract) {
-  const elements = elementsOf(contract);
+function globalDeclarations(elements) {
   const tags = elements.map(({ name, item }) => `    '${item.tag}': ${name};`).join('\n');
   const events = elements.flatMap(({ item }) => listenableEvents(item)).filter(isFrameworkEvent);
 
@@ -133,13 +133,32 @@ function globalDeclarations(contract) {
 }
 
 /**
- * The declaration file for a custom element's module
+ * The declaration file for one module of a custom element contract. A module declares the elements
+ * it defines, and the component's own module also re-exports child elements defined in another.
  *
  * @param {import('../../src/contract.js').ComponentContract} contract - An element contract
+ * @param {string} [module] - The module to declare, by default the component's own
  * @returns {string}
  */
-export function elementDeclarations(contract) {
-  const blocks = [...elementsOf(contract).map(classDeclaration), globalDeclarations(contract)];
+export function elementDeclarations(contract, module = contract.module) {
+  const elements = elementsOf(contract);
+  const defined = elements.filter(element => element.module === module);
+  const reexports =
+    module === contract.module
+      ? elements
+          .filter(element => element.module !== module)
+          .map(element => {
+            const relative = path.posix.relative(path.posix.dirname(module), element.module);
+            const specifier = relative.startsWith('.') ? relative : `./${relative}`;
+            return `export { ${element.name} } from '${specifier}.js';`;
+          })
+      : [];
+
+  const blocks = [
+    ...(reexports.length ? [reexports.join('\n')] : []),
+    ...defined.map(classDeclaration),
+    globalDeclarations(defined),
+  ];
   return `${blocks.join('\n\n')}\n`;
 }
 
