@@ -263,7 +263,7 @@ The package stylesheet declares these custom properties on `:root`. Set them in 
 
 When the user prefers a dark colour scheme, form fields, secondary button hovers and panels switch to dark values; set the same properties inside `@media (prefers-color-scheme: dark)` to change them. Properties for one component, such as `--modal-panel-bg` or `--toggle-transition-duration`, are listed under CSS custom properties on that component's page.
 
-Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. Tabs' stylesheet shows only the first panel until Tabs mounts, or the panel the markup marks `data-tab-panel="active"`, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
+Toggle's stylesheet hides closed targets and animates opening and closing, and Toggle waits for those animations. A target the markup marks `data-toggle-state="closed"` is hidden before Toggle mounts, but only while scripts are enabled. Tabs' stylesheet shows only the first panel until Tabs mounts, or the panel the markup marks `data-tab-panel="active"`, and Scrollreveal's hides its elements until Scrollreveal mounts. Both show the content again if the component fails to load, but not if it was never registered. Load them for pages that use those components, and register the components wherever their stylesheets are used.
 
 ## A complete page
 
