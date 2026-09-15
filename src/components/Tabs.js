@@ -124,9 +124,15 @@ export default class Tabs extends BaseComponent {
     this._setupTabs(state);
 
     const defaultTab = this.getAttr(element, 'default-tab', Tabs.defaults.defaultTab);
-    const initialTab = this._getLinkedTab(state) ?? this._getInitialTab(tabs, defaultTab);
+    const linkedTab = this._getLinkedTab(state);
+    const initialTab = linkedTab ?? this._getInitialTab(tabs, defaultTab);
     if (initialTab) {
       this._activateTab(element, initialTab.dataset.tab, state, false);
+    }
+    /* The browser couldn't scroll to a target in a hidden panel. Scroll now, unless the page has
+       already been scrolled, as when a reload restores its position. */
+    if (linkedTab && window.scrollX === 0 && window.scrollY === 0) {
+      this._hashTarget()?.scrollIntoView({ block: 'start' });
     }
 
     const { signal } = state.controller;
@@ -243,21 +249,28 @@ export default class Tabs extends BaseComponent {
    * @returns {HTMLElement|null}
    */
   _getLinkedTab(state) {
-    let id;
-    try {
-      id = decodeURIComponent(location.hash.slice(1));
-    } catch {
-      return null;
-    }
-    if (!id) return null;
-
-    const target = document.getElementById(id);
+    const target = this._hashTarget();
     const panel = target && state.panels.find(candidate => candidate.contains(target));
     return panel ? (state.tabs.find(tab => tab.dataset.tab === panel.id) ?? null) : null;
   }
 
   /**
-   * Select the tab the new hash links to, moving focus with the selection only if the old tab had it
+   * The element the address's hash names, or null
+   *
+   * @returns {HTMLElement|null}
+   */
+  _hashTarget() {
+    try {
+      const id = decodeURIComponent(location.hash.slice(1));
+      return id ? document.getElementById(id) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Select the tab the new hash links to and scroll to its target, moving focus with the selection
+   * only if the old tab had it
    */
   _handleHashChange(element, state) {
     const tab = this._getLinkedTab(state);
@@ -266,7 +279,8 @@ export default class Tabs extends BaseComponent {
     const oldTab = state.tabs.find(candidate => candidate.dataset.tab === state.activeTab);
     const hadFocus = Boolean(oldTab) && document.activeElement === oldTab;
     this._activateTab(element, tab.dataset.tab, state, true);
-    if (hadFocus) tab.focus();
+    if (hadFocus) tab.focus({ preventScroll: true });
+    this._hashTarget()?.scrollIntoView({ block: 'start' });
   }
 
   _handleTabClick(event, element, state) {
