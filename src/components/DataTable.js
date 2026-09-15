@@ -16,9 +16,10 @@ const cellsOf = row => childrenNamed(row, 'td', 'th');
  * DataTable - sorting, filtering and pagination for an existing table
  *
  * Sortable headers (`th[data-sort]`) get a button and `aria-sort`, following the WAI-ARIA sortable
- * table example. Values are read once when the table mounts: numbers ignore currency symbols and
- * separators, dates are parsed, text is compared in natural order ("Item 2" before "Item 10"), a
- * cell's `data-sort-value` overrides its text, and blank values always sort last. Filtering keeps
+ * table example. Values are read once when the table mounts: numbers are the first number in the
+ * cell, ignoring currency symbols, units and group separators, using the decimal separator of the
+ * table's `lang`, and negative after a minus sign or inside parentheses, dates are parsed, text is
+ * compared in natural order ("Item 2" before "Item 10"), a cell's `data-sort-value` overrides its text, and blank values always sort last. Filtering keeps
  * the current sort, pagination is a labelled navigation region with a window of page numbers, and a
  * status line below the table shows and announces which rows are showing after each change. The original row elements are
  * moved rather than copied, and unmounting puts the table back as it was.
@@ -97,6 +98,7 @@ export class DataTable extends BaseComponent {
     state.originalNodes = Array.from(tbody.childNodes);
     state.originalRows = rowsOf(tbody);
     state.columns = this._readColumns(element);
+    state.decimal = this._decimalSeparator(element);
     state.columnCount =
       cellsOf(rowsOf(childrenNamed(element, 'thead')[0]).at(-1)).length ||
       cellsOf(state.originalRows[0]).length ||
@@ -196,24 +198,51 @@ export class DataTable extends BaseComponent {
       keys: Object.fromEntries(
         state.columns.map(column => [
           column.key,
-          this._sortKey(cellsOf(row)[column.index], column.type),
+          this._sortKey(cellsOf(row)[column.index], column.type, state.decimal),
         ])
       ),
     }));
   }
 
   /**
+   * The decimal separator, "." or ",", of the table's language
+   */
+  _decimalSeparator(element) {
+    try {
+      const parts = new Intl.NumberFormat(
+        element.closest('[lang]')?.lang || undefined
+      ).formatToParts(1.1);
+      return parts.find(part => part.type === 'decimal')?.value === ',' ? ',' : '.';
+    } catch {
+      return '.';
+    }
+  }
+
+  /**
+   * Numbers are the first run of digits and separators, negative after a minus sign or opening
+   * parenthesis, with the other of "." and "," and spaces taken as group separators. A cell's
+   * data-sort-value always uses "." as its decimal separator.
+   *
    * @returns {string|number|null} null for a blank or unreadable value
    */
-  _sortKey(cell, type) {
+  _sortKey(cell, type, decimal = '.') {
     if (!cell) return null;
 
-    const raw = (cell.dataset.sortValue ?? cell.textContent).trim();
+    const { sortValue } = cell.dataset;
+    const raw = (sortValue ?? cell.textContent).trim();
     if (raw === '') return null;
 
     if (type === 'number') {
-      const number = Number(raw.replace(/[^\d.eE+-]/g, ''));
-      return Number.isFinite(number) ? number : null;
+      if (sortValue !== undefined) decimal = '.';
+      const match = /\d[\d., \u00a0\u202f]*/.exec(raw);
+      if (!match) return null;
+      const digits = match[0].replace(
+        decimal === ',' ? /[. \u00a0\u202f]/g : /[, \u00a0\u202f]/g,
+        ''
+      );
+      const number = Number(digits.replace(decimal, '.'));
+      if (!Number.isFinite(number)) return null;
+      return /[-\u2212(]/.test(raw.slice(0, match.index)) ? -number : number;
     }
     if (type === 'date') {
       const time = Date.parse(raw);
