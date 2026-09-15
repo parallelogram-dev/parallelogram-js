@@ -11,7 +11,7 @@ export default {
   summary: 'Show and hide a target element from one or more trigger buttons',
   description: `This is the disclosure pattern: triggers get \`aria-expanded\` and an \`aria-controls\` link to the target, which is given an id when it has none. The target has the \`open\` class while open and the \`hidden\` attribute while closed. The shipped stylesheet keeps closed targets hidden whatever display page styles give them, leaves open targets their own display, and animates the change. Toggle waits for those animations instead of a fixed delay, so the duration lives only in CSS.
 
-Toggles are independent unless they share a group, in which case opening one closes the others. A capture toggle, such as a dropdown, also closes when the user clicks or moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its trigger, and following a page link inside an open target closes it.
+Toggles are independent unless they share a group, in which case opening one closes the others. A capture toggle, such as a dropdown, also closes when the user clicks or moves focus outside it. Escape closes the open toggle that holds focus and returns focus to its trigger, and following a page link inside an open target closes it. Unmounting a trigger puts back the attributes Toggle gave it, and unmounting the last trigger for a target does the same for the target.
 
 For new dropdowns consider \`<button popovertarget>\` with \`popover\`, and for accordions Accordion, which animates \`<details name="…">\`; both work without JavaScript.`,
   states: STATES,
