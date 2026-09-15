@@ -86,12 +86,37 @@ Deep links keep working: when the address names a panel, or an element inside on
       default: '0.2s',
       description: 'Length of the panel fade and tab colour changes',
     },
-    { name: '--tabs-color', description: 'Tab text colour' },
-    { name: '--tabs-hover-color', description: 'Tab text colour on hover' },
-    { name: '--tabs-hover-bg', description: 'Tab background on hover' },
-    { name: '--tabs-selected-color', description: "The chosen tab's text and underline colour" },
-    { name: '--tabs-selected-bg', description: "The chosen tab's background" },
-    { name: '--tabs-border-color', description: 'The line under the tab list' },
+    {
+      name: '--tabs-color',
+      default: 'var(--color-text-muted, #6b7280)',
+      description: 'Tab text colour: the muted text colour',
+    },
+    {
+      name: '--tabs-hover-color',
+      default: 'var(--surface-panel-color-text, #374151)',
+      description:
+        "Tab text colour on hover: the panel text colour, which is the page's text colour",
+    },
+    {
+      name: '--tabs-hover-bg',
+      default: 'var(--color-hover, #f9fafb)',
+      description: 'Tab background on hover: the hover tint',
+    },
+    {
+      name: '--tabs-selected-color',
+      default: 'var(--color-accent-hover, #0369a1)',
+      description: "The chosen tab's text and underline colour: the stronger accent",
+    },
+    {
+      name: '--tabs-selected-bg',
+      default: 'var(--surface-dropdown-item-selected-bg, #f0f9ff)',
+      description: "The chosen tab's background: the selected option tint, 12% of the accent",
+    },
+    {
+      name: '--tabs-border-color',
+      default: 'var(--surface-panel-border-color, var(--color-border, #e2e8f0))',
+      description: 'The line under the tab list: the panel border colour',
+    },
   ],
   examples: [
     {
