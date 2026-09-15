@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Tabs from '../../../src/components/Tabs.js';
 
 const MARKUP = `
@@ -53,6 +53,8 @@ describe('Tabs deep links', () => {
   afterEach(() => {
     tabs?.destroy();
     tabs = null;
+    vi.restoreAllMocks();
+    window.scrollTo(0, 0);
     document.body.replaceChildren();
     history.replaceState(null, '', location.pathname);
   });
@@ -124,6 +126,33 @@ describe('Tabs deep links', () => {
     goTo('#returns');
 
     expect(document.activeElement).toBe(outer.querySelector('[data-tab="returns"]'));
+  });
+
+  it('scrolls to the element the new hash names after selecting its tab', () => {
+    mount();
+    const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+    goTo('#refunds');
+
+    expect(scrollIntoView.mock.contexts.map(element => element.id)).toEqual(['refunds']);
+  });
+
+  it('scrolls to the linked element when it mounts at the top of the page', () => {
+    window.scrollTo(0, 0);
+    const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+    mount('#refunds');
+
+    expect(scrollIntoView.mock.contexts.map(element => element.id)).toContain('refunds');
+  });
+
+  it('leaves a scroll position the page already has when it mounts', () => {
+    window.scrollTo(0, 300);
+    const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+    mount('#refunds');
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it('stops following the hash once unmounted', () => {
