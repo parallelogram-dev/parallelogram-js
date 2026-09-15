@@ -49,7 +49,6 @@ export class Lightbox extends BaseComponent {
       imageClass: 'lightbox__image',
       counterClass: 'lightbox__counter',
       /* State classes */
-      stateClosedClass: 'is-closed',
       stateOpeningClass: 'is-opening',
       stateOpenClass: 'is-open',
       stateTransitioningClass: 'is-transitioning',
@@ -142,7 +141,6 @@ export class Lightbox extends BaseComponent {
       imageClass: 'image-class',
       counterClass: 'counter-class',
       /* State and utility classes */
-      stateClosedClass: 'state-closed-class',
       stateOpeningClass: 'state-opening-class',
       stateOpenClass: 'state-open-class',
       stateTransitioningClass: 'state-transitioning-class',
