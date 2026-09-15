@@ -28,6 +28,23 @@ app.components.add(
 
 Blocks must sit inside the element the framework observes, which is the body by default. Blocks in `<head>` or elsewhere are never mounted, and the first tracker to start logs a warning listing them.
 
+## Which scripts can load
+
+Tracker blocks are markup, and adapters give the scripts they load the page's CSP nonce, so a block injected into a page could otherwise load any script. Limit what blocks can load when registering adapters.
+
+```js
+import { registerTrackerAdapter } from '@parallelogram-js/core/components/DeferTracker';
+import gtm from '@parallelogram-js/core/adapters/gtm';
+import plausible from '@parallelogram-js/core/adapters/plausible';
+
+registerTrackerAdapter('gtm', gtm, { ids: ['GTM-XXXXXX'] });
+registerTrackerAdapter('plausible', plausible, { origins: ['https://stats.example.com'] });
+```
+
+- With `ids`, a block whose tracker id (its `id`, `site`, `domain` or `scriptId`) isn't listed gets the status `error`, logs a warning naming the tracker and id, and its adapter isn't called. Without `ids`, any id is accepted.
+- A block's `src` loads only from the page's own origin, the vendor's origin that the adapter declares, or an origin listed in `origins`. Any other `src` gets the status `error` and a warning, and nothing loads. Fathom declares `https://cdn.usefathom.com` and Plausible `https://plausible.io`. A custom adapter declares its own as `boot.origins`.
+- Register Tag Manager with `ids`: a container's Custom HTML tags run any script, so without them a block can load any container. DeferTracker logs a warning once when `gtm` starts without `ids`.
+
 ## When trackers start
 
 Trackers start on the first `pointerdown`, `touchstart`, `keydown` or `click` on the window. Without interaction, they start after a fallback: once the page's load event has fired, then 5 seconds, then the browser's next idle period, waiting at most 2 seconds for it where `requestIdleCallback` is supported.
@@ -92,7 +109,7 @@ Every adapter is at `@parallelogram-js/core/adapters/<name>`, and every block al
 | `hotjar`           | `id`, `sv`                                              | `sv` is the snippet version, 6 by default.                                                                                                    |
 | `clarity`          | `id`                                                    |                                                                                                                                               |
 | `plausible`        | `scriptId`, `options`, `src`, or `domain`, `src`, `api` | `scriptId` loads the site script, with `options` for `plausible.init()`. `domain` loads the older shared script, with `api` as its endpoint.  |
-| `fathom`           | `site`, `src`                                           | `src` points at a custom domain or self-hosted copy.                                                                                          |
+| `fathom`           | `site`, `src`                                           | `src` points at a custom domain or self-hosted copy, on an allowed origin.                                                                    |
 
 `consentDefault` for the Google adapters and Bing is an object such as `{ "ad_storage": "denied" }`, queued before the tag starts.
 
@@ -129,9 +146,9 @@ registerTrackerAdapter('stats', statsAdapter);
 
 These are exported from `@parallelogram-js/core/components/DeferTracker`.
 
-| Function                             | What it does                                                                                           |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `registerTrackerAdapter(name, boot)` | Registers an adapter under the name used in `data-defer-tracker`.                                      |
-| `configureDeferTracker(options)`     | Sets `events`, `idleTimeout` and `nonce`, before the first tracker mounts.                             |
-| `setTrackerConsent(fn, options)`     | Sets the consent resolver, `(category) => boolean`, or clears it with `null`. Takes `requireCategory`. |
-| `reevaluateTrackerConsent()`         | Checks consent again for every tracker waiting for it.                                                 |
+| Function                                      | What it does                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `registerTrackerAdapter(name, boot, options)` | Registers an adapter under the name used in `data-defer-tracker`, with optional `ids` and `origins`.   |
+| `configureDeferTracker(options)`              | Sets `events`, `idleTimeout` and `nonce`, before the first tracker mounts.                             |
+| `setTrackerConsent(fn, options)`              | Sets the consent resolver, `(category) => boolean`, or clears it with `null`. Takes `requireCategory`. |
+| `reevaluateTrackerConsent()`                  | Checks consent again for every tracker waiting for it.                                                 |
