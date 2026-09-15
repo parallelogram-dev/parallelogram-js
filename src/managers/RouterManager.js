@@ -9,6 +9,8 @@
  *   place
  * @property {string[]} [nonRoutableExtensions] - Lowercase file extensions, without the dot, that
  *   links open natively instead of loading as a page
+ * @property {number} [historyCache=5] - Pages kept in memory for Back and Forward to show without
+ *   fetching them again, most recently shown first; 0 fetches every history move
  */
 
 /**
@@ -34,6 +36,7 @@ export class RouterManager {
       loadingClass: 'router-loading',
       errorClass: 'router-error',
       fullLoadOnError: true,
+      historyCache: 5,
       /* File extensions that are never loaded as an HTML fragment, unless the link is marked
          [data-router-enhance]. The browser downloads or opens them natively. */
       nonRoutableExtensions: [
@@ -86,6 +89,8 @@ export class RouterManager {
     this._entry = null;
     this._entryCount = 0;
     this._scrollPositions = new Map();
+    /* Pages shown in place, by address without the hash, for history moves to show again */
+    this._pages = new Map();
     this._previousScrollRestoration = history.scrollRestoration;
 
     /* Aborted in destroy() to remove every window and document listener */
@@ -497,7 +502,8 @@ export class RouterManager {
 
     try {
       const { signal } = navigation.controller;
-      const { response, data } = await this.get(targetUrl, { signal });
+      const kept = fromHistory && this._pages.get(this._pageKey(targetUrl));
+      const { response, data } = kept || (await this.get(targetUrl, { signal }));
       const finalUrl = this._responseUrl(response, targetUrl);
       const contentType = response.headers.get('content-type') || '';
 
@@ -555,6 +561,8 @@ export class RouterManager {
         throw failure.reason;
       }
 
+      this._remember(finalUrl, { response, data });
+
       this.logger?.info('Navigation successful', {
         url: finalUrl.href,
         trigger,
@@ -572,6 +580,7 @@ export class RouterManager {
 
       status = 'error';
       this._lastFailed = true;
+      this._pages.delete(this._pageKey(targetUrl));
       this._showError(navigation);
 
       this.eventBus.emit('router:navigate-error', {
@@ -615,6 +624,28 @@ export class RouterManager {
       url.hash = requestedUrl.hash;
     }
     return url;
+  }
+
+  /**
+   * Keep a page that was shown in place for history moves, dropping the pages shown least recently
+   * beyond `historyCache`
+   */
+  _remember(url, page) {
+    const key = this._pageKey(url);
+    this._pages.delete(key);
+    this._pages.set(key, page);
+    for (const oldest of this._pages.keys()) {
+      if (this._pages.size <= this.options.historyCache) {
+        break;
+      }
+      this._pages.delete(oldest);
+    }
+  }
+
+  _pageKey(url) {
+    const key = new URL(url);
+    key.hash = '';
+    return key.href;
   }
 
   _fullLoad(url, replaceEntry) {

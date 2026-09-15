@@ -459,6 +459,82 @@ describe('RouterManager', () => {
       await vi.waitFor(() => expect(window.scrollY).toBe(500));
     });
 
+    describe('kept pages', () => {
+      const visit = async path => {
+        const navigation = router.navigate(path);
+        server.requests.at(-1).respond(htmlResponse(`<main>${path}</main>`));
+        await navigation;
+        return history.state;
+      };
+
+      const goBackTo = (state, path) => {
+        history.pushState(state, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate', { state }));
+      };
+
+      it('shows a page again on Back without fetching it', async () => {
+        start();
+        const oneState = await visit('/one');
+        await visit('/two');
+        const success = record('router:navigate-success');
+
+        goBackTo(oneState, '/one');
+
+        await vi.waitFor(() => expect(success).toHaveBeenCalledOnce());
+        expect([server.fetch.mock.calls.length, success.mock.calls[0][0].html]).toEqual([
+          2,
+          '<main>/one</main>',
+        ]);
+      });
+
+      it('fetches a page again when a link leads back to it', async () => {
+        start();
+        await visit('/one');
+        await visit('/two');
+
+        router.navigate('/one');
+
+        expect(server.fetch).toHaveBeenCalledTimes(3);
+      });
+
+      it('fetches a page on Back once more recent pages have pushed it out', async () => {
+        start({ historyCache: 1 });
+        const oneState = await visit('/one');
+        await visit('/two');
+
+        goBackTo(oneState, '/one');
+
+        expect(server.fetch).toHaveBeenCalledTimes(3);
+      });
+
+      it('fetches every page on Back when keeping pages is turned off', async () => {
+        start({ historyCache: 0 });
+        const oneState = await visit('/one');
+        await visit('/two');
+
+        goBackTo(oneState, '/one');
+
+        expect(server.fetch).toHaveBeenCalledTimes(3);
+      });
+
+      it('fetches a page on Back again after it failed to show', async () => {
+        start({ fullLoadOnError: false });
+        const oneState = await visit('/one');
+        const twoState = await visit('/two');
+        bus.on('router:navigate-success', ({ waitUntil }) =>
+          waitUntil(Promise.reject(new Error('Swap failed')))
+        );
+        goBackTo(oneState, '/one');
+        await vi.waitFor(() => expect(router.navigating).toBe(false));
+        goBackTo(twoState, '/two');
+        await vi.waitFor(() => expect(router.navigating).toBe(false));
+
+        goBackTo(oneState, '/one');
+
+        expect(server.fetch).toHaveBeenCalledTimes(3);
+      });
+    });
+
     it('stops reporting history navigation once destroyed', () => {
       const popstate = record('router:popstate');
       start().destroy();

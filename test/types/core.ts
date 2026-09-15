@@ -13,7 +13,7 @@ import gtm from '@parallelogram-js/core/adapters/gtm';
 
 export function configure(): Parallelogram {
   const app = Parallelogram.create({
-    router: { timeout: 5000, loadingClass: 'is-loading' },
+    router: { timeout: 5000, loadingClass: 'is-loading', historyCache: 3 },
     pageManager: {
       containerSelector: 'main',
       focusTarget: false,
