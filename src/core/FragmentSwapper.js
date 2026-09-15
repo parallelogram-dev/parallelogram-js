@@ -1,5 +1,6 @@
 import { announce } from '../utils/announce.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
+import { trustedHTML, trustedScript, trustedScriptURL } from '../utils/trusted.js';
 
 const TRACKED_ASSETS = '[data-router-track="reload"]';
 
@@ -101,7 +102,7 @@ export class FragmentSwapper {
 
     try {
       const storedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
-      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const doc = new DOMParser().parseFromString(trustedHTML(html), 'text/html');
       const fragmentOptions = { ...options, storedScroll, doc };
       const fragments = viewTargets.map(viewTarget => ({
         viewTarget,
@@ -264,7 +265,7 @@ export class FragmentSwapper {
    */
   _swapFragment(sourceFragment, targetFragment, viewTarget, options, transitionConfig) {
     this.unmountWithin(targetFragment);
-    targetFragment.innerHTML = sourceFragment.innerHTML;
+    targetFragment.replaceChildren(...this._fragmentContent(sourceFragment));
     this._syncFragmentRoot(sourceFragment, targetFragment, transitionConfig);
 
     if (viewTarget === 'main') {
@@ -588,8 +589,23 @@ export class FragmentSwapper {
   }
 
   /**
-   * Run the scripts in swapped-in content, which the browser does not execute when content is set
-   * through innerHTML
+   * A copy of a fetched fragment's content, ready to move into the page
+   *
+   * The copy is made in the parsed document, where scripts don't run and nothing loads. That
+   * document parses `<noscript>` content as elements, so it is turned back into text, as the page's
+   * own parser would leave it.
+   */
+  _fragmentContent(sourceFragment) {
+    const content = sourceFragment.cloneNode(true);
+    for (const noscript of content.querySelectorAll('noscript')) {
+      noscript.textContent = noscript.innerHTML;
+    }
+    return [...content.childNodes];
+  }
+
+  /**
+   * Run the scripts in swapped-in content, which the browser does not execute when they are moved
+   * in from the parsed document
    *
    * Scripts marked [data-router-skip] and data blocks such as `type="application/json"` are left
    * alone. Page scripts run again on every visit, as they would on a full page load.
@@ -598,7 +614,12 @@ export class FragmentSwapper {
     for (const original of fragment.querySelectorAll('script:not([data-router-skip])')) {
       const type = (original.getAttribute('type') ?? '').trim().toLowerCase();
       if (type === '' || type === 'module' || /(java|ecma)script/.test(type)) {
-        original.replaceWith(this._cloneScript(original));
+        /* A script the page's Trusted Types policy rejects is skipped, and the swap carries on */
+        try {
+          original.replaceWith(this._cloneScript(original));
+        } catch (error) {
+          this.logger?.warn('Could not run a script in the new content', { error });
+        }
       }
     }
   }
@@ -609,10 +630,13 @@ export class FragmentSwapper {
   _cloneScript(original, base = null) {
     const script = document.createElement('script');
     for (const { name, value } of original.attributes) {
-      script.setAttribute(name, value);
+      if (name !== 'src') {
+        script.setAttribute(name, value);
+      }
     }
-    if (base && original.hasAttribute('src')) {
-      script.src = new URL(original.getAttribute('src'), base).href;
+    const src = original.getAttribute('src');
+    if (src !== null) {
+      script.src = trustedScriptURL(base ? new URL(src, base).href : src);
     }
     if (!original.hasAttribute('async')) {
       script.async = false;
@@ -620,7 +644,7 @@ export class FragmentSwapper {
     if (original.nonce) {
       script.nonce = original.nonce;
     }
-    script.textContent = original.textContent;
+    script.textContent = trustedScript(original.textContent);
     return script;
   }
 

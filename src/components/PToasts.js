@@ -3,6 +3,7 @@ import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { getOpenModal } from '../utils/modal.js';
+import { trustedHTML } from '../utils/trusted.js';
 
 /** Alternative type names, normalised to the four styled types */
 const TYPE_ALIASES = { warn: 'warning', danger: 'error' };
@@ -107,7 +108,8 @@ export default class PToasts extends HTMLElement {
    * @param {number} [options.timeout] Milliseconds before the toast closes, or 0 to keep it until it
    *   is dismissed. Defaults to 4000, and to 0 for errors. `duration` is accepted as an alias.
    * @param {boolean} [options.dismissible=true] Whether the toast has a dismiss button
-   * @param {boolean} [options.allowHTML=false] Treat the message as trusted HTML
+   * @param {boolean} [options.allowHTML=false] Treat the message as trusted HTML, inserted through
+   *   the `parallelogram` Trusted Types policy where the page enforces Trusted Types
    * @returns {Function} Closes the toast
    */
   toast(options = {}) {
@@ -134,7 +136,7 @@ export default class PToasts extends HTMLElement {
     const messageElement = document.createElement('span');
     messageElement.className = 'msg';
     if (allowHTML) {
-      messageElement.innerHTML = message;
+      messageElement.innerHTML = trustedHTML(message);
     } else {
       messageElement.textContent = message;
     }

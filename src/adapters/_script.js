@@ -4,6 +4,8 @@
  * @module @parallelogram-js/core/adapters/_script
  */
 
+import { trustedScriptURL } from '../utils/trusted.js';
+
 /** Scripts this module has added, keyed by absolute address */
 const loading = new Map();
 
@@ -31,7 +33,7 @@ export function injectScript(src, { nonce, id, attrs = {} } = {}) {
 
   const script = document.createElement('script');
   script.async = true;
-  script.src = href;
+  script.src = trustedScriptURL(href);
   if (nonce) script.setAttribute('nonce', nonce);
   if (id) script.id = id;
   for (const [name, value] of Object.entries(attrs)) {
