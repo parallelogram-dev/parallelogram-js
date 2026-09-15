@@ -69,6 +69,101 @@ describe('Modal', () => {
     expect(events).toEqual(['opened', 'closed']);
   });
 
+  it('reports an open from the second of two triggers once, on that trigger', async () => {
+    document.body.innerHTML = `
+      <button id="first" data-modal data-modal-target="#terms">Terms</button>
+      <button id="second" data-modal data-modal-target="#terms">Read the terms</button>
+      <p-modal id="terms"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#first'));
+    modals.mount(document.querySelector('#second'));
+    const opened = [];
+    for (const trigger of document.querySelectorAll('[data-modal]')) {
+      trigger.addEventListener('modal:opened', () => opened.push(trigger.id));
+    }
+
+    document.querySelector('#second').click();
+    await vi.waitFor(() => expect(opened.length).toBeGreaterThan(0), { timeout: 2000 });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    expect(opened).toEqual(['second']);
+    document.querySelector('#terms').close();
+  });
+
+  it('reports the close once, on the trigger that opened the modal', async () => {
+    document.body.innerHTML = `
+      <button id="first" data-modal data-modal-target="#terms">Terms</button>
+      <button id="second" data-modal data-modal-target="#terms">Read the terms</button>
+      <p-modal id="terms"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    modals.mount(document.querySelector('#first'));
+    modals.mount(document.querySelector('#second'));
+    const terms = document.querySelector('#terms');
+    const closed = [];
+    for (const trigger of document.querySelectorAll('[data-modal]')) {
+      trigger.addEventListener('modal:closed', () => closed.push(trigger.id));
+    }
+
+    document.querySelector('#second').click();
+    terms.close();
+    await vi.waitFor(() => expect(closed.length).toBeGreaterThan(0), { timeout: 2000 });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    expect(closed).toEqual(['second']);
+  });
+
+  it("keeps every trigger's aria-expanded in step with the modal", async () => {
+    document.body.innerHTML = `
+      <button id="first" data-modal data-modal-target="#terms">Terms</button>
+      <button id="second" data-modal data-modal-target="#terms">Read the terms</button>
+      <p-modal id="terms"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const modals = new Modal();
+    const first = document.querySelector('#first');
+    const second = document.querySelector('#second');
+    modals.mount(first);
+    modals.mount(second);
+    const terms = document.querySelector('#terms');
+    const expanded = () => [first, second].map(trigger => trigger.getAttribute('aria-expanded'));
+
+    second.click();
+    const whileOpen = expanded();
+    terms.close();
+    await vi.waitFor(() => expect(terms.hasAttribute('open')).toBe(false), { timeout: 2000 });
+
+    expect([whileOpen, expanded()]).toEqual([
+      ['true', 'true'],
+      ['false', 'false'],
+    ]);
+  });
+
+  it('reports a script opening the modal once', async () => {
+    document.body.innerHTML = `
+      <button id="first" data-modal data-modal-target="#terms">Terms</button>
+      <button id="second" data-modal data-modal-target="#terms">Read the terms</button>
+      <p-modal id="terms"><h2 slot="title">Terms</h2><button>Done</button></p-modal>
+    `;
+    const eventBus = new EventManager();
+    const modals = new Modal({ eventBus });
+    modals.mount(document.querySelector('#first'));
+    modals.mount(document.querySelector('#second'));
+    const terms = document.querySelector('#terms');
+    const events = [];
+    for (const trigger of document.querySelectorAll('[data-modal]')) {
+      trigger.addEventListener('modal:opened', () => events.push(`dom:${trigger.id}`));
+    }
+    eventBus.on('modal:opened', () => events.push('bus'));
+
+    terms.open();
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0), { timeout: 2000 });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    expect(events).toEqual(['dom:first', 'bus']);
+    terms.close();
+  });
+
   it('creates a working modal programmatically', async () => {
     const modal = await Modal.create({
       title: 'Discard changes?',

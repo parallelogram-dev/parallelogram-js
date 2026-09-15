@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CopyToClipboard from '../../../src/components/CopyToClipboard.js';
 
-const liveRegion = () => document.querySelector('[data-copytoclipboard-status]');
+const liveRegion = (container = document) =>
+  container.querySelector('[data-parallelogram-announcer]');
 
 const button = (attributes = {}, children = ['Copy']) => {
   const element = document.createElement('button');
@@ -100,6 +101,19 @@ describe('CopyToClipboard', () => {
       expect(trigger.getAttribute('data-copytoclipboard-state')).toBe('failed')
     );
     await vi.waitFor(() => expect(liveRegion()?.textContent).toBe('Copy failed'));
+  });
+
+  it('announces the copy inside an open modal dialog', async () => {
+    const dialog = document.createElement('dialog');
+    document.body.append(dialog);
+    const trigger = button({ 'data-copytoclipboard-text': 'abc' });
+    dialog.append(trigger);
+    mount(trigger);
+    dialog.showModal();
+
+    trigger.click();
+
+    await vi.waitFor(() => expect(liveRegion(dialog)?.textContent).toBe('Copied!'));
   });
 
   it('enhances documented markup when enhanceAll is called without arguments', async () => {

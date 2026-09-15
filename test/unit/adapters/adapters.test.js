@@ -3,10 +3,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const scripts = pattern =>
   [...document.querySelectorAll('script')].filter(script => pattern.test(script.src));
 
+const fakeUet = (created = []) =>
+  class {
+    constructor(options) {
+      this.options = options;
+      created.push(options.ti);
+    }
+
+    push() {}
+  };
+
 const laterPage = { url: 'https://shop.example/confirmation', mounted: true };
 
 const GLOBALS = [
   'uetq',
+  'uetq_1234567',
+  'uetq_7654321',
   'UET',
   'ttq',
   'TiktokAnalyticsObject',
@@ -58,6 +70,47 @@ describe('tracker adapters', () => {
     expect([scripts(/bat\.bing\.com\/bat\.js/).length, window.uetq.options.q]).toEqual([
       1,
       ['consent', 'default', { ad_storage: 'denied' }],
+    ]);
+  });
+
+  it('bing-uet starts a second tag id with its own UET instance', async () => {
+    const { default: bingUet } = await import('../../../src/adapters/bing-uet.js');
+
+    const started = [bingUet({ id: '1234567' }), bingUet({ id: '7654321' })];
+    window.UET = fakeUet();
+    await Promise.all(started);
+
+    expect([window.uetq.options.ti, window.uetq_7654321.options.ti]).toEqual([
+      '1234567',
+      '7654321',
+    ]);
+  });
+
+  it('bing-uet starts a tag id given twice once', async () => {
+    const created = [];
+    const { default: bingUet } = await import('../../../src/adapters/bing-uet.js');
+
+    const started = [bingUet({ id: '1234567' }), bingUet({ id: '1234567' })];
+    window.UET = fakeUet(created);
+    await Promise.all(started);
+
+    expect(created).toEqual(['1234567']);
+  });
+
+  it('bing-uet starts its tag beside a UET tag the page already has for another id', async () => {
+    window.UET = fakeUet();
+    window.uetq = new window.UET({ ti: '999' });
+    const { default: bingUet } = await import('../../../src/adapters/bing-uet.js');
+
+    await bingUet({ id: '1234567', consentDefault: { ad_storage: 'denied' } });
+
+    expect([window.uetq.options.ti, window.uetq_1234567.options]).toEqual([
+      '999',
+      {
+        ti: '1234567',
+        enableAutoSpaTracking: true,
+        q: ['consent', 'default', { ad_storage: 'denied' }],
+      },
     ]);
   });
 

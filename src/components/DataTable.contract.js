@@ -9,7 +9,7 @@ export default {
   module: 'components/DataTable',
   stylesheet: 'styles/datatable.css',
   summary: 'Sorting, filtering and pagination for an existing table',
-  description: `Sortable headers get a button and \`aria-sort\`, following the WAI-ARIA sortable table example. Values are read once when the table mounts: numbers ignore currency symbols and separators, dates are parsed, text is compared in natural order ("Item 2" before "Item 10"), and blank values always sort last.
+  description: `Sortable headers get a button and \`aria-sort\`, following the WAI-ARIA sortable table example. Values are read once when the table mounts: numbers are the first number in the cell, ignoring currency symbols, units and group separators, using the decimal separator of the table's \`lang\`, and negative after a minus sign or inside parentheses, dates are parsed, text is compared in natural order ("Item 2" before "Item 10"), and blank values always sort last.
 
 Filtering keeps the current sort, pagination is a labelled navigation region with a window of page numbers, and a status message announces which rows are showing after each change. The original rows are moved rather than copied, and unmounting puts the table back as it was.`,
   states: STATES,

@@ -13,7 +13,7 @@ const MARKUP = `
     <div data-tabs-panels>
       <div id="panel-shipping" data-tab-panel>Orders ship in two days.</div>
       <div id="panel-returns" data-tab-panel>Return within 30 days.</div>
-      <div id="panel-contact" data-tab-panel><a href="#email">Email us</a></div>
+      <div id="panel-contact" data-tab-panel><a id="email" href="#email">Email us</a></div>
     </div>
   </div>
 `;
@@ -185,6 +185,51 @@ describe('Tabs panels and styles', () => {
     container.querySelector('a[data-tab]').click();
 
     expect([location.hash, shownPanels(container)]).toEqual([hash, ['panel-contact']]);
+  });
+
+  describe('deep links', () => {
+    const address = location.href;
+
+    const goTo = hash => {
+      history.replaceState(null, '', hash);
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    };
+
+    afterEach(() => {
+      history.replaceState(null, '', address);
+    });
+
+    it('shows the panel the address names when it mounts', () => {
+      history.replaceState(null, '', '#panel-returns');
+
+      const container = mount(render());
+
+      expect(shownPanels(container)).toEqual(['panel-returns']);
+    });
+
+    it('shows the panel the address names when the hash changes', () => {
+      const container = mount(render());
+
+      goTo('#panel-contact');
+
+      expect(shownPanels(container)).toEqual(['panel-contact']);
+    });
+
+    it('shows the panel holding the element the address names', () => {
+      history.replaceState(null, '', '#email');
+
+      const container = mount(render());
+
+      expect(shownPanels(container)).toEqual(['panel-contact']);
+    });
+
+    it('shows the first panel when the address names nothing in the tab set', () => {
+      history.replaceState(null, '', '#elsewhere');
+
+      const container = mount(render());
+
+      expect(shownPanels(container)).toEqual(['panel-shipping']);
+    });
   });
 
   it("leaves a nested tab set's panels alone when the outer tabs change", () => {

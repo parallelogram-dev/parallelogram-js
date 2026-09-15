@@ -23,6 +23,29 @@ const mountTable = (attributes = {}) => {
   return dataTable.getState(table).config;
 };
 
+const sortNumbers = (values, { lang, sortValues = false } = {}) => {
+  const wrapper = document.createElement('div');
+  if (lang) wrapper.lang = lang;
+  const table = document.createElement('table');
+  table.setAttribute('data-datatable', '');
+  const heading = document.createElement('th');
+  heading.dataset.sort = 'value';
+  heading.dataset.sortType = 'number';
+  table.createTHead().insertRow().append(heading);
+  const body = table.createTBody();
+  for (const value of values) {
+    const cell = body.insertRow().insertCell();
+    cell.textContent = value;
+    if (sortValues) cell.dataset.sortValue = value;
+  }
+  wrapper.append(table);
+  document.body.append(wrapper);
+
+  new DataTable().mount(table);
+  heading.querySelector('button').click();
+  return Array.from(body.querySelectorAll('td'), cell => cell.textContent);
+};
+
 describe('DataTable', () => {
   afterEach(() => {
     document.body.replaceChildren();
@@ -47,5 +70,46 @@ describe('DataTable', () => {
       sortable: false,
       filterable: true,
     });
+  });
+
+  it.each([
+    [
+      'words after them',
+      ['12 users', '5 users', '100 users'],
+      ['5 users', '12 users', '100 users'],
+    ],
+    ['units', ['5 minutes', '3 minutes', '10 GB'], ['3 minutes', '5 minutes', '10 GB']],
+    ['currency and group separators', ['$1,200', '$900', '$15'], ['$15', '$900', '$1,200']],
+    ['a range, by its first number', ['10-20', '3-4', '7'], ['3-4', '7', '10-20']],
+  ])('sorts numbers written with %s', (_case, values, expected) => {
+    expect(sortNumbers(values)).toEqual(expected);
+  });
+
+  it('sorts numbers in parentheses and after minus signs as negative', () => {
+    expect(sortNumbers(['2', '(1,200)', '\u22125', '-3'])).toEqual([
+      '(1,200)',
+      '\u22125',
+      '-3',
+      '2',
+    ]);
+  });
+
+  it('reads a hyphen joined to a word as part of the word rather than a minus sign', () => {
+    expect(sortNumbers(['Item-5', 'Item-2', '-1'])).toEqual(['-1', 'Item-2', 'Item-5']);
+  });
+
+  it.each([
+    ['de', ['1.234,56', '99,5', '1.000'], ['99,5', '1.000', '1.234,56']],
+    ['en', ['1,234.56', '99.5', '1,000'], ['99.5', '1,000', '1,234.56']],
+  ])('reads decimal separators in the table language %s', (lang, values, expected) => {
+    expect(sortNumbers(values, { lang })).toEqual(expected);
+  });
+
+  it('reads data-sort-value with a "." decimal separator in any table language', () => {
+    expect(sortNumbers(['1234.5', '99.5', '1000'], { lang: 'de', sortValues: true })).toEqual([
+      '99.5',
+      '1000',
+      '1234.5',
+    ]);
   });
 });
