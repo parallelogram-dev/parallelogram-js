@@ -82,6 +82,18 @@ describe('ComponentHost', () => {
     expect(recorder.log).toEqual([['mount', 'toggle', 'menu']]);
   });
 
+  it('ignores requests to mount once stopped, until it starts again', () => {
+    start([syncEntry('toggle')]);
+    host.stop();
+    root.innerHTML = '<button id="menu" data-toggle></button>';
+
+    host.mountWithin(root);
+    const whileStopped = [...recorder.log];
+    host.start(root);
+
+    expect([whileStopped, recorder.log]).toEqual([[], [['mount', 'toggle', 'menu']]]);
+  });
+
   it('passes the event bus, logger and router to each component', () => {
     root.innerHTML = '<button id="menu" data-toggle></button>';
     const logger = { info() {} };
