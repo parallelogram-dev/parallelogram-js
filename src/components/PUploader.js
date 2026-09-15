@@ -2,6 +2,7 @@ import { generateId } from '../utils/dom-utils.js';
 import hostStyles from '../styles/framework/components/PUploaderHost.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
+import { followFocusSource } from '../utils/focus-source.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
 import { PUploaderFile } from './PUploaderFile.js';
 
@@ -125,6 +126,7 @@ export default class PUploader extends HTMLElement {
   }
 
   connectedCallback() {
+    followFocusSource(this);
     this._setupEventListeners();
     this._loadFieldDefinitions();
     this._loadExistingFiles();

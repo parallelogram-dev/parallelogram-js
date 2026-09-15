@@ -410,6 +410,35 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
+  it('clears its value when its text is deleted and the list closes', async () => {
+    const { select } = renderForm(COUNTRIES);
+    const input = select.shadowRoot.querySelector('input');
+    const changes = [];
+    select.addEventListener('change', () => changes.push(select.value));
+
+    await userEvent.click(input);
+    await userEvent.clear(input);
+    select.close();
+
+    expect([select.value, input.value, changes]).toEqual(['', '', ['']]);
+  });
+
+  it('restores the chosen option when its text is deleted while it is required', async () => {
+    const { select } = renderForm(`
+      <p-select name="size" required>
+        <option value="s" selected>Small</option>
+        <option value="m">Medium</option>
+      </p-select>
+    `);
+    const input = select.shadowRoot.querySelector('input');
+
+    await userEvent.click(input);
+    await userEvent.clear(input);
+    select.close();
+
+    expect([select.value, input.value]).toEqual(['s', 'Small']);
+  });
+
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
     const select = mountSelect(COUNTRIES);
     const seen = [];
