@@ -123,43 +123,34 @@ export class Lightbox extends BaseComponent {
   }
 
   _getConfiguration(element) {
-    const { defaults } = this.constructor;
-    return {
-      closeOnEscape: this.getBoolAttr(element, 'close-escape', defaults.closeOnEscape),
-      closeOnBackdrop: this.getBoolAttr(element, 'close-backdrop', defaults.closeOnBackdrop),
-      showCounter: this.getBoolAttr(element, 'show-counter', defaults.showCounter),
-      showNavigation: this.getBoolAttr(element, 'show-nav', defaults.showNavigation),
-      keyNavigation: this.getBoolAttr(element, 'key-nav', defaults.keyNavigation),
-      useDirectionalTransitions: this.getBoolAttr(
-        element,
-        'directional-transitions',
-        defaults.useDirectionalTransitions
-      ),
-      preloadStrategy: this.getAttr(element, 'preload', defaults.preloadStrategy),
+    return this._getConfigFromAttrs(element, {
+      closeOnEscape: 'close-escape',
+      closeOnBackdrop: 'close-backdrop',
+      showCounter: 'show-counter',
+      showNavigation: 'show-nav',
+      keyNavigation: 'key-nav',
+      useDirectionalTransitions: 'directional-transitions',
+      preloadStrategy: 'preload',
       /* BEM class names */
-      baseClass: this.getAttr(element, 'base-class', defaults.baseClass),
-      overlayClass: this.getAttr(element, 'overlay-class', defaults.overlayClass),
-      containerClass: this.getAttr(element, 'container-class', defaults.containerClass),
-      closeClass: this.getAttr(element, 'close-class', defaults.closeClass),
-      prevClass: this.getAttr(element, 'prev-class', defaults.prevClass),
-      nextClass: this.getAttr(element, 'next-class', defaults.nextClass),
-      contentClass: this.getAttr(element, 'content-class', defaults.contentClass),
-      imageClass: this.getAttr(element, 'image-class', defaults.imageClass),
-      counterClass: this.getAttr(element, 'counter-class', defaults.counterClass),
-      /* State classes */
-      stateClosedClass: this.getAttr(element, 'state-closed-class', defaults.stateClosedClass),
-      stateOpeningClass: this.getAttr(element, 'state-opening-class', defaults.stateOpeningClass),
-      stateOpenClass: this.getAttr(element, 'state-open-class', defaults.stateOpenClass),
-      stateTransitioningClass: this.getAttr(
-        element,
-        'state-transitioning-class',
-        defaults.stateTransitioningClass
-      ),
-      stateClosingClass: this.getAttr(element, 'state-closing-class', defaults.stateClosingClass),
-      showClass: this.getAttr(element, 'show-class', defaults.showClass),
-      slideLeftClass: this.getAttr(element, 'slide-left-class', defaults.slideLeftClass),
-      slideRightClass: this.getAttr(element, 'slide-right-class', defaults.slideRightClass),
-    };
+      baseClass: 'base-class',
+      overlayClass: 'overlay-class',
+      containerClass: 'container-class',
+      closeClass: 'close-class',
+      prevClass: 'prev-class',
+      nextClass: 'next-class',
+      contentClass: 'content-class',
+      imageClass: 'image-class',
+      counterClass: 'counter-class',
+      /* State and utility classes */
+      stateClosedClass: 'state-closed-class',
+      stateOpeningClass: 'state-opening-class',
+      stateOpenClass: 'state-open-class',
+      stateTransitioningClass: 'state-transitioning-class',
+      stateClosingClass: 'state-closing-class',
+      showClass: 'show-class',
+      slideLeftClass: 'slide-left-class',
+      slideRightClass: 'slide-right-class',
+    });
   }
 
   _setState(element, newState) {
