@@ -485,25 +485,37 @@ export class ComponentHost {
   _mountElement(name, instance, element, fragmentTarget) {
     if (instance.elements?.has(element) || instance._initializing?.has(element)) return;
 
-    try {
-      instance.mount(element);
-      if (fragmentTarget) {
-        element.setAttribute('data-fragment-target', fragmentTarget);
-      }
+    const mounted = () =>
       this.eventBus.emit('page:component-mounted', {
         componentName: name,
         element,
         instance,
         fragmentTarget,
       });
-    } catch (error) {
-      this.logger?.error(`Failed to mount ${name}`, { error, element });
+    const failed = error =>
       this.eventBus.emit('page:component-mount-error', {
         componentName: name,
         error,
         element,
         fragmentTarget,
       });
+
+    try {
+      const result = instance.mount(element);
+      if (fragmentTarget) {
+        element.setAttribute('data-fragment-target', fragmentTarget);
+      }
+      if (!isThenable(result)) {
+        mounted();
+        return;
+      }
+      /* An asynchronous _init is reported once it settles, unless the element was unmounted first */
+      result.then(() => {
+        if (instance.elements?.has(element) !== false) mounted();
+      }, failed);
+    } catch (error) {
+      this.logger?.error(`Failed to mount ${name}`, { error, element });
+      failed(error);
     }
   }
 

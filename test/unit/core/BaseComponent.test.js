@@ -138,6 +138,17 @@ describe('BaseComponent', () => {
       await vi.waitFor(() => expect(widget.getState(element)?.ready).toBe(true));
     });
 
+    it('returns a promise that rejects when an asynchronous _init fails', async () => {
+      class FailingInit extends Widget {
+        async _init() {
+          throw new Error('offline');
+        }
+      }
+      const widget = new FailingInit({ logger: { error() {} } });
+
+      await expect(widget.mount(widgetElement())).rejects.toThrow('offline');
+    });
+
     it('cleans up an asynchronous _init that finishes after the element was unmounted', async () => {
       let finishInit;
       let signal;

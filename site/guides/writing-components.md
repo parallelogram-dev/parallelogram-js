@@ -142,6 +142,8 @@ _init(element) {
 - If the element is unmounted first, its controller is aborted, and the resolved state's `cleanup()` runs as soon as it arrives.
 - If the Promise rejects, the element isn't tracked, its controller is aborted and the logger reports the error.
 
+`mount()` returns a Promise that settles with `_init`'s, and rejects when it does. The framework emits `page:component-mounted` once the state resolves, or `page:component-mount-error` if it rejects.
+
 ### When `_init` returns no state
 
 An `_init` that returns nothing, or anything other than an object, is a mistake in the component, so the logger warns. The element is still tracked, with a state holding the controller from `super._init`, and unmounting it aborts that controller.

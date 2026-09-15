@@ -363,7 +363,7 @@ These are emitted on the event bus, not as DOM events. [Events and alerts](event
 | `page:component-loaded`        | A component's module loaded.                                                   | `{ componentName, instance, queueSize }`                                                                                  |
 | `page:component-load-error`    | A component's module failed after its retries.                                 | `{ componentName, error, retries }`                                                                                       |
 | `page:component-mounted`       | A component mounted on an element.                                             | `{ componentName, element, instance, fragmentTarget }`                                                                    |
-| `page:component-mount-error`   | Mounting threw, or a component's selector is invalid.                          | `{ componentName, error, element, fragmentTarget }`, or `{ componentName, error }` for a selector                         |
+| `page:component-mount-error`   | Mounting threw or an async `_init` rejected, or a selector is invalid.         | `{ componentName, error, element, fragmentTarget }`, or `{ componentName, error }` for a selector                         |
 | `page:component-unmounted`     | A component unmounted from an element.                                         | `{ componentName, element, instance }`                                                                                    |
 
 In `router:navigate-success`:

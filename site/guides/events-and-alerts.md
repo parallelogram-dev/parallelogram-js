@@ -113,7 +113,7 @@ The page manager mounts and unmounts enhancement components through `ComponentHo
 | `page:component-loaded`      | A component's module loaded and its instance was created             | `{ componentName, instance, queueSize }`                                                                     |
 | `page:component-load-error`  | A component's module failed to load after every retry                | `{ componentName, error, retries }`                                                                          |
 | `page:component-mounted`     | A component mounted on an element                                    | `{ componentName, element, instance, fragmentTarget }`                                                       |
-| `page:component-mount-error` | Mounting on an element threw, or the component's selector is invalid | `{ componentName, error, element, fragmentTarget }`; only `{ componentName, error }` for an invalid selector |
+| `page:component-mount-error` | Mounting threw, an async `_init` rejected or the selector is invalid | `{ componentName, error, element, fragmentTarget }`; only `{ componentName, error }` for an invalid selector |
 | `page:component-unmounted`   | A component unmounted from an element                                | `{ componentName, element, instance }`                                                                       |
 
 ### Fragments (FragmentSwapper)
