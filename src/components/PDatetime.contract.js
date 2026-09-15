@@ -133,12 +133,6 @@ export default {
     { name: 'rangeToValue', type: 'string', description: 'The end of the range' },
     { name: 'range', type: 'boolean', description: 'Reflects the range attribute' },
     {
-      name: 'isRange',
-      type: 'boolean',
-      description: 'The old name for range',
-      deprecated: 'Use range. Removed in 0.6.0.',
-    },
-    {
       name: 'form',
       type: 'HTMLFormElement | null',
       readonly: true,
