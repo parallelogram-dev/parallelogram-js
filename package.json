@@ -171,7 +171,7 @@
     "@parcel/watcher@2.5.1": true
   },
   "sizeBudget": {
-    "index.js": 15450,
+    "index.js": 16662,
     "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3944,
     "components/DataTable.js": 6873,
@@ -212,12 +212,12 @@
     "core/ComponentStates.js": 498,
     "core/DevLogger.js": 590,
     "core/FragmentSwapper.js": 4681,
-    "core/Parallelogram.js": 13429,
+    "core/Parallelogram.js": 14499,
     "core/WebComponentLoader.js": 1048,
     "managers/AlertManager.js": 3690,
     "managers/EventManager.js": 428,
     "managers/PageManager.js": 8006,
-    "managers/RouterManager.js": 3245,
+    "managers/RouterManager.js": 3883,
     "managers/TransitionManager.js": 1016,
     "styles/index.min.css": 4244
   }
