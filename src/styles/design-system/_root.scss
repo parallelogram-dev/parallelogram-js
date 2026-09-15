@@ -30,6 +30,8 @@
   --color-success-bg: #{$color-success-bg};
   --color-warning: #{$warning-dark};
   --color-warning-bg: #{$color-warning-bg};
+  --color-inverse-surface: #111827;
+  --color-inverse-text: #ffffff;
 }
 
 @include mix.dark-theme {
@@ -52,6 +54,8 @@
   --color-success-bg: rgba(74, 222, 128, 0.16);
   --color-warning: #fb923c;
   --color-warning-bg: rgba(251, 146, 60, 0.16);
+  --color-inverse-surface: #2a3342;
+  --color-inverse-text: #e4e8ee;
 }
 
 :root {
