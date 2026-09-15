@@ -18,7 +18,7 @@
     "check:logger": "node scripts/check-logger.mjs",
     "check:package": "publint --strict",
     "check:size": "node scripts/check-size.mjs",
-    "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./dev/components/PModal ./custom-elements.json",
+    "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./custom-elements.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -85,30 +85,6 @@
       "types": "./dist/types/managers/*.d.ts",
       "development": "./dist/dev/managers/*.js",
       "default": "./dist/managers/*.js"
-    },
-    "./dev/components/*.js": {
-      "types": "./dist/types/components/*.d.ts",
-      "default": "./dist/dev/components/*.js"
-    },
-    "./dev/components/*": {
-      "types": "./dist/types/components/*.d.ts",
-      "default": "./dist/dev/components/*.js"
-    },
-    "./dev/adapters/*.js": {
-      "types": "./dist/types/adapters/*.d.ts",
-      "default": "./dist/dev/adapters/*.js"
-    },
-    "./dev/adapters/*": {
-      "types": "./dist/types/adapters/*.d.ts",
-      "default": "./dist/dev/adapters/*.js"
-    },
-    "./dev/core/*.js": {
-      "types": "./dist/types/core/*.d.ts",
-      "default": "./dist/dev/core/*.js"
-    },
-    "./dev/core/*": {
-      "types": "./dist/types/core/*.d.ts",
-      "default": "./dist/dev/core/*.js"
     },
     "./styles": "./dist/styles/index.min.css",
     "./styles/*.css": "./dist/styles/components/*.css",
