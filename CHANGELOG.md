@@ -334,6 +334,10 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
 - The demo build deletes stale hashed chunks from `demo/dist`.
 
+## [0.4.1] - 2026-06-26
+
+Changes in this release weren't recorded here; see the git history for what it contains.
+
 ## [0.4.0] - 2026-06-03
 
 ### Added
@@ -347,7 +351,29 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 - Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
 
-## [0.1.2] - 2025-01-19
+## [0.1.3 – 0.3.2] - not recorded
+
+Changes in these releases weren't recorded here; see the git history for what each one contains. They were published to npm on these dates:
+
+- 0.3.2 - 2026-06-03
+- 0.3.1 - 2026-05-27
+- 0.3.0 - 2026-05-18
+- 0.2.11 - 2026-05-13
+- 0.2.10 - 2026-05-12
+- 0.2.9 - 2026-05-12
+- 0.2.8 - 2026-02-11
+- 0.2.7 - 2025-11-26
+- 0.2.6 - 2025-11-26
+- 0.2.5 - 2025-11-26
+- 0.2.4 - 2025-11-25
+- 0.2.3 - 2025-11-21
+- 0.2.2 - 2025-11-20
+- 0.2.1 - 2025-11-20
+- 0.2.0 - 2025-11-19
+- 0.1.4 - 2025-11-19
+- 0.1.3 - 2025-11-19
+
+## [0.1.2] - 2025-11-19
 
 ### Added
 
@@ -390,7 +416,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
   - Toggle component (opening/closing states)
   - Lightbox component (active animation states)
 
-## [0.1.1] - 2025-01-19
+## [0.1.1] - 2025-11-18
 
 ### Added
 
@@ -404,7 +430,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Improved async/defer script handling in initialization
 - Enhanced ComponentRegistry validation and error messaging
 
-## [0.1.0] - 2025-01-18
+## [0.1.0] - 2025-11-18
 
 ### Changed
 
