@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A component waits for the components named in its `dependsOn` while they retry, and isn't loaded when one fails for good: its elements get the `component-error` class and `page:component-load-error` is emitted for it, with the dependency's error as `cause`. Components that depend on each other in a cycle throw when registered, instead of both loading.
 - Closed Toggle targets get the `hidden` attribute, and closed targets and inactive tab panels stay hidden when page styles give them a display value, including when the framework stylesheet is imported into a cascade layer.
+- DeferTracker runs a tracker's page step after a router navigation has swapped the new page in, so a block on the new page sends its own conversion or events. It ran as soon as the navigation succeeded, while the previous page's block was still there, and the new page's Google Ads `conversion` or Meta, TikTok and HubSpot `events` were dropped whenever the previous page also had a block for that tracker.
 
 ## [0.5.1] - 2026-09-15
 
