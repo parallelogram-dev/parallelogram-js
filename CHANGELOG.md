@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Closed Toggle targets get the `hidden` attribute, and closed targets and inactive tab panels stay hidden when page styles give them a display value, including when the framework stylesheet is imported into a cascade layer.
 - DeferTracker runs a tracker's page step after a router navigation has swapped the new page in, so a block on the new page sends its own conversion or events. It ran as soon as the navigation succeeded, while the previous page's block was still there, and the new page's Google Ads `conversion` or Meta, TikTok and HubSpot `events` were dropped whenever the previous page also had a block for that tracker.
 - A navigation that replaces fragments other than `main`, such as a target group of results and pagination, moves focus into the first replaced fragment when the focused element was replaced, and announces the new page's title, instead of dropping focus to the body.
+- Uploader saves a new order one request at a time, so moving files again before a save finishes sends the latest order once the earlier save settles. An earlier save that fails no longer puts the files back or reports a failure, and a failed latest save returns the files to the last order the server accepted.
 
 ## [0.5.1] - 2026-09-15
 
