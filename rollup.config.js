@@ -32,6 +32,7 @@ const build = ({ dir, production }) => ({
     entryFileNames: '[name].js',
     chunkFileNames: 'shared/[name].js',
     sourcemap: true,
+    sourcemapExcludeSources: production,
   },
   plugins: [
     scss({ loadPaths: ['src/styles'] }),
