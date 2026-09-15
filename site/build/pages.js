@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readGuide } from './guides.js';
+import { orderGuides, readGuide } from './guides.js';
 import { componentPage, guidePage, homePage, layout, slugFor, titleFor } from './render.js';
 
 export const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -29,17 +29,18 @@ export async function loadContracts() {
 }
 
 /**
- * Every guide in site/guides, ordered by file name
+ * Every guide in site/guides, in reading order
  *
  * @returns {import('./guides.js').Guide[]}
  */
 export function loadGuides() {
-  return readdirSync(guidesDir)
-    .filter(file => file.endsWith('.md'))
-    .sort()
-    .map(file =>
-      readGuide(path.basename(file, '.md'), readFileSync(path.join(guidesDir, file), 'utf8'))
-    );
+  return orderGuides(
+    readdirSync(guidesDir)
+      .filter(file => file.endsWith('.md'))
+      .map(file =>
+        readGuide(path.basename(file, '.md'), readFileSync(path.join(guidesDir, file), 'utf8'))
+      )
+  );
 }
 
 /**

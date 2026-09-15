@@ -19,6 +19,29 @@ const markdown = new Marked({ gfm: true });
  * @property {string} content - The sections as HTML
  */
 
+/** The order guides appear in, by slug; guides not listed follow in title order */
+export const GUIDE_ORDER = [
+  'getting-started',
+  'pages-and-router',
+  'writing-components',
+  'events-and-alerts',
+  'upgrading',
+];
+
+/**
+ * Guides in reading order
+ *
+ * @param {Guide[]} guides
+ * @returns {Guide[]}
+ */
+export function orderGuides(guides) {
+  const rank = guide => {
+    const index = GUIDE_ORDER.indexOf(guide.slug);
+    return index === -1 ? GUIDE_ORDER.length : index;
+  };
+  return [...guides].sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+}
+
 /**
  * @param {string} text - A heading's Markdown
  * @returns {string}
