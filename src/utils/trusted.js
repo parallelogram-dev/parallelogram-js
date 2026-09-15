@@ -21,7 +21,7 @@ const create = (name, rules) => {
     /* eslint-disable-next-line compat/compat -- detected: undefined where Trusted Types are missing */
     policy = globalThis.trustedTypes?.createPolicy(name, rules) ?? false;
   } catch {
-    console.warn(`Trusted Types policy "${name}" was blocked; add it to trusted-types`);
+    console.warn(`Trusted Types blocked policy "${name}"`);
   }
   return policy;
 };

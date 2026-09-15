@@ -197,10 +197,7 @@ export class BaseComponent {
       return;
     }
 
-    this.logger?.warn(
-      `${this.constructor.name || 'A component'}'s _init returned no state object. Return the state from super._init(element).`,
-      { element }
-    );
+    this.logger?.warn(`${this.constructor.name}: _init must return its state`, { element });
     const controller = this._controllers.get(element) ?? new AbortController();
     this._controllers.set(element, controller);
     this.elements.set(element, { controller, cleanup() {} });
