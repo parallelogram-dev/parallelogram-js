@@ -138,5 +138,6 @@ These work in 0.5 and are removed in 0.6.0:
 | `data-form-validator`, `data-validate` and `data-validate-message`                          | `data-form-enhancer`, native validation attributes and `data-form-enhancer-message`      |
 | `form-validator:mounted`, `form-validator:submit-blocked` and `form-validator:submit-valid` | `form-enhancer:mounted`, `form-enhancer:submit-blocked` and `form-enhancer:submit-valid` |
 | [CopyToClipboard](copy-to-clipboard.html)'s `data-copy-target` and `data-copy-text`         | `data-copytoclipboard-target` and `data-copytoclipboard-text`                            |
+| [Lightbox](lightbox.html)'s `data-lightbox-state-closed-class`, which was never applied     | The `lightbox:closed` event                                                              |
 | `<p-datetime>`'s `isRange`                                                                  | `range`                                                                                  |
 | BaseComponent's `_getDataAttr()` and `_elementsKeys()`                                      | `getAttr()`, `getBoolAttr()`, `getNumberAttr()` and `trackedElements()`                  |

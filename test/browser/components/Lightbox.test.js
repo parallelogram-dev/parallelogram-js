@@ -19,12 +19,15 @@ const press = key =>
 const imageOf = width =>
   `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="${width}" height="8"%3E%3C/svg%3E`;
 
-const mountGallery = (hrefs = [IMAGE, IMAGE, IMAGE], options = {}) => {
+const mountGallery = (hrefs = [IMAGE, IMAGE, IMAGE], options = {}, attributes = {}) => {
   const lightbox = new Lightbox(options);
   const links = hrefs.map((href, index) => {
     const link = document.createElement('a');
     link.href = href;
     link.dataset.lightbox = 'holiday';
+    for (const [name, value] of Object.entries(attributes)) {
+      link.setAttribute(name, value);
+    }
     const thumbnail = document.createElement('img');
     thumbnail.alt = `Photo ${index + 1}`;
     link.append(thumbnail);
@@ -183,6 +186,42 @@ describe('Lightbox', () => {
     expect([overlay(), document.body.classList.contains('overflow--hidden')]).toEqual([
       null,
       false,
+    ]);
+  });
+
+  it('puts the configured class for each state on the viewer in place of the previous one', async () => {
+    const seen = [];
+    const eventBus = new EventManager();
+    eventBus.on('lightbox:stateChange', ({ newState }) => {
+      if (overlay()) {
+        const classes = [...overlay().classList].filter(
+          name => name !== 'lightbox__overlay' && name !== 'show'
+        );
+        seen.push([newState, classes]);
+      }
+    });
+    const { lightbox, links } = mountGallery(
+      [IMAGE, IMAGE, IMAGE],
+      { eventBus },
+      {
+        'data-lightbox-state-opening-class': 'viewer-opening',
+        'data-lightbox-state-open-class': 'viewer-open',
+      }
+    );
+    links[0].click();
+    await vi.waitFor(() => expect(lightboxState()).toBe('open'), WAIT);
+    lightbox.next(links[0]);
+    await vi.waitFor(() => expect([counter(), lightboxState()]).toEqual(['2 / 3', 'open']), WAIT);
+
+    lightbox.close(links[0]);
+    await vi.waitFor(() => expect(overlay()).toBeNull(), WAIT);
+
+    expect(seen).toEqual([
+      ['opening', ['viewer-opening']],
+      ['open', ['viewer-open']],
+      ['transitioning', ['is-transitioning']],
+      ['open', ['viewer-open']],
+      ['closing', ['is-closing']],
     ]);
   });
 
