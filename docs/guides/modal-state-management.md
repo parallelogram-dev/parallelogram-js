@@ -1,5 +1,7 @@
 # Modal State Management
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 ## Overview
 
 The PModal web component uses a simple state machine pattern with `ExtendedStates` from `ComponentStates.js` to manage modal lifecycle transitions.

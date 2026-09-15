@@ -1,5 +1,7 @@
 # Simplified API Guide
 
+> **Superseded.** This page was written before 0.5 and hasn’t been checked against the current code, and it is no longer published with the package. Use the [documentation site](https://dev.parallelogram.com.au) and the [upgrade guide](https://dev.parallelogram.com.au/upgrading.html) instead.
+
 This guide demonstrates the new, simplified API for initializing Parallelogram with minimal boilerplate.
 
 ## Quick Start
