@@ -288,14 +288,14 @@ input {
 
 .field {
   &__label {
-    opacity: $color-text-muted;
+    opacity: $opacity-muted;
     font-weight: $font-semibold;
     font-size: $font-sm;
     flex: 0 0 4rem;
   }
 
   &__value {
-    opacity: $color-text-muted;
+    opacity: $opacity-muted;
     font-size: $font-sm;
     line-height: $size-field-height;
     word-break: break-word;

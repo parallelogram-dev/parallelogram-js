@@ -87,13 +87,6 @@
   --datetime-action-btn-min-height: var(--datetime-cell-size);
 }
 
-@media (prefers-color-scheme: dark) {
-  :host {
-    --datetime-muted: rgba(255, 255, 255, 0.5);
-    --datetime-hover: rgba(255, 255, 255, 0.1);
-  }
-}
-
 /* Shared - Border Properties */
 .panel,
 .time-select,

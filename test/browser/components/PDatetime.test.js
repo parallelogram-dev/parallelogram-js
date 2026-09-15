@@ -171,6 +171,54 @@ describe('p-datetime', () => {
     ]).toEqual([true, true]);
   });
 
+  it.each([
+    ['the next month button', '[data-datetime-nav-btn="next"]'],
+    ['the month and year button', '[data-datetime-month-year]'],
+    ['a quick date', '.preset'],
+    ['a day', '.day'],
+    ['the hour select', '[data-datetime-hour]'],
+  ])('stays open in datetime mode after a click on %s', async (_, selector) => {
+    const picker = renderPicker({ mode: 'datetime', 'show-quick-dates': '' });
+    trigger(picker).click();
+    await nextFrame();
+
+    shadow(picker, selector).click();
+    await wait(200);
+
+    expect([panel(picker).hidden, trigger(picker).getAttribute('aria-expanded')]).toEqual([
+      false,
+      'true',
+    ]);
+  });
+
+  it('stays open when the time changes', async () => {
+    const picker = renderPicker({ mode: 'time' });
+    picker.open();
+    await nextFrame();
+    const hour = shadow(picker, '[data-datetime-hour]');
+
+    hour.focus();
+    hour.value = '14';
+    hour.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(200);
+
+    expect(panel(picker).hidden).toBe(false);
+  });
+
+  it('closes after a click outside it', async () => {
+    const picker = renderPicker({ mode: 'date' });
+    const outside = document.createElement('p');
+    outside.textContent = 'Elsewhere';
+    document.body.append(outside);
+    picker.open();
+    await nextFrame();
+
+    outside.click();
+    await wait(200);
+
+    expect(panel(picker).hidden).toBe(true);
+  });
+
   it('shows the first hour and minute again when the value is cleared', () => {
     const picker = renderPicker({ mode: 'datetime', value: '2023-07-12T14:30:00' });
     picker.open();
