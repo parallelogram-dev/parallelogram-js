@@ -126,13 +126,13 @@ Sent while the page manager replaces fragments of the page with those of a fetch
 | `page:fragment-transition-out` | A fragment's out transition finished                                                                 | `{ fragment, viewTarget, transitionType, duration }`                              |
 | `page:fragment-did-replace`    | A fragment's content was replaced, before its in transition                                          | `{ targetFragment, viewTarget, options, transitionConfig }`                       |
 | `page:fragment-transition-in`  | A fragment's in transition finished                                                                  | `{ fragment, viewTarget, transitionType, duration }`                              |
-| `page:fragments-replaced`      | Every requested fragment was processed                                                               | `{ results, viewTargets, duration, options }`                                     |
+| `page:fragments-replaced`      | Every requested fragment was processed                                                               | `{ results, viewTargets, options }`                                               |
 | `page:fragments-replace-error` | Replacement failed, for example when a fragment is missing from either page, before anything changed | `{ viewTargets, error, options }`                                                 |
 | `page:head-updated`            | The head was updated from the new page, when the `main` fragment is replaced                         | `{ updatedElements, newTitle }`                                                   |
 | `page:head-update-error`       | Updating the head threw                                                                              | `{ error }`                                                                       |
 | `dom:content-loaded`           | A fragment's new content is in place and critical components have mounted                            | `{ fragment, viewTarget, trigger }`                                               |
 
-The transition messages are only sent for fragments with configured transitions, and not when the user prefers reduced motion. `results` holds one `{ viewTarget, success }` entry for each fragment, with `error` when that fragment failed. `duration` is `null` unless performance tracking is on.
+The transition messages are only sent for fragments with configured transitions, and not when the user prefers reduced motion. `results` holds one `{ viewTarget, success }` entry for each fragment, with `error` when that fragment failed.
 
 `dom:content-loaded` isn't sent for the first page load, only after a fragment is replaced, and its `trigger` is always `'fragment-replacement'`. Use it to set up content that isn't a registered component.
 
