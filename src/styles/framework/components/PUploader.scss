@@ -1,6 +1,10 @@
 /* PUploader Web Component Styles */
 @use '../../design-system' as *;
 
+$size-preview: 6rem;
+$size-field-height: 1.25rem;
+$size-icon-md: 1.25rem;
+
 *,
 *::before,
 *::after {
@@ -63,7 +67,7 @@ input {
   &__overlay {
     position: absolute;
     inset: 0;
-    background: $color-bg-overlay;
+    background: rgba(255, 255, 255, 0.95);
     display: flex;
     align-items: center;
     justify-content: center;

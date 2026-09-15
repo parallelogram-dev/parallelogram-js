@@ -12,7 +12,7 @@
   box-sizing: border-box;
 
   /* Colors using surface-dialog tokens and design system variables */
-  --modal-backdrop-bg: #{$color-bg-overlay};
+  --modal-backdrop-bg: rgba(255, 255, 255, 0.95);
   --modal-panel-bg: var(--surface-dialog-color-bg, #ffffff);
   --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
   --modal-panel-border: var(--surface-dialog-border-color, #{$color-border});
