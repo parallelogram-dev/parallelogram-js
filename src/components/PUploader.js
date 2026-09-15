@@ -365,7 +365,9 @@ export default class PUploader extends HTMLElement {
     if (!this._canSort() || !target) return;
 
     const action = file.shadowRoot.activeElement?.dataset.action;
-    this.originalFileOrder = files;
+    if (!this._sequenceSaving) {
+      this._confirmedOrder = files;
+    }
     if (offset < 0) {
       target.before(file);
     } else {
@@ -895,8 +897,11 @@ export default class PUploader extends HTMLElement {
     this.draggedElement = fileElement;
     e.dataTransfer.effectAllowed = 'move';
 
-    /* Capture the original order before any drag operations */
-    this.originalFileOrder = Array.from(this.querySelectorAll('p-uploader-file'));
+    /* Capture the order before the drag, to put the files back if it is abandoned */
+    this._dragStartOrder = Array.from(this.querySelectorAll('p-uploader-file'));
+    if (!this._sequenceSaving) {
+      this._confirmedOrder = this._dragStartOrder;
+    }
 
     window.getSelection()?.removeAllRanges();
 
@@ -923,13 +928,15 @@ export default class PUploader extends HTMLElement {
     this.draggedOverElement = null;
     this._dropAccepted = false;
 
-    const moved = this.originalFileOrder?.some((file, index) => files[index] !== file);
-    if (!moved) {
-      this.originalFileOrder = null;
-    } else if (dropped) {
+    const previous = this._dragStartOrder;
+    this._dragStartOrder = null;
+    const moved = previous?.some((file, index) => files[index] !== file);
+    if (!moved) return;
+
+    if (dropped) {
       this._updateSequence();
     } else {
-      this._revertSequence();
+      this._restoreOrder(previous);
     }
   }
 
@@ -981,46 +988,65 @@ export default class PUploader extends HTMLElement {
     this._dropAccepted = true;
   }
 
+  /**
+   * Save the current order. Saves run one at a time so the server ends on the latest order: a move
+   * made while a save is in flight is sent once that save settles, and the earlier response only
+   * records the order the server confirmed. When the latest save fails, the files go back to the
+   * last confirmed order.
+   */
   async _updateSequence() {
-    const fileIds = [...this.querySelectorAll('p-uploader-file')]
-      .map(el => el.getAttribute('file-id'))
-      .filter(id => id !== null);
+    this._sequenceQueued = true;
+    if (this._sequenceSaving) return;
 
+    this._sequenceSaving = true;
+    let sequence;
+    let failure;
     try {
-      const response = await this._postJson(this.config.sequenceAction, { sequence: fileIds });
-      if (!response.ok) {
-        throw new Error(errorMessage(await response.text(), `HTTP ${response.status}`));
+      while (this._sequenceQueued) {
+        this._sequenceQueued = false;
+        const files = [...this.querySelectorAll('p-uploader-file')];
+        sequence = files.map(el => el.getAttribute('file-id')).filter(id => id !== null);
+        failure = null;
+        try {
+          const response = await this._postJson(this.config.sequenceAction, { sequence });
+          if (!response.ok) {
+            throw new Error(errorMessage(await response.text(), `HTTP ${response.status}`));
+          }
+          this._confirmedOrder = files;
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+          failure = error;
+        }
       }
+    } finally {
+      this._sequenceSaving = false;
+    }
 
-      this.originalFileOrder = null;
-      if (this._sequenceFailed) {
-        this._sequenceFailed = false;
-        this._showMessage('');
-      }
-      dispatchComponentEvent(
-        this,
-        'p-uploader:sequence-update',
-        { sequence: fileIds },
-        { legacy: 'sequence:update' }
-      );
-    } catch (error) {
-      if (error.name === 'AbortError') return;
-
-      this._revertSequence();
+    if (failure) {
+      this._restoreOrder(this._confirmedOrder);
       this._sequenceFailed = true;
       this._showMessage(
         'The new order couldn’t be saved, so the files are back in their previous order.'
       );
-      this.logger?.error('Failed to update sequence:', error);
+      this.logger?.error('Failed to update sequence:', failure);
+      return;
     }
+
+    if (this._sequenceFailed) {
+      this._sequenceFailed = false;
+      this._showMessage('');
+    }
+    dispatchComponentEvent(
+      this,
+      'p-uploader:sequence-update',
+      { sequence },
+      { legacy: 'sequence:update' }
+    );
   }
 
-  _revertSequence() {
-    if (this.originalFileOrder) {
-      /* Light-DOM order is slot order, so appending the files in their old order restores it */
-      this.append(...this.originalFileOrder.filter(file => file.parentNode === this));
-    }
-    this.originalFileOrder = null;
+  _restoreOrder(order) {
+    /* Light-DOM order is slot order, so appending the files in their old order restores it */
+    this.append(...(order ?? []).filter(file => file.parentNode === this));
     this._updateDraggableState();
   }
 

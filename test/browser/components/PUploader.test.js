@@ -679,6 +679,63 @@ describe('p-uploader ordering and replacing without dragging', () => {
     });
   });
 
+  it('keeps and saves the latest order when an earlier order fails to save after a second move', async () => {
+    let settleFirst;
+    const save = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise(resolve => (settleFirst = resolve)))
+      .mockImplementation(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderFiles({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+    const saved = new Promise(resolve =>
+      uploader.addEventListener('p-uploader:sequence-update', resolve, { once: true })
+    );
+
+    control(uploader, 'first', 'move-down')?.click();
+    control(uploader, 'first', 'move-down')?.click();
+    settleFirst(new Response('nope', { status: 500 }));
+    await saved;
+
+    expect({
+      order: fileIds(uploader),
+      sent: save.mock.calls.map(([, init]) => JSON.parse(init.body).sequence),
+      message: uploader.shadowRoot.querySelector('[part~="message"]')?.textContent,
+    }).toEqual({
+      order: ['second', 'third', 'first'],
+      sent: [
+        ['second', 'first', 'third'],
+        ['second', 'third', 'first'],
+      ],
+      message: 'Moved first.jpg to position 3 of 3.',
+    });
+  });
+
+  it('returns to the last saved order when the latest order fails to save', async () => {
+    let settleFirst;
+    const save = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise(resolve => (settleFirst = resolve)))
+      .mockImplementation(async () => new Response('nope', { status: 500 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderFiles({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+    const message = () => uploader.shadowRoot.querySelector('[part~="message"]')?.textContent;
+
+    control(uploader, 'first', 'move-down')?.click();
+    control(uploader, 'first', 'move-down')?.click();
+    settleFirst(new Response('{}', { status: 200 }));
+
+    await vi.waitFor(() => expect(message()).toMatch(/couldn’t be saved/));
+    expect(fileIds(uploader)).toEqual(['second', 'first', 'third']);
+  });
+
   it('disables moving past either end of the list', async () => {
     const uploader = await renderFiles({ 'sequence-action': '/api/sequence' }, [
       'first',
