@@ -207,7 +207,7 @@
     "adapters/plausible.js": 892,
     "adapters/tiktok-pixel.js": 1262,
     "core/BaseComponent.js": 2779,
-    "core/ComponentHost.js": 2747,
+    "core/ComponentHost.js": 2906,
     "core/ComponentRegistry.js": 930,
     "core/ComponentStates.js": 498,
     "core/DevLogger.js": 590,
