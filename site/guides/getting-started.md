@@ -91,11 +91,11 @@ Two PageManager options affect loading on every page:
 
 ### `run()` and `init()`
 
-`init()` creates the logger, event bus, router, page manager and web component loader, mounts components already on the page and starts watching it. It returns the instance. Calling it a second time logs a warning and does nothing else.
+`init()` creates the logger, event bus, page manager and web component loader, starts loading the router when `router` is set, mounts components already on the page and starts watching it. It returns the instance. Calling it a second time logs a warning and does nothing else.
 
 `run()` calls `init()` at the right moment. If the document has finished parsing, it calls `init()` straight away and returns a promise that resolves with the instance. Otherwise it waits for `DOMContentLoaded` first. Use `run()` unless you know the DOM is ready, for example in a script that runs after the markup.
 
-The promise resolves once the framework has started, not once components have loaded. Component modules load in the background.
+The promise resolves once the framework has started, not once components have loaded. Component modules load in the background. With `router` set, the router's code loads on demand, so pages without it don't download it, and the promise resolves once the router has loaded and started. After calling `init()` directly, `app.router` stays `null` until then; `router:initialized` is emitted on the event bus when it starts. Links followed before that load pages normally.
 
 ### `destroy()` and `isInitialized`
 
@@ -108,7 +108,7 @@ After `init()`, the instance exposes the parts it created. They are `null` befor
 | Property                 | What it is                                                                           |
 | ------------------------ | ------------------------------------------------------------------------------------ |
 | `app.eventBus`           | The `EventManager` components and managers communicate through                       |
-| `app.router`             | The `RouterManager`, or `null` when `router` isn't set                               |
+| `app.router`             | The `RouterManager` once it has loaded, or `null` when `router` isn't set            |
 | `app.pageManager`        | The `PageManager`, which mounts components through `app.pageManager.host`            |
 | `app.logger`             | The `DevLogger`, which prefixes messages with `[parallelogram]`                      |
 | `app.webComponentLoader` | The `WebComponentLoader` that loads web components                                   |

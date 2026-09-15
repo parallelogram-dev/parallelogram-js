@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { Parallelogram } from '../../../src/core/Parallelogram.js';
 
 const createRecorder = () => {
@@ -126,5 +126,71 @@ describe('Parallelogram', () => {
     app.components.add('[data-datatable]', () => ({ default: define('datatable') }));
 
     expect(mounts).toEqual([['datatable', 'orders']]);
+  });
+
+  describe('router', () => {
+    it('starts without loading the router when no router options are given', async () => {
+      const routerPath = '../../../src/managers/RouterManager.js';
+      let loads = 0;
+      vi.resetModules();
+      vi.doMock(routerPath, async importOriginal => {
+        loads += 1;
+        return importOriginal();
+      });
+      onTestFinished(() => vi.doUnmock(routerPath));
+      const { Parallelogram: Isolated } = await import('../../../src/core/Parallelogram.js');
+      app = Isolated.create({ silent: true });
+
+      await app.run();
+
+      expect([loads, app.router]).toEqual([0, null]);
+    });
+
+    it('resolves run() once the router has loaded when router options are given', async () => {
+      app = Parallelogram.create({ silent: true, router: {} });
+
+      const started = await app.run();
+
+      expect([started === app, app.router?.constructor.name]).toEqual([true, 'RouterManager']);
+    });
+
+    it('gives components that mounted before the router loaded the router', async () => {
+      document.body.innerHTML = '<div id="region" data-region></div>';
+      app = Parallelogram.create({ silent: true, router: {} });
+      app.components.add('[data-region]', () => ({
+        default: class {
+          constructor({ router } = {}) {
+            this.router = router;
+            this.elements = new Map();
+          }
+
+          mount(element) {
+            this.elements.set(element, {});
+          }
+
+          unmount(element) {
+            this.elements.delete(element);
+          }
+
+          trackedElements() {
+            return [...this.elements.keys()];
+          }
+        },
+      }));
+
+      await app.run();
+
+      expect(app.pageManager.host.getInstance('[data-region]').router).toBe(app.router);
+    });
+
+    it('creates no router when it is destroyed before the router has loaded', async () => {
+      app = Parallelogram.create({ silent: true, router: {} });
+
+      const started = app.run();
+      app.destroy();
+      await started;
+
+      expect(app.router).toBeNull();
+    });
   });
 });
