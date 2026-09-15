@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `<p-uploader-file>` updates its card in place when its attributes or its uploader change, where it rebuilt the card when its filename, error or allow-edit changed and when the uploader checked its fields. An open Edit details dialog stays open with its unsaved changes, and a focused toolbar button keeps focus.
 - DataTable sorts the right column when a header before it in the sortable header row spans several columns with `colspan`. Column positions count each header cell's `colspan`, where they counted cells, so sorting read the values of an earlier column. The message row shown when nothing matches spans every column too.
 - The DataTable reference gives `loadData()` its `rowMapper` argument and lists `sort()`, `filter()`, `goToPage()` and `clearError()`, and the SelectLoader reference lists `load()`, `reload()`, `clear()` and `getLoadState()`. A contract test checks every method a component's reference lists exists on its class.
 - SelectLoader no longer reports a load that a newer choice replaced while its content was fading or sliding in. The older load dispatched `selectloader:loaded`, emitted `selectloader:content-loaded`, announced its content and cleared the inline styles of the newer load's transition.
