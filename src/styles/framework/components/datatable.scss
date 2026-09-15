@@ -1,3 +1,5 @@
+@use '../../design-system' as *;
+
 /* DataTable Component Styles
  *
  * Selectors are wrapped in :where() so page styles override them easily; focus outlines keep normal
@@ -94,7 +96,7 @@
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
   background: var(--datatable-button-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)));
-  border-color: var(--datatable-button-hover-border-color, var(--color-text-muted, #9ca3af));
+  border-color: var(--datatable-button-hover-border-color, var(--color-border-strong, #d1d5db));
 }
 
 :where(.datatable__pagination button:disabled) {
@@ -121,8 +123,9 @@
   font-style: italic;
 }
 
+/* Light pages keep the darker red, which reaches 4.5:1 on tinted backgrounds; dark pages take the role */
 :where(.datatable__message td[role='alert']) {
-  color: var(--brand-danger, var(--color-danger, #b91c1c));
+  color: var(--datatable-error-color, var(--brand-danger, #b91c1c));
   font-style: normal;
   font-weight: 500;
 }
@@ -131,6 +134,10 @@
   margin-top: 0.5rem;
   color: var(--datatable-muted-color, var(--color-text-muted, #6b7280));
   font-size: 0.875em;
+}
+
+@include dark-theme {
+  --datatable-error-color: var(--brand-danger, var(--color-danger));
 }
 
 /* State-based styling */

@@ -233,8 +233,8 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     },
     {
       name: '--datatable-button-hover-border-color',
-      default: 'var(--color-text-muted)',
-      description: 'Pagination button border on hover: the muted text colour',
+      default: 'var(--color-border-strong)',
+      description: 'Pagination button border on hover: the strong border colour',
     },
     {
       name: '--datatable-current-bg',
@@ -245,6 +245,12 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
       name: '--datatable-current-color',
       default: 'var(--color-accent-contrast)',
       description: 'The current page text: the text colour on the accent',
+    },
+    {
+      name: '--datatable-error-color',
+      default: '#b91c1c',
+      description:
+        'Load error message text: a darker red on light pages, and --brand-danger or --color-danger on dark pages',
     },
     {
       name: '--datatable-header-hover-bg',
