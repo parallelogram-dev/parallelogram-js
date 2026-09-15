@@ -1,7 +1,7 @@
 /**
  * Check that the production build has no debug-level logger calls
  *
- * scripts/babel-plugin-strip-logger.js removes `this.logger` debug, log, info, group and groupEnd
+ * Terser's pure_funcs in rollup.config.js removes `this.logger` debug, log, info, group and groupEnd
  * calls from the production build and keeps warn and error. This fails if any of those calls are
  * left in a JavaScript file in dist outside dist/dev. Run after `npm run build`.
  */

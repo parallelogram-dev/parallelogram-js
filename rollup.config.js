@@ -1,9 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { babel } from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import scss from './scripts/rollup-plugin-scss.js';
-import stripLogger from './scripts/babel-plugin-strip-logger.js';
 
 const entries = (folder, keep = () => true) =>
   fs
@@ -38,10 +36,24 @@ const build = ({ dir, production }) => ({
     scss({ loadPaths: ['src/styles'] }),
     ...(production
       ? [
-          babel({ babelHelpers: 'bundled', plugins: [stripLogger] }),
           terser({
             ecma: 2022,
-            compress: { drop_debugger: true },
+            compress: {
+              drop_debugger: true,
+              /* Debug-level logger calls are removed from production; warn and error stay */
+              pure_funcs: [
+                'this.logger.debug',
+                'this.logger?.debug',
+                'this.logger.log',
+                'this.logger?.log',
+                'this.logger.info',
+                'this.logger?.info',
+                'this.logger.group',
+                'this.logger?.group',
+                'this.logger.groupEnd',
+                'this.logger?.groupEnd',
+              ],
+            },
             mangle: { keep_classnames: true },
             format: { comments: false },
           }),
