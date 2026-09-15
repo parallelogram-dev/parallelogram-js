@@ -1,14 +1,7 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { ExtendedStates } from '../core/ComponentStates.js';
+import { deepActiveElement } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
-
-const deepActiveElement = () => {
-  let active = document.activeElement;
-  while (active?.shadowRoot?.activeElement) {
-    active = active.shadowRoot.activeElement;
-  }
-  return active;
-};
 
 /** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
 const INTERACTIVE =
