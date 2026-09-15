@@ -326,12 +326,15 @@ export class BaseComponent {
    * @returns {HTMLElement|null} Target element or null
    *
    * @example
-   * // CSS selector approach
-   * <button data-toggle-target="#sidebar">Toggle</button>
+   * // In a component's _init, such as SelectLoader's
+   * const target = this._getTargetElement(element, 'target', { required: true });
    *
-   * // data-view approach (more consistent with framework)
-   * <button data-toggle-target-view="sidebar">Toggle</button>
-   * <div data-view="sidebar">...</div>
+   * // Markup with a CSS selector
+   * <select data-selectloader data-selectloader-target="#results">...</select>
+   *
+   * // Markup with a data-view name
+   * <select data-selectloader data-selectloader-target-view="results">...</select>
+   * <div data-view="results">...</div>
    */
   _getTargetElement(element, dataAttr, options = {}) {
     /* Check for data-view based target first (e.g., data-toggle-target-view) */
