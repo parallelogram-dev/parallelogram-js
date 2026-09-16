@@ -248,6 +248,23 @@ describe('Toggle', () => {
     );
   });
 
+  it('stays open for links that go nowhere, whatever case their scheme uses', async () => {
+    build(`
+      <button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu">
+        <a id="run" href="JavaScript:void(0)">Run</a>
+        <a id="write" href="MailTo:hello@example.com">Email</a>
+      </nav>`);
+    $('#site-menu').addEventListener('click', event => event.preventDefault());
+    $('#menu-button').click();
+
+    $('#run').click();
+    $('#write').click();
+    await pause(150);
+
+    expect(stateOf('#site-menu')).toBe('open');
+  });
+
   it('stops closing on outside clicks once unmounted', async () => {
     build(`
       <button id="account" data-toggle data-toggle-target="#account-menu" data-toggle-capture>Account</button>
