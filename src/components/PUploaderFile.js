@@ -286,6 +286,11 @@ export class PUploaderFile extends HTMLElement {
           ? currentPanel === 'info' && state === 'uploaded'
           : name === currentPanel || (name === 'error' && state === 'error');
       panel.classList.toggle('uploader__panel--show', show);
+      /* Once the details have been seen, they wait above rather than below, so a panel opening
+         over them pushes them up and cancelling brings them back down */
+      if (show && name === 'info') {
+        panel.classList.add('uploader__panel--activated');
+      }
       panel.inert = !show;
     }
   }
@@ -437,11 +442,6 @@ export class PUploaderFile extends HTMLElement {
       requestAnimationFrame(() => {
         content.scrollTop = 0;
       });
-    }
-
-    const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
-    if (infoPanel?.classList.contains('uploader__panel--show')) {
-      infoPanel.classList.add('uploader__panel--activated');
     }
   }
 
