@@ -4,9 +4,196 @@
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+const json = body =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+const slug = text =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/** Towns and suburbs around Australia, listed as `Name, STATE`, for the long list example */
+const PLACES = [
+  'Sydney, NSW',
+  'Newcastle, NSW',
+  'Wollongong, NSW',
+  'Parramatta, NSW',
+  'Bondi, NSW',
+  'Manly, NSW',
+  'Cronulla, NSW',
+  'Chatswood, NSW',
+  'Penrith, NSW',
+  'Surry Hills, NSW',
+  'Newtown, NSW',
+  'Katoomba, NSW',
+  'Bathurst, NSW',
+  'Orange, NSW',
+  'Dubbo, NSW',
+  'Tamworth, NSW',
+  'Armidale, NSW',
+  'Coffs Harbour, NSW',
+  'Byron Bay, NSW',
+  'Wagga Wagga, NSW',
+  'Albury, NSW',
+  'Goulburn, NSW',
+  'Maitland, NSW',
+  'Nowra, NSW',
+  'Broken Hill, NSW',
+  'Melbourne, VIC',
+  'Fitzroy, VIC',
+  'St Kilda, VIC',
+  'Brunswick, VIC',
+  'Richmond, VIC',
+  'Footscray, VIC',
+  'Geelong, VIC',
+  'Ballarat, VIC',
+  'Bendigo, VIC',
+  'Shepparton, VIC',
+  'Warrnambool, VIC',
+  'Dandenong, VIC',
+  'Frankston, VIC',
+  'Mildura, VIC',
+  'Wodonga, VIC',
+  'Traralgon, VIC',
+  'Horsham, VIC',
+  'Sale, VIC',
+  'Torquay, VIC',
+  'Castlemaine, VIC',
+  'Brisbane, QLD',
+  'Fortitude Valley, QLD',
+  'Ipswich, QLD',
+  'Gold Coast, QLD',
+  'Caloundra, QLD',
+  'Noosa Heads, QLD',
+  'Toowoomba, QLD',
+  'Gympie, QLD',
+  'Bundaberg, QLD',
+  'Hervey Bay, QLD',
+  'Maryborough, QLD',
+  'Gladstone, QLD',
+  'Rockhampton, QLD',
+  'Mackay, QLD',
+  'Airlie Beach, QLD',
+  'Townsville, QLD',
+  'Charters Towers, QLD',
+  'Cairns, QLD',
+  'Mount Isa, QLD',
+  'Roma, QLD',
+  'Adelaide, SA',
+  'Glenelg, SA',
+  'Norwood, SA',
+  'Murray Bridge, SA',
+  'Victor Harbor, SA',
+  'Mount Gambier, SA',
+  'Renmark, SA',
+  'Port Augusta, SA',
+  'Port Lincoln, SA',
+  'Whyalla, SA',
+  'Perth, WA',
+  'Fremantle, WA',
+  'Mandurah, WA',
+  'Bunbury, WA',
+  'Busselton, WA',
+  'Albany, WA',
+  'Esperance, WA',
+  'Kalgoorlie, WA',
+  'Geraldton, WA',
+  'Karratha, WA',
+  'Port Hedland, WA',
+  'Broome, WA',
+  'Hobart, TAS',
+  'Kingston, TAS',
+  'Sorell, TAS',
+  'Launceston, TAS',
+  'Devonport, TAS',
+  'Burnie, TAS',
+  'Ulverstone, TAS',
+  'Darwin, NT',
+  'Palmerston, NT',
+  'Katherine, NT',
+  'Nhulunbuy, NT',
+  'Alice Springs, NT',
+  'Canberra, ACT',
+  'Belconnen, ACT',
+  'Gungahlin, ACT',
+  'Tuggeranong, ACT',
+  'Woden, ACT',
+];
+
+const PLACE_OPTIONS = PLACES.map(place => ({ value: slug(place), label: place }));
+
+const GIVEN_NAMES = [
+  'Amelia',
+  'Noah',
+  'Charlotte',
+  'Oliver',
+  'Isla',
+  'Leo',
+  'Matilda',
+  'Hudson',
+  'Ruby',
+  'Archie',
+  'Georgia',
+  'Xavier',
+  'Harriet',
+  'Jarrah',
+  'Priya',
+  'Mateo',
+  'Nadia',
+  'Elias',
+  'Frances',
+  'Tobias',
+  'Saoirse',
+  'Malik',
+  'Imogen',
+  'Callum',
+];
+
+const FAMILY_NAMES = [
+  'Nguyen',
+  'Whitlam',
+  'Papadopoulos',
+  'O’Sullivan',
+  'Tran',
+  'Callaghan',
+  'Mikkelsen',
+  'Rahman',
+  'Ferraro',
+  'Baptiste',
+  'Kowalski',
+  'Hargreaves',
+  'Yunupingu',
+  'Petrenko',
+];
+
 /**
- * Answer the uploader's JSON requests to `/api/update`, `/api/delete` and `/api/sequence`; every
- * other request goes to the network
+ * A directory of a few hundred people, built from the same name lists in the same order on every
+ * load, so a row keeps its id between reloads
+ */
+const DIRECTORY = GIVEN_NAMES.flatMap((given, index) =>
+  FAMILY_NAMES.map((family, offset) => {
+    const row = index * FAMILY_NAMES.length + offset;
+    return {
+      value: `cust-${4200 + row}`,
+      label: `${given} ${family} — ${PLACES[row % PLACES.length]}`,
+    };
+  })
+);
+
+const matches = (options, query) => {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return options;
+  return options.filter(option => option.label.toLowerCase().includes(needle));
+};
+
+/**
+ * Answer the site's JSON requests: `/api/update`, `/api/delete` and `/api/sequence` for the
+ * uploader, `/api/places` and `/api/directory` for the select. Every other request goes to the
+ * network. The delays are there so the examples show their loading states.
  */
 export function installMockApi() {
   if (window.fetch.isMockApi) return;
@@ -17,15 +204,25 @@ export function installMockApi() {
       resource instanceof Request ? resource.url : String(resource),
       location.href
     );
-    if (!/\/api\/(update|delete|sequence)$/.test(url.pathname)) {
-      return networkFetch(resource, options);
+    const query = url.searchParams.get('q') ?? '';
+
+    if (/\/api\/(update|delete|sequence)$/.test(url.pathname)) {
+      await delay(400);
+      return json({ success: true });
     }
 
-    await delay(400);
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (/\/api\/places$/.test(url.pathname)) {
+      await delay(250);
+      return json({ options: matches(PLACE_OPTIONS, query) });
+    }
+
+    /* A stand-in for a database search: it never sends more than a page of rows back */
+    if (/\/api\/directory$/.test(url.pathname)) {
+      await delay(450);
+      return json({ options: matches(DIRECTORY, query).slice(0, 25) });
+    }
+
+    return networkFetch(resource, options);
   };
 
   mockFetch.isMockApi = true;
