@@ -931,13 +931,13 @@ describe('p-select paging', () => {
     select.open();
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
     const live = select.shadowRoot.querySelector('[aria-live]');
-    const first = live.textContent;
-    scrollToEnd(select);
-    await vi.waitFor(() => expect(optionsOf(select).length).toBe(15), WAIT);
+    await vi.waitFor(
+      () => expect(live.textContent).toBe('10 results available, more on the way'),
+      WAIT
+    );
 
-    expect([first, live.textContent]).toEqual([
-      '10 results available, more on the way',
-      '15 results available',
-    ]);
+    scrollToEnd(select);
+
+    await vi.waitFor(() => expect(live.textContent).toBe('15 results available'), WAIT);
   });
 });
