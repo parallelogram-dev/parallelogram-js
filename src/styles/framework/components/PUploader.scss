@@ -29,9 +29,10 @@ $size-icon-md: 1.25rem;
   /* The card holds no padding of its own: the space between cards, and before the drop zone, is
      the list's gap */
   padding: var(--uploader-file-padding, 0);
-  /* The panels waiting out of sight sit below the card, so it clips them: without this they are
-     drawn into the picture the browser drags */
-  overflow: hidden;
+  /* The panels waiting out of sight sit below the card, so it clips them. `clip` rather than
+     `hidden`: a hidden box is a scrollable one, and Safari scrolls this one, which paints the
+     card's contents above its own box. */
+  overflow: clip;
 
   transition:
     border-color $duration-fast ease-out,
@@ -212,10 +213,17 @@ input {
   }
 
   &__fields {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
+    row-gap: var(--puploader-field-gap, #{$space-sm});
+    column-gap: var(--puploader-preview-gap, 1rem);
+    align-items: baseline;
     flex: 1;
     min-width: 0;
+  }
+
+  &__filename {
+    grid-column: 1 / -1;
   }
 
   &__filename,
@@ -250,6 +258,8 @@ input {
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
+    /* The buttons are joined by their keyline, so the row's own spacing has no place here */
+    gap: 0;
     border-radius: 999px;
     border: $border-width solid var(--puploader-pill-border, var(--color-border, #{$color-border}));
     background: var(--puploader-pill-bg, var(--color-surface-muted, #{$neutral-100}));
@@ -282,6 +292,33 @@ input {
     &--delete:hover {
       color: var(--color-danger, #{$error-dark});
     }
+
+    /* The button that carries the action out is filled, the one that backs out is not */
+    &--save {
+      background: var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+      color: var(--button-primary-color, var(--color-accent-contrast, #ffffff));
+
+      &:hover {
+        background: color-mix(
+          in srgb,
+          var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark})) 85%,
+          black
+        );
+      }
+    }
+
+    &--danger {
+      background: var(--button-danger-bg, var(--color-danger, #{$error-dark}));
+      color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
+
+      &:hover {
+        background: var(
+          --button-danger-hover-bg,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
+        color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
+      }
+    }
   }
 
   &__actions {
@@ -289,6 +326,11 @@ input {
     gap: $space-sm;
     justify-content: flex-end;
     padding-left: $space-sm;
+
+    /* A row of buttons is spaced; a pill group is joined, so it keeps its own spacing */
+    &.uploader__pills {
+      gap: 0;
+    }
   }
 
   /* The buttons and fields follow the design system's button and form control tokens, so they
@@ -393,12 +435,15 @@ input {
   }
 }
 
+.uploader__field {
+  display: contents;
+}
+
 .field {
+  /* The same quiet label as the form's, so the two panels line up as one reads over the other */
   &__label {
-    opacity: $opacity-muted;
-    font-weight: $font-semibold;
-    font-size: $font-sm;
-    flex: 0 0 4rem;
+    color: var(--color-text-muted, #{$color-text-muted});
+    font-size: 0.8em;
   }
 
   &__value {
@@ -430,24 +475,36 @@ slot {
   gap: $space-md;
   padding-bottom: $space-sm;
 
-  /* Cancel at one end, Save at the other, both starting where the fields start */
+  /* The fields take the room, the pill sits at the end of the row, centred against them */
+  flex-direction: row;
+  align-items: center;
+  gap: var(--puploader-preview-gap, 1rem);
+
+  .uploader__edit-body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    flex: 1;
+    min-width: 0;
+  }
+
   .uploader__actions {
-    padding-left: calc(var(--puploader-label-width, 4rem) + var(--puploader-preview-gap, 1rem));
-    justify-content: space-between;
+    align-self: center;
+    padding-left: 0;
+    flex-shrink: 0;
   }
 }
 
 /* The confirmation asks at the top and answers along the bottom, one button at each end */
 [data-panel='delete'] .uploader__alert {
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: space-between;
   padding-block: $space-md;
 }
 
 [data-panel='delete'] .uploader__actions {
-  justify-content: space-between;
-  padding-left: calc(var(--puploader-label-width, 4rem) + var(--puploader-preview-gap, 1rem));
+  align-self: center;
+  padding-left: 0;
 }
 
 /* Label beside field, the fields growing to fill the row, spaced like the card's own edge */
@@ -502,7 +559,7 @@ textarea:focus-visible {
 .uploader__toolbar {
   display: flex;
   align-items: center;
-  align-self: flex-start;
+  align-self: center;
   gap: $space-xs;
   flex-shrink: 0;
   margin-left: $space-sm;

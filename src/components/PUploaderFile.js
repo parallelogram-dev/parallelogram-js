@@ -4,7 +4,7 @@ import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
 import { followFocusSource } from '../utils/focus-source.js';
-import { arrowDown, arrowUp, iconElement, pencil, trash } from '../utils/icons.js';
+import { arrowDown, arrowUp, check, iconElement, pencil, trash, x } from '../utils/icons.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -67,19 +67,21 @@ const getFileTemplate = () => {
           <div data-panel="delete" class="uploader__panel" part="panel" role="group">
             <div class="uploader__alert">
               <h2 class="uploader__heading">Delete this file?</h2>
-              <div class="uploader__actions" part="actions">
-                <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
-                <button type="button" class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
+              <div class="uploader__actions uploader__pills" part="actions pills">
+                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel delete"></button>
+                <button type="button" class="uploader__pill uploader__pill--danger" data-action="confirm-delete" title="Delete" aria-label="Confirm delete"></button>
               </div>
             </div>
           </div>
           <div data-panel="edit" class="uploader__panel uploader__panel--edit" part="panel edit-panel" role="group">
             <form class="uploader__form" aria-label="Edit details">
-              <div class="uploader__edit-fields"></div>
-              <p class="uploader__edit-message" role="alert"></p>
-              <div class="uploader__actions" part="actions">
-                <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
-                <button type="submit" class="uploader__btn uploader__btn--primary" data-action="save">Save</button>
+              <div class="uploader__edit-body">
+                <div class="uploader__edit-fields"></div>
+                <p class="uploader__edit-message" role="alert"></p>
+              </div>
+              <div class="uploader__actions uploader__pills" part="actions pills">
+                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel editing"></button>
+                <button type="submit" class="uploader__pill uploader__pill--save" data-action="save" title="Save" aria-label="Save details"></button>
               </div>
             </form>
           </div>
@@ -150,6 +152,17 @@ export class PUploaderFile extends HTMLElement {
     deletePanel.querySelector('.uploader__heading').id = headingId;
     /* The edit panel names itself on its form, since its own heading only repeated the button */
     root.querySelector('[data-panel="edit"]').setAttribute('aria-label', 'Edit details');
+
+    /* The panels answer with icons, so each of their buttons is given one */
+    for (const [action, paths] of Object.entries({
+      cancel: x,
+      'confirm-delete': trash,
+      save: check,
+    })) {
+      for (const button of root.querySelectorAll(`.uploader__pill[data-action="${action}"]`)) {
+        button.append(iconElement(paths, { size: 'sm' }));
+      }
+    }
 
     this._toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
     /* Edit and delete sit together as one pill, the way a segmented control does */
@@ -271,7 +284,9 @@ export class PUploaderFile extends HTMLElement {
 
     this._renderDetails(state);
     this._renderToolbar(state);
-    this._showPanels(this.getAttribute('data-current-panel') || 'info', state);
+    const panel = this.getAttribute('data-current-panel') || 'info';
+    this._syncContentHeight(panel);
+    this._showPanels(panel, state);
     this._syncOrderButtons();
   }
 
@@ -453,37 +468,35 @@ export class PUploaderFile extends HTMLElement {
   }
 
   /**
-   * The card is only as tall as its thumbnail, which the edit form outgrows, so while that panel is
-   * open the clipped box takes the form's own height. The panels waiting below are moved by the
-   * same measure, so they stay out of sight whatever it is.
+   * The card is as tall as its thumbnail until a panel needs more room, and then as tall as that
+   * panel. The panels waiting out of sight are moved by the same measure, so they stay out of
+   * sight whatever it is.
    */
   _syncContentHeight(currentPanel) {
-    const panel = this.shadowRoot.querySelector('[data-panel="edit"]');
-    if (currentPanel !== 'edit') {
-      this._editSize?.disconnect();
+    const panel = this.shadowRoot.querySelector(`[data-panel="${currentPanel || 'info'}"]`);
+    if (!panel) {
       this.style.removeProperty('--uploader-content-height');
       return;
     }
-    if (!panel) return;
 
-    /* The form's height isn't settled the first time it opens: the fields have only just been
-       built, and a web font or a wrapped label can change it again. Watching the panel keeps the
-       card the right depth however late that happens. */
-    this._editSize ??= new ResizeObserver(entries => {
+    /* A panel's height isn't settled the moment it opens: its fields may have only just been
+       built, and a web font or a wrapped label can change it again. Watching the panel on show
+       keeps the card the right depth however late that happens, and watching only the one on show
+       means a card rebuilt by a reorder is measured afresh. */
+    this._panelSize ??= new ResizeObserver(entries => {
+      const current = this.getAttribute('data-current-panel') || 'info';
       const [entry] = entries;
-      if ((this.getAttribute('data-current-panel') || 'info') === 'edit') {
+      if (entry.target.dataset.panel === current) {
         this._applyContentHeight(entry.target);
       }
     });
-    /* The card is rebuilt when it is moved in the list, so the panel watched is always the one on
-       the page now, not the one this card had before */
-    this._editSize.disconnect();
-    this._editSize.observe(panel);
+    this._panelSize.disconnect();
+    this._panelSize.observe(panel);
     this._applyContentHeight(panel);
   }
 
   /**
-   * Take the card's clipped box to the edit form's own height
+   * Take the card's clipped box to the height of the panel on show, never less than its thumbnail
    *
    * @param {HTMLElement} panel
    */
