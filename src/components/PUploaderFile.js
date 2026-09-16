@@ -452,11 +452,13 @@ export class PUploaderFile extends HTMLElement {
       /* Render fields in the info panel for newly uploaded files */
       this._renderInfoPanelFields();
 
-      /* Show the info panel after overlay fades out, unless the user has since chosen a panel
-         themselves, such as opening the delete confirmation */
+      /* Show the info panel after the overlay fades out, unless the user is looking at a panel
+         they opened themselves, such as the delete confirmation */
       clearTimeout(this._settlePanel);
       this._settlePanel = setTimeout(() => {
-        this.setAttribute('data-current-panel', 'info');
+        if ((this.getAttribute('data-current-panel') || 'info') === 'info') {
+          this.setAttribute('data-current-panel', 'info');
+        }
       }, 375); /* Match the transition duration */
     } else if (newState === 'error') {
       /* Hide progress overlay and show error panel */
