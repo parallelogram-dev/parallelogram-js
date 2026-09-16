@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `<p-select>` has a clear button. It shows when there is a value and the element isn't required or disabled, clears the selection and reports the change like any other choice. The search icon appears while the list is open, since the input filters the options then.
+
 - The components draw from one set of icons. They are the Tabler icons, on a 24 by 24 grid with a 2px round stroke in `currentColor`, at one of three sizes: 24, 20 or 16. `<p-select>`'s dropdown arrow, and the dismiss buttons of `<p-modal>` and `<p-toasts>`, were text characters (`▾` and `×`) that took their shape from the page's font; they are now icons like the rest.
 
 ### Fixed
+
+- `<p-select>`'s list lines up with the outside of the control's border. It was inset by the border width, so it sat a pixel inside the element on each side.
 
 - DeferTracker no longer drops a page event when the router shows a new page. `router:navigate-end` fires when the swap settles, about a second before normal components mount, so a tracker block the router left in place — a pixel in a header, say — ran its page step and claimed the new URL first. This page's own block then mounted, found the URL claimed, and was marked a duplicate, so adapters without a block step, such as `meta-pixel`, `tiktok-pixel` and `hubspot`, never sent its payload: a purchase on a confirmation page went missing. A tracker now claims a URL only when a page step really runs, and a block that mounts after a carried-over block ran the step gets a page step of its own. Two blocks on the same page are deduplicated as before.
 

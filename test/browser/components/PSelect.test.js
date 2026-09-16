@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import PSelect from '../../../src/components/PSelect.js';
 
+const clickShadow = (host, selector) => {
+  const target = host.shadowRoot.querySelector(selector);
+  target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+  target.click();
+};
+
 const renderForm = markup => {
   const form = document.createElement('form');
   form.innerHTML = markup;
@@ -26,6 +32,55 @@ const PRIORITY = `
 describe('p-select', () => {
   afterEach(() => {
     document.body.replaceChildren();
+  });
+
+  it('offers a clear button only when there is a value the user is allowed to remove', () => {
+    const { select } = renderForm(COUNTRIES);
+    const { select: required } = renderForm(PRIORITY);
+    required.value = 'high';
+    const clearOf = element => element.shadowRoot.querySelector('.clear');
+    const withValue = clearOf(select).hidden;
+    select.value = '';
+
+    expect([withValue, clearOf(select).hidden, clearOf(required).hidden]).toEqual([
+      false,
+      true,
+      true,
+    ]);
+  });
+
+  it('clears the value from the clear button, and reports the change', async () => {
+    const { select } = renderForm(COUNTRIES);
+    const changes = [];
+    select.addEventListener('change', () => changes.push(select.value));
+
+    clickShadow(select, '.clear');
+
+    expect([select.value, changes, select.shadowRoot.querySelector('.input').value]).toEqual([
+      '',
+      [''],
+      '',
+    ]);
+  });
+
+  it('shows the search icon while the list is open, since the input filters then', () => {
+    const { select } = renderForm(COUNTRIES);
+    const icon = select.shadowRoot.querySelector('.search');
+    const closed = icon.hidden;
+
+    select.open();
+
+    expect([closed, icon.hidden]).toEqual([true, false]);
+  });
+
+  it('lines the list up with the outside of the control', () => {
+    const { select } = renderForm(COUNTRIES);
+    select.open();
+
+    const host = select.getBoundingClientRect();
+    const menu = select.shadowRoot.querySelector('.menu').getBoundingClientRect();
+
+    expect([menu.left - host.left, menu.right - host.right]).toEqual([0, 0]);
   });
 
   it('is a form-associated custom element', () => {

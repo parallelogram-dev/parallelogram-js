@@ -35,8 +35,8 @@
 
   --select-padding: 0.45rem 0.6rem;
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
-  --select-border: var(--surface-control-border-width, #{$border-width}) solid
-    var(--select-border-color);
+  --select-border-width: var(--surface-control-border-width, #{$border-width});
+  --select-border: var(--select-border-width) solid var(--select-border-color);
 
   --menu-border-radius: var(--surface-dropdown-radius, #{$radius-sm});
   --menu-border-color: var(--surface-dropdown-border-color, var(--color-border, #{$color-border}));
@@ -98,6 +98,36 @@
   opacity: 1;
 }
 
+/* Shown while the list is open, since the input is a search box then */
+.search {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--select-placeholder);
+}
+
+.clear {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  color: var(--select-placeholder);
+  cursor: pointer;
+}
+
+.clear:hover {
+  background: var(--select-hover-bg);
+  color: var(--select-text);
+}
+
+.clear:focus-visible {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 1px;
+}
+
 .arrow {
   pointer-events: none;
   transition: transform 0.15s ease;
@@ -110,13 +140,14 @@
   transform: rotate(180deg);
 }
 
+/* Flush with the outside of the control's border, not inset by it */
 .menu {
   position: absolute;
   z-index: #{$z-dropdown};
-  left: 0;
-  right: 0;
+  left: calc(-1 * var(--select-border-width));
+  right: calc(-1 * var(--select-border-width));
   top: 100%;
-  margin-top: 0.25rem;
+  margin-top: calc(0.25rem + var(--select-border-width));
 
   /* Use surface-dropdown tokens */
   background: var(--menu-bg);
