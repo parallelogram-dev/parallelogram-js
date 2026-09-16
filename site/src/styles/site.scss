@@ -157,8 +157,17 @@ pre {
 }
 
 .site-header__link {
+  display: inline-flex;
   margin-left: auto;
   color: var(--site-muted);
+
+  &:hover {
+    color: inherit;
+  }
+
+  svg {
+    display: block;
+  }
 }
 
 .site {
