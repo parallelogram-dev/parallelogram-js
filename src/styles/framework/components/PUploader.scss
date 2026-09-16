@@ -264,43 +264,71 @@ input {
     padding-left: $space-sm;
   }
 
+  /* The buttons and fields follow the design system's button and form control tokens, so they
+     match every other component; each falls back to a light value without the package stylesheet */
   &__btn {
-    padding: $space-sm $space-lg;
-    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-    background: var(--color-surface, #ffffff);
-    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-sm;
+    padding: var(--button-padding-y, #{$space-sm}) var(--button-padding-x, #{$space-lg});
+    min-height: var(--button-min-height, 2.5em);
+    border: var(--button-border-width, #{$border-width}) solid
+      var(--button-secondary-border, var(--color-border-strong, #{$neutral-300}));
+    border-radius: var(--button-border-radius, var(--surface-button-radius, #{$radius-sm}));
+    background: var(--button-secondary-bg, transparent);
+    color: var(--button-secondary-color, currentColor);
+    font-family: inherit;
+    font-size: var(--button-font-size, #{$font-sm});
+    font-weight: var(--button-font-weight, #{$font-semibold});
     cursor: pointer;
-    font-size: $font-sm;
     transition: all $duration-fast;
     pointer-events: auto;
     flex-shrink: 0;
 
     &:hover {
-      background: var(--color-surface-muted, #{$neutral-100});
+      background: var(--button-secondary-hover-bg, var(--color-surface-muted, #{$neutral-100}));
+      border-color: var(
+        --button-secondary-hover-border,
+        var(--color-border-strong, #{$neutral-300})
+      );
     }
 
-    &--secondary {
-      background: transparent;
-      border-color: currentColor;
+    &:disabled {
+      opacity: $opacity-disabled;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     &--delete {
-      color: var(--color-danger, #{$error-dark});
-      border-color: var(--color-danger, #{$error-dark});
+      border-color: var(--button-danger-border, var(--color-danger, #{$error-dark}));
+      background: var(--button-danger-bg, var(--color-danger, #{$error-dark}));
+      color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
 
       &:hover {
-        background: var(--color-danger-bg, #{$color-error-bg});
+        border-color: var(
+          --button-danger-hover-border,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
+        background: var(
+          --button-danger-hover-bg,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
       }
     }
 
     /* Filled with the stronger accent so the label meets 4.5:1 */
     &--primary {
-      background: var(--color-accent-hover, #{$primary-dark});
-      color: var(--color-accent-contrast, #ffffff);
-      border-color: var(--color-accent-hover, #{$primary-dark});
+      border-color: var(--button-primary-hover-border, var(--color-accent-hover, #{$primary-dark}));
+      background: var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+      color: var(--button-primary-color, var(--color-accent-contrast, #ffffff));
 
       &:hover {
-        background: color-mix(in srgb, var(--color-accent-hover, #{$primary-dark}) 85%, black);
+        background: color-mix(
+          in srgb,
+          var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark})) 85%,
+          black
+        );
       }
     }
   }
@@ -308,16 +336,28 @@ input {
   &__input,
   &__textarea {
     flex: 1 0 auto;
-    height: 100%;
-    padding: $space-sm;
-    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-    background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-    color: var(--surface-control-color-text, #{$neutral-900});
+    padding: var(--form-control-padding-y, #{$space-sm}) var(--form-control-padding-x, #{$space-md});
+    border: var(--form-control-border-width, #{$border-width}) solid
+      var(--form-control-border-color, var(--color-control-border, #{$color-control-border}));
+    border-radius: var(--form-control-border-radius, var(--surface-control-radius, #{$radius-sm}));
+    background: var(--form-control-bg, var(--surface-control-color-bg, var(--color-surface, #fff)));
+    color: var(--form-control-color, var(--surface-control-color-text, #{$neutral-900}));
     margin: 0;
-    font-family: inherit;
-    font-size: $font-sm;
+    font-family: var(--form-control-font-family, inherit);
+    font-size: var(--form-control-font-size, #{$font-sm});
     pointer-events: auto;
-    outline: 0 none;
+
+    &:hover {
+      border-color: var(
+        --form-control-hover-border-color,
+        var(--color-text-muted, #{$neutral-600})
+      );
+    }
+
+    &::placeholder {
+      color: var(--form-control-placeholder-color, var(--color-text-muted, #{$color-text-muted}));
+      opacity: 1;
+    }
   }
 
   &__textarea {
