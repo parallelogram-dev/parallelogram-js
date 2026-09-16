@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The `--button-*` and `--panel-*` families do what the guide says. They were declared on `:root` and documented as the way to restyle every component, but only `<p-uploader>` read the button family and nothing read the panel family. DataTable's pagination, `<p-datetime>`'s action buttons and quick dates and `<p-modal>`'s slotted `.btn` buttons now take their padding, size, border, colours and hover from the button family — pagination and action buttons as secondary buttons, quick dates as ghost buttons, `.btn--primary` and `.primary` as primary, `.btn--danger` as danger — and `<p-modal>`'s panel, header and footer, `<p-datetime>`'s popover and `<p-toasts>`' toasts take their padding, radius and shadow from the panel family. Each component's own properties, such as `--modal-btn-bg` or `--datatable-button-bg`, still win for that component. `--button-primary-bg` is the stronger accent, `--color-accent-hover`, since the accent itself under its contrast text is 3.7:1, short of AA; every filled button in the package was already using the stronger one.
+
 ## [0.7.1] - 2026-09-16
 
 ### Added
