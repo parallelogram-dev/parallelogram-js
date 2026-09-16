@@ -63,14 +63,67 @@ describe('p-select', () => {
     ]);
   });
 
-  it('shows the search icon while the list is open, since the input filters then', () => {
+  it('shows the search icon whenever there is no clear button to show', () => {
     const { select } = renderForm(COUNTRIES);
-    const icon = select.shadowRoot.querySelector('.search');
-    const closed = icon.hidden;
+    const { select: required } = renderForm(PRIORITY);
+    required.value = 'high';
+    const searchOf = element => element.shadowRoot.querySelector('.search');
+    const withValue = searchOf(select).hidden;
+    select.value = '';
+
+    expect([withValue, searchOf(select).hidden, searchOf(required).hidden]).toEqual([
+      true,
+      false,
+      false,
+    ]);
+  });
+
+  it('keeps the search icon away while the list is open over a value', () => {
+    const { select } = renderForm(COUNTRIES);
 
     select.open();
 
-    expect([closed, icon.hidden]).toEqual([true, false]);
+    expect(select.shadowRoot.querySelector('.search').hidden).toBe(true);
+  });
+
+  it('puts the search icon exactly where the clear button was', () => {
+    const { select } = renderForm(COUNTRIES);
+    const clear = select.shadowRoot.querySelector('.clear').getBoundingClientRect();
+    select.value = '';
+    const search = select.shadowRoot.querySelector('.search').getBoundingClientRect();
+
+    expect([search.left - clear.left, search.right - clear.right]).toEqual([0, 0]);
+  });
+
+  it('centres the chevron on the middle of the control', () => {
+    const { select } = renderForm(COUNTRIES);
+    const control = select.shadowRoot.querySelector('.control').getBoundingClientRect();
+    const icon = select.shadowRoot.querySelector('.arrow svg').getBoundingClientRect();
+
+    expect(Math.abs(icon.top + icon.height / 2 - (control.top + control.height / 2))).toBeLessThan(
+      0.5
+    );
+  });
+
+  it('leaves the chevron a padding width in from the trailing edge', () => {
+    const { select } = renderForm(COUNTRIES);
+    const control = select.shadowRoot.querySelector('.control');
+    const icon = control.querySelector('.arrow svg').getBoundingClientRect();
+    /* The chevron itself is drawn inside a quarter of the icon's box */
+    const drawn = icon.right - icon.width / 4;
+    const padding = parseFloat(getComputedStyle(control).paddingRight);
+
+    expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
+  });
+
+  it('shows a pointer over the closed input and a text cursor once it opens for typing', () => {
+    const { select } = renderForm(COUNTRIES);
+    const input = select.shadowRoot.querySelector('.input');
+    const closed = getComputedStyle(input).cursor;
+
+    select.open();
+
+    expect([closed, getComputedStyle(input).cursor]).toEqual(['pointer', 'text']);
   });
 
   it('lines the list up with the outside of the control', () => {
