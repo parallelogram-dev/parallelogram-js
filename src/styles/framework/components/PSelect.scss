@@ -23,7 +23,7 @@
   );
   --select-focus-color: var(--color-accent, #{$primary});
   --select-bg: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-  --select-text: var(--surface-control-color-text, #{$color-text});
+  --select-text: var(--surface-control-color-text, #{$neutral-900});
   --select-placeholder: var(--color-text-muted, #{$color-text-muted});
 
   --select-hover-bg: var(--surface-dropdown-item-hover-bg, var(--color-hover, #{$neutral-100}));

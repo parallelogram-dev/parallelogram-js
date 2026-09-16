@@ -72,6 +72,36 @@ describe('dark theme', () => {
     });
   });
 
+  it('leaves text to the page in light mode and gives panels a text colour in dark mode', () => {
+    addFrameworkStyles();
+    document.body.style.color = 'rgb(20, 40, 60)';
+    cleanups.push(() => {
+      document.body.style.color = '';
+    });
+    const panel = document.createElement('div');
+    panel.style.color = 'var(--surface-panel-color-text)';
+    document.body.append(panel);
+    cleanups.push(() => panel.remove());
+    const light = getComputedStyle(panel).color;
+    document.documentElement.dataset.theme = 'dark';
+
+    expect([light, getComputedStyle(panel).color]).toEqual([
+      'rgb(20, 40, 60)',
+      'rgb(228, 232, 238)',
+    ]);
+  });
+
+  it('tells the browser which colour scheme the page is in, so its own text and controls follow', () => {
+    addFrameworkStyles();
+    const light = getComputedStyle(document.documentElement).colorScheme;
+    document.documentElement.dataset.theme = 'dark';
+
+    expect([light, getComputedStyle(document.documentElement).colorScheme]).toEqual([
+      'light',
+      'dark',
+    ]);
+  });
+
   it('draws an open accordion item and the selected tab with the dark roles when data-theme is dark', async () => {
     addFrameworkStyles();
     document.documentElement.dataset.theme = 'dark';

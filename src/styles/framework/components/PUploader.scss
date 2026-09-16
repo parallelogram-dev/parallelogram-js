@@ -25,7 +25,7 @@ $size-icon-md: 1.25rem;
   border-style: solid;
   border-color: var(--surface-card-border-color, var(--color-border-strong, #{$neutral-300}));
   background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
-  color: var(--surface-card-color-text, #{$color-text});
+  color: var(--surface-card-color-text, #{$neutral-900});
   box-shadow: var(--surface-card-shadow, none);
 
   /* Customize */
@@ -282,7 +282,7 @@ input {
     padding: $space-sm;
     border: $border-width solid var(--color-border-strong, #{$color-border-hover});
     background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-    color: var(--surface-control-color-text, currentColor);
+    color: var(--surface-control-color-text, #{$neutral-900});
     margin: 0;
     font-family: inherit;
     font-size: $font-sm;
