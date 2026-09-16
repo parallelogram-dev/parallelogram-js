@@ -173,6 +173,7 @@ export class Parallelogram {
       eventBus: this.eventBus,
       logger: this.logger,
       router: this.router,
+      routerPending: !!this.config.router,
       options: { observeRoot: document.body, ...this.config.pageManager },
     };
     this.pageManager = new PageManager(pageManagerConfig).start();
@@ -226,6 +227,7 @@ export class Parallelogram {
       },
       error => {
         this.logger?.error('Failed to load the router; links load pages normally', { error });
+        this.pageManager?._routerUnavailable();
         return this;
       }
     );

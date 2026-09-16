@@ -40,7 +40,8 @@ describe('SelectLoader before the router loads', () => {
       </select>
       <div id="product-details"></div>`;
     const select = document.querySelector('select');
-    const loader = new SelectLoader({ eventBus });
+    /* The app asked for a router, which is still loading */
+    const loader = new SelectLoader({ eventBus, routerPending: true });
     loader.mount(select);
     return { loader, select, target: document.querySelector('#product-details') };
   };

@@ -5,6 +5,7 @@ import { EventManager } from '../../../src/managers/EventManager.js';
 const mountLoader = ({
   eventBus = new EventManager(),
   router,
+  routerPending = false,
   attributes = '',
   wrap = false,
 } = {}) => {
@@ -23,7 +24,7 @@ const mountLoader = ({
   `;
   document.body.innerHTML = wrap ? `<form>${markup}</form>` : markup;
   const select = document.querySelector('select');
-  const loader = new SelectLoader({ eventBus, router });
+  const loader = new SelectLoader({ eventBus, router, routerPending });
   loader.mount(select);
   return { loader, select, target: document.querySelector('#product-details') };
 };
@@ -54,7 +55,7 @@ describe('SelectLoader', () => {
   it('loads the chosen fragment once the router starts, after mounting without one', async () => {
     const eventBus = new EventManager();
     const router = { get: vi.fn(async url => ({ data: `<p>${url}</p>` })) };
-    const { loader, select, target } = mountLoader({ eventBus });
+    const { loader, select, target } = mountLoader({ eventBus, routerPending: true });
 
     choose(select, '/fragments/laptop.html');
     choose(select, '/fragments/phone.html');
@@ -68,10 +69,18 @@ describe('SelectLoader', () => {
     ]);
   });
 
+  it('reports that the router is missing when the app never asked for one', async () => {
+    const { select, target } = mountLoader();
+
+    choose(select, '/fragments/laptop.html');
+
+    await vi.waitFor(() => expect(target.querySelector('.select-loader__error')).not.toBeNull());
+  });
+
   it('does not load when unmounted before the router starts', async () => {
     const eventBus = new EventManager();
     const router = { get: vi.fn(async () => ({ data: '<p>Laptop</p>' })) };
-    const { loader, select } = mountLoader({ eventBus });
+    const { loader, select } = mountLoader({ eventBus, routerPending: true });
 
     choose(select, '/fragments/laptop.html');
     loader.unmount(select);

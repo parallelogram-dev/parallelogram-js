@@ -26,6 +26,7 @@ const classesWarnedAboutSelector = new WeakSet();
  * @property {import('../managers/EventManager.js').EventManager} [eventBus]
  * @property {import('./DevLogger.js').DevLogger} [logger]
  * @property {import('../managers/RouterManager.js').RouterManager | null} [router]
+ * @property {boolean} [routerPending] - Whether the app is still loading its router
  * @property {import('./ComponentHost.js').RegistryEntry} [config] - The registry entry the
  *   component was loaded from
  */
@@ -41,10 +42,13 @@ export class BaseComponent {
   /**
    * @param {ComponentContext} [context]
    */
-  constructor({ eventBus, logger, router } = {}) {
+  constructor({ eventBus, logger, router, routerPending = false } = {}) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
+    /* True while the app is still loading its router, so a component can tell that apart from a
+       page that never asked for one */
+    this.routerPending = routerPending;
     /** @type {Map<HTMLElement, ComponentState>} Mounted elements and their state */
     this.elements = new Map();
     /* Backward-compat alias for older components expecting `states` */

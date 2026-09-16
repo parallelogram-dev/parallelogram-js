@@ -49,9 +49,18 @@ export class PageManager {
    * @param {import('./EventManager.js').EventManager} config.eventBus
    * @param {import('../core/DevLogger.js').DevLogger} [config.logger]
    * @param {import('./RouterManager.js').RouterManager | null} [config.router]
+   * @param {boolean} [config.routerPending] - Whether the app is still loading its router
    * @param {PageManagerOptions} [config.options]
    */
-  constructor({ containerSelector, registry, eventBus, logger, router, options = {} }) {
+  constructor({
+    containerSelector,
+    registry,
+    eventBus,
+    logger,
+    router,
+    routerPending = false,
+    options = {},
+  }) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
@@ -87,6 +96,7 @@ export class PageManager {
       eventBus,
       logger,
       router,
+      routerPending,
       maxRetryAttempts: this.options.retryFailedLoads ? this.options.maxRetryAttempts : 0,
     });
 
@@ -160,6 +170,17 @@ export class PageManager {
   }
 
   /**
+   * Tell components no router is coming, so they stop waiting for one
+   * @internal
+   */
+  _routerUnavailable() {
+    this.host.routerPending = false;
+    for (const instance of this.host.getInstances().values()) {
+      instance.routerPending = false;
+    }
+  }
+
+  /**
    * Hand the router to components, including those that mounted before it loaded, and start loading
    * the swapping code now that navigation is possible
    * @internal
@@ -168,8 +189,10 @@ export class PageManager {
   _useRouter(router) {
     this.router = router;
     this.host.router = router;
+    this.host.routerPending = false;
     for (const instance of this.host.getInstances().values()) {
       instance.router ??= router;
+      instance.routerPending = false;
     }
 
     this._loadSwapper().catch(error => {
