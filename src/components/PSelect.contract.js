@@ -33,7 +33,8 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     {
       name: 'data-select-src',
       type: 'url',
-      description: 'URL for remote options, with {q} replaced by the search text',
+      description:
+        'URL for remote options, with {q} replaced by the search text. With {page} in it the list is paged: page 1 first, then the next page whenever the list is scrolled to its end or the arrow keys reach the last option, for as long as the response says `more: true`. {limit} is replaced by data-select-limit.',
     },
     {
       name: 'data-select-min',
@@ -46,6 +47,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       type: 'number',
       default: 200,
       description: 'Milliseconds to wait after typing before a remote search',
+    },
+    {
+      name: 'data-select-limit',
+      type: 'number',
+      default: 25,
+      description: 'Rows per page, replacing {limit} in data-select-src',
     },
     {
       name: 'data-select-open-on-focus',
@@ -294,7 +301,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       id: 'remote-search',
       title: 'Searching a database',
       description:
-        'The search runs on the server: each query is sent to `data-select-src` with `{q}` replaced by the typed text, and the options that come back replace the list. Each row carries an email as its `secondary` and a role as its `description`, so the list shows both and a search on `nguyen`, `perth` or an address like `noah.tran` finds its person. Type two characters to start a search, and the list shows its busy state while the request is out and "No results found" when nothing matches.',
+        'The search runs on the server: each query is sent to `data-select-src` with `{q}` replaced by the typed text, and the options that come back replace the list. The URL also carries `{page}` and `{limit}`, so the server sends a page at a time — 25 rows here, from `data-select-limit` — and answers `more: true` while there are further pages; scrolling to the end of the list, or arrowing onto its last row, asks for the next one. Each row carries an email as its `secondary` and a role as its `description`, so the list shows both and a search on `nguyen`, `perth` or an address like `noah.tran` finds its person. Type two characters to start a search, and the list shows its busy state while the request is out and "No results found" when nothing matches.',
       markup: `<div class="form">
   <div class="form__group">
     <label class="form__label" for="customer">Customer</label>
@@ -303,7 +310,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         id="customer"
         name="customer"
         placeholder="Search customers"
-        data-select-src="/api/directory?q={q}"
+        data-select-src="/api/directory?q={q}&page={page}&limit={limit}"
         data-select-min="2"
         data-select-debounce="300"
       ></p-select>
@@ -314,6 +321,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         { attribute: 'placeholder' },
         { attribute: 'data-select-min' },
         { attribute: 'data-select-debounce' },
+        { attribute: 'data-select-limit' },
       ],
     },
   ],
