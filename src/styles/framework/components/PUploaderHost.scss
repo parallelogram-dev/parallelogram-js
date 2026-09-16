@@ -40,16 +40,12 @@
     border: var(--surface-touch-border-width, #{$border-width}) solid
       var(
         --puploader-selector-border,
-        color-mix(in srgb, var(--color-accent, #{$primary}) 25%, transparent)
+        color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
       );
     border-radius: var(--surface-touch-radius, #{$radius-xs});
     background: var(
       --puploader-selector-bg,
-      linear-gradient(
-        to bottom,
-        transparent,
-        color-mix(in srgb, var(--color-accent, #{$primary}) 10%, transparent)
-      )
+      color-mix(in srgb, var(--color-accent, #{$primary}) 8%, transparent)
     );
     color: var(--puploader-selector-color, var(--color-accent-hover, #{$primary-dark}));
     box-shadow: var(--surface-touch-shadow, none);
@@ -64,24 +60,50 @@
     @include hover {
       background: var(
         --puploader-selector-hover-bg,
-        linear-gradient(
-          to bottom,
-          transparent,
-          color-mix(in srgb, var(--color-accent, #{$primary}) 18%, transparent)
-        )
+        color-mix(in srgb, var(--color-accent, #{$primary}) 14%, transparent)
       );
     }
 
     &.dragover {
       background: var(
         --puploader-selector-dragover-bg,
-        linear-gradient(
-          to bottom,
-          transparent,
-          color-mix(in srgb, var(--color-accent, #{$primary}) 28%, transparent)
-        )
+        color-mix(in srgb, var(--color-accent, #{$primary}) 20%, transparent)
       );
     }
+  }
+
+  /* What follows the cursor while a file is dragged */
+  &__chip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    max-width: 18rem;
+    padding: $space-sm $space-lg $space-sm $space-sm;
+    border-radius: 999px;
+    background: var(--puploader-chip-bg, var(--surface-card-color-bg, var(--color-surface, #fff)));
+    color: var(--puploader-chip-color, var(--surface-card-color-text, #{$neutral-900}));
+    box-shadow: 0 4px 12px var(--color-shadow, rgba(0, 0, 0, 0.2));
+    font-size: $font-sm;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  &__chip-image {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__fileinput {
@@ -96,14 +118,21 @@
   &__add {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: $space-xs;
-    font: inherit;
-    font-size: $font-sm;
-    color: inherit;
+    padding: var(--button-padding-y, #{$space-sm}) var(--button-padding-x, #{$space-lg});
+    min-height: var(--button-min-height, 2.5em);
+    border: var(--button-border-width, #{$border-width}) solid
+      var(
+        --puploader-add-border,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
+      );
+    border-radius: var(--button-border-radius, var(--surface-button-radius, #{$radius-sm}));
     background: var(--puploader-add-bg, var(--color-surface, #ffffff));
-    border: none;
-    border-radius: 999px;
-    padding: 0.25rem 0.75rem;
+    color: var(--puploader-add-color, var(--color-accent-hover, #{$primary-dark}));
+    font-family: inherit;
+    font-size: var(--button-font-size, #{$font-sm});
+    font-weight: var(--button-font-weight, #{$font-semibold});
     cursor: pointer;
   }
 

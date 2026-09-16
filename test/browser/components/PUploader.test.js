@@ -332,7 +332,7 @@ describe('p-uploader host', () => {
     ]).toEqual([0, 0]);
   });
 
-  it('draws what follows the cursor itself, rather than leaving it to the browser', async () => {
+  it('shows the dragged file as a chip that follows the cursor', async () => {
     const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
       'first',
       'second',
@@ -341,17 +341,25 @@ describe('p-uploader host', () => {
     file.setAttribute('filename', 'harbour.jpg');
     file.setAttribute('preview', 'images/harbour.jpg');
     const transfer = new DataTransfer();
-    let ghost = null;
+    let handedToBrowser = null;
     transfer.setDragImage = element => {
-      ghost = {
-        text: element.textContent,
-        image: element.querySelector('img')?.getAttribute('src'),
-      };
+      handedToBrowser = element.tagName;
     };
 
     drag('dragstart', file.shadowRoot.querySelector('[part~="preview"]'), transfer);
+    const chip = uploader.shadowRoot.querySelector('[part~="drag-chip"]');
+    document.dispatchEvent(new DragEvent('dragover', { bubbles: true, clientX: 120, clientY: 80 }));
+    const moved = chip.style.transform;
+    drag('dragend', file, transfer);
 
-    expect(ghost).toEqual({ text: 'harbour.jpg', image: expect.stringContaining('harbour.jpg') });
+    expect([
+      chip.textContent,
+      chip.querySelector('img')?.getAttribute('src'),
+      /* The browser is given a blank picture of its own, so only the chip shows */
+      handedToBrowser,
+      moved,
+      uploader.shadowRoot.querySelector('[part~="drag-chip"]'),
+    ]).toEqual(['harbour.jpg', 'images/harbour.jpg', 'IMG', 'translate(132px, 60px)', null]);
   });
 
   it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
@@ -530,8 +538,7 @@ describe('p-uploader host', () => {
         return [
           getComputedStyle(uploader).backgroundColor,
           getComputedStyle(uploader).borderTopColor,
-          /* The drop zone washes in from transparent, so the colour is in its gradient */
-          getComputedStyle(selector).backgroundImage.includes('0.376471 0.647059 0.980392'),
+          getComputedStyle(selector).backgroundColor,
           getComputedStyle(selector).color,
           getComputedStyle(file).backgroundColor,
           /* The cards carry no border of their own; the list's gap separates them */
@@ -544,7 +551,7 @@ describe('p-uploader host', () => {
         expect(colours()).toEqual([
           'rgb(23, 29, 38)',
           'rgba(255, 255, 255, 0.14)',
-          true,
+          'color(srgb 0.376471 0.647059 0.980392 / 0.08)',
           'rgb(147, 197, 253)',
           'rgb(23, 29, 38)',
           'none',

@@ -125,6 +125,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
     { name: 'files', description: 'The list of files' },
     { name: 'selector', description: 'The drop zone' },
     { name: 'add-button', description: 'The button that opens the file picker' },
+    { name: 'drag-chip', description: 'The chip that follows the cursor while a file is dragged' },
     { name: 'message', description: 'Messages about refused files and failed saves' },
   ],
   cssProperties: [
