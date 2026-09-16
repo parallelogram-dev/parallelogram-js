@@ -255,7 +255,7 @@ The component stylesheets are `accordion.css`, `datatable.css`, `lazysrc.css`, `
 
 ### Design tokens
 
-The package stylesheet declares these custom properties on `:root`. Set them in your own `:root` rule, after the package stylesheet, to change every component that reads them.
+The package stylesheet declares these custom properties on `:root`. Set them in your own `:root` rule, after the package stylesheet, to change every component that reads them. The button family styles `<p-uploader>`'s buttons, `<p-datetime>`'s action buttons and quick dates, `<p-modal>`'s slotted `.btn` buttons and DataTable's pagination; the panel family sets the padding, shadow and radius of `<p-modal>`'s panel, header and footer, `<p-datetime>`'s popover and `<p-toasts>`' toasts. Each component's own properties, such as `--modal-btn-bg`, still override the family for that component alone.
 
 | Properties                                                                                                                          | What they set                                                                                                                                                                                                                                                        |
 | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
