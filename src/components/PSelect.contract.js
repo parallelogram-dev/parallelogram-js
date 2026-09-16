@@ -129,6 +129,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   parts: [
     { name: 'input', description: 'The text input' },
+    { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [

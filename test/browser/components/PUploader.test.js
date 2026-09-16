@@ -218,6 +218,9 @@ const drag = (type, target, dataTransfer) =>
     new DragEvent(type, { bubbles: true, composed: true, cancelable: true, dataTransfer })
   );
 
+/* Drags start on the thumbnail: it is the handle, so a press elsewhere stays a click */
+const handleOf = file => file.shadowRoot.querySelector('[part~="preview"]');
+
 describe('p-uploader host', () => {
   beforeEach(() => {
     RecordingUpload.instances = [];
@@ -244,11 +247,49 @@ describe('p-uploader host', () => {
   const reorder = uploader => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
     const transfer = new DataTransfer();
-    drag('dragstart', first, transfer);
+    drag('dragstart', handleOf(first), transfer);
     drag('dragenter', second, transfer);
     drag('drop', second, transfer);
     drag('dragend', first, transfer);
   };
+
+  it('keeps the delete confirmation open when it is asked for just after an upload finishes', async () => {
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'delete-action': '/api/delete',
+    });
+    addFiles(uploader, [new File(['x'], 'harbour.txt', { type: 'text/plain' })]);
+    const file = await vi.waitFor(() => {
+      const added = uploader.querySelector('p-uploader-file[state="uploaded"]');
+      expect(added).not.toBeNull();
+      return added;
+    });
+
+    /* The card switches itself to the info panel shortly after an upload finishes */
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    expect(file.getAttribute('data-current-panel')).toBe('delete');
+  });
+
+  it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    const before = fileIds(uploader);
+    const moveButton = first.shadowRoot.querySelector('[data-action="move-down"]');
+    const transfer = new DataTransfer();
+
+    /* A press on a button that the browser turns into a drag of the card beneath it */
+    drag('dragstart', moveButton, transfer);
+    drag('dragenter', second, transfer);
+    drag('drop', second, transfer);
+    drag('dragend', moveButton, transfer);
+
+    expect(fileIds(uploader)).toEqual(before);
+  });
 
   it('opens the file picker from a button keyboard users can reach', async () => {
     const uploader = await renderUploader({ 'upload-action': '/api/upload' });
@@ -408,7 +449,7 @@ describe('p-uploader host', () => {
           getComputedStyle(uploader).backgroundColor,
           getComputedStyle(uploader).borderTopColor,
           getComputedStyle(selector).backgroundColor,
-          getComputedStyle(selector).borderTopColor,
+          getComputedStyle(selector).color,
           getComputedStyle(file).backgroundColor,
           getComputedStyle(file).borderTopColor,
           getComputedStyle(panel).backgroundColor,
@@ -419,8 +460,8 @@ describe('p-uploader host', () => {
         expect(colours()).toEqual([
           'rgb(23, 29, 38)',
           'rgba(255, 255, 255, 0.14)',
-          'rgb(32, 39, 51)',
-          'rgb(58, 67, 80)',
+          'color(srgb 0.376471 0.647059 0.980392 / 0.08)',
+          'rgb(147, 197, 253)',
           'rgb(23, 29, 38)',
           'rgb(58, 67, 80)',
           'rgb(23, 29, 38)',
@@ -485,7 +526,7 @@ describe('p-uploader host', () => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
     const transfer = new DataTransfer();
 
-    drag('dragstart', first, transfer);
+    drag('dragstart', handleOf(first), transfer);
     drag('dragenter', second, transfer);
     drag('dragend', first, transfer);
     await nextTask();

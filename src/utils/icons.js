@@ -26,6 +26,7 @@ export const trash = [
   'M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12',
   'M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3',
 ];
+export const plus = ['M12 5l0 14', 'M5 12l14 0'];
 export const arrowUp = ['M12 5l0 14', 'M18 11l-6 -6', 'M6 11l6 -6'];
 export const arrowDown = ['M12 5l0 14', 'M18 13l-6 6', 'M6 13l6 6'];
 
