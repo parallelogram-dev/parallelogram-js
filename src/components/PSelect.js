@@ -11,6 +11,53 @@ const DEFAULT_PLACEHOLDER = 'Select…';
 const PAGE_SIZE = 10;
 
 /**
+ * The optional fields an option may carry beyond its label: muted text after it, a smaller line
+ * beneath it, and the URL of a thumbnail before it
+ */
+const RICH_FIELDS = ['secondary', 'description', 'image'];
+
+/**
+ * The rich fields of an option, read from a dataset or a JSON item, as strings or null
+ *
+ * @param {object} source
+ */
+const richFields = source =>
+  Object.fromEntries(
+    RICH_FIELDS.map(field => [field, source[field] ? String(source[field]) : null])
+  );
+
+const span = (className, text) => {
+  const element = document.createElement('span');
+  element.className = className;
+  element.textContent = text;
+  return element;
+};
+
+/**
+ * Build the contents of an option that has more than a label: a thumbnail, then the label with the
+ * secondary text on its line and the description beneath. Everything is set through DOM properties,
+ * so no markup is parsed. The thumbnail has an empty alt, since the text is the option's name, and
+ * the parts are separated by spaces so that name reads as words
+ *
+ * @param {{ label: string, secondary?: string, description?: string, image?: string }} option
+ * @returns {Node[]}
+ */
+const richOptionContent = ({ label, secondary, description, image }) => {
+  const text = span('text', '');
+  text.append(span('label', label));
+  if (secondary) text.append(' ', span('secondary', secondary));
+  if (description) text.append(' ', span('description', description));
+  if (!image) return [text];
+
+  const thumbnail = document.createElement('img');
+  thumbnail.className = 'image';
+  thumbnail.src = image;
+  thumbnail.alt = '';
+  thumbnail.loading = 'lazy';
+  return [thumbnail, text];
+};
+
+/**
  * PSelect - a select that can be searched, built as an editable combobox with a listbox popup
  *
  * Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox
@@ -23,7 +70,11 @@ const PAGE_SIZE = 10;
  *
  * Options come from `<option>` and `<optgroup>` children, which are watched for changes, or from
  * `data-select-src`, a URL where `{q}` is replaced by the typed text. It must return JSON: an array
- * of `{ value, label, disabled?, group? }`, or an object with those in `options`.
+ * of `{ value, label, disabled?, group?, secondary?, description?, image? }`, or an object with
+ * those in `options`. An option may carry a `secondary` text, shown muted after its label, a
+ * `description`, shown smaller beneath, and an `image` URL, shown as a round thumbnail before the
+ * text; in markup they are the `data-secondary`, `data-description` and `data-image` attributes.
+ * Typing matches the label and the secondary text, so an email finds its person.
  *
  * The element is form-associated: it submits its value under its `name`, supports `required`, and
  * restores its `value` attribute, or else its selected option, when the form resets.
@@ -38,6 +89,10 @@ const PAGE_SIZE = 10;
  *
  * <p-select name="user" aria-label="User" data-select-src="/api/users?q={q}" data-select-min="2"></p-select>
  *
+ * <p-select name="owner" aria-label="Owner">
+ *   <option value="ada" data-secondary="ada@example.com" data-description="Engineering" data-image="/avatars/ada.jpg">Ada Lovelace</option>
+ * </p-select>
+ *
  * @attributes
  * - name, value, placeholder, disabled, required: as for a native select
  * - aria-label: names the input when there is no label
@@ -49,7 +104,8 @@ const PAGE_SIZE = 10;
  * @events
  * - input, change: dispatched when the user chooses a different option; they bubble out of shadow
  *   roots, as a native select's do
- * - p-select:change: with `{ value, label }`, when a different option is chosen
+ * - p-select:change: with `{ value, label }`, and the option's `secondary`, `description` and
+ *   `image` when it has them, when a different option is chosen
  * - p-select:open, p-select:close: when the list opens or closes
  *
  * @csspart input - the text input
@@ -125,7 +181,15 @@ export default class PSelect extends HTMLElement {
       subtree: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ['value', 'label', 'selected', 'disabled'],
+      attributeFilter: [
+        'value',
+        'label',
+        'selected',
+        'disabled',
+        'data-secondary',
+        'data-description',
+        'data-image',
+      ],
     });
 
     if (this.state.src && this.state.min === 0) {
@@ -304,6 +368,7 @@ export default class PSelect extends HTMLElement {
         label: option.label || option.textContent.trim(),
         disabled: option.disabled || Boolean(parent?.disabled),
         group,
+        ...richFields(option.dataset),
       });
       if (option.hasAttribute('selected') && selectedValue === null) {
         selectedValue = option.value;
@@ -445,6 +510,7 @@ export default class PSelect extends HTMLElement {
         label: String(item.label ?? item.value ?? ''),
         disabled: Boolean(item.disabled),
         group: item.group ?? null,
+        ...richFields(item),
       }));
       this._filterLocal('', { announce: true });
     } catch (error) {
@@ -482,8 +548,13 @@ export default class PSelect extends HTMLElement {
 
   _filterLocal(query, { announce = Boolean(query) } = {}) {
     const searchTerm = query.trim().toLowerCase();
+    /* The secondary text is searched as well, so an email finds its person; the description isn't */
     this.state.filtered = searchTerm
-      ? this.state.options.filter(option => option.label.toLowerCase().includes(searchTerm))
+      ? this.state.options.filter(
+          option =>
+            option.label.toLowerCase().includes(searchTerm) ||
+            option.secondary?.toLowerCase().includes(searchTerm)
+        )
       : this.state.options.slice();
 
     this._renderOptions();
@@ -614,7 +685,7 @@ export default class PSelect extends HTMLElement {
     const option = this.state.options.find(item => String(item.value) === String(value));
     if (!option || option.disabled) return;
 
-    this._choose(option.value, option.label);
+    this._choose(option.value, option);
     this.close();
   }
 
@@ -622,21 +693,26 @@ export default class PSelect extends HTMLElement {
    * Record a value the user chose, dispatching input, change and p-select:change when it changes
    *
    * @param {string} value
-   * @param {string} [label]
+   * @param {{ label: string, secondary?: string, description?: string, image?: string }} [option] - the option chosen, whose label and rich fields go in the detail
    */
-  _choose(value, label = '') {
+  _choose(value, option = null) {
     if (value === this.state.value) return;
     this._setValue(value);
 
+    const detail = { value, label: option?.label ?? '' };
+    for (const field of RICH_FIELDS) {
+      if (option?.[field]) detail[field] = option[field];
+    }
+
     this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-    dispatchComponentEvent(this, 'p-select:change', { value, label });
+    dispatchComponentEvent(this, 'p-select:change', detail);
   }
 
   /**
    * Replace the options
    *
-   * @param {Array<{value: string, label: string, disabled?: boolean, group?: string}>} options
+   * @param {Array<{value: string, label: string, disabled?: boolean, group?: string, secondary?: string, description?: string, image?: string}>} options
    */
   setOptions(options) {
     this.state.options = Array.isArray(options) ? options.slice() : [];
@@ -822,7 +898,11 @@ export default class PSelect extends HTMLElement {
       if (option.disabled) {
         element.setAttribute('aria-disabled', 'true');
       }
-      element.textContent = option.label;
+      if (option.secondary || option.description || option.image) {
+        element.append(...richOptionContent(option));
+      } else {
+        element.textContent = option.label;
+      }
       (groupElement ?? menu).append(element);
     });
   }

@@ -25,6 +25,8 @@
   --select-bg: var(--surface-control-color-bg, var(--color-surface, #ffffff));
   --select-text: var(--surface-control-color-text, #{$neutral-900});
   --select-placeholder: var(--color-text-muted, #{$color-text-muted});
+  --select-description-color: var(--color-text-muted, #{$color-text-muted});
+  --select-image-size: 1.5rem;
 
   --select-hover-bg: var(--surface-dropdown-item-hover-bg, var(--color-hover, #{$neutral-100}));
   --select-selected-bg: var(--surface-dropdown-item-selected-bg, rgba(59, 130, 246, 0.1));
@@ -188,9 +190,38 @@
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.45rem 0.6rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+}
+
+/* A thumbnail has its size before it loads, so the list doesn't reflow as images arrive; it is
+   no taller than a line of text, so an option with one is as tall as an option without */
+.image {
+  flex-shrink: 0;
+  width: var(--select-image-size);
+  height: var(--select-image-size);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.text {
+  min-width: 0;
+}
+
+.secondary {
+  color: var(--color-text-muted, #{$color-text-muted});
+  font-weight: 400;
+}
+
+.description {
+  display: block;
+  color: var(--select-description-color);
+  font-size: 0.85em;
+  font-weight: 400;
 }
 
 .option:hover {
