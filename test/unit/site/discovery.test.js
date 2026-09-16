@@ -28,7 +28,27 @@ const sitemapUrls = [...sitemapXml(contracts, guides).matchAll(/<loc>([^<]+)<\/l
   match => match[1]
 );
 
+const PROBE = {
+  name: 'Probe',
+  kind: 'enhancement',
+  selector: 'data-probe',
+  module: 'components/Probe',
+  summary: 'A component used by this test',
+  description: 'A component used by this test',
+  attributes: [{ name: 'data-probe-mode', type: 'string', description: 'Either a\\b or a|b' }],
+  events: [],
+  examples: [{ id: 'probe', title: 'Probe', markup: '<div data-probe></div>' }],
+};
+
 describe('discovery files', () => {
+  it('escapes pipes and backslashes so a table row keeps its columns', () => {
+    const row = llmsFullTxt([PROBE], [])
+      .split('\n')
+      .find(line => line.includes('data-probe-mode'));
+
+    expect(row).toContain('Either a\\\\b or a\\|b.');
+  });
+
   it('lists every guide and component page in llms.txt', () => {
     expect(guideAndComponentUrls.filter(url => !llmsLinks.includes(url))).toEqual([]);
   });
