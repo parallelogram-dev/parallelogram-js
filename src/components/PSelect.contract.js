@@ -197,19 +197,25 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       id: 'form',
       title: 'In a form',
       markup: `<form class="form" action="#chosen">
-  <label for="dining-area">Dining area</label>
-  <p-select id="dining-area" name="area" placeholder="Choose an area" required>
-    <optgroup label="Inside">
-      <option value="bar">Bar</option>
-      <option value="main">Main room</option>
-    </optgroup>
-    <optgroup label="Outside">
-      <option value="terrace" selected>Terrace</option>
-      <option value="garden" disabled>Garden (closed for winter)</option>
-    </optgroup>
-  </p-select>
-  <button type="submit">Continue</button>
-  <button type="reset">Reset</button>
+  <div class="form__group">
+    <label class="form__label" for="dining-area">Dining area</label>
+    <div class="form__control">
+      <p-select id="dining-area" name="area" placeholder="Choose an area" required>
+        <optgroup label="Inside">
+          <option value="bar">Bar</option>
+          <option value="main">Main room</option>
+        </optgroup>
+        <optgroup label="Outside">
+          <option value="terrace" selected>Terrace</option>
+          <option value="garden" disabled>Garden (closed for winter)</option>
+        </optgroup>
+      </p-select>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Continue</button>
+    <button type="reset">Reset</button>
+  </div>
 </form>`,
       controls: [
         { attribute: 'placeholder' },
@@ -223,34 +229,40 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       title: 'People',
       description:
         'An option can carry more than its label: `data-secondary` is shown muted after the label and searched with it, so typing an email finds the person; `data-description` is a smaller line beneath; `data-image` is a round thumbnail before the text. The input shows the label alone once someone is chosen. Remote options carry the same fields as `secondary`, `description` and `image`.',
-      markup: `<label for="owner">Owner</label>
-<p-select id="owner" name="owner" placeholder="Choose an owner">
-  <option
-    value="amelia"
-    data-secondary="amelia@example.com"
-    data-description="Account manager, Sydney"
-    data-image="images/harbour-640.jpg"
-  >
-    Amelia Nguyen
-  </option>
-  <option
-    value="hudson"
-    data-secondary="hudson@example.com"
-    data-description="Head chef, Melbourne"
-    data-image="images/kitchen-640.jpg"
-  >
-    Hudson Ferraro
-  </option>
-  <option
-    value="priya"
-    data-secondary="priya@example.com"
-    data-description="Events, Brisbane"
-    data-image="images/terrace-640.jpg"
-  >
-    Priya Rahman
-  </option>
-  <option value="unassigned" data-description="Leave the record with no owner">Unassigned</option>
-</p-select>`,
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="owner">Owner</label>
+    <div class="form__control">
+      <p-select id="owner" name="owner" placeholder="Choose an owner">
+        <option
+          value="amelia"
+          data-secondary="amelia@example.com"
+          data-description="Account manager, Sydney"
+          data-image="images/harbour-640.jpg"
+        >
+          Amelia Nguyen
+        </option>
+        <option
+          value="hudson"
+          data-secondary="hudson@example.com"
+          data-description="Head chef, Melbourne"
+          data-image="images/kitchen-640.jpg"
+        >
+          Hudson Ferraro
+        </option>
+        <option
+          value="priya"
+          data-secondary="priya@example.com"
+          data-description="Events, Brisbane"
+          data-image="images/terrace-640.jpg"
+        >
+          Priya Rahman
+        </option>
+        <option value="unassigned" data-description="Leave the record with no owner">Unassigned</option>
+      </p-select>
+    </div>
+  </div>
+</div>`,
       controls: [{ attribute: 'placeholder' }, { attribute: 'data-select-open-on-focus' }],
     },
     {
@@ -258,14 +270,20 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       title: 'A long list',
       description:
         'Around a hundred options, loaded from a URL so the sample stays readable. The list scrolls once it outgrows its maximum height, typing narrows it and the arrow keys, Page Up and Page Down walk it. With `data-select-min="0"` the options arrive as soon as the list opens.',
-      markup: `<label for="delivery-suburb">Delivery suburb</label>
-<p-select
-  id="delivery-suburb"
-  name="suburb"
-  placeholder="Choose a suburb"
-  data-select-src="/api/places?q={q}"
-  data-select-min="0"
-></p-select>`,
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="delivery-suburb">Delivery suburb</label>
+    <div class="form__control">
+      <p-select
+        id="delivery-suburb"
+        name="suburb"
+        placeholder="Choose a suburb"
+        data-select-src="/api/places?q={q}"
+        data-select-min="0"
+      ></p-select>
+    </div>
+  </div>
+</div>`,
       controls: [
         { attribute: 'placeholder' },
         { attribute: 'data-select-min' },
@@ -277,15 +295,21 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       title: 'Searching a database',
       description:
         'The search runs on the server: each query is sent to `data-select-src` with `{q}` replaced by the typed text, and the options that come back replace the list. Each row carries an email as its `secondary` and a role as its `description`, so the list shows both and a search on `nguyen`, `perth` or an address like `noah.tran` finds its person. Type two characters to start a search, and the list shows its busy state while the request is out and "No results found" when nothing matches.',
-      markup: `<label for="customer">Customer</label>
-<p-select
-  id="customer"
-  name="customer"
-  placeholder="Search customers"
-  data-select-src="/api/directory?q={q}"
-  data-select-min="2"
-  data-select-debounce="300"
-></p-select>`,
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="customer">Customer</label>
+    <div class="form__control">
+      <p-select
+        id="customer"
+        name="customer"
+        placeholder="Search customers"
+        data-select-src="/api/directory?q={q}"
+        data-select-min="2"
+        data-select-debounce="300"
+      ></p-select>
+    </div>
+  </div>
+</div>`,
       controls: [
         { attribute: 'placeholder' },
         { attribute: 'data-select-min' },

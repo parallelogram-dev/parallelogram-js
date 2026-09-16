@@ -99,18 +99,29 @@ Each error is written to the form's \`[data-error-for]\` element for that field,
       title: 'Booking form',
       description: 'Leave a field empty or submit to see the messages.',
       markup: `<form data-form-enhancer class="form" action="#booked">
-  <label for="guest-name">Name</label>
-  <input id="guest-name" name="name" required minlength="2" autocomplete="name">
-
-  <label for="guest-email">Email</label>
-  <input id="guest-email" name="email" type="email" required autocomplete="email"
-         data-form-enhancer-message-value-missing="Tell us where to send your confirmation">
-  <p data-error-for="email" hidden></p>
-
-  <label for="guest-party">Party size</label>
-  <input id="guest-party" name="party" type="number" min="1" max="12" required>
-
-  <button type="submit">Book</button>
+  <div class="form__group">
+    <label class="form__label" for="guest-name">Name</label>
+    <div class="form__control">
+      <input id="guest-name" name="name" required minlength="2" autocomplete="name">
+    </div>
+  </div>
+  <div class="form__group">
+    <label class="form__label" for="guest-email">Email</label>
+    <div class="form__control">
+      <input id="guest-email" name="email" type="email" required autocomplete="email"
+             data-form-enhancer-message-value-missing="Tell us where to send your confirmation">
+      <p data-error-for="email" hidden></p>
+    </div>
+  </div>
+  <div class="form__group">
+    <label class="form__label" for="guest-party">Party size</label>
+    <div class="form__control">
+      <input id="guest-party" name="party" type="number" min="1" max="12" required>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Book</button>
+  </div>
 </form>`,
       controls: [
         { attribute: 'data-form-enhancer-validate-on-blur' },
