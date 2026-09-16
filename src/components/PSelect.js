@@ -1,5 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
+import { chevronDown, iconMarkup } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -178,7 +179,7 @@ export default class PSelect extends HTMLElement {
             aria-expanded="false"
             aria-controls="listbox"
           />
-          <span class="arrow" aria-hidden="true">▾</span>
+          <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
         <div class="menu" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1" hidden></div>

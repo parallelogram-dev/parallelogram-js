@@ -1,4 +1,5 @@
 import styles from '../styles/framework/components/PModal.scss';
+import { iconMarkup, x } from '../utils/icons.js';
 import { deepActiveElement, getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
@@ -78,7 +79,7 @@ export default class PModal extends HTMLElement {
         <header class="modal__header" data-modal-header part="header">
           <div class="modal__title" part="title"><slot name="title"><h2>Dialog</h2></slot></div>
           <div class="modal__spacer"></div>
-          <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">×</button>
+          <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
         </header>
         <section class="modal__content" data-modal-content part="content">
           <slot></slot>
