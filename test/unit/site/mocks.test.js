@@ -42,6 +42,22 @@ describe('site mock api', () => {
     expect(options.every(option => option.label.includes('Nguyen'))).toBe(true);
   });
 
+  it('gives each directory row an email and a role', async () => {
+    const [row] = await optionsFrom('/api/directory?q=amelia nguyen');
+
+    expect([row.secondary, typeof row.description, row.description.length > 0]).toEqual([
+      'amelia.nguyen@example.com',
+      'string',
+      true,
+    ]);
+  });
+
+  it('searches the directory on the email as well as the name', async () => {
+    const options = await optionsFrom('/api/directory?q=noah.tran@');
+
+    expect(options.map(option => option.secondary)).toEqual(['noah.tran@example.com']);
+  });
+
   it('sends back no more than a page of rows', async () => {
     expect((await optionsFrom('/api/directory?q=a')).length).toBe(25);
   });

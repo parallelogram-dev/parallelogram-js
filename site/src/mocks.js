@@ -170,9 +170,20 @@ const FAMILY_NAMES = [
   'Petrenko',
 ];
 
+const ROLES = [
+  'Owner, Harbourside Bistro',
+  'Buyer, Southern Grocers',
+  'Events manager, The Terrace',
+  'Head chef, Kitchen Table',
+  'Accounts, Riverbend Farms',
+  'Sommelier, Vine & Barrel',
+  'Director, Coastal Catering',
+];
+
 /**
  * A directory of a few hundred people, built from the same name lists in the same order on every
- * load, so a row keeps its id between reloads
+ * load, so a row keeps its id between reloads. Each row carries an email as its secondary text and
+ * a role as its description, so the select shows both
  */
 const DIRECTORY = GIVEN_NAMES.flatMap((given, index) =>
   FAMILY_NAMES.map((family, offset) => {
@@ -180,14 +191,21 @@ const DIRECTORY = GIVEN_NAMES.flatMap((given, index) =>
     return {
       value: `cust-${4200 + row}`,
       label: `${given} ${family} — ${PLACES[row % PLACES.length]}`,
+      secondary: `${slug(given)}.${slug(family)}@example.com`,
+      description: ROLES[row % ROLES.length],
     };
   })
 );
 
+/* The label and the secondary text are searched, as the select searches them itself */
 const matches = (options, query) => {
   const needle = query.trim().toLowerCase();
   if (!needle) return options;
-  return options.filter(option => option.label.toLowerCase().includes(needle));
+  return options.filter(
+    option =>
+      option.label.toLowerCase().includes(needle) ||
+      option.secondary?.toLowerCase().includes(needle)
+  );
 };
 
 /**
