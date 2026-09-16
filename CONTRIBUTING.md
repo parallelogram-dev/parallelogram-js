@@ -100,4 +100,4 @@ Components work from the keyboard, name their controls, move and return focus pr
 - Record user-facing changes under `[Unreleased]` in `CHANGELOG.md`. Deprecate a public name for at least one release before removing it, except where a release says otherwise.
 - Commits are authored by the person responsible for them, without co-author trailers for tools.
 
-To release, set the version with `npm version <version> --no-git-tag-version`, move `[Unreleased]` to the new version with its date, and merge to `main`. Then push a `v<version>` tag on `main`. The Publish workflow runs every check and publishes to npm with provenance.
+To release, set the version with `npm version <version> --no-git-tag-version`, move `[Unreleased]` to the new version with its date, name the new line in `SECURITY.md` when the minor changes, and merge to `main`. Then push a `v<version>` tag on `main`. The Publish workflow runs every check and publishes to npm with provenance.

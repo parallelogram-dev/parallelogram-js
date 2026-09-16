@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Four colours that didn't meet WCAG AA. `<p-select>` marked the option the arrow keys are on with a tint of 1.09:1 that also replaced the selected option's own tint; it now keeps the tint and adds a 2px outline in the stronger accent, settable with `--select-active-outline`. `<p-uploader>`'s error message and DataTable's load error share a new `--color-danger-text` role, `#b91c1c` in light mode and `#f87171` in dark, so the uploader's error goes from 3.99:1 to 7.1:1 on its tint. `<p-datetime>`'s month and year buttons use the stronger accent on hover, 4.61:1 instead of 3.31:1. DataTable's pagination buttons border with `--color-control-border` rather than `--color-border-strong`, 3.35:1 instead of 1.48:1, since the border is all that shows where the button is.
 
+- The changelog records every released version again. A merge dropped the entries for 0.4.1 and for 0.1.3 to 0.3.2, and the 0.1.x dates that went with them, so 18 released versions had no record; they are back, with their npm publish dates. The security policy names the supported line as 0.7.x rather than 0.6.x, and the release steps in CONTRIBUTING now say to roll it forward. The stylesheet list in the getting started guide includes `accordion.css`, which the build has been emitting all along.
+
 - The dark theme now carries text as well as backgrounds. A new `--color-text` role colours every surface: in light mode it is `currentColor`, so surfaces keep inheriting the page's own text colour and nothing changes, and in dark mode it is `#e4e8ee`. Before this, a page that had no dark styles of its own got dark panels with its own black text under a dark operating system — modal panels at 1.25:1 and muted tab labels at 1.00:1. The stylesheet also sets `color-scheme` to match the theme, so the browser's own canvas, text and form controls follow it; a page can still set `color-scheme` itself after the stylesheet. Components that render without the package stylesheet now fall back to `#171717` text rather than `currentColor`, so `<p-select>`, `<p-datetime>`, `<p-modal>` and `<p-uploader>` no longer paint a white panel with the page's light text.
 
 ## [0.7.0] - 2026-09-16
@@ -428,6 +430,10 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
 - The demo build deletes stale hashed chunks from `demo/dist`.
 
+## [0.4.1] - 2026-06-26
+
+Changes in this release weren't recorded here; see the git history for what it contains.
+
 ## [0.4.0] - 2026-06-03
 
 ### Added
@@ -441,7 +447,29 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 - Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
 
-## [0.1.2] - 2025-01-19
+## [0.1.3 – 0.3.2] - not recorded
+
+Changes in these releases weren't recorded here; see the git history for what each one contains. They were published to npm on these dates:
+
+- 0.3.2 - 2026-06-03
+- 0.3.1 - 2026-05-27
+- 0.3.0 - 2026-05-18
+- 0.2.11 - 2026-05-13
+- 0.2.10 - 2026-05-12
+- 0.2.9 - 2026-05-12
+- 0.2.8 - 2026-02-11
+- 0.2.7 - 2025-11-26
+- 0.2.6 - 2025-11-26
+- 0.2.5 - 2025-11-26
+- 0.2.4 - 2025-11-25
+- 0.2.3 - 2025-11-21
+- 0.2.2 - 2025-11-20
+- 0.2.1 - 2025-11-20
+- 0.2.0 - 2025-11-19
+- 0.1.4 - 2025-11-19
+- 0.1.3 - 2025-11-19
+
+## [0.1.2] - 2025-11-19
 
 ### Added
 
@@ -484,7 +512,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
   - Toggle component (opening/closing states)
   - Lightbox component (active animation states)
 
-## [0.1.1] - 2025-01-19
+## [0.1.1] - 2025-11-18
 
 ### Added
 
@@ -498,7 +526,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Improved async/defer script handling in initialization
 - Enhanced ComponentRegistry validation and error messaging
 
-## [0.1.0] - 2025-01-18
+## [0.1.0] - 2025-11-18
 
 ### Changed
 
