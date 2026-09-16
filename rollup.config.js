@@ -29,8 +29,9 @@ const build = ({ dir, production }) => ({
     format: 'es',
     entryFileNames: '[name].js',
     chunkFileNames: 'shared/[name].js',
-    sourcemap: true,
-    sourcemapExcludeSources: production,
+    /* The development build is readable as it is; its maps with sources inside were 1.2 MB of the package */
+    sourcemap: production,
+    sourcemapExcludeSources: true,
   },
   plugins: [
     scss({ loadPaths: ['src/styles'] }),
