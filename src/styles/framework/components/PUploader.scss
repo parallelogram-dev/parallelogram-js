@@ -120,15 +120,21 @@ input {
 
   /* The panels are stacked and clipped here. The box can scroll, so the browser would keep the
      panel it thinks you are looking at in view and leave every panel off its mark. */
+  /* The edit form outgrows the thumbnail, so the box takes the height JS measured for it */
   &__content {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
     position: relative;
-    height: $size-preview;
+    height: var(--uploader-content-height, #{$size-preview});
+    min-height: $size-preview;
     overflow: hidden;
     overflow-anchor: none;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: height $duration-normal $ease-standard;
+    }
   }
 
   &__panel {
@@ -149,24 +155,30 @@ input {
       transform: translateY(0);
     }
 
-    &[data-panel='info'] {
-      transform: translateY(100%);
-
-      &.uploader__panel--activated {
-        transform: translateY(-100%);
-      }
+    /* A panel waiting below is moved by the height of the box, not its own, so it stays out of
+       sight while the edit panel makes the box taller */
+    &[data-panel='info'],
+    &[data-panel='delete'],
+    &[data-panel='edit'] {
+      transform: translateY(var(--uploader-content-height, #{$size-preview}));
 
       &.uploader__panel--show {
         transform: translateY(0);
       }
     }
 
-    &[data-panel='delete'] {
-      transform: translateY(100%);
+    &[data-panel='info'].uploader__panel--activated {
+      transform: translateY(-100%);
 
       &.uploader__panel--show {
         transform: translateY(0);
       }
+    }
+
+    /* The form sets the height here; the other panels keep the thumbnail's */
+    &--edit {
+      height: auto;
+      min-height: $size-preview;
     }
   }
 
@@ -397,16 +409,11 @@ slot {
   display: none;
 }
 
-.uploader__dialog {
-  width: min(32rem, calc(100vw - 2rem));
-  padding: $space-lg;
-  border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-  background: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
-  color: inherit;
-
-  &::backdrop {
-    background: rgba(0, 0, 0, 0.4);
-  }
+.uploader__form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  padding-bottom: $space-sm;
 
   .uploader__heading {
     height: auto;
@@ -416,16 +423,11 @@ slot {
 
   .uploader__actions {
     padding-left: 0;
+    justify-content: flex-start;
   }
 }
 
-.uploader__form {
-  display: flex;
-  flex-direction: column;
-  gap: $space-md;
-}
-
-.uploader__dialog-field {
+.uploader__edit-field {
   display: flex;
   flex-direction: column;
   gap: $space-xs;
@@ -442,7 +444,7 @@ slot {
   }
 }
 
-.uploader__dialog-message {
+.uploader__edit-message {
   margin: 0;
   color: var(--color-danger, #{$error-dark});
   font-size: $font-sm;
