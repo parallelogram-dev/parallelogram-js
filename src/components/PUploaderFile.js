@@ -68,8 +68,8 @@ const getFileTemplate = () => {
             <div class="uploader__alert">
               <h2 class="uploader__heading">Delete this file?</h2>
               <div class="uploader__actions" part="actions">
-                <button type="button" class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
                 <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
+                <button type="button" class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
               </div>
             </div>
           </div>
