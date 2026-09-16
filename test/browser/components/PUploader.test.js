@@ -796,24 +796,31 @@ describe('p-uploader-file', () => {
     ]);
   });
 
-  it('grows the card to fit the edit form and shrinks it back again', async () => {
+  it('takes the depth of the edit form while it is open, and its own again after', async () => {
     const { shadow } = await renderCard({
       attributes: { 'update-action': '/api/update' },
       fields: [
         ['title', 'Title'],
         ['caption', 'Caption', 'textarea'],
+        ['credit', 'Credit'],
+        ['notes', 'Notes', 'textarea'],
       ],
       data: { title: 'Harbour at dawn', caption: 'Boats' },
     });
     const content = shadow.querySelector('.uploader__content');
-    const height = () => content.getBoundingClientRect().height;
+    const panel = shadow.querySelector('[data-panel="edit"]');
+    const details = shadow.querySelector('[data-panel="info"]');
+    const height = () => Math.round(content.getBoundingClientRect().height);
+    /* Whichever panel is on show says how deep the card is, so neither is ever cropped */
+    await vi.waitFor(() => expect(height()).toBe(details.scrollHeight));
     const closed = height();
 
     shadow.querySelector('button[data-action="edit"]').click();
-    await vi.waitFor(() => expect(height()).toBeGreaterThan(closed));
+    await vi.waitFor(() => expect(height()).toBe(panel.scrollHeight));
+    const open = height();
     shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
 
-    await vi.waitFor(() => expect(height()).toBe(closed));
+    await vi.waitFor(() => expect([open > closed, height()]).toEqual([true, closed]));
   });
 
   it('exposes parts for styling and does not render the filename as a heading', async () => {
