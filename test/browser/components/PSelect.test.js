@@ -635,3 +635,189 @@ describe('p-select combobox', () => {
     );
   });
 });
+
+const PEOPLE = `
+  <p-select name="owner" aria-label="Owner">
+    <option
+      value="ada"
+      data-secondary="ada@example.com"
+      data-description="Engineering"
+      data-image="/avatars/ada.jpg"
+    >
+      Ada Lovelace
+    </option>
+    <option value="grace" data-secondary="grace@example.com">Grace Hopper</option>
+    <option value="nobody">Unassigned</option>
+  </p-select>
+`;
+
+const partsOf = option => ({
+  label: option.querySelector('.label')?.textContent ?? option.textContent,
+  secondary: option.querySelector('.secondary')?.textContent ?? null,
+  description: option.querySelector('.description')?.textContent ?? null,
+  image: option.querySelector('img')?.getAttribute('src') ?? null,
+});
+
+describe('p-select rich options', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('reads the secondary text, description and image from the option markup', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    expect(optionsOf(select).map(partsOf)).toEqual([
+      {
+        label: 'Ada Lovelace',
+        secondary: 'ada@example.com',
+        description: 'Engineering',
+        image: '/avatars/ada.jpg',
+      },
+      { label: 'Grace Hopper', secondary: 'grace@example.com', description: null, image: null },
+      { label: 'Unassigned', secondary: null, description: null, image: null },
+    ]);
+  });
+
+  it('reads the same fields from remote JSON', async () => {
+    vi.spyOn(window, 'fetch').mockImplementation(async () =>
+      Response.json([
+        {
+          value: 'ada',
+          label: 'Ada Lovelace',
+          secondary: 'ada@example.com',
+          description: 'Engineering',
+          image: '/avatars/ada.jpg',
+        },
+      ])
+    );
+    const select = mountSelect(
+      '<p-select name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
+    );
+
+    await vi.waitFor(
+      () =>
+        expect(optionsOf(select).map(partsOf)).toEqual([
+          {
+            label: 'Ada Lovelace',
+            secondary: 'ada@example.com',
+            description: 'Engineering',
+            image: '/avatars/ada.jpg',
+          },
+        ]),
+      WAIT
+    );
+  });
+
+  it('builds the thumbnail as a lazy, unnamed image of a fixed size', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+    const image = optionsOf(select)[0].querySelector('img');
+    const { width, height } = getComputedStyle(image);
+
+    expect([image.alt, image.loading, width, height]).toEqual(['', 'lazy', '24px', '24px']);
+  });
+
+  it('keeps an option without an image as tall as one in a plain list', () => {
+    const plain = mountSelect(COUNTRIES);
+    const rich = mountSelect(PEOPLE);
+    press(plain, 'ArrowDown');
+    press(rich, 'ArrowDown');
+
+    expect(optionsOf(rich).at(-1).offsetHeight).toBe(optionsOf(plain)[0].offsetHeight);
+  });
+
+  it('sizes the thumbnail from --select-image-size', () => {
+    const select = mountSelect(PEOPLE);
+    select.style.setProperty('--select-image-size', '40px');
+    press(select, 'ArrowDown');
+
+    expect(getComputedStyle(optionsOf(select)[0].querySelector('img')).width).toBe('40px');
+  });
+
+  it('matches typed text against the secondary text but not the description', () => {
+    const select = mountSelect(PEOPLE);
+    const labels = () => optionsOf(select).map(option => partsOf(option).label);
+
+    typeInto(select, 'grace@');
+    const byEmail = labels();
+    typeInto(select, 'engineering');
+
+    expect([byEmail, labels()]).toEqual([['Grace Hopper'], []]);
+  });
+
+  it('shows the label alone in the input once a rich option is chosen', () => {
+    const select = mountSelect(PEOPLE);
+
+    select.select('ada');
+
+    expect(inputOf(select).value).toBe('Ada Lovelace');
+  });
+
+  it('adds the fields an option has to the p-select:change detail, and no others', () => {
+    const select = mountSelect(PEOPLE);
+    const details = [];
+    select.addEventListener('p-select:change', event => details.push(event.detail));
+
+    select.select('ada');
+    select.select('grace');
+    select.select('nobody');
+
+    expect(details).toEqual([
+      {
+        value: 'ada',
+        label: 'Ada Lovelace',
+        secondary: 'ada@example.com',
+        description: 'Engineering',
+        image: '/avatars/ada.jpg',
+      },
+      { value: 'grace', label: 'Grace Hopper', secondary: 'grace@example.com' },
+      { value: 'nobody', label: 'Unassigned' },
+    ]);
+  });
+
+  it('chooses the option when its secondary text is clicked', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    optionsOf(select)[1].querySelector('.secondary').click();
+
+    expect(select.value).toBe('grace');
+  });
+
+  it('gives a rich option a text of its label, secondary text and description, as words', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    expect(optionsOf(select)[0].textContent.replace(/\s+/g, ' ').trim()).toBe(
+      'Ada Lovelace ada@example.com Engineering'
+    );
+  });
+
+  it('marks a rich option as the active descendant and disabled like any other', () => {
+    const select = mountSelect(
+      PEOPLE.replace('data-image="/avatars/ada.jpg"', 'data-image="/avatars/ada.jpg" disabled')
+    );
+    press(select, 'ArrowDown');
+    const [ada] = optionsOf(select);
+
+    press(select, 'Enter');
+
+    expect([
+      inputOf(select).getAttribute('aria-activedescendant'),
+      ada.hasAttribute('data-active'),
+      ada.getAttribute('aria-disabled'),
+      select.value,
+    ]).toEqual([ada.id, true, 'true', '']);
+  });
+
+  it('shows a changed data-secondary without being asked', async () => {
+    const select = mountSelect(PEOPLE);
+    select.querySelector('option[value="grace"]').dataset.secondary = 'hopper@example.com';
+
+    await vi.waitFor(() => {
+      press(select, 'ArrowDown');
+      expect(partsOf(optionsOf(select)[1]).secondary).toBe('hopper@example.com');
+    }, WAIT);
+  });
+});
