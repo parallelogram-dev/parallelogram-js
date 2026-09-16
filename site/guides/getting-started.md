@@ -251,7 +251,7 @@ Enhancement components that need styles use a document stylesheet. Import the pa
 @import '@parallelogram-js/core/styles/tabs.css';
 ```
 
-The component stylesheets are `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and the design tokens below. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
+The component stylesheets are `accordion.css`, `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and the design tokens below. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
 
 ### Design tokens
 
