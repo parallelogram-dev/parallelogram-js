@@ -9,6 +9,8 @@ const DEFAULT_PLACEHOLDER = 'Select…';
 
 /** How many options Page Up and Page Down move by */
 const PAGE_SIZE = 10;
+/* Pixels from the end of the list at which the next page is asked for */
+const LOAD_MORE_MARGIN = 48;
 
 /**
  * The optional fields an option may carry beyond its label: muted text after it, a smaller line
@@ -71,7 +73,10 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * Options come from `<option>` and `<optgroup>` children, which are watched for changes, or from
  * `data-select-src`, a URL where `{q}` is replaced by the typed text. It must return JSON: an array
  * of `{ value, label, disabled?, group?, secondary?, description?, image? }`, or an object with
- * those in `options`. An option may carry a `secondary` text, shown muted after its label, a
+ * those in `options`. A URL with `{page}` in it is paged: the list asks for page 1, and while the
+ * object answers `more: true` it asks for the next page when the list is scrolled to its end or the
+ * arrow keys reach the last option, adding what comes back. `{limit}` is replaced by
+ * `data-select-limit`, the page size. An option may carry a `secondary` text, shown muted after its label, a
  * `description`, shown smaller beneath, and an `image` URL, shown as a round thumbnail before the
  * text; in markup they are the `data-secondary`, `data-description` and `data-image` attributes.
  * Typing matches the label and the secondary text, so an email finds its person.
@@ -99,6 +104,7 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * - data-select-src: URL for remote options, with `{q}` replaced by the search text
  * - data-select-min: characters to type before a remote search (default 0)
  * - data-select-debounce: milliseconds to wait after typing before a remote search (default 200)
+ * - data-select-limit: rows per page, replacing `{limit}` in the URL (default 25)
  * - data-select-open-on-focus: open the list when the input receives focus (default false)
  *
  * @events
@@ -125,6 +131,7 @@ export default class PSelect extends HTMLElement {
       'data-select-src',
       'data-select-min',
       'data-select-debounce',
+      'data-select-limit',
       'data-select-open-on-focus',
     ];
   }
@@ -156,6 +163,9 @@ export default class PSelect extends HTMLElement {
       required: false,
       loading: false,
       error: null,
+      limit: 25,
+      page: 1,
+      more: false,
     };
 
     this._selectedOption = null;
@@ -303,6 +313,11 @@ export default class PSelect extends HTMLElement {
 
     /* Keep focus on the input while an option is pressed */
     menu.addEventListener('mousedown', event => event.preventDefault());
+    menu.addEventListener('scroll', () => {
+      if (menu.scrollTop + menu.clientHeight >= menu.scrollHeight - LOAD_MORE_MARGIN) {
+        this._loadMore();
+      }
+    });
     menu.addEventListener('click', event => {
       const element = event.target.closest('[role="option"]');
       const option = element && this.state.filtered[Number(element.dataset.index)];
@@ -324,6 +339,7 @@ export default class PSelect extends HTMLElement {
     this.state.src = data.selectSrc || null;
     this.state.debounce = Number(data.selectDebounce ?? 200) || 0;
     this.state.min = Number(data.selectMin ?? 0) || 0;
+    this.state.limit = Number(data.selectLimit ?? 25) || 25;
     this.state.openOnFocus =
       data.selectOpenOnFocus !== undefined && data.selectOpenOnFocus !== 'false';
   }
@@ -485,13 +501,26 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
-   * Load options for a search from `data-select-src`
+   * Ask for the next page of the current search, while the source says there is one
    */
-  async _fetchOptions(query) {
+  _loadMore() {
+    if (this.state.more && !this.state.loading && this.state.open) {
+      this._fetchOptions(this.state.query, this.state.page + 1);
+    }
+  }
+
+  /**
+   * Load options for a search from `data-select-src`; page 1 replaces the list, a later page
+   * adds to it
+   */
+  async _fetchOptions(query, page = 1) {
     this._cancelPendingRequest();
     const controller = new AbortController();
     this._abortController = controller;
-    const url = this.state.src.replaceAll('{q}', encodeURIComponent(query));
+    const url = this.state.src
+      .replaceAll('{q}', encodeURIComponent(query))
+      .replaceAll('{page}', String(page))
+      .replaceAll('{limit}', String(this.state.limit));
 
     this._setBusy(true);
     try {
@@ -505,14 +534,19 @@ export default class PSelect extends HTMLElement {
       const data = await response.json();
       const items = Array.isArray(data) ? data : (data?.options ?? []);
       this.state.error = null;
-      this.state.options = items.map(item => ({
+      const options = items.map(item => ({
         value: String(item.value ?? ''),
         label: String(item.label ?? item.value ?? ''),
         disabled: Boolean(item.disabled),
         group: item.group ?? null,
         ...richFields(item),
       }));
+      this.state.options = page > 1 ? this.state.options.concat(options) : options;
+      this.state.page = page;
+      this.state.more = this.state.src.includes('{page}') && Boolean(data?.more);
+      const highlighted = this.state.highlightedIndex;
       this._filterLocal('', { announce: true });
+      if (page > 1) this._setHighlight(highlighted);
     } catch (error) {
       if (error.name !== 'AbortError') {
         this._handleFetchError(error);
@@ -573,7 +607,7 @@ export default class PSelect extends HTMLElement {
       this._announce(
         count === 0
           ? this._emptyMessage()
-          : `${count} ${count === 1 ? 'result' : 'results'} available`
+          : `${count} ${count === 1 ? 'result' : 'results'} available${this.state.more ? ', more on the way' : ''}`
       );
     }
   }
@@ -925,6 +959,7 @@ export default class PSelect extends HTMLElement {
 
     element.setAttribute('data-active', '');
     input.setAttribute('aria-activedescendant', element.id);
+    if (index === this.state.filtered.length - 1) this._loadMore();
 
     const top = element.offsetTop;
     const bottom = top + element.offsetHeight;

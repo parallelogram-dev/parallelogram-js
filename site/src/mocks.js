@@ -234,10 +234,13 @@ export function installMockApi() {
       return json({ options: matches(PLACE_OPTIONS, query) });
     }
 
-    /* A stand-in for a database search: it never sends more than a page of rows back */
+    /* A stand-in for a database search: a page of rows at a time, and whether there are more */
     if (/\/api\/directory$/.test(url.pathname)) {
       await delay(450);
-      return json({ options: matches(DIRECTORY, query).slice(0, 25) });
+      const rows = matches(DIRECTORY, query);
+      const limit = Number(url.searchParams.get('limit')) || 25;
+      const start = (Math.max(1, Number(url.searchParams.get('page')) || 1) - 1) * limit;
+      return json({ options: rows.slice(start, start + limit), more: start + limit < rows.length });
     }
 
     return networkFetch(resource, options);

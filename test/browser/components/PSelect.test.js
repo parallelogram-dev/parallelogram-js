@@ -821,3 +821,123 @@ describe('p-select rich options', () => {
     }, WAIT);
   });
 });
+
+/* A source of 30 rows in pages of whatever size the URL asks for, remembering what was asked */
+const pagedSource = (total = 30) => {
+  const calls = [];
+  vi.spyOn(window, 'fetch').mockImplementation(async url => {
+    const params = new URL(String(url), 'http://localhost').searchParams;
+    const page = Number(params.get('page')) || 1;
+    const limit = Number(params.get('limit')) || 10;
+    calls.push({ q: params.get('q'), page, limit });
+    const start = (page - 1) * limit;
+    const rows = Array.from({ length: total }, (_, i) => ({ value: `r${i}`, label: `Row ${i}` }));
+    return Response.json({
+      options: rows.slice(start, start + limit),
+      more: start + limit < total,
+    });
+  });
+  return calls;
+};
+
+const pagedSelect = (src = '/api/rows?q={q}&page={page}&limit={limit}', limit = '10') =>
+  mountSelect(
+    `<p-select name="row" aria-label="Row" data-select-src="${src}" data-select-min="0" data-select-debounce="0" data-select-limit="${limit}"></p-select>`
+  );
+
+const scrollToEnd = select => {
+  const menu = listboxOf(select);
+  menu.scrollTop = menu.scrollHeight;
+  menu.dispatchEvent(new Event('scroll'));
+};
+
+describe('p-select paging', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.replaceChildren();
+  });
+
+  it('asks for the first page with the page size, and adds the next when the list is scrolled to its end', async () => {
+    const calls = pagedSource();
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    scrollToEnd(select);
+
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(20), WAIT);
+    expect(calls).toEqual([
+      { q: '', page: 1, limit: 10 },
+      { q: '', page: 2, limit: 10 },
+    ]);
+  });
+
+  it('adds the next page when the arrow keys reach the last option, and keeps the highlight there', async () => {
+    pagedSource();
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    press(select, 'End');
+
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(20), WAIT);
+    expect(inputOf(select).getAttribute('aria-activedescendant')).toBe('option-9');
+  });
+
+  it('stops asking once the source says there is no more', async () => {
+    const calls = pagedSource(15);
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    scrollToEnd(select);
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(15), WAIT);
+
+    scrollToEnd(select);
+    press(select, 'End');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(calls.map(call => call.page)).toEqual([1, 2]);
+  });
+
+  it('starts again from page 1 for a new search', async () => {
+    const calls = pagedSource();
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    scrollToEnd(select);
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(20), WAIT);
+
+    typeInto(select, 'Row 2');
+
+    await vi.waitFor(() => expect(calls.at(-1)).toEqual({ q: 'Row 2', page: 1, limit: 10 }), WAIT);
+  });
+
+  it('treats a URL without {page} as a single page, whatever the response says', async () => {
+    const calls = pagedSource();
+    const select = pagedSelect('/api/rows?q={q}');
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    scrollToEnd(select);
+    press(select, 'End');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(calls.length).toBe(1);
+  });
+
+  it('tells a screen reader more is on the way while there is', async () => {
+    pagedSource(15);
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    const live = select.shadowRoot.querySelector('[aria-live]');
+    await vi.waitFor(
+      () => expect(live.textContent).toBe('10 results available, more on the way'),
+      WAIT
+    );
+
+    scrollToEnd(select);
+
+    await vi.waitFor(() => expect(live.textContent).toBe('15 results available'), WAIT);
+  });
+});

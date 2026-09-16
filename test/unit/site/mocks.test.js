@@ -58,8 +58,26 @@ describe('site mock api', () => {
     expect(options.map(option => option.secondary)).toEqual(['noah.tran@example.com']);
   });
 
-  it('sends back no more than a page of rows', async () => {
-    expect((await optionsFrom('/api/directory?q=a')).length).toBe(25);
+  it('sends back a page of rows and says whether there are more', async () => {
+    const first = await window.fetch('/api/directory?q=a').then(response => response.json());
+    const third = await window
+      .fetch('/api/directory?q=a&page=3&limit=10')
+      .then(response => response.json());
+
+    expect([first.options.length, first.more, third.options.length, third.more]).toEqual([
+      25,
+      true,
+      10,
+      true,
+    ]);
+  });
+
+  it('says there are no more rows on the last page', async () => {
+    const last = await window
+      .fetch('/api/directory?q=amelia nguyen&page=1')
+      .then(response => response.json());
+
+    expect([last.options.length, last.more]).toEqual([1, false]);
   });
 
   it('gives the directory the same ids on every install', async () => {
