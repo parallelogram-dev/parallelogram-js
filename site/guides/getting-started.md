@@ -46,7 +46,7 @@ The production build differs from the development build in these ways:
 - `debugger` statements are removed and comments are dropped.
 - Names are minified, but class names are kept.
 
-Both builds include source maps. Because the production build has no debug calls, `debug: true` only shows the framework's debug output in the development build. Your own calls to `app.logger.info()` are not removed.
+The production build has source maps that name the source files; the development build is readable as it is and has none. Because the production build has no debug calls, `debug: true` only shows the framework's debug output in the development build. Your own calls to `app.logger.info()` are not removed.
 
 ## Start the framework
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The development build no longer ships source maps. It is unminified and readable as it is, and its maps carried a copy of every source file, 1.2 MB of the package's 2.8 MB unpacked. The production build's maps stay; they name the source files without including them, as before.
+
 ## [0.7.1] - 2026-09-16
 
 ### Added
