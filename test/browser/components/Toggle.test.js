@@ -236,6 +236,8 @@ describe('Toggle', () => {
       <nav id="site-menu"><a id="faq" href="#faq">FAQ</a><a id="pricing" href="/pricing">Pricing</a></nav>`);
     $('#site-menu').addEventListener('click', event => event.preventDefault());
     $('#menu-button').click();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
+
     $('#faq').click();
     await pause(150);
     const afterAnchor = stateOf('#site-menu');
@@ -257,6 +259,7 @@ describe('Toggle', () => {
       </nav>`);
     $('#site-menu').addEventListener('click', event => event.preventDefault());
     $('#menu-button').click();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
 
     $('#run').click();
     $('#write').click();
