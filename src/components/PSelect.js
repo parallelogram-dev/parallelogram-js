@@ -171,6 +171,7 @@ export default class PSelect extends HTMLElement {
     this._selectedOption = null;
     this._defaultValue = '';
     this._abortController = null;
+    this._requestedPage = 0;
     this._searchTimeout = null;
     this._optionObserver = null;
     this._parseQueued = false;
@@ -504,8 +505,9 @@ export default class PSelect extends HTMLElement {
    * Ask for the next page of the current search, while the source says there is one
    */
   _loadMore() {
-    if (this.state.more && !this.state.loading && this.state.open) {
-      this._fetchOptions(this.state.query, this.state.page + 1);
+    const next = this.state.page + 1;
+    if (this.state.more && !this.state.loading && this.state.open && next > this._requestedPage) {
+      this._fetchOptions(this.state.query, next);
     }
   }
 
@@ -517,6 +519,12 @@ export default class PSelect extends HTMLElement {
     this._cancelPendingRequest();
     const controller = new AbortController();
     this._abortController = controller;
+    /* A page is asked for once; a fresh search forgets the pages that came before it */
+    this._requestedPage = page;
+    if (page === 1) {
+      this.state.page = 1;
+      this.state.more = false;
+    }
     const url = this.state.src
       .replaceAll('{q}', encodeURIComponent(query))
       .replaceAll('{page}', String(page))
