@@ -125,7 +125,7 @@
 
 /* Light pages keep the darker red, which reaches 4.5:1 on tinted backgrounds; dark pages take the role */
 :where(.datatable__message td[role='alert']) {
-  color: var(--datatable-error-color, var(--brand-danger, #b91c1c));
+  color: var(--datatable-error-color, var(--brand-danger, var(--datatable-error-default, #b91c1c)));
   font-style: normal;
   font-weight: 500;
 }
@@ -136,8 +136,14 @@
   font-size: 0.875em;
 }
 
+/* The theme sets its own default rather than the documented property, so a page setting
+   --datatable-error-color on :root still wins in both themes */
+:root {
+  --datatable-error-default: #b91c1c;
+}
+
 @include dark-theme {
-  --datatable-error-color: var(--brand-danger, var(--color-danger));
+  --datatable-error-default: var(--color-danger);
 }
 
 /* State-based styling */
