@@ -22,19 +22,27 @@
   --modal-footer-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
   --modal-footer-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
   --modal-close-hover-bg: var(--color-hover, #{$color-bg-hover});
-  --modal-btn-primary-bg: var(--color-accent-hover, #{$primary-dark});
-  --modal-btn-primary-color: var(--color-accent-contrast, #ffffff);
-  --modal-btn-primary-hover-bg: color-mix(
-    in srgb,
-    var(--color-accent-hover, #{$primary-dark}) 85%,
-    black
+  /* Slotted buttons read the button family; a page can still set these for the modal alone */
+  --modal-btn-primary-bg: var(--button-primary-bg, var(--color-accent-hover, #{$primary-dark}));
+  --modal-btn-primary-color: var(--button-primary-color, var(--color-accent-contrast, #ffffff));
+  --modal-btn-primary-hover-bg: var(
+    --button-primary-hover-bg,
+    color-mix(in srgb, var(--color-accent-hover, #{$primary-dark}) 85%, black)
   );
-  --modal-btn-danger-bg: var(--color-danger, #{$error-dark});
-  --modal-btn-danger-color: var(--color-danger-contrast, #ffffff);
-  --modal-btn-danger-hover-bg: var(--color-danger, #{$error-dark});
-  --modal-btn-bg: var(--color-surface-muted, #{$neutral-100});
-  --modal-btn-color: var(--surface-dialog-color-text, #{$neutral-900});
-  --modal-btn-hover-bg: var(--color-border-strong, #{$neutral-300});
+  --modal-btn-danger-bg: var(--button-danger-bg, var(--color-danger, #{$error-dark}));
+  --modal-btn-danger-color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
+  --modal-btn-danger-hover-bg: var(--button-danger-hover-bg, var(--color-danger, #{$error-dark}));
+  --modal-btn-bg: var(--button-secondary-bg, transparent);
+  --modal-btn-color: var(--button-secondary-color, currentColor);
+  --modal-btn-border: var(--button-secondary-border, var(--color-border-strong, #{$neutral-300}));
+  --modal-btn-hover-bg: var(
+    --button-secondary-hover-bg,
+    var(--color-surface-muted, #{$neutral-100})
+  );
+  --modal-btn-hover-border: var(
+    --button-secondary-hover-border,
+    var(--color-border-strong, #{$neutral-300})
+  );
 
   /* Opacity */
   --modal-placeholder-opacity: #{$opacity-muted};
@@ -48,6 +56,15 @@
   --modal-space-xl: 1em; /* 16px */
   --modal-padding-x: 0.875em; /* 14px */
   --modal-padding-y: 0.75em; /* 12px */
+  --modal-header-padding: var(
+    --panel-header-padding,
+    var(--modal-padding-y) var(--modal-padding-x)
+  );
+  --modal-content-padding: var(--panel-padding, var(--modal-padding-x));
+  --modal-footer-padding: var(
+    --panel-footer-padding,
+    var(--modal-padding-y) var(--modal-padding-x)
+  );
   --modal-gap: 0.5em; /* 8px */
 
   /* Border Radius using surface-dialog tokens */
@@ -157,9 +174,12 @@
 .modal__header {
   flex-shrink: 0;
   gap: var(--modal-gap);
-  padding: var(--modal-padding-y) var(--modal-padding-x);
+  padding: var(--modal-header-padding);
   background: var(--modal-header-bg);
-  border-bottom: var(--modal-border-width) solid var(--modal-panel-border);
+  border-bottom: var(
+    --panel-header-border,
+    var(--modal-border-width) solid var(--modal-panel-border)
+  );
 }
 
 .modal__title {
@@ -205,54 +225,59 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  padding: var(--modal-padding-x);
+  padding: var(--modal-content-padding);
 }
 
 /* Element: Modal footer */
 .modal__footer {
   flex-shrink: 0;
-  padding: var(--modal-padding-y) var(--modal-padding-x);
+  padding: var(--modal-footer-padding);
   gap: var(--modal-gap);
   justify-content: flex-end;
   background: var(--modal-footer-bg);
-  border-top: var(--modal-border-width) solid var(--modal-panel-border);
+  border-top: var(--panel-footer-border, var(--modal-border-width) solid var(--modal-panel-border));
 }
 
 /* Slotted button styles (BEM classes) */
 ::slotted(.btn) {
   appearance: none;
-  border: 0;
-  border-radius: var(--modal-radius-lg);
-  padding: var(--modal-space-lg) var(--modal-padding-x);
+  border: var(--button-border-width, 1px) solid var(--modal-btn-border);
+  border-radius: var(--button-border-radius, var(--modal-radius-lg));
+  padding: var(--button-padding-y, var(--modal-space-lg))
+    var(--button-padding-x, var(--modal-padding-x));
   background: var(--modal-btn-bg);
   color: var(--modal-btn-color);
   cursor: pointer;
-  font-size: var(--modal-font-sm);
-  font-weight: 500;
-  min-height: var(--modal-btn-min-height);
+  font-size: var(--button-font-size, var(--modal-font-sm));
+  font-weight: var(--button-font-weight, 500);
+  min-height: var(--button-min-height, var(--modal-btn-min-height));
 }
 
 ::slotted(.btn:hover) {
   background: var(--modal-btn-hover-bg);
+  border-color: var(--modal-btn-hover-border);
 }
 
 ::slotted(.btn--primary) {
   background: var(--modal-btn-primary-bg);
+  border-color: var(--modal-btn-primary-bg);
   color: var(--modal-btn-primary-color);
-  font-weight: 700;
 }
 
 ::slotted(.btn--primary:hover) {
   background: var(--modal-btn-primary-hover-bg);
+  border-color: var(--modal-btn-primary-hover-bg);
 }
 
 ::slotted(.btn--danger) {
   background: var(--modal-btn-danger-bg);
+  border-color: var(--modal-btn-danger-bg);
   color: var(--modal-btn-danger-color);
 }
 
 ::slotted(.btn--danger:hover) {
   background: var(--modal-btn-danger-hover-bg);
+  border-color: var(--modal-btn-danger-hover-bg);
 }
 
 ::slotted(.btn:disabled) {

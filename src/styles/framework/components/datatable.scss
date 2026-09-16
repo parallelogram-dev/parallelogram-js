@@ -87,23 +87,32 @@
   margin-top: 1rem;
 }
 
+/* Secondary buttons from the button family, with the datatable's own properties over them */
 :where(.datatable__pagination button) {
   min-width: 2.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--datatable-border-color, var(--color-control-border, rgba(0, 0, 0, 0.45)));
-  border-radius: 4px;
-  background: var(--datatable-button-bg, transparent);
-  color: var(--datatable-button-color, inherit);
+  min-height: var(--button-min-height, 2.5em);
+  padding: var(--button-padding-y, 0.5rem) var(--button-padding-x, 0.75rem);
+  border: var(--button-border-width, 1px) solid
+    var(
+      --datatable-border-color,
+      var(--button-secondary-border, var(--color-control-border, rgba(0, 0, 0, 0.45)))
+    );
+  border-radius: var(--button-border-radius, 4px);
+  background: var(--datatable-button-bg, var(--button-secondary-bg, transparent));
+  color: var(--datatable-button-color, var(--button-secondary-color, inherit));
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--button-font-size, 0.875rem);
   cursor: pointer;
 }
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
-  background: var(--datatable-button-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)));
+  background: var(
+    --datatable-button-hover-bg,
+    var(--button-secondary-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)))
+  );
   border-color: var(
     --datatable-button-hover-border-color,
-    var(--color-control-border, rgba(0, 0, 0, 0.45))
+    var(--button-secondary-hover-border, var(--color-control-border, rgba(0, 0, 0, 0.45)))
   );
 }
 
