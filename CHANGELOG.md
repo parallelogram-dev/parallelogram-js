@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Toggle decided whether a click was leaving the page by matching the start of the `href`, so a link written `JavaScript:` or `MailTo:`, or with a scheme it didn't know, closed the toggle as though the page were changing. The destination is resolved instead: only an `http:` or `https:` address that differs from the current page counts, and fragments on this page still leave the toggle open.
 - The documentation's `llms-full.txt` escaped a `|` in a description but not a `\`, so a description ending in a backslash could break the table row it sat in. Backslashes are escaped first.
+- A `<p-select>` taken off the page kept asking for more pages. Removing it aborted the request in flight, but an event already queued for it — a scroll of its list, or a key that moved the highlight to the last option — still reached it afterwards and started a new one, so a removed select went on fetching. It now asks only while it is on the page.
 
 ## [0.7.2] - 2026-09-16
 
