@@ -16,6 +16,8 @@ export const ICON_SIZES = { md: 24, sm: 20, xs: 16 };
 
 export const chevronDown = ['M6 9l6 6l6 -6'];
 export const chevronUp = ['M6 15l6 -6l6 6'];
+export const chevronLeft = ['M15 6l-6 6l6 6'];
+export const chevronRight = ['M9 6l6 6l-6 6'];
 export const x = ['M18 6l-12 12', 'M6 6l12 12'];
 export const check = ['M5 12l5 5l10 -10'];
 export const search = ['M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0', 'M21 21l-6 -6'];

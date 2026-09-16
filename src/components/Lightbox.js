@@ -1,12 +1,12 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 import { setStaticHTML } from '../utils/shadow.js';
+import { chevronLeft, chevronRight, iconMarkup, x } from '../utils/icons.js';
 
 const ICONS = {
-  close:
-    '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
-  prev: '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
-  next: '<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  close: iconMarkup(x),
+  prev: iconMarkup(chevronLeft),
+  next: iconMarkup(chevronRight),
 };
 
 /**
