@@ -4,6 +4,7 @@ import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
 import { followFocusSource } from '../utils/focus-source.js';
+import { arrowDown, arrowUp, iconElement, pencil, trash } from '../utils/icons.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -14,6 +15,11 @@ import { followFocusSource } from '../utils/focus-source.js';
  * @param {string} [text]
  * @returns {HTMLElement}
  */
+const withIcon = (button, paths) => {
+  button.append(iconElement(paths, { size: 'sm' }));
+  return button;
+};
+
 const el = (tag, attributes = {}, text) => {
   const element = document.createElement(tag);
   for (const [name, value] of Object.entries(attributes)) {
@@ -145,6 +151,8 @@ export class PUploaderFile extends HTMLElement {
     deletePanel.querySelector('.uploader__heading').id = deleteHeadingId;
 
     this._toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
+    /* Edit and delete sit together as one pill, the way a segmented control does */
+    this._pills = el('div', { class: 'uploader__pills', part: 'pills' });
     root.querySelector('[data-panel="info"] .uploader__body').append(this._toolbar);
 
     this.shadowRoot.replaceChildren(root);
@@ -176,45 +184,52 @@ export class PUploaderFile extends HTMLElement {
 
     /* In toolbar order */
     this._toolbarButtons = {
-      edit: el(
-        'button',
-        { type: 'button', class: 'uploader__edit', 'data-action': 'edit', part: 'edit-button' },
-        'Edit details'
+      edit: withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill',
+          'data-action': 'edit',
+          part: 'edit-button',
+          title: 'Edit details',
+          'aria-label': 'Edit details',
+        }),
+        pencil
       ),
-      'move-up': el(
-        'button',
-        {
+      'move-up': withIcon(
+        el('button', {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-up',
           title: 'Move up',
           'aria-label': 'Move up',
-        },
-        '↑'
+        }),
+        arrowUp
       ),
-      'move-down': el(
-        'button',
-        {
+      'move-down': withIcon(
+        el('button', {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-down',
           title: 'Move down',
           'aria-label': 'Move down',
-        },
-        '↓'
+        }),
+        arrowDown
       ),
       replace: el(
         'button',
         { type: 'button', class: 'uploader__replace', 'data-action': 'replace' },
         'Replace'
       ),
-      'show-delete': el('button', {
-        type: 'button',
-        class: 'uploader__delete-icon',
-        'data-action': 'show-delete',
-        title: 'Delete file',
-        'aria-label': 'Delete file',
-      }),
+      'show-delete': withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill uploader__pill--delete',
+          'data-action': 'show-delete',
+          title: 'Delete file',
+          'aria-label': 'Delete file',
+        }),
+        trash
+      ),
     };
 
     this._setupFileEventListeners();
@@ -335,20 +350,31 @@ export class PUploaderFile extends HTMLElement {
       'show-delete': permissions.remove,
     };
 
-    let previous = null;
+    const parentOf = action =>
+      action === 'edit' || action === 'show-delete' ? this._pills : this._toolbar;
+    const previous = new Map();
     for (const [action, button] of Object.entries(this._toolbarButtons)) {
       if (!shown[action]) {
         button.remove();
         continue;
       }
-      if (button.parentNode !== this._toolbar) {
-        if (previous) {
-          previous.after(button);
+      const parent = parentOf(action);
+      if (button.parentNode !== parent) {
+        const after = previous.get(parent);
+        if (after) {
+          after.after(button);
         } else {
-          this._toolbar.prepend(button);
+          parent.prepend(button);
         }
       }
-      previous = button;
+      previous.set(parent, button);
+    }
+
+    /* The pill sits last in the toolbar, and goes away when neither button is allowed */
+    if (this._pills.children.length === 0) {
+      this._pills.remove();
+    } else if (this._pills.parentNode !== this._toolbar) {
+      this._toolbar.append(this._pills);
     }
   }
 
@@ -426,8 +452,10 @@ export class PUploaderFile extends HTMLElement {
       /* Render fields in the info panel for newly uploaded files */
       this._renderInfoPanelFields();
 
-      /* Show the info panel after overlay fades out */
-      setTimeout(() => {
+      /* Show the info panel after overlay fades out, unless the user has since chosen a panel
+         themselves, such as opening the delete confirmation */
+      clearTimeout(this._settlePanel);
+      this._settlePanel = setTimeout(() => {
         this.setAttribute('data-current-panel', 'info');
       }, 375); /* Match the transition duration */
     } else if (newState === 'error') {
@@ -519,6 +547,8 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _setPanel(panel) {
+    /* A panel the user asked for outlives the one a finished upload would have shown */
+    clearTimeout(this._settlePanel);
     const focusWasInPanel = Boolean(this.shadowRoot.activeElement?.closest('.uploader__panel'));
 
     this.setAttribute('data-current-panel', panel);

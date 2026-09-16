@@ -37,6 +37,14 @@ $size-icon-md: 1.25rem;
   font-family: inherit;
 }
 
+:host([draggable='true']) .uploader__preview {
+  cursor: grab;
+}
+
+:host([dragging]) .uploader__preview {
+  cursor: grabbing;
+}
+
 :host([dragging]) {
   opacity: 0.5;
   transition: none;
@@ -92,15 +100,15 @@ input {
 
   &__container {
     display: flex;
-    gap: $space-sm;
+    gap: var(--puploader-preview-gap, 1rem);
     position: relative;
   }
 
+  /* The image is the drag handle, so a press anywhere else is a click on what it lands on */
   &__preview {
     flex-shrink: 0;
     width: $size-preview;
     height: $size-preview;
-    pointer-events: none;
     user-select: none;
 
     img {
@@ -207,23 +215,42 @@ input {
     margin: 0;
   }
 
-  &__delete-icon {
-    width: $size-icon-md;
-    height: $size-icon-md;
-    border: none;
-    background-size: contain;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: var(--surface-card-color-bg, var(--color-surface, #ffffff));
-    background-repeat: no-repeat;
-    background-position: center;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity $duration-fast;
+  /* Edit and delete as one segmented pill, divided by a keyline in the card's own surface */
+  &__pills {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: $border-width solid var(--puploader-pill-border, var(--color-border, #{$color-border}));
+    background: var(--puploader-pill-bg, var(--color-surface-muted, #{$neutral-100}));
+    overflow: hidden;
     pointer-events: auto;
-    padding: 0;
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.75rem;
+    border: none;
+    background: none;
+    color: var(--surface-card-color-text, #{$neutral-900});
+    cursor: pointer;
+
+    + .uploader__pill {
+      border-left: $border-width solid
+        var(
+          --puploader-pill-keyline,
+          var(--puploader-pill-border, var(--color-border, #{$color-border}))
+        );
+    }
 
     &:hover {
-      opacity: 1;
+      background: var(--color-hover, rgba(0, 0, 0, 0.05));
+    }
+
+    &--delete:hover {
+      color: var(--color-danger, #{$error-dark});
     }
   }
 
@@ -327,19 +354,6 @@ slot {
   display: none;
 }
 
-.uploader__edit {
-  height: $size-icon-md;
-  padding: 0;
-  font: inherit;
-  font-size: $font-sm;
-  color: inherit;
-  background: none;
-  border: none;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
-}
-
 .uploader__dialog {
   width: min(32rem, calc(100vw - 2rem));
   padding: $space-lg;
@@ -409,6 +423,25 @@ textarea:focus-visible {
   gap: $space-xs;
   flex-shrink: 0;
   margin-left: $space-sm;
+}
+
+/* Reordering is a drag for pointer users, so the arrows stay out of the way until someone reaches
+   the card with a keyboard. They keep their place in the tab order while hidden. */
+.uploader__move {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:host([data-focus-source='keyboard']:focus-within) .uploader__move {
+  position: static;
+  width: auto;
+  height: $size-icon-md;
+  overflow: visible;
+  clip-path: none;
 }
 
 .uploader__move,

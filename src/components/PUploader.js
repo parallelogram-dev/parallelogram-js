@@ -4,6 +4,7 @@ import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
+import { iconMarkup, plus } from '../utils/icons.js';
 import { PUploaderFile } from './PUploaderFile.js';
 
 export { PUploaderFile };
@@ -166,6 +167,17 @@ export default class PUploader extends HTMLElement {
       this.shadowRoot.querySelector('.uploader__fileinput').accept = this.config.acceptTypes;
     } else if (name === 'max-files' && this.isConnected) {
       this._updateFullState();
+      this._syncAddLabel();
+    }
+  }
+
+  /**
+   * Name the drop zone for one file or several, depending on how many it takes
+   */
+  _syncAddLabel() {
+    const label = this.shadowRoot.querySelector('.uploader__add-label');
+    if (label) {
+      label.textContent = this.config.maxFiles === 1 ? 'Drag/Add file' : 'Drag/Add files';
     }
   }
 
@@ -423,14 +435,14 @@ export default class PUploader extends HTMLElement {
 
       <div class="uploader__selector" part="selector">
         <input type="file" multiple class="uploader__fileinput" tabindex="-1" aria-hidden="true">
-        <button type="button" class="uploader__add" part="add-button">+ Add files</button>
-        <span class="uploader__hint">or drag them here</span>
+        <button type="button" class="uploader__add" part="add-button">${iconMarkup(plus, { size: 'xs' })}<span class="uploader__add-label"></span></button>
       </div>
 
       <p class="uploader__message" part="message" role="status"></p>
     `
     );
     adoptStyles(this.shadowRoot, hostStyles);
+    this._syncAddLabel();
     this.shadowRoot.querySelector('.uploader__fileinput').accept =
       this.getAttribute('accept-types') || '*/*';
   }
@@ -781,8 +793,20 @@ export default class PUploader extends HTMLElement {
     const fileElement = e.target.closest('p-uploader-file');
     if (!fileElement || !fileElement.hasAttribute('draggable')) return;
 
+    /* The image is the handle: a press anywhere else on the card belongs to what it lands on, so
+       clicking Edit or Delete can't turn into a reorder */
+    const origin = e.composedPath?.()[0] ?? e.target;
+    if (!(origin instanceof Element) || !origin.closest('[part~="preview"]')) {
+      e.preventDefault();
+      return;
+    }
+
     this.draggedElement = fileElement;
     e.dataTransfer.effectAllowed = 'move';
+
+    /* The press starts on the thumbnail, so say that the whole card is what's being dragged */
+    const card = fileElement.getBoundingClientRect();
+    e.dataTransfer.setDragImage?.(fileElement, e.clientX - card.left, e.clientY - card.top);
 
     /* Capture the order before the drag, to put the files back if it is abandoned */
     this._dragStartOrder = Array.from(this.querySelectorAll('p-uploader-file'));

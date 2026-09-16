@@ -208,6 +208,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
         { name: 'field', description: 'Each field' },
         { name: 'filename', description: 'The file name' },
         { name: 'toolbar', description: 'The action buttons' },
+        { name: 'pills', description: 'The Edit and Delete buttons, as one segmented pill' },
         { name: 'actions', description: 'Button rows in panels and the dialog' },
         { name: 'edit-button', description: 'The Edit button' },
         { name: 'dialog', description: 'The edit dialog' },

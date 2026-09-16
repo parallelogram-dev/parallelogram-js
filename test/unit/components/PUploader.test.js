@@ -48,7 +48,8 @@ describe('p-uploader', () => {
       'sequence-action': '/api/sequence',
     });
 
-    expect(actions(shadow)).toEqual(['edit', 'move-up', 'move-down', 'show-delete']);
+    /* Edit and Delete sit together in the pill, after the reorder arrows */
+    expect(actions(shadow)).toEqual(['move-up', 'move-down', 'edit', 'show-delete']);
   });
 
   it('keeps focus on a file’s toolbar button when the file renders again', async () => {
@@ -90,7 +91,7 @@ describe('p-uploader', () => {
 
     expect([withoutEditing, actions(shadow)]).toEqual([
       ['move-up', 'move-down'],
-      ['edit', 'move-up', 'move-down', 'show-delete'],
+      ['move-up', 'move-down', 'edit', 'show-delete'],
     ]);
   });
 
