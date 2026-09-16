@@ -31,9 +31,16 @@
   overflow: hidden;
 }
 
+/* The framework's own elements and anything inside them, so the rule below leaves a page's own
+   focus styles alone */
+$framework-elements: '[data-lazysrc], [data-modal], [data-lightbox], [data-form-enhancer], [data-copytoclipboard], [data-datatable], [data-toggle], [data-tabs], [data-accordion], [data-selectloader], p-select, p-datetime, p-modal, p-uploader, p-toasts';
+
 /* Pointer users don't need focus rings; trackFocusSource() records the last input on <html> */
-:root[data-focus-source='pointer'] :focus {
-  outline: none;
+:root[data-focus-source='pointer'] {
+  :is(#{$framework-elements}):focus,
+  :is(#{$framework-elements}) :focus {
+    outline: none;
+  }
 }
 
 /* Global focus styles for framework components */

@@ -349,6 +349,26 @@ describe('DataTable', () => {
     }
   });
 
+  it('lets a page set the load error colour in both themes', async () => {
+    const style = document.createElement('style');
+    style.textContent = `${frameworkStyles}\n:root { --datatable-error-color: rgb(0, 128, 0) }`;
+    document.head.append(style);
+    const table = mount(build(PEOPLE));
+    vi.spyOn(window, 'fetch').mockResolvedValue(new Response('Nope', { status: 503 }));
+
+    try {
+      await dataTable.loadData(table, '/guests', () => document.createElement('tr'));
+      const cell = table.tBodies[0].rows[0].cells[0];
+      const light = getComputedStyle(cell).color;
+      document.documentElement.dataset.theme = 'dark';
+
+      expect([light, getComputedStyle(cell).color]).toEqual(['rgb(0, 128, 0)', 'rgb(0, 128, 0)']);
+    } finally {
+      delete document.documentElement.dataset.theme;
+      style.remove();
+    }
+  });
+
   it('puts the table back as it was when unmounted', () => {
     const table = build(PEOPLE, 'data-datatable-filterable data-datatable-paginate="2"');
     const holder = table.parentElement;
