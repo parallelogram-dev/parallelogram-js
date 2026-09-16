@@ -525,6 +525,18 @@ export default class PUploader extends HTMLElement {
       { signal }
     );
 
+    /* The drag itself starts on the card, so where the press began is what says whether it is a
+       drag of the card or a click on one of its buttons */
+    this.addEventListener(
+      'pointerdown',
+      e => {
+        const origin = e.composedPath()[0];
+        this._pressedHandle =
+          origin instanceof Element ? Boolean(origin.closest('[part~="preview"]')) : false;
+      },
+      { signal, capture: true }
+    );
+
     this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
     this.addEventListener('dragend', () => this._handleDragEnd(), { signal });
     this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
@@ -795,8 +807,7 @@ export default class PUploader extends HTMLElement {
 
     /* The image is the handle: a press anywhere else on the card belongs to what it lands on, so
        clicking Edit or Delete can't turn into a reorder */
-    const origin = e.composedPath?.()[0] ?? e.target;
-    if (!(origin instanceof Element) || !origin.closest('[part~="preview"]')) {
+    if (!this._pressedHandle) {
       e.preventDefault();
       return;
     }
@@ -804,9 +815,7 @@ export default class PUploader extends HTMLElement {
     this.draggedElement = fileElement;
     e.dataTransfer.effectAllowed = 'move';
 
-    /* The press starts on the thumbnail, so say that the whole card is what's being dragged */
-    const card = fileElement.getBoundingClientRect();
-    e.dataTransfer.setDragImage?.(fileElement, e.clientX - card.left, e.clientY - card.top);
+    /* The card is the element being dragged, so the browser pictures it without being told */
 
     /* Capture the order before the drag, to put the files back if it is abandoned */
     this._dragStartOrder = Array.from(this.querySelectorAll('p-uploader-file'));

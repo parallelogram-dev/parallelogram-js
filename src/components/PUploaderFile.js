@@ -74,13 +74,12 @@ const getFileTemplate = () => {
             </div>
           </div>
           <div data-panel="edit" class="uploader__panel uploader__panel--edit" part="panel edit-panel" role="group">
-            <form class="uploader__form">
-              <h2 class="uploader__heading">Edit details</h2>
+            <form class="uploader__form" aria-label="Edit details">
               <div class="uploader__edit-fields"></div>
               <p class="uploader__edit-message" role="alert"></p>
               <div class="uploader__actions" part="actions">
-                <button type="submit" class="uploader__btn uploader__btn--primary" data-action="save">Save</button>
                 <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
+                <button type="submit" class="uploader__btn uploader__btn--primary" data-action="save">Save</button>
               </div>
             </form>
           </div>
@@ -145,12 +144,12 @@ export class PUploaderFile extends HTMLElement {
   _build() {
     const root = document.importNode(getFileTemplate().content, true);
 
-    for (const name of ['delete', 'edit']) {
-      const panel = root.querySelector(`[data-panel="${name}"]`);
-      const headingId = generateId(`${name}-heading`);
-      panel.setAttribute('aria-labelledby', headingId);
-      panel.querySelector('.uploader__heading').id = headingId;
-    }
+    const deletePanel = root.querySelector('[data-panel="delete"]');
+    const headingId = generateId('delete-heading');
+    deletePanel.setAttribute('aria-labelledby', headingId);
+    deletePanel.querySelector('.uploader__heading').id = headingId;
+    /* The edit panel names itself on its form, since its own heading only repeated the button */
+    root.querySelector('[data-panel="edit"]').setAttribute('aria-label', 'Edit details');
 
     this._toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
     /* Edit and delete sit together as one pill, the way a segmented control does */
@@ -439,8 +438,8 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _updatePanelVisibility(currentPanel) {
-    this._showPanels(currentPanel, this.getAttribute('state') || 'uploaded');
     this._syncContentHeight(currentPanel);
+    this._showPanels(currentPanel, this.getAttribute('state') || 'uploaded');
     /* The panels are stacked in a clipped box that can scroll. Focus moving to a panel still out of
        view scrolls it, which leaves every panel off its mark, so put it back once the browser has
        had its say. */
@@ -459,12 +458,37 @@ export class PUploaderFile extends HTMLElement {
    * same measure, so they stay out of sight whatever it is.
    */
   _syncContentHeight(currentPanel) {
+    const panel = this.shadowRoot.querySelector('[data-panel="edit"]');
     if (currentPanel !== 'edit') {
+      this._editSize?.disconnect();
       this.style.removeProperty('--uploader-content-height');
       return;
     }
-    const panel = this.shadowRoot.querySelector('[data-panel="edit"]');
-    const height = panel?.scrollHeight ?? 0;
+    if (!panel) return;
+
+    /* The form's height isn't settled the first time it opens: the fields have only just been
+       built, and a web font or a wrapped label can change it again. Watching the panel keeps the
+       card the right depth however late that happens. */
+    this._editSize ??= new ResizeObserver(entries => {
+      const [entry] = entries;
+      if ((this.getAttribute('data-current-panel') || 'info') === 'edit') {
+        this._applyContentHeight(entry.target);
+      }
+    });
+    /* The card is rebuilt when it is moved in the list, so the panel watched is always the one on
+       the page now, not the one this card had before */
+    this._editSize.disconnect();
+    this._editSize.observe(panel);
+    this._applyContentHeight(panel);
+  }
+
+  /**
+   * Take the card's clipped box to the edit form's own height
+   *
+   * @param {HTMLElement} panel
+   */
+  _applyContentHeight(panel) {
+    const height = panel.scrollHeight;
     if (height > 0) {
       this.style.setProperty('--uploader-content-height', `${height}px`);
     }

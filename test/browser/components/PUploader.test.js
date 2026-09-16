@@ -213,10 +213,15 @@ const addFiles = (uploader, files) => {
 const fileIds = uploader =>
   [...uploader.querySelectorAll('p-uploader-file')].map(file => file.getAttribute('file-id'));
 
-const drag = (type, target, dataTransfer) =>
-  target.dispatchEvent(
+const drag = (type, target, dataTransfer) => {
+  /* A real drag is preceded by the press that started it, which is what says where it began */
+  if (type === 'dragstart') {
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+  }
+  return target.dispatchEvent(
     new DragEvent(type, { bubbles: true, composed: true, cancelable: true, dataTransfer })
   );
+};
 
 /* Drags start on the thumbnail: it is the handle, so a press elsewhere stays a click */
 const handleOf = file => file.shadowRoot.querySelector('[part~="preview"]');
@@ -503,10 +508,12 @@ describe('p-uploader host', () => {
         return [
           getComputedStyle(uploader).backgroundColor,
           getComputedStyle(uploader).borderTopColor,
-          getComputedStyle(selector).backgroundColor,
+          /* The drop zone washes in from transparent, so the colour is in its gradient */
+          getComputedStyle(selector).backgroundImage.includes('0.376471 0.647059 0.980392'),
           getComputedStyle(selector).color,
           getComputedStyle(file).backgroundColor,
-          getComputedStyle(file).borderTopColor,
+          /* The cards carry no border of their own; the list's gap separates them */
+          getComputedStyle(file).borderTopStyle,
           getComputedStyle(panel).backgroundColor,
         ];
       };
@@ -515,10 +522,10 @@ describe('p-uploader host', () => {
         expect(colours()).toEqual([
           'rgb(23, 29, 38)',
           'rgba(255, 255, 255, 0.14)',
-          'color(srgb 0.376471 0.647059 0.980392 / 0.08)',
+          true,
           'rgb(147, 197, 253)',
           'rgb(23, 29, 38)',
-          'rgb(58, 67, 80)',
+          'none',
           'rgb(23, 29, 38)',
         ])
       );
