@@ -9,8 +9,10 @@
 @use 'mixins' as mix;
 
 /* Colour roles: surfaces and components read these, and dark mode redefines only these. Text
-   colour is inherited, so there is no text role */
+   colour follows the page in light mode, and the dark theme gives it a real value */
 :root {
+  color-scheme: light;
+  --color-text: #{$color-text};
   --color-accent: #{$primary};
   --color-accent-hover: #{$primary-dark};
   --color-accent-contrast: #ffffff;
@@ -39,6 +41,8 @@
 }
 
 @include mix.dark-theme {
+  color-scheme: dark;
+  --color-text: #{$color-text-dark};
   --color-accent: #60a5fa;
   --color-accent-hover: #93c5fd;
   --color-accent-contrast: #0b1220;
@@ -71,7 +75,7 @@
   --surface-control-border-width: #{$border-width};
   --surface-control-border-color: var(--color-control-border);
   --surface-control-color-bg: var(--color-surface);
-  --surface-control-color-text: #{$color-text};
+  --surface-control-color-text: var(--color-text, #{$color-text});
   --surface-control-shadow: none;
 
   /* Button surfaces */
@@ -84,7 +88,7 @@
   --surface-panel-border-width: #{$border-width};
   --surface-panel-border-color: var(--color-border);
   --surface-panel-color-bg: var(--color-surface);
-  --surface-panel-color-text: #{$color-text};
+  --surface-panel-color-text: var(--color-text, #{$color-text});
   --surface-panel-shadow: 0 4px 6px var(--color-shadow);
 
   /* Dialog surfaces (modals, dialogs, popovers) */
@@ -92,7 +96,7 @@
   --surface-dialog-border-width: #{$border-width};
   --surface-dialog-border-color: var(--color-border);
   --surface-dialog-color-bg: var(--color-surface);
-  --surface-dialog-color-text: #{$color-text};
+  --surface-dialog-color-text: var(--color-text, #{$color-text});
   --surface-dialog-shadow: 0 #{$space-xl} 3em var(--color-shadow);
 
   /* Dropdown surfaces */
@@ -100,7 +104,7 @@
   --surface-dropdown-border-width: #{$border-width};
   --surface-dropdown-border-color: var(--color-border);
   --surface-dropdown-color-bg: var(--color-surface);
-  --surface-dropdown-color-text: #{$color-text};
+  --surface-dropdown-color-text: var(--color-text, #{$color-text});
   --surface-dropdown-shadow: 0 4px 6px var(--color-shadow);
 
   /* Dropdown item states */
@@ -113,7 +117,7 @@
   --surface-item-border-width: #{$border-width};
   --surface-item-border-color: var(--color-border);
   --surface-item-color-bg: transparent;
-  --surface-item-color-text: #{$color-text};
+  --surface-item-color-text: var(--color-text, #{$color-text});
   --surface-item-shadow: none;
 
   /* Card surfaces (nested items within panels) */
@@ -121,7 +125,7 @@
   --surface-card-border-width: #{$border-width};
   --surface-card-border-color: var(--color-border-strong);
   --surface-card-color-bg: var(--color-surface);
-  --surface-card-color-text: #{$color-text};
+  --surface-card-color-text: var(--color-text, #{$color-text});
   --surface-card-shadow: none;
 
   /* Touch surfaces (interactive areas with hover feedback) */
@@ -129,7 +133,7 @@
   --surface-touch-border-width: #{$border-width};
   --surface-touch-border-color: var(--color-border-strong);
   --surface-touch-color-bg: var(--color-surface-muted);
-  --surface-touch-color-text: #{$color-text};
+  --surface-touch-color-text: var(--color-text, #{$color-text});
   --surface-touch-shadow: none;
   --surface-touch-hover-bg: var(--color-surface-muted);
   --surface-touch-hover-border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);

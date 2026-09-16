@@ -17,7 +17,7 @@
     var(--surface-panel-border-color, var(--color-border, #{$color-border}))
   );
   background: var(--puploader-bg, var(--surface-panel-color-bg, var(--color-surface, #ffffff)));
-  color: var(--puploader-color, var(--surface-panel-color-text, #{$color-text}));
+  color: var(--puploader-color, var(--surface-panel-color-text, #{$neutral-900}));
   box-shadow: var(
     --puploader-shadow,
     var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
@@ -42,7 +42,7 @@
     border-style: solid;
     border-color: var(--surface-touch-border-color, var(--color-border-strong, #{$neutral-300}));
     background: var(--surface-touch-color-bg, var(--color-surface-muted, #{$neutral-100}));
-    color: var(--surface-touch-color-text, #{$color-text});
+    color: var(--surface-touch-color-text, #{$neutral-900});
     box-shadow: var(--surface-touch-shadow, none);
 
     /* Customize for file upload area */

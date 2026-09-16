@@ -25,7 +25,7 @@
     );
   border-radius: 4px;
   background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-  color: var(--surface-control-color-text, currentColor);
+  color: var(--surface-control-color-text, #{$neutral-900});
   font-size: 0.875rem;
 }
 
