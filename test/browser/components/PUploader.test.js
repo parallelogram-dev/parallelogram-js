@@ -272,6 +272,26 @@ describe('p-uploader host', () => {
     expect(file.getAttribute('data-current-panel')).toBe('delete');
   });
 
+  it('keeps a delete confirmation open when the card settles its state again underneath', async () => {
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'delete-action': '/api/delete',
+    });
+    addFiles(uploader, [new File(['x'], 'harbour.txt', { type: 'text/plain' })]);
+    const file = await vi.waitFor(() => {
+      const added = uploader.querySelector('p-uploader-file[state="uploaded"]');
+      expect(added).not.toBeNull();
+      return added;
+    });
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    /* Anything that sets the state again schedules the card's own switch back to the details */
+    file.setAttribute('state', 'uploaded');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    expect(file.getAttribute('data-current-panel')).toBe('delete');
+  });
+
   it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
     const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
       'first',
