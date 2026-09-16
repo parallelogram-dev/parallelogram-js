@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { chevronDown, iconMarkup } from '../utils/icons.js';
+import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -168,6 +168,7 @@ export default class PSelect extends HTMLElement {
       `
       <div class="root">
         <div class="control">
+          <span class="search" aria-hidden="true" hidden>${iconMarkup(search, { size: 'sm' })}</span>
           <input
             class="input"
             part="input"
@@ -179,6 +180,7 @@ export default class PSelect extends HTMLElement {
             aria-expanded="false"
             aria-controls="listbox"
           />
+          <button type="button" class="clear" part="clear" tabindex="-1" aria-label="Clear the selection" hidden>${iconMarkup(x, { size: 'xs' })}</button>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
@@ -194,17 +196,31 @@ export default class PSelect extends HTMLElement {
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
+      search: this.shadowRoot.querySelector('.search'),
+      clear: this.shadowRoot.querySelector('.clear'),
       live: this.shadowRoot.querySelector('.live'),
     };
     this._els.input.placeholder = this.state.placeholder;
   }
 
   _setupEventListeners() {
-    const { control, input, menu } = this._els;
+    const { control, input, menu, clear } = this._els;
+
+    /* The clear button sits inside the control, so it must not open the list as well */
+    clear.addEventListener('mousedown', event => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    clear.addEventListener('click', event => {
+      event.stopPropagation();
+      this._choose('');
+      input.focus();
+    });
 
     /* Mousedown rather than click, so the list doesn't open and close again as focus moves */
     control.addEventListener('mousedown', event => {
-      if (event.target !== input) {
+      if (event.target !== input && !clear.contains(event.target)) {
         event.preventDefault();
         input.focus();
         this.toggle();
@@ -490,6 +506,17 @@ export default class PSelect extends HTMLElement {
   _updateDisplay() {
     this._els.input.value =
       this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
+    this._updateControls();
+  }
+
+  /**
+   * Show the search icon while the list is open for typing, and the clear button while there is a
+   * value to clear
+   */
+  _updateControls() {
+    const { open, value, required, disabled } = this.state;
+    this._els.search.hidden = !open;
+    this._els.clear.hidden = open || value === '' || required || disabled;
   }
 
   /**
@@ -518,11 +545,13 @@ export default class PSelect extends HTMLElement {
     this.state.disabled = disabled;
     this._els.input.disabled = disabled;
     if (disabled) this.close();
+    this._updateControls();
   }
 
   _updateRequiredState(required) {
     this.state.required = required;
     this._syncFormState();
+    this._updateControls();
   }
 
   open() {
@@ -532,6 +561,7 @@ export default class PSelect extends HTMLElement {
     this._els.input.setAttribute('aria-expanded', 'true');
     this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
+    this._updateControls();
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);
