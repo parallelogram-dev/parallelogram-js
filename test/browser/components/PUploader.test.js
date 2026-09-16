@@ -6,6 +6,10 @@ const PAYLOAD = '<img src="data:," onerror="window.__puploaderInjected = true">'
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
 
+/* The card's depth is animated, so a test watching it waits for the transition to land; vitest's
+   own second isn't always enough for WebKit on a loaded CI runner. */
+const SETTLED = { timeout: 5000 };
+
 const element = (tag, attributes = {}, text) => {
   const node = document.createElement(tag);
   for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
@@ -812,15 +816,15 @@ describe('p-uploader-file', () => {
     const details = shadow.querySelector('[data-panel="info"]');
     const height = () => Math.round(content.getBoundingClientRect().height);
     /* Whichever panel is on show says how deep the card is, so neither is ever cropped */
-    await vi.waitFor(() => expect(height()).toBe(details.scrollHeight));
+    await vi.waitFor(() => expect(height()).toBe(details.scrollHeight), SETTLED);
     const closed = height();
 
     shadow.querySelector('button[data-action="edit"]').click();
-    await vi.waitFor(() => expect(height()).toBe(panel.scrollHeight));
+    await vi.waitFor(() => expect(height()).toBe(panel.scrollHeight), SETTLED);
     const open = height();
     shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
 
-    await vi.waitFor(() => expect([open > closed, height()]).toEqual([true, closed]));
+    await vi.waitFor(() => expect([open > closed, height()]).toEqual([true, closed]), SETTLED);
   });
 
   it('exposes parts for styling and does not render the filename as a heading', async () => {
