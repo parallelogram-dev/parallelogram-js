@@ -21,15 +21,17 @@ $size-icon-md: 1.25rem;
     var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}));
-  border-width: var(--surface-card-border-width, #{$border-width});
-  border-style: solid;
-  border-color: var(--surface-card-border-color, var(--color-border-strong, #{$neutral-300}));
+  border: var(--uploader-file-border, none);
   background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
   color: var(--surface-card-color-text, #{$neutral-900});
   box-shadow: var(--surface-card-shadow, none);
 
-  /* Customize */
-  padding: $space-sm;
+  /* The card holds no padding of its own: the space between cards, and before the drop zone, is
+     the list's gap */
+  padding: var(--uploader-file-padding, 0);
+  /* The panels waiting out of sight sit below the card, so it clips them: without this they are
+     drawn into the picture the browser drags */
+  overflow: hidden;
 
   transition:
     border-color $duration-fast ease-out,
@@ -115,6 +117,8 @@ input {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      /* Without this the browser drags the picture itself, and the card is never the drag image */
+      -webkit-user-drag: none;
     }
   }
 
@@ -129,7 +133,11 @@ input {
     position: relative;
     height: var(--uploader-content-height, #{$size-preview});
     min-height: $size-preview;
+    /* `clip` rather than `hidden`: a hidden box can still be scrolled, and a browser that scrolls
+       it to reveal a panel still out of view leaves every panel off its mark. Safari does that
+       when focus moves into the edit panel, since it ignores focus({ preventScroll: true }). */
     overflow: hidden;
+    overflow: clip;
     overflow-anchor: none;
 
     @media (prefers-reduced-motion: no-preference) {
@@ -148,19 +156,29 @@ input {
     height: $size-preview;
     background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
     transform: translateY(-100%);
-    transition: transform $duration-normal $ease-standard;
+    /* A waiting panel is not drawn at all. Clipping it is not enough: the picture the browser
+       drags paints what the card clips, so a panel below would ride along with the card. The
+       visibility waits for the slide to finish before it takes effect. */
+    visibility: hidden;
+    transition:
+      transform $duration-normal $ease-standard,
+      visibility 0s linear $duration-normal;
     will-change: transform;
 
     &--show {
       transform: translateY(0);
+      visibility: visible;
+      transition:
+        transform $duration-normal $ease-standard,
+        visibility 0s linear 0s;
     }
 
-    /* A panel waiting below is moved by the height of the box, not its own, so it stays out of
-       sight while the edit panel makes the box taller */
+    /* A panel waits its own height below, so it is out of sight whatever depth the box is at, and
+       the two can move together as it opens */
     &[data-panel='info'],
     &[data-panel='delete'],
     &[data-panel='edit'] {
-      transform: translateY(var(--uploader-content-height, #{$size-preview}));
+      transform: translateY(100%);
 
       &.uploader__panel--show {
         transform: translateY(0);
@@ -412,9 +430,9 @@ slot {
   gap: $space-md;
   padding-bottom: $space-sm;
 
-  /* Cancel at one end, Save at the other */
+  /* Cancel at one end, Save at the other, both starting where the fields start */
   .uploader__actions {
-    padding-left: 0;
+    padding-left: calc(var(--puploader-label-width, 4rem) + var(--puploader-preview-gap, 1rem));
     justify-content: space-between;
   }
 }
@@ -429,14 +447,24 @@ slot {
 
 [data-panel='delete'] .uploader__actions {
   justify-content: space-between;
-  padding-left: 0;
+  padding-left: calc(var(--puploader-label-width, 4rem) + var(--puploader-preview-gap, 1rem));
+}
+
+/* Label beside field, the fields growing to fill the row, spaced like the card's own edge */
+.uploader__edit-fields {
+  display: grid;
+  grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
+  row-gap: var(--puploader-field-gap, #{$space-sm});
+  column-gap: var(--puploader-preview-gap, 1rem);
+  /* The label sits at the top of its cell, on the same baseline as the field's first line */
+  align-items: baseline;
 }
 
 .uploader__edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
+  display: contents;
+}
 
+.uploader__edit-field {
   /* Quiet labels, like the quick dates in the date picker */
   .field__label {
     flex: none;
@@ -449,6 +477,7 @@ slot {
   .uploader__input,
   .uploader__textarea {
     flex: none;
+    width: 100%;
     height: auto;
   }
 }

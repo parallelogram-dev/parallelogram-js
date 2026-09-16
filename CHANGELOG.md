@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `<p-uploader>`'s panels open the same way whichever one it is: the file's details slide up as the panel arrives from below, and the card deepens for the edit form as they move rather than jumping first. Cancelling or saving reverses it.
+- `<p-uploader>`'s edit form is the right depth the first time it opens. The card measures the form as it settles rather than once, too early, and follows it when a field wraps or a message appears.
+- `<p-uploader>` drags the whole card, not just its thumbnail. The browser's own picture of a dragged image was overriding the card's, and the panels waiting out of sight were being painted into it.
+- `<p-uploader>`'s panels stay where they belong when focus moves into one. They are stacked in a clipped box, and a browser that ignores `focus({ preventScroll: true })`, as Safari does, scrolled that box to reveal the panel and left every panel out of place. The box can no longer be scrolled at all.
 - `<p-uploader>`'s delete confirmation puts Cancel before Delete, so the destructive button sits at the end of the row.
 - `<p-uploader>`'s panels move the right way. Opening the delete confirmation pushes the file's details up and slides the confirmation in from below, and cancelling brings the details back down; the details used to drop out of the way instead, because the class that puts them above was only ever set on a path that didn't run.
 - `<p-uploader>` no longer reorders files when a button on a card is pressed. The card itself was draggable, so pressing Edit or Delete and moving a pixel started a drag that reordered them on release.

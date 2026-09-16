@@ -140,6 +140,24 @@ describe('p-select', () => {
     expect([menu.left - host.left, menu.right - host.right]).toEqual([0, 0]);
   });
 
+  it('asks for a search before saying nothing was found', async () => {
+    const { select } = renderForm(`
+      <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
+    `);
+    const message = () => select.shadowRoot.querySelector('.noresults')?.textContent;
+
+    select.open();
+    const beforeTyping = message();
+    const input = select.shadowRoot.querySelector('.input');
+    input.value = 'a';
+    input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+    expect([beforeTyping, message()]).toEqual([
+      'Type 2 or more characters to search',
+      'Type 2 or more characters to search',
+    ]);
+  });
+
   it('is a form-associated custom element', () => {
     const { form, select } = renderForm(COUNTRIES);
 

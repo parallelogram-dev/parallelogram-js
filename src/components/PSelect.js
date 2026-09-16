@@ -91,6 +91,7 @@ export default class PSelect extends HTMLElement {
       open: false,
       highlightedIndex: -1,
       src: null,
+      query: '',
       debounce: 200,
       min: 0,
       openOnFocus: false,
@@ -325,6 +326,7 @@ export default class PSelect extends HTMLElement {
 
   _handleInput(event) {
     const query = event.target.value;
+    this.state.query = query;
     this.open();
 
     if (this.state.src) {
@@ -499,7 +501,7 @@ export default class PSelect extends HTMLElement {
       const count = this.state.filtered.length;
       this._announce(
         count === 0
-          ? 'No results found'
+          ? this._emptyMessage()
           : `${count} ${count === 1 ? 'result' : 'results'} available`
       );
     }
@@ -757,6 +759,20 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
+   * What the list says when it has nothing to show: a search that hasn't started yet is not the
+   * same as a search that found nothing
+   *
+   * @returns {string}
+   */
+  _emptyMessage() {
+    const { src, min, query } = this.state;
+    if (src && query.length < min) {
+      return min === 1 ? 'Type to search' : `Type ${min} or more characters to search`;
+    }
+    return 'No results found';
+  }
+
+  /**
    * Build the listbox for the filtered options, grouping them under their optgroup labels
    */
   _renderOptions() {
@@ -768,7 +784,7 @@ export default class PSelect extends HTMLElement {
     if (this.state.filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'noresults';
-      empty.textContent = 'No results found';
+      empty.textContent = this._emptyMessage();
       menu.append(empty);
       return;
     }

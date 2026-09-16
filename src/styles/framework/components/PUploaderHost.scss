@@ -37,11 +37,19 @@
 
   /* A pale wash of the accent, with the accent's own text, rather than a bordered box */
   &__selector {
-    border: none;
+    border: var(--surface-touch-border-width, #{$border-width}) solid
+      var(
+        --puploader-selector-border,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 25%, transparent)
+      );
     border-radius: var(--surface-touch-radius, #{$radius-xs});
     background: var(
       --puploader-selector-bg,
-      color-mix(in srgb, var(--color-accent, #{$primary}) 8%, transparent)
+      linear-gradient(
+        to bottom,
+        transparent,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 10%, transparent)
+      )
     );
     color: var(--puploader-selector-color, var(--color-accent-hover, #{$primary-dark}));
     box-shadow: var(--surface-touch-shadow, none);
@@ -56,14 +64,22 @@
     @include hover {
       background: var(
         --puploader-selector-hover-bg,
-        color-mix(in srgb, var(--color-accent, #{$primary}) 14%, transparent)
+        linear-gradient(
+          to bottom,
+          transparent,
+          color-mix(in srgb, var(--color-accent, #{$primary}) 18%, transparent)
+        )
       );
     }
 
     &.dragover {
       background: var(
         --puploader-selector-dragover-bg,
-        color-mix(in srgb, var(--color-accent, #{$primary}) 22%, transparent)
+        linear-gradient(
+          to bottom,
+          transparent,
+          color-mix(in srgb, var(--color-accent, #{$primary}) 28%, transparent)
+        )
       );
     }
   }
