@@ -332,6 +332,28 @@ describe('p-uploader host', () => {
     ]).toEqual([0, 0]);
   });
 
+  it('draws what follows the cursor itself, rather than leaving it to the browser', async () => {
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    file.setAttribute('filename', 'harbour.jpg');
+    file.setAttribute('preview', 'images/harbour.jpg');
+    const transfer = new DataTransfer();
+    let ghost = null;
+    transfer.setDragImage = element => {
+      ghost = {
+        text: element.textContent,
+        image: element.querySelector('img')?.getAttribute('src'),
+      };
+    };
+
+    drag('dragstart', file.shadowRoot.querySelector('[part~="preview"]'), transfer);
+
+    expect(ghost).toEqual({ text: 'harbour.jpg', image: expect.stringContaining('harbour.jpg') });
+  });
+
   it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
     const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
       'first',
