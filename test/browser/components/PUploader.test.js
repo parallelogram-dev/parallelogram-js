@@ -292,6 +292,24 @@ describe('p-uploader host', () => {
     expect(file.getAttribute('data-current-panel')).toBe('delete');
   });
 
+  it('lines the delete confirmation up with the card, even though focus moves into it', async () => {
+    const uploader = await renderUploader({ 'delete-action': '/api/delete' }, ['first', 'second']);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    const content = file.shadowRoot.querySelector('.uploader__content');
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    /* Focus lands on Cancel while its panel is still out of view, which scrolls the clipped box
+       the panels are stacked in unless the component puts it back */
+    const panel = file.shadowRoot.querySelector('[data-panel="delete"]');
+    panel.getAnimations().forEach(animation => animation.finish());
+    expect([
+      content.scrollTop,
+      Math.round(panel.getBoundingClientRect().top - content.getBoundingClientRect().top),
+    ]).toEqual([0, 0]);
+  });
+
   it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
     const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
       'first',

@@ -428,6 +428,16 @@ export class PUploaderFile extends HTMLElement {
 
   _updatePanelVisibility(currentPanel) {
     this._showPanels(currentPanel, this.getAttribute('state') || 'uploaded');
+    /* The panels are stacked in a clipped box that can scroll. Focus moving to a panel still out of
+       view scrolls it, which leaves every panel off its mark, so put it back once the browser has
+       had its say. */
+    const content = this.shadowRoot.querySelector('.uploader__content');
+    if (content) {
+      content.scrollTop = 0;
+      requestAnimationFrame(() => {
+        content.scrollTop = 0;
+      });
+    }
 
     const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
     if (infoPanel?.classList.contains('uploader__panel--show')) {
@@ -538,7 +548,7 @@ export class PUploaderFile extends HTMLElement {
 
     this.shadowRoot
       .querySelector('.uploader__dialog')
-      .addEventListener('close', () => this._editorOpener?.focus());
+      .addEventListener('close', () => this._editorOpener?.focus({ preventScroll: true }));
 
     this.addEventListener('keydown', event => {
       if (event.key === 'Escape' && this.getAttribute('data-current-panel') === 'delete') {
@@ -557,9 +567,11 @@ export class PUploaderFile extends HTMLElement {
     this._notifyDraggableStateChange();
 
     if (panel === 'delete') {
-      this.shadowRoot.querySelector('[data-panel="delete"] [data-action="cancel"]')?.focus();
+      this.shadowRoot
+        .querySelector('[data-panel="delete"] [data-action="cancel"]')
+        ?.focus({ preventScroll: true });
     } else if (focusWasInPanel) {
-      this.shadowRoot.querySelector('[data-action="show-delete"]')?.focus();
+      this.shadowRoot.querySelector('[data-action="show-delete"]')?.focus({ preventScroll: true });
     }
   }
 
@@ -613,7 +625,7 @@ export class PUploaderFile extends HTMLElement {
     if (dialog?.open) {
       dialog.close();
     }
-    this._editorOpener?.focus();
+    this._editorOpener?.focus({ preventScroll: true });
   }
 
   /**
