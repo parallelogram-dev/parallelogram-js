@@ -68,6 +68,11 @@
   font-size: 0.8em;
 }
 
+/* The icon sits on the text's middle rather than its baseline */
+:where(.sort-icon svg) {
+  vertical-align: middle;
+}
+
 :where([aria-sort] .sort-icon) {
   color: currentColor;
 }

@@ -369,6 +369,22 @@ describe('DataTable', () => {
     }
   });
 
+  it('draws the sort icons from the shared set, and shows text a page gives instead', () => {
+    const table = mount(build(PEOPLE));
+    const icon = () => table.querySelector('th[data-sort="name"] .sort-icon');
+    const unsorted = icon().querySelector('svg path')?.getAttribute('d');
+    dataTable.sort(table, 'name', 'asc');
+    const ascending = icon().querySelector('svg path')?.getAttribute('d');
+
+    const custom = new DataTable({ sortIcons: { unsorted: '~', asc: 'up', desc: 'down' } });
+    const other = build(PEOPLE);
+    custom.mount(other);
+    const customText = other.querySelector('.sort-icon').textContent;
+    custom.destroy();
+
+    expect([unsorted !== ascending, unsorted, customText]).toEqual([true, 'M8 9l4 -4l4 4', '~']);
+  });
+
   it('puts the table back as it was when unmounted', () => {
     const table = build(PEOPLE, 'data-datatable-filterable data-datatable-paginate="2"');
     const holder = table.parentElement;
