@@ -53,8 +53,8 @@
     calc(100vw - 2 * var(--toast-padding, #{$space-lg}))
   );
   max-width: var(--toast-max-width, 500px);
-  padding: var(--toast-item-padding, #{$space-sm} #{$space-lg});
-  border-radius: var(--toast-border-radius, var(--surface-panel-radius, #{$radius-md}));
+  padding: var(--toast-item-padding, var(--panel-padding-sm, #{$space-sm} #{$space-lg}));
+  border-radius: var(--toast-border-radius, var(--panel-border-radius, #{$radius-md}));
   background: var(--toast-bg-info, var(--color-inverse-surface, #{$neutral-900}));
   color: var(--toast-text-color, var(--color-inverse-text, #fff));
   box-shadow: var(
