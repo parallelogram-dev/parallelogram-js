@@ -814,8 +814,7 @@ export default class PUploader extends HTMLElement {
 
     this.draggedElement = fileElement;
     e.dataTransfer.effectAllowed = 'move';
-
-    /* The card is the element being dragged, so the browser pictures it without being told */
+    this._setDragImage(e, fileElement);
 
     /* Capture the order before the drag, to put the files back if it is abandoned */
     this._dragStartOrder = Array.from(this.querySelectorAll('p-uploader-file'));
@@ -836,6 +835,48 @@ export default class PUploader extends HTMLElement {
    * Save the new order after a drop inside the uploader, or put the files back when the drag was
    * abandoned
    */
+  /**
+   * Draw what follows the cursor: the file's thumbnail and its name
+   *
+   * Left to itself a browser photographs the whole card, which in Safari comes out as a translucent
+   * copy of the row laid over the rows beneath it. A small element of our own looks the same
+   * everywhere.
+   *
+   * @param {DragEvent} e
+   * @param {HTMLElement} fileElement
+   */
+  _setDragImage(e, fileElement) {
+    if (!e.dataTransfer?.setDragImage) return;
+
+    const ghost = document.createElement('div');
+    ghost.className = 'uploader__drag-image';
+    /* Kept on screen but moved aside: Safari draws nothing for an element parked far outside the
+       viewport, so its picture arrives without the thumbnail */
+    ghost.style.cssText = `position:fixed;top:0;left:0;transform:translateX(-150%);
+      pointer-events:none;display:flex;align-items:center;
+      gap:.5rem;max-width:18rem;padding:.25rem .75rem .25rem .25rem;border-radius:999px;
+      background:var(--surface-card-color-bg,#fff);color:var(--surface-card-color-text,#171717);
+      box-shadow:0 4px 12px var(--color-shadow,rgba(0,0,0,.2));font:inherit;font-size:.875rem;
+      white-space:nowrap;overflow:hidden`;
+
+    /* The card's own thumbnail is already loaded, so its clone has something to draw at once */
+    const preview = fileElement.shadowRoot?.querySelector('.uploader__preview img');
+    if (preview?.getAttribute('src')) {
+      const image = preview.cloneNode();
+      image.style.cssText = 'width:2rem;height:2rem;border-radius:999px;object-fit:cover';
+      ghost.append(image);
+    }
+    const name = document.createElement('span');
+    name.textContent = fileElement.getAttribute('filename') || 'File';
+    name.style.cssText = 'overflow:hidden;text-overflow:ellipsis';
+    ghost.append(name);
+
+    this.append(ghost);
+    e.dataTransfer.setDragImage(ghost, 24, 20);
+    /* It only has to exist while the browser takes its picture */
+    setTimeout(() => ghost.remove(), 0);
+  }
+
   _handleDragEnd() {
     if (!this.draggedElement) return;
 
