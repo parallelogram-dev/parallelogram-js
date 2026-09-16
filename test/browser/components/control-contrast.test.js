@@ -81,6 +81,8 @@ describe('form control contrast', () => {
     const inRangeBg = over(inRange.backgroundColor, panel);
 
     select.open();
+    /* The marker is for people using the arrow keys, so it is drawn only after keyboard input */
+    select.setAttribute('data-focus-source', 'keyboard');
     const option = select.shadowRoot.querySelector('[role="option"]');
     option.setAttribute('data-active', '');
     const activeOption = getComputedStyle(option);

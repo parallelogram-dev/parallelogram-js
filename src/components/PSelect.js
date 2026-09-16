@@ -513,13 +513,19 @@ export default class PSelect extends HTMLElement {
 
   /**
    * Fill the slot before the chevron with the clear button when there is a value the user may
-   * remove, and with the search icon otherwise, so the two are never shown at once
+   * remove. The search icon takes that slot only while the list is open with nothing chosen, since
+   * that is when the input is a search box; the two are never shown at once
    */
   _updateControls() {
-    const { value, required, disabled } = this.state;
-    const clearable = value !== '' && !required && !disabled;
-    this._els.clear.hidden = !clearable;
-    this._els.search.hidden = clearable;
+    const { open, value, disabled } = this.state;
+    /* The slot before the chevron fills only while the list is open: the clear button when
+       something is chosen, the search icon when nothing is. A required select can be cleared as
+       well: it won't validate until something is chosen again, which is better than leaving no way
+       back to the search. */
+    this._els.clear.hidden = !open || value === '' || disabled;
+    this._els.search.hidden = !open || value !== '';
+    /* A chosen value is not something to type over: clear it first, or choose another option */
+    this._els.input.readOnly = value !== '';
   }
 
   /**
@@ -564,6 +570,7 @@ export default class PSelect extends HTMLElement {
     this._els.input.setAttribute('aria-expanded', 'true');
     this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
+    this._updateControls();
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);

@@ -34,18 +34,22 @@ describe('p-select', () => {
     document.body.replaceChildren();
   });
 
-  it('offers a clear button only when there is a value the user is allowed to remove', () => {
+  it('offers a clear button while it is open over a value, required or not', () => {
     const { select } = renderForm(COUNTRIES);
     const { select: required } = renderForm(PRIORITY);
     required.value = 'high';
-    const clearOf = element => element.shadowRoot.querySelector('.clear');
-    const withValue = clearOf(select).hidden;
+    const clearOf = element => element.shadowRoot.querySelector('.clear').hidden;
+    const closedOverAValue = clearOf(select);
+    select.open();
+    required.open();
+    const openOverAValue = clearOf(select);
     select.value = '';
 
-    expect([withValue, clearOf(select).hidden, clearOf(required).hidden]).toEqual([
+    expect([closedOverAValue, openOverAValue, clearOf(select), clearOf(required)]).toEqual([
+      true,
       false,
       true,
-      true,
+      false,
     ]);
   });
 
@@ -63,19 +67,16 @@ describe('p-select', () => {
     ]);
   });
 
-  it('shows the search icon whenever there is no clear button to show', () => {
+  it('shows the search icon only while the list is open with nothing chosen', () => {
     const { select } = renderForm(COUNTRIES);
-    const { select: required } = renderForm(PRIORITY);
-    required.value = 'high';
-    const searchOf = element => element.shadowRoot.querySelector('.search');
-    const withValue = searchOf(select).hidden;
+    const searchOf = () => select.shadowRoot.querySelector('.search').hidden;
     select.value = '';
+    const closedAndEmpty = searchOf();
+    select.open();
+    const openAndEmpty = searchOf();
+    select.value = 'uk';
 
-    expect([withValue, searchOf(select).hidden, searchOf(required).hidden]).toEqual([
-      true,
-      false,
-      false,
-    ]);
+    expect([closedAndEmpty, openAndEmpty, searchOf()]).toEqual([true, false, true]);
   });
 
   it('keeps the search icon away while the list is open over a value', () => {
@@ -88,6 +89,7 @@ describe('p-select', () => {
 
   it('puts the search icon exactly where the clear button was', () => {
     const { select } = renderForm(COUNTRIES);
+    select.open();
     const clear = select.shadowRoot.querySelector('.clear').getBoundingClientRect();
     select.value = '';
     const search = select.shadowRoot.querySelector('.search').getBoundingClientRect();
@@ -116,14 +118,16 @@ describe('p-select', () => {
     expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
   });
 
-  it('shows a pointer over the closed input and a text cursor once it opens for typing', () => {
+  it('shows a text cursor only where the input can be typed in', () => {
     const { select } = renderForm(COUNTRIES);
     const input = select.shadowRoot.querySelector('.input');
-    const closed = getComputedStyle(input).cursor;
-
+    const cursor = () => getComputedStyle(input).cursor;
+    const closed = cursor();
     select.open();
+    const openOverAValue = cursor();
+    select.value = '';
 
-    expect([closed, getComputedStyle(input).cursor]).toEqual(['pointer', 'text']);
+    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'pointer', 'text']);
   });
 
   it('lines the list up with the outside of the control', () => {
@@ -518,33 +522,29 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
-  it('clears its value when its text is deleted and the list closes', async () => {
+  it('will not let a chosen value be typed over until it is cleared', async () => {
     const { select } = renderForm(COUNTRIES);
     const input = select.shadowRoot.querySelector('input');
-    const changes = [];
-    select.addEventListener('change', () => changes.push(select.value));
+    const readOnlyWithValue = input.readOnly;
 
-    await userEvent.click(input);
-    await userEvent.clear(input);
-    select.close();
+    clickShadow(select, '.clear');
 
-    expect([select.value, input.value, changes]).toEqual(['', '', ['']]);
+    expect([readOnlyWithValue, input.readOnly, select.value]).toEqual([true, false, '']);
   });
 
-  it('restores the chosen option when its text is deleted while it is required', async () => {
-    const { select } = renderForm(`
-      <p-select name="size" required>
-        <option value="s" selected>Small</option>
-        <option value="m">Medium</option>
-      </p-select>
-    `);
-    const input = select.shadowRoot.querySelector('input');
+  it('searches again once a required select has been cleared', () => {
+    const { select } = renderForm(PRIORITY);
+    select.value = 'high';
+    select.open();
+    const offeredOnRequired = !select.shadowRoot.querySelector('.clear').hidden;
 
-    await userEvent.click(input);
-    await userEvent.clear(input);
-    select.close();
+    clickShadow(select, '.clear');
 
-    expect([select.value, input.value]).toEqual(['s', 'Small']);
+    expect([
+      offeredOnRequired,
+      select.shadowRoot.querySelector('input').readOnly,
+      select.shadowRoot.querySelector('.search').hidden,
+    ]).toEqual([true, false, false]);
   });
 
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
