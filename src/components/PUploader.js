@@ -836,48 +836,71 @@ export default class PUploader extends HTMLElement {
    * abandoned
    */
   /**
-   * Draw what follows the cursor: the file's thumbnail and its name
+   * Show the file being dragged as a chip that follows the cursor
    *
-   * Left to itself a browser photographs the whole card, which in Safari comes out as a translucent
-   * copy of the row laid over the rows beneath it. A small element of our own looks the same
-   * everywhere.
+   * The browser's own picture is turned off rather than replaced: asked to photograph an element,
+   * Safari leaves the thumbnail out and Chrome draws it, so neither can be relied on. The chip is
+   * an ordinary element moved with the pointer instead, which every browser draws the same way.
    *
    * @param {DragEvent} e
    * @param {HTMLElement} fileElement
    */
   _setDragImage(e, fileElement) {
-    if (!e.dataTransfer?.setDragImage) return;
+    if (!e.dataTransfer) return;
 
-    const ghost = document.createElement('div');
-    ghost.className = 'uploader__drag-image';
-    /* Kept on screen but moved aside: Safari draws nothing for an element parked far outside the
-       viewport, so its picture arrives without the thumbnail */
-    ghost.style.cssText = `position:fixed;top:0;left:0;transform:translateX(-150%);
-      pointer-events:none;display:flex;align-items:center;
-      gap:.5rem;max-width:18rem;padding:.25rem .75rem .25rem .25rem;border-radius:999px;
-      background:var(--surface-card-color-bg,#fff);color:var(--surface-card-color-text,#171717);
-      box-shadow:0 4px 12px var(--color-shadow,rgba(0,0,0,.2));font:inherit;font-size:.875rem;
-      white-space:nowrap;overflow:hidden`;
+    /* Nothing for the browser to draw */
+    if (e.dataTransfer.setDragImage) {
+      this._blankDragImage ??= Object.assign(new Image(), {
+        src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+      });
+      e.dataTransfer.setDragImage(this._blankDragImage, 0, 0);
+    }
 
-    /* The card's own thumbnail is already loaded, so its clone has something to draw at once */
+    const chip = document.createElement('div');
+    chip.className = 'uploader__chip';
+    chip.setAttribute('part', 'drag-chip');
+    chip.setAttribute('aria-hidden', 'true');
+
     const preview = fileElement.shadowRoot?.querySelector('.uploader__preview img');
     if (preview?.getAttribute('src')) {
       const image = preview.cloneNode();
-      image.style.cssText = 'width:2rem;height:2rem;border-radius:999px;object-fit:cover';
-      ghost.append(image);
+      image.className = 'uploader__chip-image';
+      chip.append(image);
     }
     const name = document.createElement('span');
+    name.className = 'uploader__chip-name';
     name.textContent = fileElement.getAttribute('filename') || 'File';
-    name.style.cssText = 'overflow:hidden;text-overflow:ellipsis';
-    ghost.append(name);
+    chip.append(name);
 
-    this.append(ghost);
-    e.dataTransfer.setDragImage(ghost, 24, 20);
-    /* It only has to exist while the browser takes its picture */
-    setTimeout(() => ghost.remove(), 0);
+    this.shadowRoot.append(chip);
+    this._chip = chip;
+    this._moveChip(e);
+
+    /* dragover carries the pointer in every browser, where the drag event's own position does not */
+    this._chipMove = event => this._moveChip(event);
+    document.addEventListener('dragover', this._chipMove);
+  }
+
+  /**
+   * Put the chip under the cursor
+   *
+   * @param {DragEvent} e
+   */
+  _moveChip(e) {
+    if (!this._chip || (e.clientX === 0 && e.clientY === 0)) return;
+    this._chip.style.transform = `translate(${e.clientX + 12}px, ${e.clientY - 20}px)`;
+  }
+
+  /** Take the chip away once the drag is over */
+  _removeChip() {
+    document.removeEventListener('dragover', this._chipMove);
+    this._chipMove = null;
+    this._chip?.remove();
+    this._chip = null;
   }
 
   _handleDragEnd() {
+    this._removeChip();
     if (!this.draggedElement) return;
 
     this.draggedElement.removeAttribute('dragging');
