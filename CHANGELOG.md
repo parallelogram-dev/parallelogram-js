@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The components draw from one set of icons. They are the Tabler icons, on a 24 by 24 grid with a 2px round stroke in `currentColor`, at one of three sizes: 24, 20 or 16. `<p-select>`'s dropdown arrow, and the dismiss buttons of `<p-modal>` and `<p-toasts>`, were text characters (`▾` and `×`) that took their shape from the page's font; they are now icons like the rest.
 
+### Changed
+
+- `<p-uploader>` edits a file's details in a sliding panel rather than a modal dialog. Pressing Edit pushes the file's details up and slides the form in from below, the way the delete confirmation does, and the card grows to fit the form while it is open, animating unless the reader has asked for less motion. Escape and Cancel close it and return focus to the Edit button, and Save works as before. The `dialog` shadow part is gone, since there is no dialog; the form is in a panel carrying the `panel` and `edit-panel` parts, and `data-current-panel` takes a new `edit` value.
+
 ### Fixed
 
 - `<p-uploader>`'s delete confirmation puts Cancel before Delete, so the destructive button sits at the end of the row.

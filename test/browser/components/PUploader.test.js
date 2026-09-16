@@ -95,8 +95,8 @@ describe('p-uploader', () => {
     const shadow = file.shadowRoot;
 
     shadow.querySelector('button[data-action="edit"]').click();
-    shadow.querySelector('dialog [name="caption"]').value = PAYLOAD;
-    shadow.querySelector('dialog [data-action="save"]').click();
+    shadow.querySelector('[data-panel="edit"] [name="caption"]').value = PAYLOAD;
+    shadow.querySelector('[data-panel="edit"] [data-action="save"]').click();
 
     await vi.waitFor(() => expect(shadow.querySelector('.field__value').textContent).toBe(PAYLOAD));
     expect(shadow.querySelectorAll('img')).toHaveLength(1);
@@ -119,8 +119,8 @@ describe('p-uploader', () => {
     const shadow = file.shadowRoot;
 
     shadow.querySelector('button[data-action="edit"]').click();
-    shadow.querySelector('dialog [name="caption"]').value = 'New caption';
-    shadow.querySelector('dialog [data-action="save"]').click();
+    shadow.querySelector('[data-panel="edit"] [name="caption"]').value = 'New caption';
+    shadow.querySelector('[data-panel="edit"] [data-action="save"]').click();
 
     await expect(updated).resolves.toEqual([
       true,
@@ -128,13 +128,13 @@ describe('p-uploader', () => {
     ]);
   });
 
-  it('labels the delete dialog with its own heading even when the filename has quotes', async () => {
+  it('labels the delete panel with its own heading even when the filename has quotes', async () => {
     const file = element('p-uploader-file', { filename: 'say "cheese".jpg' });
     document.body.append(file);
     await nextTask();
 
-    const dialog = file.shadowRoot.querySelector('[data-panel="delete"]');
-    const heading = file.shadowRoot.getElementById(dialog.getAttribute('aria-labelledby'));
+    const panel = file.shadowRoot.querySelector('[data-panel="delete"]');
+    const heading = file.shadowRoot.getElementById(panel.getAttribute('aria-labelledby'));
     expect(heading?.textContent).toBe('Delete this file?');
   });
 
@@ -656,7 +656,7 @@ describe('p-uploader-file', () => {
     expect(labels).toEqual(['Title']);
   });
 
-  it('edits every field in one dialog and saves only the changed ones', async () => {
+  it('edits every field in one panel and saves only the changed ones', async () => {
     const save = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', save);
     const { shadow } = await renderCard({
@@ -669,15 +669,15 @@ describe('p-uploader-file', () => {
     });
 
     shadow.querySelector('button[data-action="edit"]').click();
-    const dialog = shadow.querySelector('dialog');
+    const panel = shadow.querySelector('[data-panel="edit"]');
     const opened = [
-      dialog?.open,
-      [...(dialog?.querySelectorAll('[name]') ?? [])].map(control => control.name),
+      panel?.classList.contains('uploader__panel--show'),
+      [...(panel?.querySelectorAll('[name]') ?? [])].map(control => control.name),
     ];
-    dialog.querySelector('[name="caption"]').value = 'Fishing boats';
-    dialog.querySelector('button[data-action="save"]').click();
+    panel.querySelector('[name="caption"]').value = 'Fishing boats';
+    panel.querySelector('button[data-action="save"]').click();
 
-    await vi.waitFor(() => expect(dialog.open).toBe(false));
+    await vi.waitFor(() => expect(panel.inert).toBe(true));
     expect({
       opened,
       saves: save.mock.calls.map(([, init]) => JSON.parse(init.body)),
@@ -689,7 +689,7 @@ describe('p-uploader-file', () => {
     });
   });
 
-  it('returns focus to the edit button when the dialog is cancelled', async () => {
+  it('returns focus to the edit button when the edit panel is cancelled', async () => {
     const { shadow } = await renderCard({
       attributes: { 'update-action': '/api/update' },
       fields: [['title', 'Title']],
@@ -699,12 +699,85 @@ describe('p-uploader-file', () => {
 
     edit.focus();
     edit.click();
-    shadow.querySelector('dialog button[data-action="cancel"]').click();
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
 
-    expect([shadow.querySelector('dialog').open, shadow.activeElement === edit]).toEqual([
-      false,
+    expect([
+      shadow.querySelector('[data-panel="edit"]').inert,
+      shadow.activeElement === edit,
+    ]).toEqual([true, true]);
+  });
+
+  it('slides the edit panel in over the details and back out again', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+    const info = shadow.querySelector('[data-panel="info"]');
+    const edit = shadow.querySelector('[data-panel="edit"]');
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    const opened = [edit.inert, info.inert];
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
+
+    expect({ opened, closed: [edit.inert, info.inert] }).toEqual({
+      opened: [false, true],
+      closed: [true, false],
+    });
+  });
+
+  it('moves focus into the edit panel when it opens', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+
+    shadow.querySelector('button[data-action="edit"]').click();
+
+    expect([
+      shadow.activeElement?.name,
+      Boolean(shadow.activeElement?.closest('[data-panel="edit"]')),
+    ]).toEqual(['title', true]);
+  });
+
+  it('cancels the edit panel when Escape is pressed', async () => {
+    const { file, shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+    const editButton = shadow.querySelector('button[data-action="edit"]');
+
+    editButton.click();
+    shadow.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true })
+    );
+
+    expect([file.getAttribute('data-current-panel'), shadow.activeElement === editButton]).toEqual([
+      'info',
       true,
     ]);
+  });
+
+  it('grows the card to fit the edit form and shrinks it back again', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [
+        ['title', 'Title'],
+        ['caption', 'Caption', 'textarea'],
+      ],
+      data: { title: 'Harbour at dawn', caption: 'Boats' },
+    });
+    const content = shadow.querySelector('.uploader__content');
+    const height = () => content.getBoundingClientRect().height;
+    const closed = height();
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    await vi.waitFor(() => expect(height()).toBeGreaterThan(closed));
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
+
+    await vi.waitFor(() => expect(height()).toBe(closed));
   });
 
   it('exposes parts for styling and does not render the filename as a heading', async () => {
@@ -714,9 +787,16 @@ describe('p-uploader-file', () => {
       data: { title: 'Harbour at dawn' },
     });
 
-    const parts = ['preview', 'filename', 'fields', 'field', 'actions', 'panel', 'progress'].filter(
-      part => !shadow.querySelector(`[part~="${part}"]`)
-    );
+    const parts = [
+      'preview',
+      'filename',
+      'fields',
+      'field',
+      'actions',
+      'panel',
+      'edit-panel',
+      'progress',
+    ].filter(part => !shadow.querySelector(`[part~="${part}"]`));
     expect([parts, shadow.querySelector('[part~="filename"]')?.localName]).toEqual([[], 'p']);
   });
 
