@@ -91,6 +91,14 @@
   color: inherit;
   font: inherit;
   padding: 0;
+
+  /* A click anywhere on a closed control opens the list rather than placing a caret */
+  cursor: inherit;
+}
+
+/* Typing filters the options once the list is open, so the input becomes a search box */
+.control[data-open] .input {
+  cursor: text;
 }
 
 .input::placeholder {
@@ -98,24 +106,34 @@
   opacity: 1;
 }
 
-/* Shown while the list is open, since the input is a search box then */
-.search {
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--select-placeholder);
-}
-
 .clear {
   all: unset;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.search {
+  pointer-events: none;
+}
+
+/* One slot before the chevron, holding whichever of the two applies, so neither swap moves
+   anything: the clear button when there is a value to remove, the search icon otherwise */
+.search,
+.clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   width: 1.25rem;
   height: 1.25rem;
-  border-radius: 50%;
+  margin-left: auto;
   color: var(--select-placeholder);
-  cursor: pointer;
+}
+
+/* The display above is more specific than the browser's own rule for the hidden attribute */
+.search[hidden],
+.clear[hidden] {
+  display: none;
 }
 
 .clear:hover {
@@ -128,12 +146,20 @@
   outline-offset: 1px;
 }
 
+/* Laid out as a flex box, since an inline icon sits on the text baseline with the descender space
+   below it rather than in the middle. The chevron is drawn inside a quarter of the 20px icon on
+   either side, so the negative margin pulls that 5px back out and leaves the gap the control's own
+   padding asks for */
 .arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   transition: transform 0.15s ease;
   user-select: none;
   flex-shrink: 0;
   margin-left: auto;
+  margin-right: -5px;
 }
 
 .control[data-open] .arrow {

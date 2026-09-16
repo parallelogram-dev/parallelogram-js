@@ -53,6 +53,7 @@ const PAGE_SIZE = 10;
  * - p-select:open, p-select:close: when the list opens or closes
  *
  * @csspart input - the text input
+ * @csspart clear - the button that clears the selection
  * @csspart listbox - the list of options
  */
 export default class PSelect extends HTMLElement {
@@ -168,7 +169,6 @@ export default class PSelect extends HTMLElement {
       `
       <div class="root">
         <div class="control">
-          <span class="search" aria-hidden="true" hidden>${iconMarkup(search, { size: 'sm' })}</span>
           <input
             class="input"
             part="input"
@@ -180,6 +180,7 @@ export default class PSelect extends HTMLElement {
             aria-expanded="false"
             aria-controls="listbox"
           />
+          <span class="search" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
           <button type="button" class="clear" part="clear" tabindex="-1" aria-label="Clear the selection" hidden>${iconMarkup(x, { size: 'xs' })}</button>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
@@ -201,6 +202,7 @@ export default class PSelect extends HTMLElement {
       live: this.shadowRoot.querySelector('.live'),
     };
     this._els.input.placeholder = this.state.placeholder;
+    this._updateControls();
   }
 
   _setupEventListeners() {
@@ -510,13 +512,14 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
-   * Show the search icon while the list is open for typing, and the clear button while there is a
-   * value to clear
+   * Fill the slot before the chevron with the clear button when there is a value the user may
+   * remove, and with the search icon otherwise, so the two are never shown at once
    */
   _updateControls() {
-    const { open, value, required, disabled } = this.state;
-    this._els.search.hidden = !open;
-    this._els.clear.hidden = open || value === '' || required || disabled;
+    const { value, required, disabled } = this.state;
+    const clearable = value !== '' && !required && !disabled;
+    this._els.clear.hidden = !clearable;
+    this._els.search.hidden = clearable;
   }
 
   /**
@@ -561,7 +564,6 @@ export default class PSelect extends HTMLElement {
     this._els.input.setAttribute('aria-expanded', 'true');
     this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
-    this._updateControls();
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);
