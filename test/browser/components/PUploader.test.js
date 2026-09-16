@@ -292,6 +292,23 @@ describe('p-uploader host', () => {
     expect(file.getAttribute('data-current-panel')).toBe('delete');
   });
 
+  it('pushes the details up for the confirmation and brings them back down on cancel', async () => {
+    const uploader = await renderUploader({ 'delete-action': '/api/delete' }, ['first', 'second']);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    const info = file.shadowRoot.querySelector('[data-panel="info"]');
+    const settle = () => {
+      info.getAnimations().forEach(animation => animation.finish());
+      return Math.round(new DOMMatrix(getComputedStyle(info).transform).m42);
+    };
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    const whileConfirming = settle();
+    file.shadowRoot.querySelector('[data-panel="delete"] [data-action="cancel"]').click();
+
+    /* Negative is up: the details wait above the confirmation, not below it */
+    expect([whileConfirming < 0, settle()]).toEqual([true, 0]);
+  });
+
   it('lines the delete confirmation up with the card, even though focus moves into it', async () => {
     const uploader = await renderUploader({ 'delete-action': '/api/delete' }, ['first', 'second']);
     const [file] = uploader.querySelectorAll('p-uploader-file');
