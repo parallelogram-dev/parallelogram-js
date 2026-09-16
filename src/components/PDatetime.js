@@ -1,6 +1,7 @@
 import styles from '../styles/framework/components/PDatetime.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { followFocusSource } from '../utils/focus-source.js';
+import { arrowLeft, arrowRight, calendar, iconMarkup, selector } from '../utils/icons.js';
 
 const formats = new Map();
 
@@ -187,20 +188,20 @@ export default class PDatetime extends HTMLElement {
           <div class="field">
             <button type="button" class="input" data-datetime-input aria-haspopup="dialog" aria-expanded="false" data-placeholder="Select date..."></button>
             <button type="button" class="input" data-datetime-input-to aria-haspopup="dialog" aria-expanded="false" hidden data-placeholder="End date..."></button>
-            <button type="button" class="calendar-btn" data-datetime-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M8 14v4" /><path d="M12 14v4" /><path d="M16 14v4" /></svg></button>
+            <button type="button" class="calendar-btn" data-datetime-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date">${iconMarkup(calendar, { size: 'sm' })}</button>
           </div>
 
           <div class="panel" data-datetime-panel role="dialog" aria-label="Choose date" tabindex="-1" hidden>
             <div class="range-info" data-datetime-range-info aria-live="polite" hidden>Click to select start date, then select end date</div>
 
             <div class="nav" data-datetime-nav>
-              <button type="button" data-datetime-nav-btn="prev" aria-label="Previous month"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg></button>
+              <button type="button" data-datetime-nav-btn="prev" aria-label="Previous month">${iconMarkup(arrowLeft, { size: 'sm' })}</button>
               <button type="button" class="month-year" id="month-year" data-datetime-month-year aria-live="polite">
                 <span data-slot="month"></span>
                 <span data-slot="year"></span>
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l4 -4l4 4" /><path d="M16 15l-4 4l-4 -4" /></svg>
+                ${iconMarkup(selector, { size: 'sm' })}
               </button>
-              <button type="button" data-datetime-nav-btn="next" aria-label="Next month"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg></button>
+              <button type="button" data-datetime-nav-btn="next" aria-label="Next month">${iconMarkup(arrowRight, { size: 'sm' })}</button>
             </div>
 
             <div class="grid-container" data-datetime-grid-container>

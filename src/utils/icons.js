@@ -30,6 +30,18 @@ export const trash = [
 export const plus = ['M12 5l0 14', 'M5 12l14 0'];
 export const arrowUp = ['M12 5l0 14', 'M18 11l-6 -6', 'M6 11l6 -6'];
 export const arrowDown = ['M12 5l0 14', 'M18 13l-6 6', 'M6 13l6 6'];
+export const arrowLeft = ['M5 12l14 0', 'M5 12l6 6', 'M5 12l6 -6'];
+export const arrowRight = ['M5 12l14 0', 'M19 12l-6 6', 'M19 12l-6 -6'];
+export const calendar = [
+  'M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z',
+  'M16 3v4',
+  'M8 3v4',
+  'M4 11h16',
+  'M8 14v4',
+  'M12 14v4',
+  'M16 14v4',
+];
+export const selector = ['M8 9l4 -4l4 4', 'M16 15l-4 4l-4 -4'];
 
 const attributes = (size, className) => ({
   xmlns: SVG_NS,
