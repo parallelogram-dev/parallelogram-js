@@ -201,19 +201,19 @@
   --button-min-height-sm: 2em;
   --button-min-height-lg: 3em;
 
-  /* Primary button */
-  --button-primary-bg: var(--color-accent);
+  /* Primary button: the stronger accent, since the accent itself is 3.7:1 under white text */
+  --button-primary-bg: var(--color-accent-hover);
   --button-primary-color: var(--color-accent-contrast);
-  --button-primary-border: var(--color-accent);
-  --button-primary-hover-bg: var(--color-accent-hover);
-  --button-primary-hover-border: var(--color-accent-hover);
+  --button-primary-border: var(--color-accent-hover);
+  --button-primary-hover-bg: color-mix(in srgb, var(--color-accent-hover) 85%, black);
+  --button-primary-hover-border: color-mix(in srgb, var(--color-accent-hover) 85%, black);
 
   /* Secondary button */
   --button-secondary-bg: transparent;
   --button-secondary-color: currentColor;
-  --button-secondary-border: var(--color-border-strong);
+  --button-secondary-border: var(--color-control-border);
   --button-secondary-hover-bg: var(--color-surface-muted);
-  --button-secondary-hover-border: var(--color-border-strong);
+  --button-secondary-hover-border: var(--color-control-border);
 
   /* Danger button */
   --button-danger-bg: var(--color-danger);

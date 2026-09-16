@@ -57,7 +57,7 @@
 
   /* Border Radius */
   --datetime-radius: 0.25em;
-  --datetime-radius-lg: 0.5em;
+  --datetime-radius-lg: var(--panel-border-radius, 0.5em);
   --datetime-radius-xl: 1em;
 
   /* Borders */
@@ -66,7 +66,7 @@
   --datetime-today-border-width: 2px;
 
   /* Shadow */
-  --datetime-shadow: 0 4px 6px var(--datetime-shadow-color);
+  --datetime-shadow: var(--panel-shadow, 0 4px 6px var(--datetime-shadow-color));
 
   /* Timing */
   --datetime-transition: 0.15s ease;
@@ -78,17 +78,32 @@
   --datetime-font-md: 0.875em;
 
   /* Panel overrides */
-  --datetime-panel-padding: var(--datetime-space-lg);
+  --datetime-panel-padding: var(--panel-padding, var(--datetime-space-lg));
   --datetime-panel-min-width: 20em;
 
   /* Action button overrides (Clear / Apply) */
-  --datetime-action-btn-radius: var(--datetime-radius);
-  --datetime-action-btn-padding: 0.625em 1em;
-  --datetime-action-btn-font-size: var(--datetime-font-md);
-  --datetime-action-btn-font-weight: inherit;
+  /* Action buttons read the button family; a page can still set these for the picker alone */
+  --datetime-action-btn-radius: var(--button-border-radius, var(--datetime-radius));
+  --datetime-action-btn-padding: var(--button-padding-y, 0.625em) var(--button-padding-x, 1em);
+  --datetime-action-btn-font-size: var(--button-font-size, var(--datetime-font-md));
+  --datetime-action-btn-font-weight: var(--button-font-weight, inherit);
   --datetime-action-btn-text-transform: none;
   --datetime-action-btn-letter-spacing: normal;
-  --datetime-action-btn-min-height: var(--datetime-cell-size);
+  --datetime-action-btn-min-height: var(--button-min-height, var(--datetime-cell-size));
+  --datetime-action-btn-bg: var(--button-secondary-bg, var(--datetime-hover));
+  --datetime-action-btn-color: var(--button-secondary-color, var(--datetime-text));
+  --datetime-action-btn-border: var(--button-secondary-border, transparent);
+  --datetime-action-btn-hover-bg: var(--button-secondary-hover-bg, var(--datetime-hover));
+  --datetime-action-btn-hover-border: var(--button-secondary-hover-border, transparent);
+  --datetime-action-btn-primary-bg: var(--button-primary-bg, var(--datetime-accent-strong));
+  --datetime-action-btn-primary-color: var(--button-primary-color, var(--datetime-bg));
+  --datetime-action-btn-primary-hover-bg: var(
+    --button-primary-hover-bg,
+    var(--datetime-accent-strong)
+  );
+  --datetime-preset-bg: var(--button-ghost-bg, transparent);
+  --datetime-preset-color: var(--button-ghost-color, var(--datetime-muted));
+  --datetime-preset-hover-bg: var(--button-ghost-hover-bg, var(--datetime-hover));
 }
 
 /* Shared - Border Properties */
@@ -511,7 +526,12 @@ button:disabled {
 .preset {
   padding: 0.375em var(--datetime-space-lg);
   border-radius: var(--datetime-radius-xl);
-  color: var(--datetime-muted);
+  background: var(--datetime-preset-bg);
+  color: var(--datetime-preset-color);
+}
+
+.preset:hover {
+  background: var(--datetime-preset-hover-bg);
 }
 
 /* Action Buttons */
@@ -523,7 +543,8 @@ button:disabled {
 }
 
 .btn {
-  background: var(--datetime-hover);
+  background: var(--datetime-action-btn-bg);
+  border: var(--button-border-width, 1px) solid var(--datetime-action-btn-border);
   border-radius: var(--datetime-action-btn-radius);
   padding: var(--datetime-action-btn-padding);
   min-height: var(--datetime-action-btn-min-height);
@@ -531,13 +552,23 @@ button:disabled {
   font-weight: var(--datetime-action-btn-font-weight);
   text-transform: var(--datetime-action-btn-text-transform);
   letter-spacing: var(--datetime-action-btn-letter-spacing);
-  color: var(--datetime-text);
+  color: var(--datetime-action-btn-color);
+}
+
+.btn:hover {
+  background: var(--datetime-action-btn-hover-bg);
+  border-color: var(--datetime-action-btn-hover-border);
 }
 
 .btn.primary {
-  background: var(--datetime-accent-strong);
-  color: var(--datetime-bg);
-  border-color: var(--datetime-accent-strong);
+  background: var(--datetime-action-btn-primary-bg);
+  color: var(--datetime-action-btn-primary-color);
+  border-color: var(--datetime-action-btn-primary-bg);
+}
+
+.btn.primary:hover {
+  background: var(--datetime-action-btn-primary-hover-bg);
+  border-color: var(--datetime-action-btn-primary-hover-bg);
 }
 
 /* Range Info */
