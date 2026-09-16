@@ -922,7 +922,10 @@ describe('p-select paging', () => {
     press(select, 'End');
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    expect(calls.length).toBe(1);
+    expect({
+      laterPages: calls.filter(call => call.page > 1),
+      options: optionsOf(select).length,
+    }).toEqual({ laterPages: [], options: 10 });
   });
 
   it('tells a screen reader more is on the way while there is', async () => {
