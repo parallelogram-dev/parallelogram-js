@@ -97,7 +97,8 @@
 }
 
 /* Typing filters the options once the list is open, so the input becomes a search box */
-.control[data-open] .input {
+/* Only a search box takes a text cursor; a chosen value is read-only until it is cleared */
+.control[data-open] .input:not(:read-only) {
   cursor: text;
 }
 
@@ -198,6 +199,11 @@
 
 .option[data-active] {
   background: var(--select-current-bg);
+}
+
+/* The arrow keys' place in the list is marked for the people using them; a pointer user doesn't
+   need it, and it would sit around the chosen option the moment the list opened */
+:host([data-focus-source='keyboard']) .option[data-active] {
   outline: 2px solid var(--select-active-outline, var(--color-accent-hover, #2563eb));
   outline-offset: -2px;
 }
