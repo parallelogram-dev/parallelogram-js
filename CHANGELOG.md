@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-16
+
 ### Added
 
 - `<p-select>`'s options can carry more than a label. An option may have a `secondary` text, shown muted on the label's line after it, a `description`, shown smaller beneath, and an `image`, shown as a round thumbnail of `--select-image-size` (1.5rem) before the text. In markup they are `data-secondary`, `data-description` and `data-image` on the `<option>`; remote JSON carries the same words. Typing matches the secondary text as well as the label, so an email finds its person, though the description is never searched. The input still shows the label alone, and `p-select:change` adds the fields the chosen option has to its `{ value, label }` detail. Everything is built through DOM properties, so no markup is parsed; the thumbnail loads lazily, has its size before it arrives and is not announced, so a screen reader hears the label, the secondary text and the description. `--select-description-color` colours the description and defaults to `--color-text-muted`. The documentation gains a "People" example, and the customer search's rows carry an email and a role.
