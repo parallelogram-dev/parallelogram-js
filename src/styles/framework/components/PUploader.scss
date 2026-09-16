@@ -118,6 +118,8 @@ input {
     }
   }
 
+  /* The panels are stacked and clipped here. The box can scroll, so the browser would keep the
+     panel it thinks you are looking at in view and leave every panel off its mark. */
   &__content {
     flex: 1;
     display: flex;
@@ -126,6 +128,7 @@ input {
     position: relative;
     height: $size-preview;
     overflow: hidden;
+    overflow-anchor: none;
   }
 
   &__panel {
