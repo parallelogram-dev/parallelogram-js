@@ -44,6 +44,7 @@ export class ComponentHost {
    * @param {Object} options.eventBus
    * @param {Object} [options.logger]
    * @param {Object} [options.router]
+   * @param {boolean} [options.routerPending] - Whether the app is still loading its router
    * @param {number} [options.maxRetryAttempts=3] - Retries after a module fails to load
    * @param {number} [options.retryDelay=1000] - Delay before the first retry, doubled for each retry
    */
@@ -52,12 +53,14 @@ export class ComponentHost {
     eventBus,
     logger,
     router,
+    routerPending = false,
     maxRetryAttempts = 3,
     retryDelay = 1000,
   }) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.router = router;
+    this.routerPending = routerPending;
     this.maxRetryAttempts = maxRetryAttempts;
     this.retryDelay = retryDelay;
 
@@ -525,6 +528,7 @@ export class ComponentHost {
       eventBus: this.eventBus,
       logger: this.logger,
       router: this.router,
+      routerPending: this.routerPending,
       config: entry,
     });
   }
