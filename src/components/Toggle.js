@@ -462,19 +462,29 @@ export default class Toggle extends BaseComponent {
 
   /**
    * Whether a click path went through a link that leaves the current view
+   *
+   * The destination is resolved rather than matched as text, so schemes that stay on the page, such
+   * as `javascript:` and `mailto:` in any case, and links to this page's own fragments, don't count.
    */
   _isNavigationLink(path) {
     const link = path.find(node => node.localName === 'a' && node.hasAttribute('href'));
-    if (!link) return false;
+    if (!link || link.hasAttribute('download') || link.getAttribute('target') === '_blank') {
+      return false;
+    }
 
-    const href = link.getAttribute('href');
+    let destination;
+    try {
+      destination = new URL(link.getAttribute('href'), document.baseURI);
+    } catch {
+      return false;
+    }
+    if (destination.protocol !== 'http:' && destination.protocol !== 'https:') return false;
+
+    const here = new URL(location.href);
     return (
-      !href.startsWith('#') &&
-      !href.startsWith('javascript:') &&
-      !href.startsWith('mailto:') &&
-      !href.startsWith('tel:') &&
-      !link.hasAttribute('download') &&
-      link.getAttribute('target') !== '_blank'
+      destination.origin !== here.origin ||
+      destination.pathname !== here.pathname ||
+      destination.search !== here.search
     );
   }
 
