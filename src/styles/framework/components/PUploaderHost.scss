@@ -17,7 +17,7 @@
     var(--surface-panel-border-color, var(--color-border, #{$color-border}))
   );
   background: var(--puploader-bg, var(--surface-panel-color-bg, var(--color-surface, #ffffff)));
-  color: var(--puploader-color, var(--surface-panel-color-text, #{$color-text}));
+  color: var(--puploader-color, var(--surface-panel-color-text, #{$neutral-900}));
   box-shadow: var(
     --puploader-shadow,
     var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
@@ -35,40 +35,75 @@
     }
   }
 
+  /* A pale wash of the accent, with the accent's own text, rather than a bordered box */
   &__selector {
-    /* Use surface-touch tokens for interactive area with hover feedback */
+    border: var(--surface-touch-border-width, #{$border-width}) solid
+      var(
+        --puploader-selector-border,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
+      );
     border-radius: var(--surface-touch-radius, #{$radius-xs});
-    border-width: var(--surface-touch-border-width, #{$border-width});
-    border-style: solid;
-    border-color: var(--surface-touch-border-color, var(--color-border-strong, #{$neutral-300}));
-    background: var(--surface-touch-color-bg, var(--color-surface-muted, #{$neutral-100}));
-    color: var(--surface-touch-color-text, #{$color-text});
+    background: var(
+      --puploader-selector-bg,
+      color-mix(in srgb, var(--color-accent, #{$primary}) 8%, transparent)
+    );
+    color: var(--puploader-selector-color, var(--color-accent-hover, #{$primary-dark}));
     box-shadow: var(--surface-touch-shadow, none);
 
-    /* Customize for file upload area */
     padding: $space-xxl;
-    border-width: $border-width-thick;
-
     text-align: center;
     cursor: pointer;
 
     /* Slower transitions for touch feedback */
-    transition:
-      border-color $duration-slow $ease-smooth,
-      background-color $duration-slow $ease-smooth;
+    transition: background-color $duration-slow $ease-smooth;
 
     @include hover {
-      border-color: var(
-        --surface-touch-hover-border-color,
-        color-mix(in srgb, var(--color-accent, #{$primary}) 50%, transparent)
+      background: var(
+        --puploader-selector-hover-bg,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 14%, transparent)
       );
-      background: var(--surface-touch-hover-bg, var(--color-surface-muted, #{$neutral-100}));
     }
 
     &.dragover {
-      border-color: var(--color-accent, #{$primary});
-      background: color-mix(in srgb, var(--color-accent, #{$primary}) 5%, transparent);
+      background: var(
+        --puploader-selector-dragover-bg,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 20%, transparent)
+      );
     }
+  }
+
+  /* What follows the cursor while a file is dragged */
+  &__chip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    max-width: 18rem;
+    padding: $space-sm $space-lg $space-sm $space-sm;
+    border-radius: 999px;
+    background: var(--puploader-chip-bg, var(--surface-card-color-bg, var(--color-surface, #fff)));
+    color: var(--puploader-chip-color, var(--surface-card-color-text, #{$neutral-900}));
+    box-shadow: 0 4px 12px var(--color-shadow, rgba(0, 0, 0, 0.2));
+    font-size: $font-sm;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  &__chip-image {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__fileinput {
@@ -79,21 +114,26 @@
     pointer-events: none;
   }
 
+  /* The label is a pill in a deeper wash of the accent, so the zone reads as one target */
   &__add {
-    font: inherit;
-    font-size: $font-base;
-    color: inherit;
-    background: none;
-    border: none;
-    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-xs;
+    padding: var(--button-padding-y, #{$space-sm}) var(--button-padding-x, #{$space-lg});
+    min-height: var(--button-min-height, 2.5em);
+    border: var(--button-border-width, #{$border-width}) solid
+      var(
+        --puploader-add-border,
+        color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
+      );
+    border-radius: var(--button-border-radius, var(--surface-button-radius, #{$radius-sm}));
+    background: var(--puploader-add-bg, var(--color-surface, #ffffff));
+    color: var(--puploader-add-color, var(--color-accent-hover, #{$primary-dark}));
+    font-family: inherit;
+    font-size: var(--button-font-size, #{$font-sm});
+    font-weight: var(--button-font-weight, #{$font-semibold});
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-
-    &:focus-visible {
-      outline: 2px solid var(--framework-focus-color, var(--color-accent, #{$primary}));
-      outline-offset: 2px;
-    }
   }
 
   &__hint {

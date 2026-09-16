@@ -432,9 +432,14 @@ export default class DeferTracker extends BaseComponent {
     if (tracker.pageUrl === url) {
       const others = [...tracker.elements].filter(other => other !== element && other.isConnected);
       if (others.length > 0 && !this._runBlock(tracker, element, config, others)) {
-        this.logger?.warn('Duplicate tracker block ignored', { name, key });
-        this.setAttr(element, 'status', 'duplicate');
-        return;
+        /* The page step for this URL ran for a block the router carried over, which held the
+           previous page's configuration, so this page's own block still has its payload to send */
+        if (!tracker.carriedPage || this._repeats(config, tracker, others)) {
+          this.logger?.warn('Duplicate tracker block ignored', { name, key });
+          this.setAttr(element, 'status', 'duplicate');
+          return;
+        }
+        this._runPage(tracker, element, url, true);
       }
     } else {
       this._runPage(tracker, element, url, true);
@@ -569,12 +574,17 @@ export default class DeferTracker extends BaseComponent {
   }
 
   _runPage(tracker, element, url, mounted) {
-    tracker.pageUrl = url;
     const page = adapters.get(tracker.name)?.page;
     if (typeof page !== 'function') return;
 
     const config = this.getState(element)?.config ?? tracker.config;
     if (!this._consentGranted(tracker.name, config)) return;
+
+    /* Claimed only once a page step really runs, so a block that mounts later isn't mistaken for
+       a repeat of one that never sent anything. A step for a block the router carried over is
+       marked, because this page's own block may still mount */
+    tracker.pageUrl = url;
+    tracker.carriedPage = !mounted;
 
     try {
       page(config, this._context(element), { url, mounted });
@@ -592,11 +602,7 @@ export default class DeferTracker extends BaseComponent {
     const block = adapters.get(tracker.name)?.block;
     if (typeof block !== 'function') return false;
 
-    const json = JSON.stringify(config);
-    const repeated = others.some(
-      other => JSON.stringify(this.getState(other)?.config ?? tracker.config) === json
-    );
-    if (repeated) return false;
+    if (this._repeats(config, tracker, others)) return false;
 
     try {
       block(config, this._context(element));
@@ -604,6 +610,18 @@ export default class DeferTracker extends BaseComponent {
       this.logger?.error('Tracker block step failed', { name: tracker.name, error });
     }
     return true;
+  }
+
+  /**
+   * Whether a block repeats the configuration of another block for the same tracker on this page
+   *
+   * @returns {boolean}
+   */
+  _repeats(config, tracker, others) {
+    const json = JSON.stringify(config);
+    return others.some(
+      other => JSON.stringify(this.getState(other)?.config ?? tracker.config) === json
+    );
   }
 
   _failed(tracker, element, error) {

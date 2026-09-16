@@ -2,12 +2,12 @@
 
 ## Supported versions
 
-Before 1.0, only the latest minor release line gets security fixes. That is currently 0.6.x.
+Before 1.0, only the latest minor release line gets security fixes. That is currently 0.7.x.
 
 | Version | Security fixes |
 | ------- | -------------- |
-| 0.6.x   | Yes            |
-| < 0.6   | No             |
+| 0.7.x   | Yes            |
+| < 0.7   | No             |
 
 If you are on an older 0.x release, upgrade to the latest 0.x minor. The [upgrade guides](https://dev.parallelogram.com.au/upgrading.html) list each breaking change and what to use instead.
 

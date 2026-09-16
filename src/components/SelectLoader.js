@@ -162,8 +162,9 @@ export default class SelectLoader extends BaseComponent {
    */
   async _loadFragment(element, state, url) {
     /* The router loads on demand, so wait for it, then load whatever is chosen by then. It is
-       handed to components after router:initialized is emitted, hence the microtask. */
-    if (!this.router && this.eventBus && state.routerWait !== false) {
+       handed to components after router:initialized is emitted, hence the microtask. An app that
+       never asked for a router isn't waited for: the error below tells the developer instead. */
+    if (!this.router && this.routerPending && this.eventBus && state.routerWait !== false) {
       state.routerWait ??= this.eventBus.once(
         'router:initialized',
         () =>

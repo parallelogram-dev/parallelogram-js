@@ -145,14 +145,20 @@ Fragments are inserted as HTML, through the \`parallelogram\` policy on pages th
       title: 'Menu picker',
       description: 'Choose another menu, then Reset puts back and loads the breakfast menu.',
       markup: `<form class="form" action="#menu">
-  <label for="menu-choice">Menu</label>
-  <select id="menu-choice" data-selectloader data-selectloader-target="#menu-panel">
-    <option value="">Choose a menu</option>
-    <option value="fragments/breakfast.html" selected>Breakfast</option>
-    <option value="fragments/lunch.html">Lunch</option>
-    <option value="fragments/missing.html">A menu that fails to load</option>
-  </select>
-  <button type="reset">Reset</button>
+  <div class="form__group">
+    <label class="form__label" for="menu-choice">Menu</label>
+    <div class="form__control">
+      <select id="menu-choice" data-selectloader data-selectloader-target="#menu-panel">
+        <option value="">Choose a menu</option>
+        <option value="fragments/breakfast.html" selected>Breakfast</option>
+        <option value="fragments/lunch.html">Lunch</option>
+        <option value="fragments/missing.html">A menu that fails to load</option>
+      </select>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="reset">Reset</button>
+  </div>
 </form>
 <div id="menu-panel" class="panel"></div>`,
       controls: [

@@ -21,20 +21,31 @@ $size-icon-md: 1.25rem;
     var(--uploader-file-radius-start, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}))
     var(--uploader-file-radius-end, var(--surface-card-radius, #{$radius-xs}));
-  border-width: var(--surface-card-border-width, #{$border-width});
-  border-style: solid;
-  border-color: var(--surface-card-border-color, var(--color-border-strong, #{$neutral-300}));
+  border: var(--uploader-file-border, none);
   background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
-  color: var(--surface-card-color-text, #{$color-text});
+  color: var(--surface-card-color-text, #{$neutral-900});
   box-shadow: var(--surface-card-shadow, none);
 
-  /* Customize */
-  padding: $space-sm;
+  /* The card holds no padding of its own: the space between cards, and before the drop zone, is
+     the list's gap */
+  padding: var(--uploader-file-padding, 0);
+  /* The panels waiting out of sight sit below the card, so it clips them. `clip` rather than
+     `hidden`: a hidden box is a scrollable one, and Safari scrolls this one, which paints the
+     card's contents above its own box. */
+  overflow: clip;
 
   transition:
     border-color $duration-fast ease-out,
     background-color $duration-fast ease-out;
   font-family: inherit;
+}
+
+:host([draggable='true']) .uploader__preview {
+  cursor: grab;
+}
+
+:host([dragging]) .uploader__preview {
+  cursor: grabbing;
 }
 
 :host([dragging]) {
@@ -92,32 +103,47 @@ input {
 
   &__container {
     display: flex;
-    gap: $space-sm;
+    gap: var(--puploader-preview-gap, 1rem);
     position: relative;
   }
 
+  /* The image is the drag handle, so a press anywhere else is a click on what it lands on */
   &__preview {
     flex-shrink: 0;
     width: $size-preview;
     height: $size-preview;
-    pointer-events: none;
     user-select: none;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      /* Without this the browser drags the picture itself, and the card is never the drag image */
+      -webkit-user-drag: none;
     }
   }
 
+  /* The panels are stacked and clipped here. The box can scroll, so the browser would keep the
+     panel it thinks you are looking at in view and leave every panel off its mark. */
+  /* The edit form outgrows the thumbnail, so the box takes the height JS measured for it */
   &__content {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
     position: relative;
-    height: $size-preview;
+    height: var(--uploader-content-height, #{$size-preview});
+    min-height: $size-preview;
+    /* `clip` rather than `hidden`: a hidden box can still be scrolled, and a browser that scrolls
+       it to reveal a panel still out of view leaves every panel off its mark. Safari does that
+       when focus moves into the edit panel, since it ignores focus({ preventScroll: true }). */
     overflow: hidden;
+    overflow: clip;
+    overflow-anchor: none;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: height $duration-normal $ease-standard;
+    }
   }
 
   &__panel {
@@ -131,31 +157,47 @@ input {
     height: $size-preview;
     background: var(--surface-card-color-bg, var(--color-surface, #ffffff));
     transform: translateY(-100%);
-    transition: transform $duration-normal $ease-standard;
+    /* A waiting panel is not drawn at all. Clipping it is not enough: the picture the browser
+       drags paints what the card clips, so a panel below would ride along with the card. The
+       visibility waits for the slide to finish before it takes effect. */
+    visibility: hidden;
+    transition:
+      transform $duration-normal $ease-standard,
+      visibility 0s linear $duration-normal;
     will-change: transform;
 
     &--show {
       transform: translateY(0);
+      visibility: visible;
+      transition:
+        transform $duration-normal $ease-standard,
+        visibility 0s linear 0s;
     }
 
-    &[data-panel='info'] {
+    /* A panel waits its own height below, so it is out of sight whatever depth the box is at, and
+       the two can move together as it opens */
+    &[data-panel='info'],
+    &[data-panel='delete'],
+    &[data-panel='edit'] {
       transform: translateY(100%);
 
-      &.uploader__panel--activated {
-        transform: translateY(-100%);
+      &.uploader__panel--show {
+        transform: translateY(0);
       }
+    }
+
+    &[data-panel='info'].uploader__panel--activated {
+      transform: translateY(-100%);
 
       &.uploader__panel--show {
         transform: translateY(0);
       }
     }
 
-    &[data-panel='delete'] {
-      transform: translateY(100%);
-
-      &.uploader__panel--show {
-        transform: translateY(0);
-      }
+    /* The form sets the height here; the other panels keep the thumbnail's */
+    &--edit {
+      height: auto;
+      min-height: $size-preview;
     }
   }
 
@@ -165,19 +207,23 @@ input {
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     min-height: $size-preview;
     position: relative;
   }
 
-  &__alert {
-    justify-content: space-between;
-  }
-
   &__fields {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
+    row-gap: var(--puploader-field-gap, #{$space-sm});
+    column-gap: var(--puploader-preview-gap, 1rem);
+    align-items: baseline;
     flex: 1;
     min-width: 0;
+  }
+
+  &__filename {
+    grid-column: 1 / -1;
   }
 
   &__filename,
@@ -207,23 +253,71 @@ input {
     margin: 0;
   }
 
-  &__delete-icon {
-    width: $size-icon-md;
-    height: $size-icon-md;
-    border: none;
-    background-size: contain;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' d='M0 0h24v24H0V0z'/%3E%3Cpath fill='red' d='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z'/%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3C/svg%3E");
-    background-color: var(--surface-card-color-bg, var(--color-surface, #ffffff));
-    background-repeat: no-repeat;
-    background-position: center;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity $duration-fast;
+  /* Edit and delete as one segmented pill, divided by a keyline in the card's own surface */
+  &__pills {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    /* The buttons are joined by their keyline, so the row's own spacing has no place here */
+    gap: 0;
+    border-radius: 999px;
+    border: $border-width solid var(--puploader-pill-border, var(--color-border, #{$color-border}));
+    background: var(--puploader-pill-bg, var(--color-surface-muted, #{$neutral-100}));
+    overflow: hidden;
     pointer-events: auto;
-    padding: 0;
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.75rem;
+    border: none;
+    background: none;
+    color: var(--surface-card-color-text, #{$neutral-900});
+    cursor: pointer;
+
+    + .uploader__pill {
+      border-left: $border-width solid
+        var(
+          --puploader-pill-keyline,
+          var(--puploader-pill-border, var(--color-border, #{$color-border}))
+        );
+    }
 
     &:hover {
-      opacity: 1;
+      background: var(--color-hover, rgba(0, 0, 0, 0.05));
+    }
+
+    &--delete:hover {
+      color: var(--color-danger, #{$error-dark});
+    }
+
+    /* The button that carries the action out is filled, the one that backs out is not */
+    &--save {
+      background: var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+      color: var(--button-primary-color, var(--color-accent-contrast, #ffffff));
+
+      &:hover {
+        background: color-mix(
+          in srgb,
+          var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark})) 85%,
+          black
+        );
+      }
+    }
+
+    &--danger {
+      background: var(--button-danger-bg, var(--color-danger, #{$error-dark}));
+      color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
+
+      &:hover {
+        background: var(
+          --button-danger-hover-bg,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
+        color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
+      }
     }
   }
 
@@ -232,45 +326,78 @@ input {
     gap: $space-sm;
     justify-content: flex-end;
     padding-left: $space-sm;
+
+    /* A row of buttons is spaced; a pill group is joined, so it keeps its own spacing */
+    &.uploader__pills {
+      gap: 0;
+    }
   }
 
+  /* The buttons and fields follow the design system's button and form control tokens, so they
+     match every other component; each falls back to a light value without the package stylesheet */
   &__btn {
-    padding: $space-sm $space-lg;
-    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-    background: var(--color-surface, #ffffff);
-    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-sm;
+    padding: var(--button-padding-y, #{$space-sm}) var(--button-padding-x, #{$space-lg});
+    min-height: var(--button-min-height, 2.5em);
+    border: var(--button-border-width, #{$border-width}) solid
+      var(--button-secondary-border, var(--color-border-strong, #{$neutral-300}));
+    border-radius: var(--button-border-radius, var(--surface-button-radius, #{$radius-sm}));
+    background: var(--button-secondary-bg, transparent);
+    color: var(--button-secondary-color, currentColor);
+    font-family: inherit;
+    font-size: var(--button-font-size, #{$font-sm});
+    font-weight: var(--button-font-weight, #{$font-semibold});
     cursor: pointer;
-    font-size: $font-sm;
     transition: all $duration-fast;
     pointer-events: auto;
     flex-shrink: 0;
 
     &:hover {
-      background: var(--color-surface-muted, #{$neutral-100});
+      background: var(--button-secondary-hover-bg, var(--color-surface-muted, #{$neutral-100}));
+      border-color: var(
+        --button-secondary-hover-border,
+        var(--color-border-strong, #{$neutral-300})
+      );
     }
 
-    &--secondary {
-      background: transparent;
-      border-color: currentColor;
+    &:disabled {
+      opacity: $opacity-disabled;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     &--delete {
-      color: var(--color-danger, #{$error-dark});
-      border-color: var(--color-danger, #{$error-dark});
+      border-color: var(--button-danger-border, var(--color-danger, #{$error-dark}));
+      background: var(--button-danger-bg, var(--color-danger, #{$error-dark}));
+      color: var(--button-danger-color, var(--color-danger-contrast, #ffffff));
 
       &:hover {
-        background: var(--color-danger-bg, #{$color-error-bg});
+        border-color: var(
+          --button-danger-hover-border,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
+        background: var(
+          --button-danger-hover-bg,
+          color-mix(in srgb, var(--color-danger, #{$error-dark}) 85%, black)
+        );
       }
     }
 
     /* Filled with the stronger accent so the label meets 4.5:1 */
     &--primary {
-      background: var(--color-accent-hover, #{$primary-dark});
-      color: var(--color-accent-contrast, #ffffff);
-      border-color: var(--color-accent-hover, #{$primary-dark});
+      border-color: var(--button-primary-hover-border, var(--color-accent-hover, #{$primary-dark}));
+      background: var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+      color: var(--button-primary-color, var(--color-accent-contrast, #ffffff));
 
       &:hover {
-        background: color-mix(in srgb, var(--color-accent-hover, #{$primary-dark}) 85%, black);
+        background: color-mix(
+          in srgb,
+          var(--button-primary-hover-bg, var(--color-accent-hover, #{$primary-dark})) 85%,
+          black
+        );
       }
     }
   }
@@ -278,16 +405,28 @@ input {
   &__input,
   &__textarea {
     flex: 1 0 auto;
-    height: 100%;
-    padding: $space-sm;
-    border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-    background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-    color: var(--surface-control-color-text, currentColor);
+    padding: var(--form-control-padding-y, #{$space-sm}) var(--form-control-padding-x, #{$space-md});
+    border: var(--form-control-border-width, #{$border-width}) solid
+      var(--form-control-border-color, var(--color-control-border, #{$color-control-border}));
+    border-radius: var(--form-control-border-radius, var(--surface-control-radius, #{$radius-sm}));
+    background: var(--form-control-bg, var(--surface-control-color-bg, var(--color-surface, #fff)));
+    color: var(--form-control-color, var(--surface-control-color-text, #{$neutral-900}));
     margin: 0;
-    font-family: inherit;
-    font-size: $font-sm;
+    font-family: var(--form-control-font-family, inherit);
+    font-size: var(--form-control-font-size, #{$font-sm});
     pointer-events: auto;
-    outline: 0 none;
+
+    &:hover {
+      border-color: var(
+        --form-control-hover-border-color,
+        var(--color-text-muted, #{$neutral-600})
+      );
+    }
+
+    &::placeholder {
+      color: var(--form-control-placeholder-color, var(--color-text-muted, #{$color-text-muted}));
+      opacity: 1;
+    }
   }
 
   &__textarea {
@@ -296,12 +435,15 @@ input {
   }
 }
 
+.uploader__field {
+  display: contents;
+}
+
 .field {
+  /* The same quiet label as the form's, so the two panels line up as one reads over the other */
   &__label {
-    opacity: $opacity-muted;
-    font-weight: $font-semibold;
-    font-size: $font-sm;
-    flex: 0 0 4rem;
+    color: var(--color-text-muted, #{$color-text-muted});
+    font-size: 0.8em;
   }
 
   &__value {
@@ -317,7 +459,7 @@ input {
 }
 
 .error-message {
-  color: var(--color-danger, #{$error-dark});
+  color: var(--color-danger-text, #b91c1c);
   background: var(--color-danger-bg, #{$color-error-bg});
   padding: $space-md;
   font-size: $font-sm;
@@ -327,65 +469,77 @@ slot {
   display: none;
 }
 
-.uploader__edit {
-  height: $size-icon-md;
-  padding: 0;
-  font: inherit;
-  font-size: $font-sm;
-  color: inherit;
-  background: none;
-  border: none;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
-}
-
-.uploader__dialog {
-  width: min(32rem, calc(100vw - 2rem));
-  padding: $space-lg;
-  border: $border-width solid var(--color-border-strong, #{$color-border-hover});
-  background: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
-  color: inherit;
-
-  &::backdrop {
-    background: rgba(0, 0, 0, 0.4);
-  }
-
-  .uploader__heading {
-    height: auto;
-    margin: 0;
-    padding: 0;
-  }
-
-  .uploader__actions {
-    padding-left: 0;
-  }
-}
-
 .uploader__form {
   display: flex;
   flex-direction: column;
   gap: $space-md;
+  padding-bottom: $space-sm;
+
+  /* The fields take the room, the pill sits at the end of the row, centred against them */
+  flex-direction: row;
+  align-items: center;
+  gap: var(--puploader-preview-gap, 1rem);
+
+  .uploader__edit-body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .uploader__actions {
+    align-self: center;
+    padding-left: 0;
+    flex-shrink: 0;
+  }
 }
 
-.uploader__dialog-field {
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
+/* The confirmation asks at the top and answers along the bottom, one button at each end */
+[data-panel='delete'] .uploader__alert {
+  align-items: center;
+  justify-content: space-between;
+  padding-block: $space-md;
+}
 
+[data-panel='delete'] .uploader__actions {
+  align-self: center;
+  padding-left: 0;
+}
+
+/* Label beside field, the fields growing to fill the row, spaced like the card's own edge */
+.uploader__edit-fields {
+  display: grid;
+  grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
+  row-gap: var(--puploader-field-gap, #{$space-sm});
+  column-gap: var(--puploader-preview-gap, 1rem);
+  /* The label sits at the top of its cell, on the same baseline as the field's first line */
+  align-items: baseline;
+}
+
+.uploader__edit-field {
+  display: contents;
+}
+
+.uploader__edit-field {
+  /* Quiet labels, like the quick dates in the date picker */
   .field__label {
     flex: none;
     opacity: 1;
+    color: var(--color-text-muted, #{$color-text-muted});
+    font-size: 0.8em;
+    font-weight: inherit;
   }
 
   .uploader__input,
   .uploader__textarea {
     flex: none;
+    width: 100%;
     height: auto;
   }
 }
 
-.uploader__dialog-message {
+.uploader__edit-message {
   margin: 0;
   color: var(--color-danger, #{$error-dark});
   font-size: $font-sm;
@@ -405,10 +559,29 @@ textarea:focus-visible {
 .uploader__toolbar {
   display: flex;
   align-items: center;
-  align-self: flex-start;
+  align-self: center;
   gap: $space-xs;
   flex-shrink: 0;
   margin-left: $space-sm;
+}
+
+/* Reordering is a drag for pointer users, so the arrows stay out of the way until someone reaches
+   the card with a keyboard. They keep their place in the tab order while hidden. */
+.uploader__move {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:host([data-focus-source='keyboard']:focus-within) .uploader__move {
+  position: static;
+  width: auto;
+  height: $size-icon-md;
+  overflow: visible;
+  clip-path: none;
 }
 
 .uploader__move,

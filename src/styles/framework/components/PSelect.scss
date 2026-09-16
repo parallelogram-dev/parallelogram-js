@@ -23,8 +23,10 @@
   );
   --select-focus-color: var(--color-accent, #{$primary});
   --select-bg: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-  --select-text: var(--surface-control-color-text, #{$color-text});
+  --select-text: var(--surface-control-color-text, #{$neutral-900});
   --select-placeholder: var(--color-text-muted, #{$color-text-muted});
+  --select-description-color: var(--color-text-muted, #{$color-text-muted});
+  --select-image-size: 1.5rem;
 
   --select-hover-bg: var(--surface-dropdown-item-hover-bg, var(--color-hover, #{$neutral-100}));
   --select-selected-bg: var(--surface-dropdown-item-selected-bg, rgba(59, 130, 246, 0.1));
@@ -35,8 +37,8 @@
 
   --select-padding: 0.45rem 0.6rem;
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
-  --select-border: var(--surface-control-border-width, #{$border-width}) solid
-    var(--select-border-color);
+  --select-border-width: var(--surface-control-border-width, #{$border-width});
+  --select-border: var(--select-border-width) solid var(--select-border-color);
 
   --menu-border-radius: var(--surface-dropdown-radius, #{$radius-sm});
   --menu-border-color: var(--surface-dropdown-border-color, var(--color-border, #{$color-border}));
@@ -91,6 +93,15 @@
   color: inherit;
   font: inherit;
   padding: 0;
+
+  /* A click anywhere on a closed control opens the list rather than placing a caret */
+  cursor: inherit;
+}
+
+/* Typing filters the options once the list is open, so the input becomes a search box */
+/* Only a search box takes a text cursor; a chosen value is read-only until it is cleared */
+.control[data-open] .input:not(:read-only) {
+  cursor: text;
 }
 
 .input::placeholder {
@@ -98,25 +109,74 @@
   opacity: 1;
 }
 
+.clear {
+  all: unset;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.search {
+  pointer-events: none;
+}
+
+/* One slot before the chevron, holding whichever of the two applies, so neither swap moves
+   anything: the clear button when there is a value to remove, the search icon otherwise */
+.search,
+.clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: auto;
+  color: var(--select-placeholder);
+}
+
+/* The display above is more specific than the browser's own rule for the hidden attribute */
+.search[hidden],
+.clear[hidden] {
+  display: none;
+}
+
+.clear:hover {
+  background: var(--select-hover-bg);
+  color: var(--select-text);
+}
+
+.clear:focus-visible {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 1px;
+}
+
+/* Laid out as a flex box, since an inline icon sits on the text baseline with the descender space
+   below it rather than in the middle. The chevron is drawn inside a quarter of the 20px icon on
+   either side, so the negative margin pulls that 5px back out and leaves the gap the control's own
+   padding asks for */
 .arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   transition: transform 0.15s ease;
   user-select: none;
   flex-shrink: 0;
   margin-left: auto;
+  margin-right: -5px;
 }
 
 .control[data-open] .arrow {
   transform: rotate(180deg);
 }
 
+/* Flush with the outside of the control's border, not inset by it */
 .menu {
   position: absolute;
   z-index: #{$z-dropdown};
-  left: 0;
-  right: 0;
+  left: calc(-1 * var(--select-border-width));
+  right: calc(-1 * var(--select-border-width));
   top: 100%;
-  margin-top: 0.25rem;
+  margin-top: calc(0.25rem + var(--select-border-width));
 
   /* Use surface-dropdown tokens */
   background: var(--menu-bg);
@@ -130,22 +190,58 @@
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.45rem 0.6rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+}
+
+/* A thumbnail has its size before it loads, so the list doesn't reflow as images arrive; it is
+   no taller than a line of text, so an option with one is as tall as an option without */
+.image {
+  flex-shrink: 0;
+  width: var(--select-image-size);
+  height: var(--select-image-size);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.text {
+  min-width: 0;
+}
+
+.secondary {
+  color: var(--color-text-muted, #{$color-text-muted});
+  font-weight: 400;
+}
+
+.description {
+  display: block;
+  color: var(--select-description-color);
+  font-size: 0.85em;
+  font-weight: 400;
 }
 
 .option:hover {
   background: var(--select-hover-bg);
 }
 
+.option[data-active] {
+  background: var(--select-current-bg);
+}
+
+/* The arrow keys' place in the list is marked for the people using them; a pointer user doesn't
+   need it, and it would sit around the chosen option the moment the list opened */
+:host([data-focus-source='keyboard']) .option[data-active] {
+  outline: 2px solid var(--select-active-outline, var(--color-accent-hover, #2563eb));
+  outline-offset: -2px;
+}
+
 .option[aria-selected='true'] {
   background: var(--select-selected-bg);
   font-weight: 500;
-}
-
-.option[data-active] {
-  background: var(--select-current-bg);
 }
 
 .group-label {
@@ -179,9 +275,8 @@
 
 .noresults {
   padding: 0.6rem;
-  font-style: italic;
   text-align: center;
-  opacity: 0.6;
+  color: var(--select-placeholder);
 }
 
 /* Forced colours drop the option backgrounds, so mark the states with system colours */

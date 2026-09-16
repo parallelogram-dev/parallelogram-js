@@ -3,6 +3,7 @@ import '../../../src/components/PSelect.js';
 import '../../../src/components/PDatetime.js';
 import '../../../src/components/PModal.js';
 import datatableStyles from '../../../src/styles/framework/components/datatable.scss';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 import mixinStyles from '../fixtures/focus-mixins.scss';
 
 const outlineOf = element => {
@@ -95,5 +96,29 @@ describe('focus indicators', () => {
       ['.reset', true],
       ['.control', true],
     ]);
+  });
+
+  it('hides the ring on its own elements after pointer input, and leaves the page alone', () => {
+    const style = addStyles(frameworkStyles);
+    cleanups.push(() => style.remove());
+    const pageStyle = addStyles('.page-button:focus { outline: 3px solid green }');
+    cleanups.push(() => pageStyle.remove());
+    const table = document.createElement('table');
+    table.setAttribute('data-datatable', '');
+    const inside = document.createElement('button');
+    table.append(inside);
+    const page = document.createElement('button');
+    page.className = 'page-button';
+    document.body.append(table, page);
+    document.documentElement.dataset.focusSource = 'pointer';
+    cleanups.push(() => {
+      delete document.documentElement.dataset.focusSource;
+    });
+
+    inside.focus();
+    const frameworkRing = visible(outlineOf(inside));
+    page.focus();
+
+    expect([frameworkRing, visible(outlineOf(page))]).toEqual([false, true]);
   });
 });

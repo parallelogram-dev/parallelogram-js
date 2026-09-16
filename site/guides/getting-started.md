@@ -251,7 +251,7 @@ Enhancement components that need styles use a document stylesheet. Import the pa
 @import '@parallelogram-js/core/styles/tabs.css';
 ```
 
-The component stylesheets are `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and the design tokens below. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
+The component stylesheets are `accordion.css`, `datatable.css`, `lazysrc.css`, `lightbox.css`, `reveal.css`, `tabs.css`, `toasts.css` and `toggle.css`. The package stylesheet contains all of them, focus outlines for framework components, and the design tokens below. Web components inherit these tokens through their shadow roots and carry their own fallbacks, so they render without them.
 
 ### Design tokens
 
@@ -275,6 +275,7 @@ Colours come from a small set of roles, and the surface, form control, button an
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `--color-accent`, `--color-accent-hover`                                    | Primary buttons, focus rings and focused field borders, and selected options  |
 | `--color-accent-contrast`                                                   | Text on the accent                                                            |
+| `--color-text`                                                              | Text on surfaces: the page's own colour in light mode, a light grey in dark   |
 | `--color-text-muted`                                                        | Placeholders and secondary text                                               |
 | `--color-surface`, `--color-surface-muted`                                  | Backgrounds of fields, panels, dialogs and dropdowns, and quieter areas       |
 | `--color-hover`                                                             | Tint behind hovered items                                                     |
@@ -287,7 +288,7 @@ Colours come from a small set of roles, and the surface, form control, button an
 | `--color-success-strong`, `--color-warning-strong`, `--color-danger-strong` | Solid status fills, such as success, warning and error toasts                 |
 | `--color-on-status`                                                         | Text on the solid status fills                                                |
 
-Text colour isn't a role: surfaces inherit it from the page.
+In light mode `--color-text` is `currentColor`, so surfaces keep inheriting the page's text colour and nothing changes for a page that sets its own. The dark theme gives it a real value, so panels, dialogs and fields carry readable text even on a page that has no dark styles of its own.
 
 The dark theme redefines only the roles. It applies when the operating system prefers a dark colour scheme, and `data-theme` on `<html>` forces either theme: `data-theme="dark"` always uses it, and `data-theme="light"` never does. Set roles for the dark theme in the same places.
 
@@ -307,7 +308,9 @@ The dark theme redefines only the roles. It applies when the operating system pr
 }
 ```
 
-Set roles on `:root`. The surface properties read them there, so a role set on an element further down the page doesn't reach them. The stylesheet doesn't set `color-scheme` or the page's own text and background colours, so set `color-scheme: light dark`, or match it to `data-theme`, and style the page to match.
+Set roles on `:root`. The surface properties read them there, so a role set on an element further down the page doesn't reach them.
+
+The stylesheet sets `color-scheme` to match the theme, so the browser's own canvas, text and form controls follow it. A page that wants to decide this itself can set `color-scheme` after the stylesheet. The stylesheet still doesn't set the page's background and text colours, so style the page to match the theme, or let the browser's own colours show through.
 
 Properties for one component, such as `--modal-panel-bg` or `--toggle-transition-duration`, are listed under CSS custom properties on that component's page.
 

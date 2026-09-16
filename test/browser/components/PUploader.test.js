@@ -95,8 +95,8 @@ describe('p-uploader', () => {
     const shadow = file.shadowRoot;
 
     shadow.querySelector('button[data-action="edit"]').click();
-    shadow.querySelector('dialog [name="caption"]').value = PAYLOAD;
-    shadow.querySelector('dialog [data-action="save"]').click();
+    shadow.querySelector('[data-panel="edit"] [name="caption"]').value = PAYLOAD;
+    shadow.querySelector('[data-panel="edit"] [data-action="save"]').click();
 
     await vi.waitFor(() => expect(shadow.querySelector('.field__value').textContent).toBe(PAYLOAD));
     expect(shadow.querySelectorAll('img')).toHaveLength(1);
@@ -119,8 +119,8 @@ describe('p-uploader', () => {
     const shadow = file.shadowRoot;
 
     shadow.querySelector('button[data-action="edit"]').click();
-    shadow.querySelector('dialog [name="caption"]').value = 'New caption';
-    shadow.querySelector('dialog [data-action="save"]').click();
+    shadow.querySelector('[data-panel="edit"] [name="caption"]').value = 'New caption';
+    shadow.querySelector('[data-panel="edit"] [data-action="save"]').click();
 
     await expect(updated).resolves.toEqual([
       true,
@@ -128,13 +128,13 @@ describe('p-uploader', () => {
     ]);
   });
 
-  it('labels the delete dialog with its own heading even when the filename has quotes', async () => {
+  it('labels the delete panel with its own heading even when the filename has quotes', async () => {
     const file = element('p-uploader-file', { filename: 'say "cheese".jpg' });
     document.body.append(file);
     await nextTask();
 
-    const dialog = file.shadowRoot.querySelector('[data-panel="delete"]');
-    const heading = file.shadowRoot.getElementById(dialog.getAttribute('aria-labelledby'));
+    const panel = file.shadowRoot.querySelector('[data-panel="delete"]');
+    const heading = file.shadowRoot.getElementById(panel.getAttribute('aria-labelledby'));
     expect(heading?.textContent).toBe('Delete this file?');
   });
 
@@ -213,10 +213,18 @@ const addFiles = (uploader, files) => {
 const fileIds = uploader =>
   [...uploader.querySelectorAll('p-uploader-file')].map(file => file.getAttribute('file-id'));
 
-const drag = (type, target, dataTransfer) =>
-  target.dispatchEvent(
+const drag = (type, target, dataTransfer) => {
+  /* A real drag is preceded by the press that started it, which is what says where it began */
+  if (type === 'dragstart') {
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+  }
+  return target.dispatchEvent(
     new DragEvent(type, { bubbles: true, composed: true, cancelable: true, dataTransfer })
   );
+};
+
+/* Drags start on the thumbnail: it is the handle, so a press elsewhere stays a click */
+const handleOf = file => file.shadowRoot.querySelector('[part~="preview"]');
 
 describe('p-uploader host', () => {
   beforeEach(() => {
@@ -244,11 +252,134 @@ describe('p-uploader host', () => {
   const reorder = uploader => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
     const transfer = new DataTransfer();
-    drag('dragstart', first, transfer);
+    drag('dragstart', handleOf(first), transfer);
     drag('dragenter', second, transfer);
     drag('drop', second, transfer);
     drag('dragend', first, transfer);
   };
+
+  it('keeps the delete confirmation open when it is asked for just after an upload finishes', async () => {
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'delete-action': '/api/delete',
+    });
+    addFiles(uploader, [new File(['x'], 'harbour.txt', { type: 'text/plain' })]);
+    const file = await vi.waitFor(() => {
+      const added = uploader.querySelector('p-uploader-file[state="uploaded"]');
+      expect(added).not.toBeNull();
+      return added;
+    });
+
+    /* The card switches itself to the info panel shortly after an upload finishes */
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    expect(file.getAttribute('data-current-panel')).toBe('delete');
+  });
+
+  it('keeps a delete confirmation open when the card settles its state again underneath', async () => {
+    const uploader = await renderUploader({
+      'upload-action': '/api/upload',
+      'delete-action': '/api/delete',
+    });
+    addFiles(uploader, [new File(['x'], 'harbour.txt', { type: 'text/plain' })]);
+    const file = await vi.waitFor(() => {
+      const added = uploader.querySelector('p-uploader-file[state="uploaded"]');
+      expect(added).not.toBeNull();
+      return added;
+    });
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    /* Anything that sets the state again schedules the card's own switch back to the details */
+    file.setAttribute('state', 'uploaded');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    expect(file.getAttribute('data-current-panel')).toBe('delete');
+  });
+
+  it('pushes the details up for the confirmation and brings them back down on cancel', async () => {
+    const uploader = await renderUploader({ 'delete-action': '/api/delete' }, ['first', 'second']);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    const info = file.shadowRoot.querySelector('[data-panel="info"]');
+    const settle = () => {
+      info.getAnimations().forEach(animation => animation.finish());
+      return Math.round(new DOMMatrix(getComputedStyle(info).transform).m42);
+    };
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    const whileConfirming = settle();
+    file.shadowRoot.querySelector('[data-panel="delete"] [data-action="cancel"]').click();
+
+    /* Negative is up: the details wait above the confirmation, not below it */
+    expect([whileConfirming < 0, settle()]).toEqual([true, 0]);
+  });
+
+  it('lines the delete confirmation up with the card, even though focus moves into it', async () => {
+    const uploader = await renderUploader({ 'delete-action': '/api/delete' }, ['first', 'second']);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    const content = file.shadowRoot.querySelector('.uploader__content');
+
+    file.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    /* Focus lands on Cancel while its panel is still out of view, which scrolls the clipped box
+       the panels are stacked in unless the component puts it back */
+    const panel = file.shadowRoot.querySelector('[data-panel="delete"]');
+    panel.getAnimations().forEach(animation => animation.finish());
+    expect([
+      content.scrollTop,
+      Math.round(panel.getBoundingClientRect().top - content.getBoundingClientRect().top),
+    ]).toEqual([0, 0]);
+  });
+
+  it('shows the dragged file as a chip that follows the cursor', async () => {
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [file] = uploader.querySelectorAll('p-uploader-file');
+    file.setAttribute('filename', 'harbour.jpg');
+    file.setAttribute('preview', 'images/harbour.jpg');
+    const transfer = new DataTransfer();
+    let handedToBrowser = null;
+    transfer.setDragImage = element => {
+      handedToBrowser = element.tagName;
+    };
+
+    drag('dragstart', file.shadowRoot.querySelector('[part~="preview"]'), transfer);
+    const chip = uploader.shadowRoot.querySelector('[part~="drag-chip"]');
+    document.dispatchEvent(new DragEvent('dragover', { bubbles: true, clientX: 120, clientY: 80 }));
+    const moved = chip.style.transform;
+    drag('dragend', file, transfer);
+
+    expect([
+      chip.textContent,
+      chip.querySelector('img')?.getAttribute('src'),
+      /* The browser is given a blank picture of its own, so only the chip shows */
+      handedToBrowser,
+      moved,
+      uploader.shadowRoot.querySelector('[part~="drag-chip"]'),
+    ]).toEqual(['harbour.jpg', 'images/harbour.jpg', 'IMG', 'translate(132px, 60px)', null]);
+  });
+
+  it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    const before = fileIds(uploader);
+    const moveButton = first.shadowRoot.querySelector('[data-action="move-down"]');
+    const transfer = new DataTransfer();
+
+    /* A press on a button that the browser turns into a drag of the card beneath it */
+    drag('dragstart', moveButton, transfer);
+    drag('dragenter', second, transfer);
+    drag('drop', second, transfer);
+    drag('dragend', moveButton, transfer);
+
+    expect(fileIds(uploader)).toEqual(before);
+  });
 
   it('opens the file picker from a button keyboard users can reach', async () => {
     const uploader = await renderUploader({ 'upload-action': '/api/upload' });
@@ -408,9 +539,10 @@ describe('p-uploader host', () => {
           getComputedStyle(uploader).backgroundColor,
           getComputedStyle(uploader).borderTopColor,
           getComputedStyle(selector).backgroundColor,
-          getComputedStyle(selector).borderTopColor,
+          getComputedStyle(selector).color,
           getComputedStyle(file).backgroundColor,
-          getComputedStyle(file).borderTopColor,
+          /* The cards carry no border of their own; the list's gap separates them */
+          getComputedStyle(file).borderTopStyle,
           getComputedStyle(panel).backgroundColor,
         ];
       };
@@ -419,10 +551,10 @@ describe('p-uploader host', () => {
         expect(colours()).toEqual([
           'rgb(23, 29, 38)',
           'rgba(255, 255, 255, 0.14)',
-          'rgb(32, 39, 51)',
-          'rgb(58, 67, 80)',
+          'color(srgb 0.376471 0.647059 0.980392 / 0.08)',
+          'rgb(147, 197, 253)',
           'rgb(23, 29, 38)',
-          'rgb(58, 67, 80)',
+          'none',
           'rgb(23, 29, 38)',
         ])
       );
@@ -485,7 +617,7 @@ describe('p-uploader host', () => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
     const transfer = new DataTransfer();
 
-    drag('dragstart', first, transfer);
+    drag('dragstart', handleOf(first), transfer);
     drag('dragenter', second, transfer);
     drag('dragend', first, transfer);
     await nextTask();
@@ -560,7 +692,7 @@ describe('p-uploader-file', () => {
     expect(labels).toEqual(['Title']);
   });
 
-  it('edits every field in one dialog and saves only the changed ones', async () => {
+  it('edits every field in one panel and saves only the changed ones', async () => {
     const save = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', save);
     const { shadow } = await renderCard({
@@ -573,15 +705,15 @@ describe('p-uploader-file', () => {
     });
 
     shadow.querySelector('button[data-action="edit"]').click();
-    const dialog = shadow.querySelector('dialog');
+    const panel = shadow.querySelector('[data-panel="edit"]');
     const opened = [
-      dialog?.open,
-      [...(dialog?.querySelectorAll('[name]') ?? [])].map(control => control.name),
+      panel?.classList.contains('uploader__panel--show'),
+      [...(panel?.querySelectorAll('[name]') ?? [])].map(control => control.name),
     ];
-    dialog.querySelector('[name="caption"]').value = 'Fishing boats';
-    dialog.querySelector('button[data-action="save"]').click();
+    panel.querySelector('[name="caption"]').value = 'Fishing boats';
+    panel.querySelector('button[data-action="save"]').click();
 
-    await vi.waitFor(() => expect(dialog.open).toBe(false));
+    await vi.waitFor(() => expect(panel.inert).toBe(true));
     expect({
       opened,
       saves: save.mock.calls.map(([, init]) => JSON.parse(init.body)),
@@ -593,7 +725,7 @@ describe('p-uploader-file', () => {
     });
   });
 
-  it('returns focus to the edit button when the dialog is cancelled', async () => {
+  it('returns focus to the edit button when the edit panel is cancelled', async () => {
     const { shadow } = await renderCard({
       attributes: { 'update-action': '/api/update' },
       fields: [['title', 'Title']],
@@ -603,12 +735,92 @@ describe('p-uploader-file', () => {
 
     edit.focus();
     edit.click();
-    shadow.querySelector('dialog button[data-action="cancel"]').click();
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
 
-    expect([shadow.querySelector('dialog').open, shadow.activeElement === edit]).toEqual([
-      false,
+    expect([
+      shadow.querySelector('[data-panel="edit"]').inert,
+      shadow.activeElement === edit,
+    ]).toEqual([true, true]);
+  });
+
+  it('slides the edit panel in over the details and back out again', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+    const info = shadow.querySelector('[data-panel="info"]');
+    const edit = shadow.querySelector('[data-panel="edit"]');
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    const opened = [edit.inert, info.inert];
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
+
+    expect({ opened, closed: [edit.inert, info.inert] }).toEqual({
+      opened: [false, true],
+      closed: [true, false],
+    });
+  });
+
+  it('moves focus into the edit panel when it opens', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+
+    shadow.querySelector('button[data-action="edit"]').click();
+
+    expect([
+      shadow.activeElement?.name,
+      Boolean(shadow.activeElement?.closest('[data-panel="edit"]')),
+    ]).toEqual(['title', true]);
+  });
+
+  it('cancels the edit panel when Escape is pressed', async () => {
+    const { file, shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [['title', 'Title']],
+      data: { title: 'Harbour at dawn' },
+    });
+    const editButton = shadow.querySelector('button[data-action="edit"]');
+
+    editButton.click();
+    shadow.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true })
+    );
+
+    expect([file.getAttribute('data-current-panel'), shadow.activeElement === editButton]).toEqual([
+      'info',
       true,
     ]);
+  });
+
+  it('takes the depth of the edit form while it is open, and its own again after', async () => {
+    const { shadow } = await renderCard({
+      attributes: { 'update-action': '/api/update' },
+      fields: [
+        ['title', 'Title'],
+        ['caption', 'Caption', 'textarea'],
+        ['credit', 'Credit'],
+        ['notes', 'Notes', 'textarea'],
+      ],
+      data: { title: 'Harbour at dawn', caption: 'Boats' },
+    });
+    const content = shadow.querySelector('.uploader__content');
+    const panel = shadow.querySelector('[data-panel="edit"]');
+    const details = shadow.querySelector('[data-panel="info"]');
+    const height = () => Math.round(content.getBoundingClientRect().height);
+    /* Whichever panel is on show says how deep the card is, so neither is ever cropped */
+    await vi.waitFor(() => expect(height()).toBe(details.scrollHeight));
+    const closed = height();
+
+    shadow.querySelector('button[data-action="edit"]').click();
+    await vi.waitFor(() => expect(height()).toBe(panel.scrollHeight));
+    const open = height();
+    shadow.querySelector('[data-panel="edit"] button[data-action="cancel"]').click();
+
+    await vi.waitFor(() => expect([open > closed, height()]).toEqual([true, closed]));
   });
 
   it('exposes parts for styling and does not render the filename as a heading', async () => {
@@ -618,9 +830,16 @@ describe('p-uploader-file', () => {
       data: { title: 'Harbour at dawn' },
     });
 
-    const parts = ['preview', 'filename', 'fields', 'field', 'actions', 'panel', 'progress'].filter(
-      part => !shadow.querySelector(`[part~="${part}"]`)
-    );
+    const parts = [
+      'preview',
+      'filename',
+      'fields',
+      'field',
+      'actions',
+      'panel',
+      'edit-panel',
+      'progress',
+    ].filter(part => !shadow.querySelector(`[part~="${part}"]`));
     expect([parts, shadow.querySelector('[part~="filename"]')?.localName]).toEqual([[], 'p']);
   });
 

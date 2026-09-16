@@ -157,8 +157,17 @@ pre {
 }
 
 .site-header__link {
+  display: inline-flex;
   margin-left: auto;
   color: var(--site-muted);
+
+  &:hover {
+    color: inherit;
+  }
+
+  svg {
+    display: block;
+  }
 }
 
 .site {
@@ -433,9 +442,11 @@ pre {
   }
 
   .form {
+    --form-label-width: 7rem;
+    --form-gap: 0.75rem;
     display: grid;
-    gap: 0.5rem;
-    max-width: 24rem;
+    gap: var(--form-gap);
+    max-width: 32rem;
 
     label {
       font-size: 0.9rem;
@@ -446,6 +457,40 @@ pre {
       margin: 0;
       color: #b42318;
       font-size: 0.85rem;
+    }
+  }
+
+  .form__group {
+    display: grid;
+    grid-template-columns: var(--form-label-width) minmax(0, 1fr);
+    gap: 0.25rem var(--form-gap);
+    align-items: start;
+  }
+
+  /* Sits on the first line of the control beside it, which has this much padding and border */
+  .form__label {
+    padding-block: calc(0.45rem + 1px);
+    font-size: 0.9rem;
+  }
+
+  .form__control {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .form__actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-left: calc(var(--form-label-width) + var(--form-gap));
+  }
+
+  .form--stacked {
+    .form__group {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .form__actions {
+      padding-left: 0;
     }
   }
 

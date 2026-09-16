@@ -15,7 +15,7 @@
      backdrop is the page surface at 95%: white in light mode, the dark surface in dark mode */
   --modal-backdrop-bg: color-mix(in srgb, var(--color-surface, #ffffff) 95%, transparent);
   --modal-panel-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
-  --modal-panel-color: var(--surface-dialog-color-text, #{$color-text});
+  --modal-panel-color: var(--surface-dialog-color-text, #{$neutral-900});
   --modal-panel-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
   --modal-header-bg: var(--surface-dialog-color-bg, var(--color-surface, #ffffff));
   --modal-header-border: var(--surface-dialog-border-color, var(--color-border, #{$color-border}));
@@ -188,8 +188,6 @@
   height: var(--modal-close-size);
   border-radius: var(--modal-radius);
   cursor: pointer;
-  font-size: var(--modal-font-md);
-  font-weight: bold;
 }
 
 .modal__close:hover {

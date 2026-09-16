@@ -1,5 +1,6 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { createElement, generateId } from '../utils/dom-utils.js';
+import { arrowDown, arrowUp, iconElement, selector } from '../utils/icons.js';
 
 /** Page numbers shown either side of the current page */
 const PAGE_WINDOW = 2;
@@ -91,10 +92,11 @@ export class DataTable extends BaseComponent {
       nextText: 'Next',
       nextLabel: 'Next page',
       pageLabel: 'Page {page}',
+      /* Icons from the shared set; a page can pass text instead */
       sortIcons: {
-        unsorted: '↕',
-        asc: '↑',
-        desc: '↓',
+        unsorted: selector,
+        asc: arrowUp,
+        desc: arrowDown,
       },
     };
   }
@@ -290,7 +292,7 @@ export class DataTable extends BaseComponent {
       const icon = document.createElement('span');
       icon.className = 'sort-icon';
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = this.sortIcons.unsorted;
+      this._showSortIcon(icon, this.sortIcons.unsorted);
 
       const button = document.createElement('button');
       button.type = 'button';
@@ -404,7 +406,7 @@ export class DataTable extends BaseComponent {
       const active = key === column && direction;
       const icon = cell.querySelector('.sort-icon');
       if (icon) {
-        icon.textContent = active ? this.sortIcons[direction] : this.sortIcons.unsorted;
+        this._showSortIcon(icon, active ? this.sortIcons[direction] : this.sortIcons.unsorted);
       }
       if (active && state.config.sortable) {
         cell.setAttribute('aria-sort', direction === 'desc' ? 'descending' : 'ascending');
@@ -657,6 +659,20 @@ export class DataTable extends BaseComponent {
    * @param {string} column - The header's data-sort key
    * @param {'asc'|'desc'} [direction='asc']
    */
+  /**
+   * Put a sort icon in its cell: path data from the icon set is drawn, anything else is shown as text
+   *
+   * @param {HTMLElement} icon
+   * @param {string[]|string} value
+   */
+  _showSortIcon(icon, value) {
+    if (Array.isArray(value)) {
+      icon.replaceChildren(iconElement(value, { size: 'xs' }));
+    } else {
+      icon.textContent = value;
+    }
+  }
+
   sort(element, column, direction = 'asc') {
     const state = this.getState(element);
     if (!state?.tbody || !state.columns.some(item => item.key === column)) return;
