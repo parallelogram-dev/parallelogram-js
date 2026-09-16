@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-16
+
 ### Added
 
 - `<p-select>` pages a remote list. A `data-select-src` with `{page}` in it asks for page 1 and, for as long as the JSON answers `more: true`, asks for the next page when the list is scrolled to its end or the arrow keys reach the last option, adding the rows that arrive and keeping the highlight where it was; a new query starts again from page 1. `{limit}` in the URL is replaced by the new `data-select-limit`, 25 by default, so the page size is the page's to choose. The screen reader hears "N results available, more on the way" while there are more. A URL without `{page}` behaves as before, and an array response is still a single page. The documentation's customer search pages 25 at a time.
