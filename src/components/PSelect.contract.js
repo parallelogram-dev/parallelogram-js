@@ -206,5 +206,44 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         { attribute: 'data-select-open-on-focus' },
       ],
     },
+    {
+      id: 'long-list',
+      title: 'A long list',
+      description:
+        'Around a hundred options, loaded from a URL so the sample stays readable. The list scrolls once it outgrows its maximum height, typing narrows it and the arrow keys, Page Up and Page Down walk it. With `data-select-min="0"` the options arrive as soon as the list opens.',
+      markup: `<label for="delivery-suburb">Delivery suburb</label>
+<p-select
+  id="delivery-suburb"
+  name="suburb"
+  placeholder="Choose a suburb"
+  data-select-src="/api/places?q={q}"
+  data-select-min="0"
+></p-select>`,
+      controls: [
+        { attribute: 'placeholder' },
+        { attribute: 'data-select-min' },
+        { attribute: 'data-select-open-on-focus' },
+      ],
+    },
+    {
+      id: 'remote-search',
+      title: 'Searching a database',
+      description:
+        'The search runs on the server: each query is sent to `data-select-src` with `{q}` replaced by the typed text, and the options that come back replace the list. Type two characters to start a search, such as `nguyen` or `perth`, and the list shows its busy state while the request is out and "No results found" when nothing matches.',
+      markup: `<label for="customer">Customer</label>
+<p-select
+  id="customer"
+  name="customer"
+  placeholder="Search customers"
+  data-select-src="/api/directory?q={q}"
+  data-select-min="2"
+  data-select-debounce="300"
+></p-select>`,
+      controls: [
+        { attribute: 'placeholder' },
+        { attribute: 'data-select-min' },
+        { attribute: 'data-select-debounce' },
+      ],
+    },
   ],
 };
