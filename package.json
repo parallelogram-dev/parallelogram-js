@@ -25,6 +25,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",
+    "test:browser:local": "vitest run --config vitest.local.config.js",
     "test:watch": "vitest --project unit",
     "coverage": "vitest run --project unit --coverage",
     "prepack": "npm run build"
