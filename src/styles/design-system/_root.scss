@@ -28,6 +28,7 @@
   --color-danger: #{$error-dark};
   --color-danger-bg: #{$color-error-bg};
   --color-danger-contrast: #ffffff;
+  --color-danger-text: #b91c1c;
   --color-success: #{$success-dark};
   --color-success-bg: #{$color-success-bg};
   --color-warning: #{$warning-dark};
@@ -58,6 +59,7 @@
   --color-danger: #f87171;
   --color-danger-bg: rgba(248, 113, 113, 0.16);
   --color-danger-contrast: #1a0a0a;
+  --color-danger-text: #f87171;
   --color-success: #4ade80;
   --color-success-bg: rgba(74, 222, 128, 0.16);
   --color-warning: #fb923c;

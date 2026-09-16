@@ -85,7 +85,7 @@
 :where(.datatable__pagination button) {
   min-width: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--datatable-border-color, var(--color-border-strong, #d1d5db));
+  border: 1px solid var(--datatable-border-color, var(--color-control-border, rgba(0, 0, 0, 0.45)));
   border-radius: 4px;
   background: var(--datatable-button-bg, transparent);
   color: var(--datatable-button-color, inherit);
@@ -96,7 +96,10 @@
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
   background: var(--datatable-button-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)));
-  border-color: var(--datatable-button-hover-border-color, var(--color-border-strong, #d1d5db));
+  border-color: var(
+    --datatable-button-hover-border-color,
+    var(--color-control-border, rgba(0, 0, 0, 0.45))
+  );
 }
 
 :where(.datatable__pagination button:disabled) {
@@ -136,14 +139,10 @@
   font-size: 0.875em;
 }
 
-/* The theme sets its own default rather than the documented property, so a page setting
+/* The theme's own default, rather than the documented property, so a page setting
    --datatable-error-color on :root still wins in both themes */
 :root {
-  --datatable-error-default: #b91c1c;
-}
-
-@include dark-theme {
-  --datatable-error-default: var(--color-danger);
+  --datatable-error-default: var(--color-danger-text, #b91c1c);
 }
 
 /* State-based styling */
