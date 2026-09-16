@@ -4,6 +4,7 @@ import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { boolAttr, errorMessage } from '../utils/uploader.js';
 import { followFocusSource } from '../utils/focus-source.js';
+import { arrowDown, arrowUp, check, iconElement, pencil, trash, x } from '../utils/icons.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -14,6 +15,11 @@ import { followFocusSource } from '../utils/focus-source.js';
  * @param {string} [text]
  * @returns {HTMLElement}
  */
+const withIcon = (button, paths) => {
+  button.append(iconElement(paths, { size: 'sm' }));
+  return button;
+};
+
 const el = (tag, attributes = {}, text) => {
   const element = document.createElement(tag);
   for (const [name, value] of Object.entries(attributes)) {
@@ -61,25 +67,26 @@ const getFileTemplate = () => {
           <div data-panel="delete" class="uploader__panel" part="panel" role="group">
             <div class="uploader__alert">
               <h2 class="uploader__heading">Delete this file?</h2>
-              <div class="uploader__actions" part="actions">
-                <button type="button" class="uploader__btn uploader__btn--delete" data-action="confirm-delete" aria-label="Confirm delete">Delete</button>
-                <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel" aria-label="Cancel delete">Cancel</button>
+              <div class="uploader__actions uploader__pills" part="actions pills">
+                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel delete"></button>
+                <button type="button" class="uploader__pill uploader__pill--danger" data-action="confirm-delete" title="Delete" aria-label="Confirm delete"></button>
               </div>
             </div>
           </div>
+          <div data-panel="edit" class="uploader__panel uploader__panel--edit" part="panel edit-panel" role="group">
+            <form class="uploader__form" aria-label="Edit details">
+              <div class="uploader__edit-body">
+                <div class="uploader__edit-fields"></div>
+                <p class="uploader__edit-message" role="alert"></p>
+              </div>
+              <div class="uploader__actions uploader__pills" part="actions pills">
+                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel editing"></button>
+                <button type="submit" class="uploader__pill uploader__pill--save" data-action="save" title="Save" aria-label="Save details"></button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-      <dialog class="uploader__dialog" part="dialog" aria-labelledby="details-heading">
-        <form class="uploader__form" method="dialog">
-          <h2 class="uploader__heading" id="details-heading">Edit details</h2>
-          <div class="uploader__dialog-fields"></div>
-          <p class="uploader__dialog-message" role="alert"></p>
-          <div class="uploader__actions" part="actions">
-            <button type="submit" class="uploader__btn uploader__btn--primary" data-action="save">Save</button>
-            <button type="button" class="uploader__btn uploader__btn--secondary" data-action="cancel">Cancel</button>
-          </div>
-        </form>
-      </dialog>
     `
     );
   }
@@ -134,17 +141,32 @@ export class PUploaderFile extends HTMLElement {
 
   /**
    * Build the card's shadow tree, the buttons it shows and hides, and its listeners, once. Renders
-   * update these nodes in place, so focus and an open edit dialog survive them.
+   * update these nodes in place, so focus and an open edit panel survive them.
    */
   _build() {
     const root = document.importNode(getFileTemplate().content, true);
 
     const deletePanel = root.querySelector('[data-panel="delete"]');
-    const deleteHeadingId = generateId('delete-heading');
-    deletePanel.setAttribute('aria-labelledby', deleteHeadingId);
-    deletePanel.querySelector('.uploader__heading').id = deleteHeadingId;
+    const headingId = generateId('delete-heading');
+    deletePanel.setAttribute('aria-labelledby', headingId);
+    deletePanel.querySelector('.uploader__heading').id = headingId;
+    /* The edit panel names itself on its form, since its own heading only repeated the button */
+    root.querySelector('[data-panel="edit"]').setAttribute('aria-label', 'Edit details');
+
+    /* The panels answer with icons, so each of their buttons is given one */
+    for (const [action, paths] of Object.entries({
+      cancel: x,
+      'confirm-delete': trash,
+      save: check,
+    })) {
+      for (const button of root.querySelectorAll(`.uploader__pill[data-action="${action}"]`)) {
+        button.append(iconElement(paths, { size: 'sm' }));
+      }
+    }
 
     this._toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
+    /* Edit and delete sit together as one pill, the way a segmented control does */
+    this._pills = el('div', { class: 'uploader__pills', part: 'pills' });
     root.querySelector('[data-panel="info"] .uploader__body').append(this._toolbar);
 
     this.shadowRoot.replaceChildren(root);
@@ -176,45 +198,52 @@ export class PUploaderFile extends HTMLElement {
 
     /* In toolbar order */
     this._toolbarButtons = {
-      edit: el(
-        'button',
-        { type: 'button', class: 'uploader__edit', 'data-action': 'edit', part: 'edit-button' },
-        'Edit details'
+      edit: withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill',
+          'data-action': 'edit',
+          part: 'edit-button',
+          title: 'Edit details',
+          'aria-label': 'Edit details',
+        }),
+        pencil
       ),
-      'move-up': el(
-        'button',
-        {
+      'move-up': withIcon(
+        el('button', {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-up',
           title: 'Move up',
           'aria-label': 'Move up',
-        },
-        '↑'
+        }),
+        arrowUp
       ),
-      'move-down': el(
-        'button',
-        {
+      'move-down': withIcon(
+        el('button', {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-down',
           title: 'Move down',
           'aria-label': 'Move down',
-        },
-        '↓'
+        }),
+        arrowDown
       ),
       replace: el(
         'button',
         { type: 'button', class: 'uploader__replace', 'data-action': 'replace' },
         'Replace'
       ),
-      'show-delete': el('button', {
-        type: 'button',
-        class: 'uploader__delete-icon',
-        'data-action': 'show-delete',
-        title: 'Delete file',
-        'aria-label': 'Delete file',
-      }),
+      'show-delete': withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill uploader__pill--delete',
+          'data-action': 'show-delete',
+          title: 'Delete file',
+          'aria-label': 'Delete file',
+        }),
+        trash
+      ),
     };
 
     this._setupFileEventListeners();
@@ -255,7 +284,9 @@ export class PUploaderFile extends HTMLElement {
 
     this._renderDetails(state);
     this._renderToolbar(state);
-    this._showPanels(this.getAttribute('data-current-panel') || 'info', state);
+    const panel = this.getAttribute('data-current-panel') || 'info';
+    this._syncContentHeight(panel);
+    this._showPanels(panel, state);
     this._syncOrderButtons();
   }
 
@@ -271,12 +302,17 @@ export class PUploaderFile extends HTMLElement {
           ? currentPanel === 'info' && state === 'uploaded'
           : name === currentPanel || (name === 'error' && state === 'error');
       panel.classList.toggle('uploader__panel--show', show);
+      /* Once the details have been seen, they wait above rather than below, so a panel opening
+         over them pushes them up and cancelling brings them back down */
+      if (show && name === 'info') {
+        panel.classList.add('uploader__panel--activated');
+      }
       panel.inert = !show;
     }
   }
 
   /**
-   * Fill the info panel with the file's fields, and the edit dialog, while it is closed, with a
+   * Fill the info panel with the file's fields, and the edit panel, while it is closed, with a
    * control for each field
    */
   _renderDetails(state) {
@@ -286,13 +322,18 @@ export class PUploaderFile extends HTMLElement {
 
     const { edit } = this._permissions();
     fields.append(...this._createFields(edit));
-    if (
-      edit &&
-      this._fieldSchema?.size &&
-      !this.shadowRoot.querySelector('.uploader__dialog').open
-    ) {
+    if (edit && this._fieldSchema?.size && this._currentPanel() !== 'edit') {
       this._fillEditor();
     }
+  }
+
+  /**
+   * The panel the card is showing
+   *
+   * @returns {string}
+   */
+  _currentPanel() {
+    return this.getAttribute('data-current-panel') || 'info';
   }
 
   /**
@@ -335,20 +376,31 @@ export class PUploaderFile extends HTMLElement {
       'show-delete': permissions.remove,
     };
 
-    let previous = null;
+    const parentOf = action =>
+      action === 'edit' || action === 'show-delete' ? this._pills : this._toolbar;
+    const previous = new Map();
     for (const [action, button] of Object.entries(this._toolbarButtons)) {
       if (!shown[action]) {
         button.remove();
         continue;
       }
-      if (button.parentNode !== this._toolbar) {
-        if (previous) {
-          previous.after(button);
+      const parent = parentOf(action);
+      if (button.parentNode !== parent) {
+        const after = previous.get(parent);
+        if (after) {
+          after.after(button);
         } else {
-          this._toolbar.prepend(button);
+          parent.prepend(button);
         }
       }
-      previous = button;
+      previous.set(parent, button);
+    }
+
+    /* The pill sits last in the toolbar, and goes away when neither button is allowed */
+    if (this._pills.children.length === 0) {
+      this._pills.remove();
+    } else if (this._pills.parentNode !== this._toolbar) {
+      this._toolbar.append(this._pills);
     }
   }
 
@@ -401,11 +453,57 @@ export class PUploaderFile extends HTMLElement {
   }
 
   _updatePanelVisibility(currentPanel) {
+    this._syncContentHeight(currentPanel);
     this._showPanels(currentPanel, this.getAttribute('state') || 'uploaded');
+    /* The panels are stacked in a clipped box that can scroll. Focus moving to a panel still out of
+       view scrolls it, which leaves every panel off its mark, so put it back once the browser has
+       had its say. */
+    const content = this.shadowRoot.querySelector('.uploader__content');
+    if (content) {
+      content.scrollTop = 0;
+      requestAnimationFrame(() => {
+        content.scrollTop = 0;
+      });
+    }
+  }
 
-    const infoPanel = this.shadowRoot.querySelector('[data-panel="info"]');
-    if (infoPanel?.classList.contains('uploader__panel--show')) {
-      infoPanel.classList.add('uploader__panel--activated');
+  /**
+   * The card is as tall as its thumbnail until a panel needs more room, and then as tall as that
+   * panel. The panels waiting out of sight are moved by the same measure, so they stay out of
+   * sight whatever it is.
+   */
+  _syncContentHeight(currentPanel) {
+    const panel = this.shadowRoot.querySelector(`[data-panel="${currentPanel || 'info'}"]`);
+    if (!panel) {
+      this.style.removeProperty('--uploader-content-height');
+      return;
+    }
+
+    /* A panel's height isn't settled the moment it opens: its fields may have only just been
+       built, and a web font or a wrapped label can change it again. Watching the panel on show
+       keeps the card the right depth however late that happens, and watching only the one on show
+       means a card rebuilt by a reorder is measured afresh. */
+    this._panelSize ??= new ResizeObserver(entries => {
+      const current = this.getAttribute('data-current-panel') || 'info';
+      const [entry] = entries;
+      if (entry.target.dataset.panel === current) {
+        this._applyContentHeight(entry.target);
+      }
+    });
+    this._panelSize.disconnect();
+    this._panelSize.observe(panel);
+    this._applyContentHeight(panel);
+  }
+
+  /**
+   * Take the card's clipped box to the height of the panel on show, never less than its thumbnail
+   *
+   * @param {HTMLElement} panel
+   */
+  _applyContentHeight(panel) {
+    const height = panel.scrollHeight;
+    if (height > 0) {
+      this.style.setProperty('--uploader-content-height', `${height}px`);
     }
   }
 
@@ -426,9 +524,13 @@ export class PUploaderFile extends HTMLElement {
       /* Render fields in the info panel for newly uploaded files */
       this._renderInfoPanelFields();
 
-      /* Show the info panel after overlay fades out */
-      setTimeout(() => {
-        this.setAttribute('data-current-panel', 'info');
+      /* Show the info panel after the overlay fades out, unless the user is looking at a panel
+         they opened themselves, such as the delete confirmation */
+      clearTimeout(this._settlePanel);
+      this._settlePanel = setTimeout(() => {
+        if ((this.getAttribute('data-current-panel') || 'info') === 'info') {
+          this.setAttribute('data-current-panel', 'info');
+        }
       }, 375); /* Match the transition duration */
     } else if (newState === 'error') {
       /* Hide progress overlay and show error panel */
@@ -488,14 +590,13 @@ export class PUploaderFile extends HTMLElement {
       const button = event.target.closest('[data-action]');
       if (!button) return;
 
-      const inDialog = Boolean(button.closest('dialog'));
       const actions = {
-        edit: () => this._openEditor(),
+        edit: () => this._setPanel('edit'),
         'show-delete': () => this._setPanel('delete'),
         'move-up': () => this._uploader()?._moveFile(this, -1),
         'move-down': () => this._uploader()?._moveFile(this, 1),
         replace: () => this._uploader()?._startReplace(this),
-        cancel: () => (inDialog ? this._closeEditor() : this._setPanel('info')),
+        cancel: () => this._setPanel('info'),
         'confirm-delete': () => this._handleConfirmDelete(),
       };
       actions[button.dataset.action]?.();
@@ -506,28 +607,44 @@ export class PUploaderFile extends HTMLElement {
       this._saveDetails(event.target);
     });
 
-    this.shadowRoot
-      .querySelector('.uploader__dialog')
-      .addEventListener('close', () => this._editorOpener?.focus());
-
     this.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && this.getAttribute('data-current-panel') === 'delete') {
+      if (event.key === 'Escape' && ['delete', 'edit'].includes(this._currentPanel())) {
         event.preventDefault();
         this._setPanel('info');
       }
     });
   }
 
+  /**
+   * Show a panel and move focus with it. Focus is set with preventScroll, because the panels sit in
+   * a clipped box and scrolling it to the panel leaves every one of them off its mark.
+   */
   _setPanel(panel) {
+    /* A panel the user asked for outlives the one a finished upload would have shown */
+    clearTimeout(this._settlePanel);
+    const previous = this._currentPanel();
     const focusWasInPanel = Boolean(this.shadowRoot.activeElement?.closest('.uploader__panel'));
+
+    if (panel === 'edit' && previous !== 'edit') {
+      this._fillEditor();
+    }
 
     this.setAttribute('data-current-panel', panel);
     this._notifyDraggableStateChange();
 
     if (panel === 'delete') {
-      this.shadowRoot.querySelector('[data-panel="delete"] [data-action="cancel"]')?.focus();
-    } else if (focusWasInPanel) {
-      this.shadowRoot.querySelector('[data-action="show-delete"]')?.focus();
+      this.shadowRoot
+        .querySelector('[data-panel="delete"] [data-action="cancel"]')
+        ?.focus({ preventScroll: true });
+    } else if (panel === 'edit') {
+      this.shadowRoot
+        .querySelector(
+          '[data-panel="edit"] .uploader__input, [data-panel="edit"] .uploader__textarea, [data-panel="edit"] [data-action="save"]'
+        )
+        ?.focus({ preventScroll: true });
+    } else if (previous === 'edit' || focusWasInPanel) {
+      const opener = previous === 'edit' ? 'edit' : 'show-delete';
+      this.shadowRoot.querySelector(`[data-action="${opener}"]`)?.focus({ preventScroll: true });
     }
   }
 
@@ -539,10 +656,10 @@ export class PUploaderFile extends HTMLElement {
   }
 
   /**
-   * Put a control for each field, holding its current value, into the edit dialog
+   * Put a control for each field, holding its current value, into the edit panel
    */
   _fillEditor() {
-    const dialog = this.shadowRoot.querySelector('.uploader__dialog');
+    const panel = this.shadowRoot.querySelector('[data-panel="edit"]');
 
     const rows = [...(this._fieldSchema ?? [])].map(([key, fieldDef]) => {
       const id = generateId('field');
@@ -557,36 +674,18 @@ export class PUploaderFile extends HTMLElement {
         control.maxLength = fieldDef.maxlength;
       }
 
-      const row = el('div', { class: 'uploader__dialog-field' });
+      const row = el('div', { class: 'uploader__edit-field' });
       row.append(el('label', { class: 'field__label', for: id }, fieldDef.label), control);
       return row;
     });
 
-    dialog.querySelector('.uploader__dialog-fields').replaceChildren(...rows);
-    dialog.querySelector('.uploader__dialog-message').textContent = '';
-  }
-
-  _openEditor() {
-    const dialog = this.shadowRoot.querySelector('.uploader__dialog');
-    if (!dialog || dialog.open) return;
-
-    this._fillEditor();
-    this._editorOpener =
-      this.shadowRoot.activeElement ?? this.shadowRoot.querySelector('[data-action="edit"]');
-    dialog.showModal();
-  }
-
-  _closeEditor() {
-    const dialog = this.shadowRoot.querySelector('.uploader__dialog');
-    if (dialog?.open) {
-      dialog.close();
-    }
-    this._editorOpener?.focus();
+    panel.querySelector('.uploader__edit-fields').replaceChildren(...rows);
+    panel.querySelector('.uploader__edit-message').textContent = '';
   }
 
   /**
-   * Save the fields changed in the edit dialog, one request per field, and close it once they are all
-   * saved. A failure keeps the dialog open with a message.
+   * Save the fields changed in the edit panel, one request per field, and close it once they are all
+   * saved. A failure keeps the panel open with a message.
    */
   async _saveDetails(form) {
     const uploader = this._uploader();
@@ -595,11 +694,11 @@ export class PUploaderFile extends HTMLElement {
     );
 
     if (changed.length === 0 || !uploader?.config.updateAction) {
-      this._closeEditor();
+      this._setPanel('info');
       return;
     }
 
-    const message = form.querySelector('.uploader__dialog-message');
+    const message = form.querySelector('.uploader__edit-message');
     const buttons = [...form.querySelectorAll('button')];
     buttons.forEach(button => {
       button.disabled = true;
@@ -610,11 +709,13 @@ export class PUploaderFile extends HTMLElement {
       for (const control of changed) {
         await this._saveField(uploader, control.name, control.value);
       }
-      this._closeEditor();
+      this._setPanel('info');
     } catch (error) {
       if (error.name === 'AbortError') return;
       uploader.logger?.error('Failed to update field:', error);
       message.textContent = `Changes couldn’t be saved: ${error.message}`;
+      /* The message adds a line, so the card makes room for it */
+      this._syncContentHeight('edit');
     } finally {
       buttons.forEach(button => {
         button.disabled = false;

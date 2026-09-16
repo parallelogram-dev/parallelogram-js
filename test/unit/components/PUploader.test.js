@@ -48,7 +48,8 @@ describe('p-uploader', () => {
       'sequence-action': '/api/sequence',
     });
 
-    expect(actions(shadow)).toEqual(['edit', 'move-up', 'move-down', 'show-delete']);
+    /* Edit and Delete sit together in the pill, after the reorder arrows */
+    expect(actions(shadow)).toEqual(['move-up', 'move-down', 'edit', 'show-delete']);
   });
 
   it('keeps focus on a file’s toolbar button when the file renders again', async () => {
@@ -64,17 +65,17 @@ describe('p-uploader', () => {
     expect(shadow.activeElement).toBe(button);
   });
 
-  it('keeps the edit dialog open with unsaved changes when the file renders again', async () => {
+  it('keeps the edit panel open with unsaved changes when the file renders again', async () => {
     const { file, shadow } = await renderUploader({ 'update-action': '/api/update' });
     shadow.querySelector('[data-action="edit"]').click();
-    shadow.querySelector('dialog [name="caption"]').value = 'Fishing boats';
+    shadow.querySelector('[data-panel="edit"] [name="caption"]').value = 'Fishing boats';
 
     file.setAttribute('filename', 'renamed.jpg');
 
     expect([
-      shadow.querySelector('dialog').open,
-      shadow.querySelector('dialog [name="caption"]').value,
-    ]).toEqual([true, 'Fishing boats']);
+      file.getAttribute('data-current-panel'),
+      shadow.querySelector('[data-panel="edit"] [name="caption"]').value,
+    ]).toEqual(['edit', 'Fishing boats']);
   });
 
   it('takes away editing and deleting when allow-edit turns them off, and restores them in order', async () => {
@@ -90,7 +91,7 @@ describe('p-uploader', () => {
 
     expect([withoutEditing, actions(shadow)]).toEqual([
       ['move-up', 'move-down'],
-      ['edit', 'move-up', 'move-down', 'show-delete'],
+      ['move-up', 'move-down', 'edit', 'show-delete'],
     ]);
   });
 

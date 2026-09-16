@@ -7,7 +7,7 @@ export default {
   summary: 'Upload, order and describe a set of files',
   description: `Files are added by dropping them or through a button that opens the file picker, and each one uploads as multipart form data with its progress shown. Existing files are \`<p-uploader-file>\` children. Each feature appears only when its server address is set: uploading, editing fields, deleting and reordering.
 
-With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in one dialog. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.`,
+With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.`,
   attributes: [
     {
       name: 'upload-action',
@@ -125,6 +125,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
     { name: 'files', description: 'The list of files' },
     { name: 'selector', description: 'The drop zone' },
     { name: 'add-button', description: 'The button that opens the file picker' },
+    { name: 'drag-chip', description: 'The chip that follows the cursor while a file is dragged' },
     { name: 'message', description: 'Messages about refused files and failed saves' },
   ],
   cssProperties: [
@@ -182,7 +183,7 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
         {
           name: 'data-current-panel',
           type: 'enum',
-          options: ['info', 'error', 'delete'],
+          options: ['info', 'error', 'edit', 'delete'],
           default: 'info',
           readonly: true,
           description: 'The panel the card shows',
@@ -203,14 +204,15 @@ With a sequence-action, each file has Move up and Move down buttons as a keyboar
       parts: [
         { name: 'preview', description: 'The preview image' },
         { name: 'progress', description: 'The upload progress bar' },
-        { name: 'panel', description: 'Each panel: details, error and delete confirmation' },
+        { name: 'panel', description: 'Each panel: details, error, edit and delete confirmation' },
         { name: 'fields', description: 'The field list' },
         { name: 'field', description: 'Each field' },
         { name: 'filename', description: 'The file name' },
         { name: 'toolbar', description: 'The action buttons' },
-        { name: 'actions', description: 'Button rows in panels and the dialog' },
+        { name: 'pills', description: 'The Edit and Delete buttons, as one segmented pill' },
+        { name: 'actions', description: 'Button rows in panels' },
         { name: 'edit-button', description: 'The Edit button' },
-        { name: 'dialog', description: 'The edit dialog' },
+        { name: 'edit-panel', description: 'The panel holding the edit form' },
       ],
       slots: [
         { name: '', description: "The <p-uploader-data> elements holding the file's values" },

@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import PSelect from '../../../src/components/PSelect.js';
 
+const clickShadow = (host, selector) => {
+  const target = host.shadowRoot.querySelector(selector);
+  target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, composed: true }));
+  target.click();
+};
+
 const renderForm = markup => {
   const form = document.createElement('form');
   form.innerHTML = markup;
@@ -26,6 +32,130 @@ const PRIORITY = `
 describe('p-select', () => {
   afterEach(() => {
     document.body.replaceChildren();
+  });
+
+  it('offers a clear button while it is open over a value, required or not', () => {
+    const { select } = renderForm(COUNTRIES);
+    const { select: required } = renderForm(PRIORITY);
+    required.value = 'high';
+    const clearOf = element => element.shadowRoot.querySelector('.clear').hidden;
+    const closedOverAValue = clearOf(select);
+    select.open();
+    required.open();
+    const openOverAValue = clearOf(select);
+    select.value = '';
+
+    expect([closedOverAValue, openOverAValue, clearOf(select), clearOf(required)]).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('clears the value from the clear button, and reports the change', async () => {
+    const { select } = renderForm(COUNTRIES);
+    const changes = [];
+    select.addEventListener('change', () => changes.push(select.value));
+
+    clickShadow(select, '.clear');
+
+    expect([select.value, changes, select.shadowRoot.querySelector('.input').value]).toEqual([
+      '',
+      [''],
+      '',
+    ]);
+  });
+
+  it('shows the search icon only while the list is open with nothing chosen', () => {
+    const { select } = renderForm(COUNTRIES);
+    const searchOf = () => select.shadowRoot.querySelector('.search').hidden;
+    select.value = '';
+    const closedAndEmpty = searchOf();
+    select.open();
+    const openAndEmpty = searchOf();
+    select.value = 'uk';
+
+    expect([closedAndEmpty, openAndEmpty, searchOf()]).toEqual([true, false, true]);
+  });
+
+  it('keeps the search icon away while the list is open over a value', () => {
+    const { select } = renderForm(COUNTRIES);
+
+    select.open();
+
+    expect(select.shadowRoot.querySelector('.search').hidden).toBe(true);
+  });
+
+  it('puts the search icon exactly where the clear button was', () => {
+    const { select } = renderForm(COUNTRIES);
+    select.open();
+    const clear = select.shadowRoot.querySelector('.clear').getBoundingClientRect();
+    select.value = '';
+    const search = select.shadowRoot.querySelector('.search').getBoundingClientRect();
+
+    expect([search.left - clear.left, search.right - clear.right]).toEqual([0, 0]);
+  });
+
+  it('centres the chevron on the middle of the control', () => {
+    const { select } = renderForm(COUNTRIES);
+    const control = select.shadowRoot.querySelector('.control').getBoundingClientRect();
+    const icon = select.shadowRoot.querySelector('.arrow svg').getBoundingClientRect();
+
+    expect(Math.abs(icon.top + icon.height / 2 - (control.top + control.height / 2))).toBeLessThan(
+      0.5
+    );
+  });
+
+  it('leaves the chevron a padding width in from the trailing edge', () => {
+    const { select } = renderForm(COUNTRIES);
+    const control = select.shadowRoot.querySelector('.control');
+    const icon = control.querySelector('.arrow svg').getBoundingClientRect();
+    /* The chevron itself is drawn inside a quarter of the icon's box */
+    const drawn = icon.right - icon.width / 4;
+    const padding = parseFloat(getComputedStyle(control).paddingRight);
+
+    expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
+  });
+
+  it('shows a text cursor only where the input can be typed in', () => {
+    const { select } = renderForm(COUNTRIES);
+    const input = select.shadowRoot.querySelector('.input');
+    const cursor = () => getComputedStyle(input).cursor;
+    const closed = cursor();
+    select.open();
+    const openOverAValue = cursor();
+    select.value = '';
+
+    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'pointer', 'text']);
+  });
+
+  it('lines the list up with the outside of the control', () => {
+    const { select } = renderForm(COUNTRIES);
+    select.open();
+
+    const host = select.getBoundingClientRect();
+    const menu = select.shadowRoot.querySelector('.menu').getBoundingClientRect();
+
+    expect([menu.left - host.left, menu.right - host.right]).toEqual([0, 0]);
+  });
+
+  it('asks for a search before saying nothing was found', async () => {
+    const { select } = renderForm(`
+      <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
+    `);
+    const message = () => select.shadowRoot.querySelector('.noresults')?.textContent;
+
+    select.open();
+    const beforeTyping = message();
+    const input = select.shadowRoot.querySelector('.input');
+    input.value = 'a';
+    input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+    expect([beforeTyping, message()]).toEqual([
+      'Type 2 or more characters to search',
+      'Type 2 or more characters to search',
+    ]);
   });
 
   it('is a form-associated custom element', () => {
@@ -410,33 +540,29 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
-  it('clears its value when its text is deleted and the list closes', async () => {
+  it('will not let a chosen value be typed over until it is cleared', async () => {
     const { select } = renderForm(COUNTRIES);
     const input = select.shadowRoot.querySelector('input');
-    const changes = [];
-    select.addEventListener('change', () => changes.push(select.value));
+    const readOnlyWithValue = input.readOnly;
 
-    await userEvent.click(input);
-    await userEvent.clear(input);
-    select.close();
+    clickShadow(select, '.clear');
 
-    expect([select.value, input.value, changes]).toEqual(['', '', ['']]);
+    expect([readOnlyWithValue, input.readOnly, select.value]).toEqual([true, false, '']);
   });
 
-  it('restores the chosen option when its text is deleted while it is required', async () => {
-    const { select } = renderForm(`
-      <p-select name="size" required>
-        <option value="s" selected>Small</option>
-        <option value="m">Medium</option>
-      </p-select>
-    `);
-    const input = select.shadowRoot.querySelector('input');
+  it('searches again once a required select has been cleared', () => {
+    const { select } = renderForm(PRIORITY);
+    select.value = 'high';
+    select.open();
+    const offeredOnRequired = !select.shadowRoot.querySelector('.clear').hidden;
 
-    await userEvent.click(input);
-    await userEvent.clear(input);
-    select.close();
+    clickShadow(select, '.clear');
 
-    expect([select.value, input.value]).toEqual(['s', 'Small']);
+    expect([
+      offeredOnRequired,
+      select.shadowRoot.querySelector('input').readOnly,
+      select.shadowRoot.querySelector('.search').hidden,
+    ]).toEqual([true, false, false]);
   });
 
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
@@ -507,5 +633,191 @@ describe('p-select combobox', () => {
         ]).toEqual([0, '/api/users?q=ad', ['Ada Lovelace'], 'false']),
       WAIT
     );
+  });
+});
+
+const PEOPLE = `
+  <p-select name="owner" aria-label="Owner">
+    <option
+      value="ada"
+      data-secondary="ada@example.com"
+      data-description="Engineering"
+      data-image="/avatars/ada.jpg"
+    >
+      Ada Lovelace
+    </option>
+    <option value="grace" data-secondary="grace@example.com">Grace Hopper</option>
+    <option value="nobody">Unassigned</option>
+  </p-select>
+`;
+
+const partsOf = option => ({
+  label: option.querySelector('.label')?.textContent ?? option.textContent,
+  secondary: option.querySelector('.secondary')?.textContent ?? null,
+  description: option.querySelector('.description')?.textContent ?? null,
+  image: option.querySelector('img')?.getAttribute('src') ?? null,
+});
+
+describe('p-select rich options', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('reads the secondary text, description and image from the option markup', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    expect(optionsOf(select).map(partsOf)).toEqual([
+      {
+        label: 'Ada Lovelace',
+        secondary: 'ada@example.com',
+        description: 'Engineering',
+        image: '/avatars/ada.jpg',
+      },
+      { label: 'Grace Hopper', secondary: 'grace@example.com', description: null, image: null },
+      { label: 'Unassigned', secondary: null, description: null, image: null },
+    ]);
+  });
+
+  it('reads the same fields from remote JSON', async () => {
+    vi.spyOn(window, 'fetch').mockImplementation(async () =>
+      Response.json([
+        {
+          value: 'ada',
+          label: 'Ada Lovelace',
+          secondary: 'ada@example.com',
+          description: 'Engineering',
+          image: '/avatars/ada.jpg',
+        },
+      ])
+    );
+    const select = mountSelect(
+      '<p-select name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
+    );
+
+    await vi.waitFor(
+      () =>
+        expect(optionsOf(select).map(partsOf)).toEqual([
+          {
+            label: 'Ada Lovelace',
+            secondary: 'ada@example.com',
+            description: 'Engineering',
+            image: '/avatars/ada.jpg',
+          },
+        ]),
+      WAIT
+    );
+  });
+
+  it('builds the thumbnail as a lazy, unnamed image of a fixed size', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+    const image = optionsOf(select)[0].querySelector('img');
+    const { width, height } = getComputedStyle(image);
+
+    expect([image.alt, image.loading, width, height]).toEqual(['', 'lazy', '24px', '24px']);
+  });
+
+  it('keeps an option without an image as tall as one in a plain list', () => {
+    const plain = mountSelect(COUNTRIES);
+    const rich = mountSelect(PEOPLE);
+    press(plain, 'ArrowDown');
+    press(rich, 'ArrowDown');
+
+    expect(optionsOf(rich).at(-1).offsetHeight).toBe(optionsOf(plain)[0].offsetHeight);
+  });
+
+  it('sizes the thumbnail from --select-image-size', () => {
+    const select = mountSelect(PEOPLE);
+    select.style.setProperty('--select-image-size', '40px');
+    press(select, 'ArrowDown');
+
+    expect(getComputedStyle(optionsOf(select)[0].querySelector('img')).width).toBe('40px');
+  });
+
+  it('matches typed text against the secondary text but not the description', () => {
+    const select = mountSelect(PEOPLE);
+    const labels = () => optionsOf(select).map(option => partsOf(option).label);
+
+    typeInto(select, 'grace@');
+    const byEmail = labels();
+    typeInto(select, 'engineering');
+
+    expect([byEmail, labels()]).toEqual([['Grace Hopper'], []]);
+  });
+
+  it('shows the label alone in the input once a rich option is chosen', () => {
+    const select = mountSelect(PEOPLE);
+
+    select.select('ada');
+
+    expect(inputOf(select).value).toBe('Ada Lovelace');
+  });
+
+  it('adds the fields an option has to the p-select:change detail, and no others', () => {
+    const select = mountSelect(PEOPLE);
+    const details = [];
+    select.addEventListener('p-select:change', event => details.push(event.detail));
+
+    select.select('ada');
+    select.select('grace');
+    select.select('nobody');
+
+    expect(details).toEqual([
+      {
+        value: 'ada',
+        label: 'Ada Lovelace',
+        secondary: 'ada@example.com',
+        description: 'Engineering',
+        image: '/avatars/ada.jpg',
+      },
+      { value: 'grace', label: 'Grace Hopper', secondary: 'grace@example.com' },
+      { value: 'nobody', label: 'Unassigned' },
+    ]);
+  });
+
+  it('chooses the option when its secondary text is clicked', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    optionsOf(select)[1].querySelector('.secondary').click();
+
+    expect(select.value).toBe('grace');
+  });
+
+  it('gives a rich option a text of its label, secondary text and description, as words', () => {
+    const select = mountSelect(PEOPLE);
+    press(select, 'ArrowDown');
+
+    expect(optionsOf(select)[0].textContent.replace(/\s+/g, ' ').trim()).toBe(
+      'Ada Lovelace ada@example.com Engineering'
+    );
+  });
+
+  it('marks a rich option as the active descendant and disabled like any other', () => {
+    const select = mountSelect(
+      PEOPLE.replace('data-image="/avatars/ada.jpg"', 'data-image="/avatars/ada.jpg" disabled')
+    );
+    press(select, 'ArrowDown');
+    const [ada] = optionsOf(select);
+
+    press(select, 'Enter');
+
+    expect([
+      inputOf(select).getAttribute('aria-activedescendant'),
+      ada.hasAttribute('data-active'),
+      ada.getAttribute('aria-disabled'),
+      select.value,
+    ]).toEqual([ada.id, true, 'true', '']);
+  });
+
+  it('shows a changed data-secondary without being asked', async () => {
+    const select = mountSelect(PEOPLE);
+    select.querySelector('option[value="grace"]').dataset.secondary = 'hopper@example.com';
+
+    await vi.waitFor(() => {
+      press(select, 'ArrowDown');
+      expect(partsOf(optionsOf(select)[1]).secondary).toBe('hopper@example.com');
+    }, WAIT);
   });
 });

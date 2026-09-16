@@ -256,7 +256,7 @@ describe('DataTable', () => {
         'rgba(255, 255, 255, 0.36)',
         'rgb(147, 197, 253)',
         'rgb(11, 18, 32)',
-        'rgb(58, 67, 80)',
+        'rgba(255, 255, 255, 0.36)',
         'rgba(255, 255, 255, 0.6)',
         'rgba(255, 255, 255, 0.6)',
       ]);
@@ -347,6 +347,42 @@ describe('DataTable', () => {
       delete document.documentElement.dataset.theme;
       style.remove();
     }
+  });
+
+  it('lets a page set the load error colour in both themes', async () => {
+    const style = document.createElement('style');
+    style.textContent = `${frameworkStyles}\n:root { --datatable-error-color: rgb(0, 128, 0) }`;
+    document.head.append(style);
+    const table = mount(build(PEOPLE));
+    vi.spyOn(window, 'fetch').mockResolvedValue(new Response('Nope', { status: 503 }));
+
+    try {
+      await dataTable.loadData(table, '/guests', () => document.createElement('tr'));
+      const cell = table.tBodies[0].rows[0].cells[0];
+      const light = getComputedStyle(cell).color;
+      document.documentElement.dataset.theme = 'dark';
+
+      expect([light, getComputedStyle(cell).color]).toEqual(['rgb(0, 128, 0)', 'rgb(0, 128, 0)']);
+    } finally {
+      delete document.documentElement.dataset.theme;
+      style.remove();
+    }
+  });
+
+  it('draws the sort icons from the shared set, and shows text a page gives instead', () => {
+    const table = mount(build(PEOPLE));
+    const icon = () => table.querySelector('th[data-sort="name"] .sort-icon');
+    const unsorted = icon().querySelector('svg path')?.getAttribute('d');
+    dataTable.sort(table, 'name', 'asc');
+    const ascending = icon().querySelector('svg path')?.getAttribute('d');
+
+    const custom = new DataTable({ sortIcons: { unsorted: '~', asc: 'up', desc: 'down' } });
+    const other = build(PEOPLE);
+    custom.mount(other);
+    const customText = other.querySelector('.sort-icon').textContent;
+    custom.destroy();
+
+    expect([unsorted !== ascending, unsorted, customText]).toEqual([true, 'M8 9l4 -4l4 4', '~']);
   });
 
   it('puts the table back as it was when unmounted', () => {

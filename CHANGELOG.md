@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.7.1] - 2026-09-16
+
+### Added
+
+- `<p-select>`'s options can carry more than a label. An option may have a `secondary` text, shown muted on the label's line after it, a `description`, shown smaller beneath, and an `image`, shown as a round thumbnail of `--select-image-size` (1.5rem) before the text. In markup they are `data-secondary`, `data-description` and `data-image` on the `<option>`; remote JSON carries the same words. Typing matches the secondary text as well as the label, so an email finds its person, though the description is never searched. The input still shows the label alone, and `p-select:change` adds the fields the chosen option has to its `{ value, label }` detail. Everything is built through DOM properties, so no markup is parsed; the thumbnail loads lazily, has its size before it arrives and is not announced, so a screen reader hears the label, the secondary text and the description. `--select-description-color` colours the description and defaults to `--color-text-muted`. The documentation gains a "People" example, and the customer search's rows carry an email and a role.
+- `<p-uploader>`'s buttons and fields follow the design system like every other component. They read the `--button-*` and `--form-control-*` tokens rather than their own values, so Delete is a filled danger button, Cancel and Replace are secondary buttons, and the edit dialog's fields match the form controls elsewhere. Each keeps a light fallback, so the component still renders without the package stylesheet.
+- `<p-uploader>`'s file cards are drawn as one list rather than separate boxes: no border, no padding of their own, and the space between them, and before the drop zone, is the list's gap. A file's details and the form that edits them share one grid — the label in a column of its own, the field filling the row beside it, labels quiet and set on the field's first baseline — so nothing shifts as one panel replaces the other. The panels answer with a pill of two buttons, in the corner of the card and in the panels themselves: an icon each, joined by a keyline, with the button that carries the action out filled — the accent for Save, the danger colour for Delete — and the one that backs out left plain. The drop zone is a pale wash of the accent inside a darker accent border, and its label is a regular button.
+- `<p-uploader>` reorders by dragging the thumbnail. The image is the handle and shows a grab cursor, so a press on Edit, Delete or the reorder arrows stays a click, and the whole card is the drag image, so it ghosts as one. Edit and Delete are one segmented pill in the corner of the card, drawn from the shared icons, with the delete icon turning the danger colour on hover; the old delete icon was a red trash from another icon set, fixed as an image. The reorder arrows are hidden until the card takes keyboard focus, since a pointer user drags instead, and they keep their place in the tab order meanwhile. The drop zone loses its border for a wash of the accent with the accent's own text, and its label is a white pill reading "Drag/Add files", or "Drag/Add file" where only one file is allowed. The gap between a file's thumbnail and its details is 1rem, and `--puploader-preview-gap` sets it.
+- `<p-select>` fills the slot before the chevron only while its list is open: the clear button when something is chosen, the search icon when nothing is. A chosen value is read-only until it is cleared, so the input is a search box only when it can be searched, and the cursor says so — a pointer over a chosen value, a text cursor over an empty search. A required select can be cleared as well; it won't validate until something is chosen again, which is better than leaving no way back to the search. This replaces clearing by deleting the text, which 0.6.0 added.
+- `<p-select>` has a clear button. It shows when there is a value and the element isn't required or disabled, clears the selection and reports the change like any other choice. The clear button and a search icon share one slot beside the chevron, so exactly one of them is there: the clear button over a value the user may remove, and the search icon otherwise, including on a required or disabled element. Both are the same size and in the same place, so neither swap moves anything.
+
+- The components draw from one set of icons. They are the Tabler icons, on a 24 by 24 grid with a 2px round stroke in `currentColor`, at one of three sizes: 24, 20 or 16. `<p-select>`'s dropdown arrow, and the dismiss buttons of `<p-modal>` and `<p-toasts>`, were text characters (`▾` and `×`) that took their shape from the page's font; they are now icons like the rest. `<p-datetime>` draws from the same set: its calendar, month arrows and month/year selector were the same Tabler icons written out by hand in its template. Lightbox's close and arrows, and DataTable's sort icons, come from it too; `sortIcons` still accepts text, which is shown as before.
+
+### Changed
+
+- `<p-uploader>` edits a file's details in a sliding panel rather than a modal dialog. Pressing Edit pushes the file's details up and slides the form in from below, the way the delete confirmation does, and the card grows to fit the form while it is open, animating unless the reader has asked for less motion. Escape and Cancel close it and return focus to the Edit button, and Save works as before. The `dialog` shadow part is gone, since there is no dialog; the form is in a panel carrying the `panel` and `edit-panel` parts, and `data-current-panel` takes a new `edit` value.
+
+### Fixed
+
+- `<p-uploader>`'s panels open the same way whichever one it is: the file's details slide up as the panel arrives from below, and the card deepens for the edit form as they move rather than jumping first. Cancelling or saving reverses it.
+- `<p-uploader>`'s cards are as deep as whatever panel is on show, so nothing is cropped: the details, the confirmation, an error and the form each get the room they need, measured as they settle rather than once, too early.
+- `<p-uploader>` shows the file being dragged as a chip that follows the cursor, carrying its thumbnail and name, with a `drag-chip` part for pages that want to restyle it. The browser's own picture is turned off rather than replaced: asked to photograph an element, Safari leaves the thumbnail out and draws the card as a translucent copy of the row over the rows beneath it.
+- `<p-uploader>`'s cards sit still in Safari. The card and the box its panels are stacked in clipped with `overflow: hidden`, which also makes a box scrollable; Safari scrolled them, painting a card's contents above its own edge and its panels out of place. They clip with `overflow: clip` instead, which cannot scroll.
+- `<p-uploader>`'s panels stay where they belong when focus moves into one. They are stacked in a clipped box, and a browser that ignores `focus({ preventScroll: true })`, as Safari does, scrolled that box to reveal the panel and left every panel out of place. The box can no longer be scrolled at all.
+- `<p-uploader>`'s delete confirmation puts Cancel before Delete, so the destructive button sits at the end of the row.
+- `<p-uploader>`'s panels move the right way. Opening the delete confirmation pushes the file's details up and slides the confirmation in from below, and cancelling brings the details back down; the details used to drop out of the way instead, because the class that puts them above was only ever set on a path that didn't run.
+- `<p-uploader>` no longer reorders files when a button on a card is pressed. The card itself was draggable, so pressing Edit or Delete and moving a pixel started a drag that reordered them on release.
+- `<p-uploader>` keeps a delete confirmation open when it is asked for just after an upload finishes. A card switches itself to the details panel 375 milliseconds after an upload settles, which overwrote the confirmation; a panel the user opens now cancels that.
+- `<p-select>`'s list lines up with the outside of the control's border. It was inset by the border width, so it sat a pixel inside the element on each side.
+- `<p-select>`'s chevron sits in the middle of the control. The icon was laid out inline, so it rested on the text baseline with the descender space below it and was drawn a quarter of its own width in from the trailing edge; that quarter is now taken back, so the gap matches the control's padding. Laying it out as a flex box also lets it turn over when the list opens, which a `transform` on an inline box could not do.
+- `<p-select>` shows a pointer over the whole closed control, the text input included, since a click anywhere on it opens the list rather than placing a caret. The input takes a text cursor once the list is open, where typing filters the options.
+- `<p-select>`'s clear button and search icon no longer take up space while they are hidden. Their `display` outranked the browser's own rule for the `hidden` attribute, so both held their place in the control whichever was shown.
+
+- DeferTracker no longer drops a page event when the router shows a new page. `router:navigate-end` fires when the swap settles, about a second before normal components mount, so a tracker block the router left in place — a pixel in a header, say — ran its page step and claimed the new URL first. This page's own block then mounted, found the URL claimed, and was marked a duplicate, so adapters without a block step, such as `meta-pixel`, `tiktok-pixel` and `hubspot`, never sent its payload: a purchase on a confirmation page went missing. A tracker now claims a URL only when a page step really runs, and a block that mounts after a carried-over block ran the step gets a page step of its own. Two blocks on the same page are deduplicated as before.
+
+- A page setting `--datatable-error-color` on `:root` now wins in dark mode. The dark theme set that documented property itself, which compiles to `:root[data-theme='dark']` and outranked the page; it now sets its own internal default instead.
+- The rule that hides focus rings after pointer input no longer reaches a page's own elements. It applied to every `:focus` in the document at a specificity that beat a page's own `:focus-visible` styles, so a site's focus indicators disappeared after a click and script-moved focus showed nothing. It now applies only to the framework's own elements and what is inside them.
+
+- SelectLoader says so when there is no router, instead of doing nothing. Since the router loads on demand, SelectLoader waited for `router:initialized` before loading a fragment; an app created without `router` options, or one whose router failed to import, never emits it, so choosing an option silently did nothing. Components now know whether a router is still coming, through a new `routerPending` they are given, and SelectLoader waits only in that case. Otherwise it reports the missing router as it did before 0.6.1.
+
+- Four colours that didn't meet WCAG AA. `<p-select>` marked the option the arrow keys are on with a tint of 1.09:1 that also replaced the selected option's own tint; it now keeps the tint and adds a 2px outline in the stronger accent, settable with `--select-active-outline`. `<p-uploader>`'s error message and DataTable's load error share a new `--color-danger-text` role, `#b91c1c` in light mode and `#f87171` in dark, so the uploader's error goes from 3.99:1 to 7.1:1 on its tint. `<p-datetime>`'s month and year buttons use the stronger accent on hover, 4.61:1 instead of 3.31:1. DataTable's pagination buttons border with `--color-control-border` rather than `--color-border-strong`, 3.35:1 instead of 1.48:1, since the border is all that shows where the button is.
+
+- The changelog records every released version again. A merge dropped the entries for 0.4.1 and for 0.1.3 to 0.3.2, and the 0.1.x dates that went with them, so 18 released versions had no record; they are back, with their npm publish dates. The security policy names the supported line as 0.7.x rather than 0.6.x, and the release steps in CONTRIBUTING now say to roll it forward. The stylesheet list in the getting started guide includes `accordion.css`, which the build has been emitting all along.
+
+- The dark theme now carries text as well as backgrounds. A new `--color-text` role colours every surface: in light mode it is `currentColor`, so surfaces keep inheriting the page's own text colour and nothing changes, and in dark mode it is `#e4e8ee`. Before this, a page that had no dark styles of its own got dark panels with its own black text under a dark operating system — modal panels at 1.25:1 and muted tab labels at 1.00:1. The stylesheet also sets `color-scheme` to match the theme, so the browser's own canvas, text and form controls follow it; a page can still set `color-scheme` itself after the stylesheet. Components that render without the package stylesheet now fall back to `#171717` text rather than `currentColor`, so `<p-select>`, `<p-datetime>`, `<p-modal>` and `<p-uploader>` no longer paint a white panel with the page's light text.
+
 ## [0.7.0] - 2026-09-16
 
 ### Added
@@ -413,6 +461,10 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Development now requires Node `^22.22.3`, `^24.15.0` or `>=26`, enforced through `devEngines`.
 - The demo build deletes stale hashed chunks from `demo/dist`.
 
+## [0.4.1] - 2026-06-26
+
+Changes in this release weren't recorded here; see the git history for what it contains.
+
 ## [0.4.0] - 2026-06-03
 
 ### Added
@@ -426,7 +478,29 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 
 - Rollup build now emits individual adapter bundles to `dist/adapters/` and `dist/dev/adapters/` (production strips logger calls); shared `_`-prefixed adapter helpers are inlined rather than emitted as standalone files.
 
-## [0.1.2] - 2025-01-19
+## [0.1.3 – 0.3.2] - not recorded
+
+Changes in these releases weren't recorded here; see the git history for what each one contains. They were published to npm on these dates:
+
+- 0.3.2 - 2026-06-03
+- 0.3.1 - 2026-05-27
+- 0.3.0 - 2026-05-18
+- 0.2.11 - 2026-05-13
+- 0.2.10 - 2026-05-12
+- 0.2.9 - 2026-05-12
+- 0.2.8 - 2026-02-11
+- 0.2.7 - 2025-11-26
+- 0.2.6 - 2025-11-26
+- 0.2.5 - 2025-11-26
+- 0.2.4 - 2025-11-25
+- 0.2.3 - 2025-11-21
+- 0.2.2 - 2025-11-20
+- 0.2.1 - 2025-11-20
+- 0.2.0 - 2025-11-19
+- 0.1.4 - 2025-11-19
+- 0.1.3 - 2025-11-19
+
+## [0.1.2] - 2025-11-19
 
 ### Added
 
@@ -469,7 +543,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
   - Toggle component (opening/closing states)
   - Lightbox component (active animation states)
 
-## [0.1.1] - 2025-01-19
+## [0.1.1] - 2025-11-18
 
 ### Added
 
@@ -483,7 +557,7 @@ Upgrading from 0.4: the package is ESM only and targets Baseline 2023 browsers, 
 - Improved async/defer script handling in initialization
 - Enhanced ComponentRegistry validation and error messaging
 
-## [0.1.0] - 2025-01-18
+## [0.1.0] - 2025-11-18
 
 ### Changed
 

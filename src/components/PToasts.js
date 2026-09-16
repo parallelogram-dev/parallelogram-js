@@ -1,5 +1,6 @@
 import styles from '../styles/framework/components/PToasts.scss';
 import { whenAnimationsFinish } from '../utils/motion.js';
+import { iconElement, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { getOpenModal } from '../utils/modal.js';
@@ -158,7 +159,7 @@ export default class PToasts extends HTMLElement {
       closeButton.className = 'btn close';
       closeButton.setAttribute('part', 'close');
       closeButton.setAttribute('aria-label', 'Dismiss notification');
-      closeButton.textContent = '×';
+      closeButton.append(iconElement(x, { size: 'sm' }));
       closeButton.addEventListener('click', entry.dismiss);
       row.append(closeButton);
     }

@@ -232,9 +232,15 @@ export default {
       id: 'date',
       title: 'Booking date',
       markup: `<form class="form" action="#chosen">
-  <label for="visit-date">Date</label>
-  <p-datetime id="visit-date" name="date" mode="date" show-quick-dates required></p-datetime>
-  <button type="submit">Continue</button>
+  <div class="form__group">
+    <label class="form__label" for="visit-date">Date</label>
+    <div class="form__control">
+      <p-datetime id="visit-date" name="date" mode="date" show-quick-dates required></p-datetime>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Continue</button>
+  </div>
 </form>`,
       controls: [
         { attribute: 'mode' },
@@ -250,9 +256,15 @@ export default {
       description:
         'Submits the local date and time chosen, such as `2024-01-15T14:30`, as `<input type="datetime-local">` does. In time mode it submits `hh:mm`, and `format` changes what is sent.',
       markup: `<form class="form" action="#chosen">
-  <label for="appointment">Appointment</label>
-  <p-datetime id="appointment" name="appointment" mode="datetime" value="2024-01-15T14:30"></p-datetime>
-  <button type="submit">Book</button>
+  <div class="form__group">
+    <label class="form__label" for="appointment">Appointment</label>
+    <div class="form__control">
+      <p-datetime id="appointment" name="appointment" mode="datetime" value="2024-01-15T14:30"></p-datetime>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Book</button>
+  </div>
 </form>`,
       controls: [{ attribute: 'mode' }, { attribute: 'time-format' }, { attribute: 'format' }],
     },
@@ -260,8 +272,15 @@ export default {
       id: 'range',
       title: 'Stay dates',
       markup: `<form class="form" action="#chosen">
-  <p-datetime name="check-in" range range-to="check-out" from-label="Check in" to-label="Check out"></p-datetime>
-  <button type="submit">Search rooms</button>
+  <div class="form__group">
+    <span class="form__label">Stay</span>
+    <div class="form__control">
+      <p-datetime name="check-in" range range-to="check-out" from-label="Check in" to-label="Check out"></p-datetime>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Search rooms</button>
+  </div>
 </form>`,
       controls: [{ attribute: 'from-label' }, { attribute: 'to-label' }],
     },

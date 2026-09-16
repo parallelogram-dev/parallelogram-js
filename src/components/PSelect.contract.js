@@ -7,7 +7,7 @@ export default {
   summary: 'A select that can be searched, built as an editable combobox',
   description: `Follows the WAI-ARIA combobox pattern with list autocomplete. The text input carries the combobox role and is named after the element's \`aria-label\` or its \`<label for>\`. Typing filters the options and announces how many match; the arrow keys, Home and End move through them, and Page Up and Page Down move ten at a time; Enter or Tab chooses the highlighted option; Alt+Down Arrow opens the list without moving the highlight and Alt+Up Arrow chooses the highlighted option and closes it; Escape closes the list and puts the chosen label back.
 
-Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group? }\`, or an object with those in \`options\`. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its \`value\` attribute, or else its selected option, when the form resets.`,
+Options come from \`<option>\` and \`<optgroup>\` children, which are watched for changes, or from a URL that returns JSON: an array of \`{ value, label, disabled?, group?, secondary?, description?, image? }\`, or an object with those in \`options\`. An option may carry a \`secondary\` text, shown muted after its label and searched along with it, a \`description\`, shown smaller beneath, and an \`image\` URL, shown as a round thumbnail before the text; in markup they are the \`data-secondary\`, \`data-description\` and \`data-image\` attributes of the \`<option>\`. The input shows the label alone. The element is form-associated: it submits its value under its \`name\`, supports \`required\`, and restores its \`value\` attribute, or else its selected option, when the form resets.`,
   attributes: [
     { name: 'name', type: 'string', property: 'name', description: 'The form field name' },
     {
@@ -93,7 +93,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     {
       name: 'setOptions',
       signature:
-        '(options: Array<{ value: string; label: string; disabled?: boolean; group?: string }>) => void',
+        '(options: Array<{ value: string; label: string; disabled?: boolean; group?: string; secondary?: string; description?: string; image?: string }>) => void',
       description: 'Replace the options',
     },
     { name: 'getValue', signature: '() => string', description: 'The chosen value' },
@@ -121,14 +121,17 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
     {
       name: 'p-select:change',
-      detail: '{ value: string; label: string }',
-      description: 'A different option was chosen; bubbles out of shadow roots',
+      detail:
+        '{ value: string; label: string; secondary?: string; description?: string; image?: string }',
+      description:
+        'A different option was chosen, with its secondary text, description and image when it has them; bubbles out of shadow roots',
     },
     { name: 'p-select:open', description: 'The list opened' },
     { name: 'p-select:close', description: 'The list closed' },
   ],
   parts: [
     { name: 'input', description: 'The text input' },
+    { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
@@ -163,6 +166,16 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: 'Background of the chosen option',
     },
     {
+      name: '--select-description-color',
+      default: 'var(--color-text-muted)',
+      description: "Colour of an option's description",
+    },
+    {
+      name: '--select-image-size',
+      default: '1.5rem',
+      description: "Width and height of an option's thumbnail",
+    },
+    {
       name: '--menu-bg',
       default: 'var(--surface-dropdown-color-bg)',
       description: 'List background',
@@ -184,25 +197,123 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       id: 'form',
       title: 'In a form',
       markup: `<form class="form" action="#chosen">
-  <label for="dining-area">Dining area</label>
-  <p-select id="dining-area" name="area" placeholder="Choose an area" required>
-    <optgroup label="Inside">
-      <option value="bar">Bar</option>
-      <option value="main">Main room</option>
-    </optgroup>
-    <optgroup label="Outside">
-      <option value="terrace" selected>Terrace</option>
-      <option value="garden" disabled>Garden (closed for winter)</option>
-    </optgroup>
-  </p-select>
-  <button type="submit">Continue</button>
-  <button type="reset">Reset</button>
+  <div class="form__group">
+    <label class="form__label" for="dining-area">Dining area</label>
+    <div class="form__control">
+      <p-select id="dining-area" name="area" placeholder="Choose an area" required>
+        <optgroup label="Inside">
+          <option value="bar">Bar</option>
+          <option value="main">Main room</option>
+        </optgroup>
+        <optgroup label="Outside">
+          <option value="terrace" selected>Terrace</option>
+          <option value="garden" disabled>Garden (closed for winter)</option>
+        </optgroup>
+      </p-select>
+    </div>
+  </div>
+  <div class="form__actions">
+    <button type="submit">Continue</button>
+    <button type="reset">Reset</button>
+  </div>
 </form>`,
       controls: [
         { attribute: 'placeholder' },
         { attribute: 'required' },
         { attribute: 'disabled' },
         { attribute: 'data-select-open-on-focus' },
+      ],
+    },
+    {
+      id: 'people',
+      title: 'People',
+      description:
+        'An option can carry more than its label: `data-secondary` is shown muted after the label and searched with it, so typing an email finds the person; `data-description` is a smaller line beneath; `data-image` is a round thumbnail before the text. The input shows the label alone once someone is chosen. Remote options carry the same fields as `secondary`, `description` and `image`.',
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="owner">Owner</label>
+    <div class="form__control">
+      <p-select id="owner" name="owner" placeholder="Choose an owner">
+        <option
+          value="amelia"
+          data-secondary="amelia@example.com"
+          data-description="Account manager, Sydney"
+          data-image="images/harbour-640.jpg"
+        >
+          Amelia Nguyen
+        </option>
+        <option
+          value="hudson"
+          data-secondary="hudson@example.com"
+          data-description="Head chef, Melbourne"
+          data-image="images/kitchen-640.jpg"
+        >
+          Hudson Ferraro
+        </option>
+        <option
+          value="priya"
+          data-secondary="priya@example.com"
+          data-description="Events, Brisbane"
+          data-image="images/terrace-640.jpg"
+        >
+          Priya Rahman
+        </option>
+        <option value="unassigned" data-description="Leave the record with no owner">Unassigned</option>
+      </p-select>
+    </div>
+  </div>
+</div>`,
+      controls: [{ attribute: 'placeholder' }, { attribute: 'data-select-open-on-focus' }],
+    },
+    {
+      id: 'long-list',
+      title: 'A long list',
+      description:
+        'Around a hundred options, loaded from a URL so the sample stays readable. The list scrolls once it outgrows its maximum height, typing narrows it and the arrow keys, Page Up and Page Down walk it. With `data-select-min="0"` the options arrive as soon as the list opens.',
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="delivery-suburb">Delivery suburb</label>
+    <div class="form__control">
+      <p-select
+        id="delivery-suburb"
+        name="suburb"
+        placeholder="Choose a suburb"
+        data-select-src="/api/places?q={q}"
+        data-select-min="0"
+      ></p-select>
+    </div>
+  </div>
+</div>`,
+      controls: [
+        { attribute: 'placeholder' },
+        { attribute: 'data-select-min' },
+        { attribute: 'data-select-open-on-focus' },
+      ],
+    },
+    {
+      id: 'remote-search',
+      title: 'Searching a database',
+      description:
+        'The search runs on the server: each query is sent to `data-select-src` with `{q}` replaced by the typed text, and the options that come back replace the list. Each row carries an email as its `secondary` and a role as its `description`, so the list shows both and a search on `nguyen`, `perth` or an address like `noah.tran` finds its person. Type two characters to start a search, and the list shows its busy state while the request is out and "No results found" when nothing matches.',
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="customer">Customer</label>
+    <div class="form__control">
+      <p-select
+        id="customer"
+        name="customer"
+        placeholder="Search customers"
+        data-select-src="/api/directory?q={q}"
+        data-select-min="2"
+        data-select-debounce="300"
+      ></p-select>
+    </div>
+  </div>
+</div>`,
+      controls: [
+        { attribute: 'placeholder' },
+        { attribute: 'data-select-min' },
+        { attribute: 'data-select-debounce' },
       ],
     },
   ],

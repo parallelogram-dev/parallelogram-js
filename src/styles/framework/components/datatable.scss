@@ -25,7 +25,7 @@
     );
   border-radius: 4px;
   background: var(--surface-control-color-bg, var(--color-surface, #ffffff));
-  color: var(--surface-control-color-text, currentColor);
+  color: var(--surface-control-color-text, #{$neutral-900});
   font-size: 0.875rem;
 }
 
@@ -68,6 +68,11 @@
   font-size: 0.8em;
 }
 
+/* The icon sits on the text's middle rather than its baseline */
+:where(.sort-icon svg) {
+  vertical-align: middle;
+}
+
 :where([aria-sort] .sort-icon) {
   color: currentColor;
 }
@@ -85,7 +90,7 @@
 :where(.datatable__pagination button) {
   min-width: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--datatable-border-color, var(--color-border-strong, #d1d5db));
+  border: 1px solid var(--datatable-border-color, var(--color-control-border, rgba(0, 0, 0, 0.45)));
   border-radius: 4px;
   background: var(--datatable-button-bg, transparent);
   color: var(--datatable-button-color, inherit);
@@ -96,7 +101,10 @@
 
 :where(.datatable__pagination button:hover:not(:disabled)) {
   background: var(--datatable-button-hover-bg, var(--color-hover, rgba(128, 128, 128, 0.15)));
-  border-color: var(--datatable-button-hover-border-color, var(--color-border-strong, #d1d5db));
+  border-color: var(
+    --datatable-button-hover-border-color,
+    var(--color-control-border, rgba(0, 0, 0, 0.45))
+  );
 }
 
 :where(.datatable__pagination button:disabled) {
@@ -125,7 +133,7 @@
 
 /* Light pages keep the darker red, which reaches 4.5:1 on tinted backgrounds; dark pages take the role */
 :where(.datatable__message td[role='alert']) {
-  color: var(--datatable-error-color, var(--brand-danger, #b91c1c));
+  color: var(--datatable-error-color, var(--brand-danger, var(--datatable-error-default, #b91c1c)));
   font-style: normal;
   font-weight: 500;
 }
@@ -136,8 +144,10 @@
   font-size: 0.875em;
 }
 
-@include dark-theme {
-  --datatable-error-color: var(--brand-danger, var(--color-danger));
+/* The theme's own default, rather than the documented property, so a page setting
+   --datatable-error-color on :root still wins in both themes */
+:root {
+  --datatable-error-default: var(--color-danger-text, #b91c1c);
 }
 
 /* State-based styling */

@@ -80,6 +80,17 @@ describe('form control contrast', () => {
     const inRange = shadowStyle(range, '[data-date="2023-07-15"]');
     const inRangeBg = over(inRange.backgroundColor, panel);
 
+    select.open();
+    /* The marker is for people using the arrow keys, so it is drawn only after keyboard input */
+    select.setAttribute('data-focus-source', 'keyboard');
+    const option = select.shadowRoot.querySelector('[role="option"]');
+    option.setAttribute('data-active', '');
+    const activeOption = getComputedStyle(option);
+    const menuBg = over(shadowStyle(select, '.menu').backgroundColor, surface);
+    const roles = getComputedStyle(document.documentElement);
+    const dangerBg = over(roles.getPropertyValue('--color-danger-bg').trim(), surface);
+    const dangerText = roles.getPropertyValue('--color-danger-text').trim();
+
     const measured = {
       'p-select border': [
         ratio(over(getComputedStyle(select).borderTopColor, surface), surface),
@@ -108,6 +119,14 @@ describe('form control contrast', () => {
         Number(inRange.opacity) * ratio(over(inRange.color, inRangeBg), inRangeBg),
         4.5,
       ],
+      /* The option the arrow keys are on has to be seen against the menu behind it */
+      'p-select active option outline': [
+        activeOption.outlineStyle === 'none' || Number.parseFloat(activeOption.outlineWidth) < 2
+          ? 0
+          : ratio(over(activeOption.outlineColor, menuBg), menuBg),
+        3,
+      ],
+      'error message on its tint': [ratio(over(dangerText, dangerBg), dangerBg), 4.5],
     };
 
     expect(

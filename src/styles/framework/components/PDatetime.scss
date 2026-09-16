@@ -27,7 +27,7 @@
   background: var(--datetime-bg);
 
   /* Colors — follow the colour roles and dark theme; override at the host with --datetime-*. */
-  --datetime-text: currentColor;
+  --datetime-text: var(--color-text, #171717);
   --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.55));
   --datetime-accent: var(--color-accent, #3b82f6);
   --datetime-accent-strong: var(--color-accent-hover, #2563eb);
@@ -188,7 +188,7 @@ button:disabled {
   .nav button:hover,
   .month-year:hover {
     background: var(--datetime-hover);
-    color: var(--datetime-accent);
+    color: var(--datetime-accent-strong);
   }
 
   .day:not(.disabled):hover,

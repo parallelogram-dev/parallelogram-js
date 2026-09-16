@@ -203,12 +203,12 @@ Each link's \`href\` is the full-size image, so without JavaScript the links sti
     },
     {
       name: '--lightbox-close-bg',
-      default: 'rgba(255, 255, 255, 0.2)',
+      default: 'transparent',
       description: 'Close button background',
     },
     {
       name: '--lightbox-close-hover-bg',
-      default: 'rgba(255, 255, 255, 0.3)',
+      default: 'transparent',
       description: 'Close button background on hover',
     },
     {

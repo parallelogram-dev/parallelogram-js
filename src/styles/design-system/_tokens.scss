@@ -162,5 +162,6 @@ $color-warning-bg: #ffedd5;
 
 /* Dark Mode Overrides */
 /* Components should wrap these in @media (prefers-color-scheme: dark) {} */
+$color-text-dark: #e4e8ee;
 $color-text-muted-dark: rgba(255, 255, 255, 0.5);
 $color-bg-hover-dark: rgba(255, 255, 255, 0.1);
