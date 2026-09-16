@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Toggle decided whether a click was leaving the page by matching the start of the `href`, so a link written `JavaScript:` or `MailTo:`, or with a scheme it didn't know, closed the toggle as though the page were changing. The destination is resolved instead: only an `http:` or `https:` address that differs from the current page counts, and fragments on this page still leave the toggle open.
+- The documentation's `llms-full.txt` escaped a `|` in a description but not a `\`, so a description ending in a backslash could break the table row it sat in. Backslashes are escaped first.
 
 ## [0.7.2] - 2026-09-16
 

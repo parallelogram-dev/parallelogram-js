@@ -89,7 +89,11 @@ export function llmsTxt(contracts, guides) {
     .concat('\n');
 }
 
-const cell = value => String(value).replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' ');
+const cell = value =>
+  String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\s*\n\s*/g, ' ');
 const tick = value => `\`${value}\``;
 const none = value => (value === undefined || value === null ? 'none' : tick(value === '' ? '""' : value));
 
