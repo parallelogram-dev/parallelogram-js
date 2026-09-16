@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `<p-uploader>`'s delete confirmation puts Cancel before Delete, so the destructive button sits at the end of the row.
 - `<p-uploader>`'s panels move the right way. Opening the delete confirmation pushes the file's details up and slides the confirmation in from below, and cancelling brings the details back down; the details used to drop out of the way instead, because the class that puts them above was only ever set on a path that didn't run.
 - `<p-uploader>` no longer reorders files when a button on a card is pressed. The card itself was draggable, so pressing Edit or Delete and moving a pixel started a drag that reordered them on release.
 - `<p-uploader>` keeps a delete confirmation open when it is asked for just after an upload finishes. A card switches itself to the details panel 375 milliseconds after an upload settles, which overwrote the confirmation; a panel the user opens now cancels that.
