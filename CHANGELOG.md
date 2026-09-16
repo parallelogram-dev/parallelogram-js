@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- DeferTracker no longer drops a page event when the router shows a new page. `router:navigate-end` fires when the swap settles, about a second before normal components mount, so a tracker block the router left in place — a pixel in a header, say — ran its page step and claimed the new URL first. This page's own block then mounted, found the URL claimed, and was marked a duplicate, so adapters without a block step, such as `meta-pixel`, `tiktok-pixel` and `hubspot`, never sent its payload: a purchase on a confirmation page went missing. A tracker now claims a URL only when a page step really runs, and a block that mounts after a carried-over block ran the step gets a page step of its own. Two blocks on the same page are deduplicated as before.
+
 - The dark theme now carries text as well as backgrounds. A new `--color-text` role colours every surface: in light mode it is `currentColor`, so surfaces keep inheriting the page's own text colour and nothing changes, and in dark mode it is `#e4e8ee`. Before this, a page that had no dark styles of its own got dark panels with its own black text under a dark operating system — modal panels at 1.25:1 and muted tab labels at 1.00:1. The stylesheet also sets `color-scheme` to match the theme, so the browser's own canvas, text and form controls follow it; a page can still set `color-scheme` itself after the stylesheet. Components that render without the package stylesheet now fall back to `#171717` text rather than `currentColor`, so `<p-select>`, `<p-datetime>`, `<p-modal>` and `<p-uploader>` no longer paint a white panel with the page's light text.
 
 ## [0.7.0] - 2026-09-16

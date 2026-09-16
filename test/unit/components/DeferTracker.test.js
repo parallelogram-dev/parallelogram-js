@@ -255,6 +255,32 @@ describe('DeferTracker trackers', () => {
     ]);
   });
 
+  it('sends a later page block its own page step when the router carried the first block over', async () => {
+    const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
+    const { EventManager } = await import('../../../src/managers/EventManager.js');
+    const eventBus = new EventManager();
+    const boot = vi.fn();
+    boot.page = vi.fn();
+    registerTrackerAdapter('meta-pixel', boot);
+    const tracker = new DeferTracker({ eventBus });
+    /* A pixel in a header the router leaves in place */
+    tracker.mount(block('meta-pixel', { id: '123' }));
+    interact();
+    await vi.advanceTimersByTimeAsync(0);
+
+    history.pushState(null, '', '/confirmation');
+    eventBus.emit('router:navigate-end', { url: '/confirmation', status: 'success' });
+    /* The swapped-in page mounts its own block later, carrying the purchase */
+    const arrived = block('meta-pixel', { id: '123', event: 'Purchase' });
+    tracker.mount(arrived);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect([boot.page.mock.calls.map(([config]) => config), statusOf(arrived)]).toEqual([
+      [{ id: '123' }, { id: '123', event: 'Purchase' }],
+      'booted',
+    ]);
+  });
+
   it('runs the page step for a block that mounts on a later page instead of ignoring it', async () => {
     const { default: DeferTracker, registerTrackerAdapter } = await loadModule();
     const boot = vi.fn();
