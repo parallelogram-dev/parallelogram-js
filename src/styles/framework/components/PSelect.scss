@@ -139,13 +139,15 @@
   background: var(--select-hover-bg);
 }
 
+.option[data-active] {
+  background: var(--select-current-bg);
+  outline: 2px solid var(--select-active-outline, var(--color-accent-hover, #2563eb));
+  outline-offset: -2px;
+}
+
 .option[aria-selected='true'] {
   background: var(--select-selected-bg);
   font-weight: 500;
-}
-
-.option[data-active] {
-  background: var(--select-current-bg);
 }
 
 .group-label {

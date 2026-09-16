@@ -188,7 +188,7 @@ button:disabled {
   .nav button:hover,
   .month-year:hover {
     background: var(--datetime-hover);
-    color: var(--datetime-accent);
+    color: var(--datetime-accent-strong);
   }
 
   .day:not(.disabled):hover,
