@@ -47,7 +47,7 @@
 
   &:focus-visible {
     outline: var(--framework-focus-width, 2px) solid
-      var(--framework-focus-color, var(--color-accent, #3b82f6));
+      var(--framework-focus-color, var(--color-accent, #2563eb));
     outline-offset: calc(-1 * var(--framework-focus-width, 2px));
   }
 }

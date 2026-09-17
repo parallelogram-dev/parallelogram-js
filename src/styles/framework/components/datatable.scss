@@ -37,12 +37,12 @@
 .datatable-search:focus-visible,
 .datatable__sort:focus-visible,
 .datatable__pagination button:focus-visible {
-  outline: 2px solid var(--framework-focus-color, var(--color-accent, #3b82f6));
+  outline: 2px solid var(--framework-focus-color, var(--color-accent, #2563eb));
   outline-offset: 1px;
 }
 
 .datatable-search:focus-visible {
-  border-color: var(--framework-focus-color, var(--color-accent, #3b82f6));
+  border-color: var(--framework-focus-color, var(--color-accent, #2563eb));
 }
 
 :where(th.sortable):hover {

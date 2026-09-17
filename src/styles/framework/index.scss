@@ -20,6 +20,10 @@
 :root {
   --framework-transition-duration: #{var(--transition-normal, 0.2s)};
   --framework-transition-easing: #{var(--ease-in-out, ease-in-out)};
+
+  @media (prefers-reduced-motion: reduce) {
+    --framework-transition-duration: 0s;
+  }
   --framework-focus-color: #{var(--color-accent)};
   --framework-focus-offset: 2px;
   --framework-focus-width: 2px;

@@ -1,20 +1,50 @@
+@use 'design-system' as ds;
+
 /* Demo styling for plain buttons and form fields in documentation examples. It loads before the
    framework styles and sits inside :where(), so component styles always win, such as DataTable's
    current page and sort buttons. */
 :where(.example__stage) {
-  :where(button) {
-    padding: 0.45rem 0.9rem;
-    border: var(--surface-button-border-width) solid var(--button-secondary-border);
-    border-radius: 6px;
-    background: var(--button-secondary-bg);
-    color: var(--button-secondary-color);
-    font: inherit;
-    cursor: pointer;
+  /* The library's button classes, defined the way a page defines them: with its mixins. A rule
+     from the page always beats a component's ::slotted() rule, so p-modal's slotted variants only
+     show when the page defines the variants too. */
+  .btn {
+    @include ds.button-base;
+    @include ds.button-secondary;
   }
 
-  :where(button:hover) {
-    border-color: var(--color-accent);
-    background: var(--button-secondary-hover-bg);
+  .btn--primary {
+    @include ds.button-primary;
+  }
+
+  .btn--secondary {
+    @include ds.button-secondary;
+  }
+
+  .btn--danger {
+    @include ds.button-danger;
+  }
+
+  .btn--ghost {
+    @include ds.button-ghost;
+  }
+
+  .btn--brand {
+    @include ds.button-brand;
+  }
+
+  .btn--sm {
+    @include ds.button-sm;
+  }
+
+  .btn--lg {
+    @include ds.button-lg;
+  }
+
+  /* A plain button is the library's secondary button, so it is the same button as a variant:
+     same padding, height and type, and only the colours differ */
+  :where(button) {
+    @include ds.button-base;
+    @include ds.button-secondary;
   }
 
   :where(.form input) {

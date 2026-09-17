@@ -497,18 +497,23 @@ export default {
     },
     {
       name: '--datetime-preset-bg',
-      default: 'var(--button-ghost-bg)',
-      description: 'Background of a quick-date button; follows the ghost button',
+      default: 'var(--color-surface-muted)',
+      description: 'Background of a quick-date pill; follows the muted surface',
     },
     {
       name: '--datetime-preset-color',
-      default: 'var(--button-ghost-color)',
-      description: 'Text of a quick-date button',
+      default: 'var(--color-text)',
+      description: 'Text of a quick-date pill; follows the text colour',
     },
     {
       name: '--datetime-preset-hover-bg',
-      default: 'var(--button-ghost-hover-bg)',
-      description: 'Background of a hovered quick-date button',
+      default: 'var(--color-accent)',
+      description: 'Background of a quick-date pill under the pointer; follows the accent',
+    },
+    {
+      name: '--datetime-preset-hover-color',
+      default: 'var(--color-accent-contrast)',
+      description: 'Text of a quick-date pill under the pointer; follows the accent contrast',
     },
     {
       name: '--datetime-action-btn-bg',

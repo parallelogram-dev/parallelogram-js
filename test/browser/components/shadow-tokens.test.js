@@ -71,7 +71,7 @@ describe('web component tokens', () => {
     expect(surfaces).toEqual(Array(4).fill('rgb(23, 29, 38)'));
   });
 
-  it('draws the modal panel and toasts with the dark surface, inverse surface and strong status fill when data-theme is dark', () => {
+  it('draws the modal panel and toasts with the dark surface, inverse surface and status colour when data-theme is dark', () => {
     const style = document.createElement('style');
     style.textContent = frameworkStyles;
     document.head.append(style);
@@ -93,6 +93,7 @@ describe('web component tokens', () => {
     delete document.documentElement.dataset.theme;
     style.remove();
 
-    expect(colours).toEqual(['rgb(23, 29, 38)', 'rgb(42, 51, 66)', 'rgb(153, 27, 27)']);
+    /* The error toast is the dark theme's --color-danger, not the deeper -strong it once was */
+    expect(colours).toEqual(['rgb(23, 29, 38)', 'rgb(42, 51, 66)', 'rgb(248, 113, 113)']);
   });
 });
