@@ -40,25 +40,11 @@
     @include ds.button-lg;
   }
 
+  /* A plain button is the library's secondary button, so it is the same button as a variant:
+     same padding, height and type, and only the colours differ */
   :where(button) {
-    padding: 0.45rem 0.9rem;
-    border: var(--surface-button-border-width) solid var(--button-secondary-border);
-    border-radius: 6px;
-    background: var(--button-secondary-bg);
-    color: var(--button-secondary-color);
-    font: inherit;
-    cursor: pointer;
-
-    @media (prefers-reduced-motion: no-preference) {
-      transition:
-        background-color var(--framework-transition-duration) var(--framework-transition-easing),
-        border-color var(--framework-transition-duration) var(--framework-transition-easing);
-    }
-  }
-
-  :where(button:hover) {
-    border-color: var(--color-accent);
-    background: var(--button-secondary-hover-bg);
+    @include ds.button-base;
+    @include ds.button-secondary;
   }
 
   :where(.form input) {
