@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `--color-success-contrast`, `--color-success-text`, `--color-warning-contrast` and `--color-warning-text`, so every status colour has the five roles danger had: the solid, the text on it, the strong, the tint a message sits on, and the text on that tint. Success and warning had no `-contrast`, so text on their solids fell back to `--color-on-status`, white in both themes -- readable on the light theme's solids and 1.7:1 on the dark theme's light green -- and no `-text`, so a message on their tint had nothing to be but the dark `-strong`, 1.8:1 over a dark surface. A browser test now holds every status pairing in both themes: 3:1 on a solid, which is a button or a badge, and 4.5:1 for a message on a tint or a strong.
+
+### Fixed
+
+- The documentation site's example stage was `#fff` with dark text and `color-scheme: light` whatever the theme, so in the dark theme every component sat on a white patch: the accordion's light text over it at 1.2:1, DataTable's inherited dark text on its own dark cells at 1.1:1, and native inputs and buttons painted light. The stage takes its ground, text and border from the design system now, and its plain buttons and fields from the secondary-button and control tokens, so an example sits on what a page using the library would give it, in either theme. A scan of every component page in the dark theme went from 48 flagged elements to one, which is the accent button and correct.
+- On the design system page, a status tint's sample carries the status's `-text` rather than its `-strong`, the `--color-on-status` sample sits on a `-strong` as toasts do rather than on the solid, and a family with no colour of its own no longer offers a length as a background, which painted white text on the page ground. In the dark theme no sample is under 4.5:1 now; in the light theme the accent, success and warning solids with white text sit at 3.3 to 3.7:1, which is the palette as drawn.
+
 ## [0.7.9] - 2026-09-17
 
 ### Changed
