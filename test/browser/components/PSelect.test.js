@@ -916,6 +916,21 @@ describe('p-select paging', () => {
     expect(calls.map(call => call.page)).toEqual([1, 2]);
   });
 
+  it('takes a new search back to the top of the list', async () => {
+    pagedSource();
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    scrollToEnd(select);
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(20), WAIT);
+    const scrolled = listboxOf(select).scrollTop;
+
+    typeInto(select, 'Row 2');
+
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    expect([scrolled > 0, listboxOf(select).scrollTop]).toEqual([true, 0]);
+  });
+
   it('starts again from page 1 for a new search', async () => {
     const calls = pagedSource();
     const select = pagedSelect();

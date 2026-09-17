@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A new search in a `<p-select>` no longer arrives with its second page already added. A list left scrolled at its end stayed there when the results of a new search replaced it, and the scroll handler read that as a call for the next page, so the search that had just started fetched page 2 of itself. The list goes back to the top whenever results replace it, and stays where it is when a further page is added to them, so the highlight still keeps its place while paging.
+
 ## [0.7.5] - 2026-09-17
 
 ### Added

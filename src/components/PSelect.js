@@ -561,7 +561,7 @@ export default class PSelect extends HTMLElement {
       this.state.page = page;
       this.state.more = this.state.src.includes('{page}') && Boolean(data?.more);
       const highlighted = this.state.highlightedIndex;
-      this._filterLocal('', { announce: true });
+      this._filterLocal('', { announce: true, keepScroll: page > 1 });
       if (page > 1) this._setHighlight(highlighted);
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -596,7 +596,7 @@ export default class PSelect extends HTMLElement {
     });
   }
 
-  _filterLocal(query, { announce = Boolean(query) } = {}) {
+  _filterLocal(query, { announce = Boolean(query), keepScroll = false } = {}) {
     const searchTerm = query.trim().toLowerCase();
     /* The secondary text is searched as well, so an email finds its person; the description isn't */
     this.state.filtered = searchTerm
@@ -607,7 +607,7 @@ export default class PSelect extends HTMLElement {
         )
       : this.state.options.slice();
 
-    this._renderOptions();
+    this._renderOptions({ keepScroll });
 
     const selectedIndex = this.state.filtered.findIndex(
       option => option.value === this.state.value
@@ -901,9 +901,16 @@ export default class PSelect extends HTMLElement {
   /**
    * Build the listbox for the filtered options, grouping them under their optgroup labels
    */
-  _renderOptions() {
+  /**
+   * Draw the options the search left, from the top unless a further page was just added to them
+   *
+   * A list left scrolled at its end would otherwise stay there when new results replace it, and
+   * the scroll handler would read that as a call for the next page of a search that just started.
+   */
+  _renderOptions({ keepScroll = false } = {}) {
     const { menu } = this._els;
     menu.replaceChildren();
+    if (!keepScroll) menu.scrollTop = 0;
     this.state.highlightedIndex = -1;
     this._els.input.removeAttribute('aria-activedescendant');
 
