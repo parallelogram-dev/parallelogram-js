@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.12] - 2026-09-17
+
 ### Added
 
 - Tooltip, an enhancement: `data-tooltip="…"` on a control shows the text beside it after a short delay under the pointer and at once on keyboard focus, and `data-tooltip-target` names an element whose content is the description when the text is empty. It goes when the pointer leaves, focus moves, the control is pressed or Escape is pressed, and links to the control with `aria-describedby` while shown -- a description, not a name, so a control with only an icon still needs its own `aria-label`. `data-tooltip-placement` picks a side and the tooltip flips when there is no room, staying inside the viewport with the triangle still pointing at the control; `data-tooltip-arrow="false"` drops the triangle. It fades and moves into place over the framework's transition, and appears at once for a visitor who prefers reduced motion. Touch gets nothing. Ten custom properties from `--tooltip-bg` to `--tooltip-transition-duration`, and `Tooltip.enhanceAll()` mounts it without the framework.
