@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.8] - 2026-09-17
+
 ### Added
 
 - The package ships one file with everything in it, `dist/parallelogram.js`, which `unpkg` and `jsdelivr` now point at. A page loading the library straight from a CDN gets it in one request instead of discovering each module from the one before it. It carries every component whether the page uses one or not, about 74 kB over the wire, so the individual files remain the better choice behind a bundler or for a page using one or two components -- Getting started now says which to reach for and why.
