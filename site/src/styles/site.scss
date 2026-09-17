@@ -232,20 +232,22 @@ pre {
 .doc {
   max-width: 62rem;
 
-  h1 {
+  /* An example stage shows a component as a page that hasn't styled it would, so the site's own
+     headings stop at its edge; a slotted heading keeps whatever the component gives it. */
+  h1:not(:where(.example__stage *)) {
     margin: 0.35rem 0 0.75rem;
     font: 600 clamp(2rem, 4vw, 2.75rem) / 1.1 var(--site-display);
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
-  h2 {
+  h2:not(:where(.example__stage *)) {
     margin: 0 0 0.75rem;
     font: 600 1.4rem/1.25 var(--site-display);
     text-wrap: balance;
   }
 
-  h3 {
+  h3:not(:where(.example__stage *)) {
     margin: 1.5rem 0 0.5rem;
     font-size: 1.05rem;
   }
