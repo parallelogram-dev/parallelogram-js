@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `<p-modal>`'s title sits on its close button's line. The button is pinned a set distance from the top of the panel while the header took its padding from the panel family, so the two were a few pixels apart; the header now takes the button's own band as its least height and centres the title in it, whatever padding the page has given it.
 - A title slotted into a `<p-modal>` no longer carries the browser's default heading margins inside the header. The rule meant to reset them matched only the fallback heading in the shadow tree, never the page's own element, so a page without its own heading reset got a title sitting low in its row; `::slotted([slot='title'])` now carries the reset, along with the size, line height and weight it always meant to, all of which a page's own styles still outrank.
 - Opening a `<p-modal>` with a click no longer leaves a focus ring on its close button. A modal moves focus inside itself as it opens, and the close button is where that focus lands when nothing in the content can take it, so a pointer user was shown a ring they never asked for. It now follows the same keyboard-only focus rings as the other components, through `data-focus-source`.
 - A `<p-modal>` given nothing to put in its `actions` slot no longer draws an empty footer. The footer was always in the dialog, so a modal that only tells the reader something ended in a bordered, padded strip with nothing in it; it is now left out until the page slots something into it.

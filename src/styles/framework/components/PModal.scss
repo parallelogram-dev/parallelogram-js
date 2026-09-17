@@ -94,6 +94,7 @@
   --modal-max-height: 86vh;
   --modal-fullscreen-inset: 3em; /* 48px */
   --modal-close-size: 1.75em; /* 28px */
+  --modal-close-inset: var(--modal-padding-y);
   --modal-font-sm: 0.875em; /* 14px */
   --modal-font-md: 1.125em; /* 18px */
   --modal-btn-min-height: 3.125em; /* 50px */
@@ -167,6 +168,7 @@
 .modal__close,
 .modal__header,
 .modal__footer {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
 }
@@ -195,8 +197,11 @@
   font-weight: 600;
 }
 
-/* Room for the pinned close button, over whatever sits at the top of the panel */
+/* Room for the pinned close button, over whatever sits at the top of the panel. The header takes
+   the button's own band as its least height, so the title sits on the button's line however the
+   page has set the header's padding. */
 .modal__panel:has(.modal__close:not([hidden])) .modal__header {
+  min-height: calc(var(--modal-close-size) + 2 * var(--modal-close-inset));
   padding-right: calc(var(--modal-padding-x) + var(--modal-close-size) + var(--modal-gap));
 }
 
@@ -209,7 +214,7 @@
 .modal__close {
   all: unset;
   position: absolute;
-  top: var(--modal-padding-y);
+  top: var(--modal-close-inset);
   right: var(--modal-padding-x);
   z-index: 1;
   display: inline-flex;

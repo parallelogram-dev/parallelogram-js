@@ -192,6 +192,7 @@ describe('p-modal', () => {
 describe('p-modal with a part left out', () => {
   afterEach(() => {
     document.body.replaceChildren();
+    document.body.style.overflow = '';
   });
 
   const render = markup => {
@@ -225,6 +226,20 @@ describe('p-modal with a part left out', () => {
     const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
 
     expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(false);
+  });
+
+  it('lines a title up with the pinned close button', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+    modal.open();
+    const centre = element => {
+      const box = element.getBoundingClientRect();
+      return box.top + box.height / 2;
+    };
+
+    const title = modal.shadowRoot.querySelector('[part="title"]');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+
+    expect(Math.abs(centre(title) - centre(close))).toBeLessThan(1.5);
   });
 
   it('pins the close button to the panel rather than the header, so it never scrolls', () => {
