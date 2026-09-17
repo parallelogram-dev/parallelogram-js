@@ -136,6 +136,12 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       description:
         "Distance from the top of the panel to the close button, and the least height of the header, so the title sits on the button's line",
     },
+    {
+      name: '--modal-content-gap',
+      default: 'var(--modal-space-xl)',
+      description:
+        "Space between the elements the page puts in the modal, which give up the margins the browser would give them so the content meets the panel's padding",
+    },
     { name: '--modal-padding-x', description: 'Horizontal padding' },
     { name: '--modal-padding-y', description: 'Vertical padding' },
     {
@@ -191,6 +197,53 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
   <p>Table 12 is held until 7.15pm.</p>
   <div slot="actions">
     <button type="button" class="btn btn--primary" data-modal-close>Close</button>
+  </div>
+</p-modal>`,
+      controls: [{ attribute: 'data-modal-size' }],
+    },
+    {
+      id: 'terms',
+      title: 'Long content',
+      description:
+        "Content taller than the panel scrolls inside it, while the close button stays where it is and the footer stays with it. The body is the page's own markup, spaced by the modal rather than by the margins the browser would give it.",
+      markup: `<button type="button" data-modal data-modal-target="#booking-terms">Read the booking terms</button>
+
+<p-modal id="booking-terms" data-modal-size="lg">
+  <h2 slot="title">Booking terms</h2>
+
+  <h3>Holding your table</h3>
+  <p>A table is held for fifteen minutes past the time you booked. After that we may offer it to the waitlist, and we will text the number on the booking before we do.</p>
+
+  <h3>Changing or cancelling</h3>
+  <p>Change or cancel from the link in your confirmation email, at any time up to two hours before you are due. Inside two hours, please call the restaurant instead.</p>
+  <ul>
+    <li>Parties of six or more: one working day's notice</li>
+    <li>Set menus and private rooms: three working days' notice</li>
+    <li>New Year's Eve: no changes after 20 December</li>
+  </ul>
+
+  <h3>Deposits</h3>
+  <p>A deposit is taken for parties of eight or more and for every booking on a public holiday. It comes off the bill on the night. A deposit is returned in full when a booking is cancelled with the notice above, and kept when it is not.</p>
+
+  <h3>Groups and events</h3>
+  <p>Parties of twelve or more eat from a set menu, chosen a week ahead. The private room seats twenty-four and has a minimum spend on Fridays and Saturdays, which we will quote when you enquire.</p>
+  <p>We can hold a room for seven days without a deposit while you decide.</p>
+
+  <h3>Children</h3>
+  <p>Children are welcome until 8pm, and high chairs are free but limited, so please ask for one when you book. Half portions are available from most of the menu.</p>
+
+  <h3>Gift vouchers</h3>
+  <p>Vouchers are valid for two years from the day they are bought and can be used against any bill, including drinks. They cannot be exchanged for cash, and any balance stays on the voucher.</p>
+
+  <h3>Your details</h3>
+  <p>We keep your name, phone number and email so we can hold the booking and tell you if anything changes. We do not pass them to anyone else, and you can ask us to delete them at any time.</p>
+  <p>Where you tell us about allergies or access needs, we keep those with the booking and share them with the kitchen and the floor team.</p>
+
+  <small>Last updated 3 September 2026. These terms apply to bookings made through this site.</small>
+
+  <div slot="actions">
+    <button type="button" data-modal-close>Decline</button>
+    <button type="button" class="btn btn--primary" data-modal-close>Accept</button>
   </div>
 </p-modal>`,
       controls: [{ attribute: 'data-modal-size' }],

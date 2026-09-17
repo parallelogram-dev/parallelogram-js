@@ -61,6 +61,7 @@
     var(--modal-padding-y) var(--modal-padding-x)
   );
   --modal-content-padding: var(--panel-padding, var(--modal-padding-x));
+  --modal-content-gap: var(--modal-space-xl);
   --modal-footer-padding: var(
     --panel-footer-padding,
     var(--modal-padding-y) var(--modal-padding-x)
@@ -243,10 +244,22 @@
 /* Element: Modal content */
 .modal__content {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--modal-content-gap);
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
   padding: var(--modal-content-padding);
+}
+
+/* Content the page hasn't styled arrives with the browser's own margins, which would set it below
+   the pinned close button and deepen the panel. Everything the page puts in the modal, rather than
+   in a slot of its own, gives up those margins, and the content area spaces them instead, so the
+   spacing holds however the markup is ordered. A page that sets margins itself outranks this, as it
+   does anything said about slotted content, and padding or a wrapper brings outer space back. */
+.modal__content ::slotted(:not([slot])) {
+  margin-block: 0;
 }
 
 /* Element: Modal footer */
