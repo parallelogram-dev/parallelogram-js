@@ -44,7 +44,7 @@
   /* Opacity */
   --datetime-placeholder-opacity: 0.6;
   --datetime-icon-opacity: 0.7;
-  --datetime-disabled-opacity: 0.3;
+  --datetime-disabled-opacity: var(--form-control-disabled-opacity, 0.3);
 
   /* Spacing */
   --datetime-padding-x: 0.75em;

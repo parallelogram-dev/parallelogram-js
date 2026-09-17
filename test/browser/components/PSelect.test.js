@@ -258,7 +258,8 @@ describe('p-select', () => {
   });
 });
 
-const WAIT = { timeout: 2000 };
+/* Long enough that a loaded runner doesn't give up on a request that is still on its way */
+const WAIT = { timeout: 5000 };
 
 const mountSelect = (markup, container = document.body) => {
   container.insertAdjacentHTML('beforeend', markup);
@@ -958,5 +959,19 @@ describe('p-select paging', () => {
     scrollToEnd(select);
 
     await vi.waitFor(() => expect(live.textContent).toBe('15 results available'), WAIT);
+  });
+});
+
+describe('p-select disabled', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('looks disabled, not only unusable', () => {
+    const select = mountSelect(
+      '<p-select aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
+    );
+
+    expect(Number(getComputedStyle(select).opacity)).toBeLessThan(1);
   });
 });

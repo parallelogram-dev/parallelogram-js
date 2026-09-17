@@ -4,6 +4,7 @@ import { deepActiveElement, getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
+import { followFocusSource } from '../utils/focus-source.js';
 
 /** Modals that are open, most recently opened last, shared by every p-modal on the page */
 const openModals = [];
@@ -43,6 +44,7 @@ let lockedOverflow = null;
  * @slots
  * - title: the title, which also names the dialog
  * - (default): the content
+ * - secondary: a secondary action, held against the leading end of the footer, away from the rest
  * - actions: footer buttons; any element with `data-modal-close` closes the modal
  *
  * @events
@@ -76,16 +78,16 @@ export default class PModal extends HTMLElement {
       root,
       `
       <dialog class="modal__panel" data-modal-panel part="panel" tabindex="-1">
+        <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
         <header class="modal__header" data-modal-header part="header">
-          <div class="modal__title" part="title"><slot name="title"><h2>Dialog</h2></slot></div>
-          <div class="modal__spacer"></div>
-          <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
+          <div class="modal__title" part="title"><slot name="title"></slot></div>
         </header>
         <section class="modal__content" data-modal-content part="content">
           <slot></slot>
         </section>
         <footer class="modal__footer" data-modal-footer part="footer">
-          <slot name="actions"></slot>
+          <div class="modal__actions"><slot name="secondary"></slot></div>
+          <div class="modal__actions"><slot name="actions"></slot></div>
         </footer>
       </dialog>
     `
@@ -95,6 +97,10 @@ export default class PModal extends HTMLElement {
     this._dialog = root.querySelector('dialog');
     this._closeButton = root.querySelector('[data-modal-close-btn]');
     this._titleSlot = root.querySelector('slot[name="title"]');
+    this._actionsSlot = root.querySelector('slot[name="actions"]');
+    this._secondarySlot = root.querySelector('slot[name="secondary"]');
+    this._footer = root.querySelector('[data-modal-footer]');
+    this._header = root.querySelector('[data-modal-header]');
     this._returnFocus = null;
     this._lastReturnFocus = null;
     this._pendingReturnFocus = undefined;
@@ -102,6 +108,7 @@ export default class PModal extends HTMLElement {
   }
 
   connectedCallback() {
+    followFocusSource(this);
     /* Custom element constructors may not add attributes, so the initial state is set here */
     if (!this.hasAttribute('data-modal-state')) {
       this._setModalState('closed');
@@ -159,8 +166,19 @@ export default class PModal extends HTMLElement {
       { signal }
     );
 
-    this._titleSlot.addEventListener('slotchange', () => this._updateName(), { signal });
+    this._titleSlot.addEventListener(
+      'slotchange',
+      () => {
+        this._updateName();
+        this._updateHeader();
+      },
+      { signal }
+    );
+    this._actionsSlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
+    this._secondarySlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
     this._updateName();
+    this._updateHeader();
+    this._updateFooter();
 
     this._upgradeOpenProperty();
     if (this.hasAttribute('open')) {
@@ -373,6 +391,24 @@ export default class PModal extends HTMLElement {
       .replace(/\s+/g, ' ')
       .trim();
     this._dialog.setAttribute('aria-label', title || 'Dialog');
+  }
+
+  /**
+   * Keep the header out of the dialog until the page slots a title into it
+   *
+   * The close button sits on the panel rather than in the header, so it is there either way.
+   */
+  _updateHeader() {
+    this._header.hidden = this._titleSlot.assignedNodes().length === 0;
+  }
+
+  /**
+   * Keep the footer out of the dialog until the page slots something into it
+   */
+  _updateFooter() {
+    this._footer.hidden =
+      this._actionsSlot.assignedNodes().length === 0 &&
+      this._secondarySlot.assignedNodes().length === 0;
   }
 
   /**

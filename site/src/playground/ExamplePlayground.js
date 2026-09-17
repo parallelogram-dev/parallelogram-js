@@ -41,6 +41,7 @@ export default class ExamplePlayground extends BaseComponent {
       code: element.querySelector('[data-example-code]'),
       log: element.querySelector('[data-example-log]'),
       panel: element.querySelector('[data-example-state]'),
+      authored: element.querySelector('template[data-example-source]').content.cloneNode(true),
       started: performance.now(),
     });
 
@@ -64,13 +65,15 @@ export default class ExamplePlayground extends BaseComponent {
     this._readControls(state);
     state.form.hidden = false;
 
-    state.form.addEventListener('input', () => this._render(state), { signal });
+    state.form.addEventListener('input', () => this._apply(state), { signal });
     state.form.addEventListener(
       'reset',
       () => {
         setTimeout(() => {
+          state.authored = state.source.content.cloneNode(true);
           this._readControls(state);
-          this._render(state);
+          this._restage(state);
+          this._writeCode(state);
         });
       },
       { signal }
@@ -101,29 +104,50 @@ export default class ExamplePlayground extends BaseComponent {
     }
   }
 
-  _render(state) {
-    const markup = state.source.content.cloneNode(true);
+  /**
+   * Set a changed attribute on the component itself, so the page shows how it answers the change
+   *
+   * A web component is told about the attributes it observes, so it keeps whatever the visitor has
+   * done to it and answers in place. An enhancement reads its options once, when it mounts, so its
+   * markup is staged again and the framework mounts it afresh.
+   */
+  _apply(state) {
     for (const field of this._fields(state)) {
-      const target = this._targetIn(markup, state, field);
-      if (!target) continue;
       const name = field.dataset.attribute;
       const authored = this._targetIn(state.source.content, state, field)?.getAttribute(name);
-      if (field.type === 'checkbox') {
-        target.toggleAttribute(name, field.checked);
-      } else if (field.value === '') {
-        target.removeAttribute(name);
-      } else if (field.value === 'true' && authored === '') {
-        target.setAttribute(name, '');
-      } else {
-        target.setAttribute(name, field.value);
+      for (const target of [
+        this._targetIn(state.authored, state, field),
+        this._targetIn(state.stage, state, field),
+      ]) {
+        if (!target) continue;
+        if (field.type === 'checkbox') {
+          target.toggleAttribute(name, field.checked);
+        } else if (field.value === '') {
+          target.removeAttribute(name);
+        } else if (field.value === 'true' && authored === '') {
+          target.setAttribute(name, '');
+        } else {
+          target.setAttribute(name, field.value);
+        }
       }
     }
 
-    if (state.code) {
-      state.code.textContent = serializeMarkup(markup.cloneNode(true));
-    }
-    state.stage.replaceChildren(markup);
+    this._writeCode(state);
+    if (state.contract.kind !== 'element') this._restage(state);
+  }
+
+  /**
+   * Put the markup as it now stands on the stage, mounting the component again
+   */
+  _restage(state) {
+    state.stage.replaceChildren(state.authored.cloneNode(true));
     this._prepareStage(state);
+  }
+
+  _writeCode(state) {
+    if (state.code) {
+      state.code.textContent = serializeMarkup(state.authored.cloneNode(true));
+    }
   }
 
   /**

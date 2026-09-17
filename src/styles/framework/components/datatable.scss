@@ -117,7 +117,7 @@
 }
 
 :where(.datatable__pagination button:disabled) {
-  opacity: 0.5;
+  opacity: $opacity-disabled;
   cursor: not-allowed;
 }
 

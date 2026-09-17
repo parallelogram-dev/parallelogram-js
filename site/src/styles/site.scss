@@ -232,20 +232,22 @@ pre {
 .doc {
   max-width: 62rem;
 
-  h1 {
+  /* An example stage shows a component as a page that hasn't styled it would, so the site's own
+     headings stop at its edge; a slotted heading keeps whatever the component gives it. */
+  h1:not(:where(.example__stage *)) {
     margin: 0.35rem 0 0.75rem;
     font: 600 clamp(2rem, 4vw, 2.75rem) / 1.1 var(--site-display);
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
-  h2 {
+  h2:not(:where(.example__stage *)) {
     margin: 0 0 0.75rem;
     font: 600 1.4rem/1.25 var(--site-display);
     text-wrap: balance;
   }
 
-  h3 {
+  h3:not(:where(.example__stage *)) {
     margin: 1.5rem 0 0.5rem;
     font-size: 1.05rem;
   }
@@ -254,6 +256,93 @@ pre {
   li {
     max-width: 44rem;
   }
+}
+
+/* A component page splits in two once there is room for it: the facts beside the title, the
+   playground beside what there is to read, and the reference tables across both underneath.
+   The gap matches the page's own side padding. Stacked, the playground leads, as it did before. */
+.doc__header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.doc__columns {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.doc__aside {
+  min-width: 0;
+
+  .example {
+    margin-top: 0;
+  }
+}
+
+.doc__aside-title {
+  margin: 0 0 1rem;
+  color: var(--site-accent);
+  font: 600 0.75rem var(--site-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.doc__main {
+  min-width: 0;
+}
+
+@media (min-width: 80rem) {
+  .doc--split {
+    max-width: 96rem;
+  }
+
+  .doc--split .doc__columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 4vw, 3rem);
+    align-items: start;
+  }
+
+  .doc--split .doc__header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .doc--split .doc__main {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* The playground keeps its place while the reading column scrolls past it, and scrolls inside
+     itself when it is taller than the window */
+  .doc--split .doc__aside {
+    position: sticky;
+    top: calc(var(--site-header) + 1.5rem);
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-height: calc(100vh - var(--site-header) - 3rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .doc--split .doc__summary {
+    margin-bottom: 0;
+  }
+
+  .doc--split .doc__main > .doc__section:first-child {
+    margin-top: 2rem;
+  }
+}
+
+.playground {
+  margin-top: 2.5rem;
+
+  [data-tabs-panels] {
+    margin-top: 1rem;
+  }
+}
+
+.playground__tabs {
+  flex-wrap: wrap;
 }
 
 .doc__eyebrow {
@@ -274,7 +363,7 @@ pre {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 1.5rem;
-  margin: 0;
+  margin: 1.25rem 0 0;
 
   div {
     display: grid;
@@ -504,6 +593,18 @@ pre {
 
   table {
     width: 100%;
+  }
+}
+
+.example__views {
+  [data-tabs-list] {
+    padding: 0 1.25rem;
+  }
+
+  .example__code,
+  .example__state,
+  .example__log {
+    border-top: 0;
   }
 }
 
