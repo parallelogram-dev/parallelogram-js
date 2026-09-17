@@ -60,6 +60,7 @@ export const uploaderText = {
   unnamedFile: 'the file',
   orderError: 'The new order couldn’t be saved, so the files are back in their previous order.',
   uploadError: 'Upload failed',
+  invalidResponseMessage: 'Invalid server response',
   serverError: 'Server error',
   deleteError: 'Delete failed: {error}',
   saveError: 'Changes couldn’t be saved: {error}',

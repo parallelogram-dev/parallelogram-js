@@ -1057,4 +1057,25 @@ describe('p-select from the keyboard alone', () => {
       PSelect.defaults.placeholder = 'Select…';
     }
   });
+
+  it('asks for a search, or says nothing was found, in the words the page or the site chose', () => {
+    PSelect.defaults.noResults = 'Aucun résultat';
+    try {
+      renderForm(`
+        <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
+        <p-select name="country"><option value="fr">France</option></p-select>
+      `);
+      const [remote, local] = document.querySelectorAll('p-select');
+      const message = select => select.shadowRoot.querySelector('.noresults')?.textContent;
+      remote.open();
+      local.open();
+      const input = local.shadowRoot.querySelector('.input');
+      input.value = 'zzz';
+      input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+      expect([message(remote), message(local)]).toEqual(['Tapez 2 caractères', 'Aucun résultat']);
+    } finally {
+      PSelect.defaults.noResults = 'No results found';
+    }
+  });
 });

@@ -121,13 +121,22 @@ export default class PSelect extends HTMLElement {
   static formAssociated = true;
 
   /** The text the select shows: a site changes it here once, a page changes one with the attribute */
-  static defaults = { placeholder: 'Select…', clearLabel: 'Clear the selection' };
+  static defaults = {
+    placeholder: 'Select…',
+    clearLabel: 'Clear the selection',
+    searchHint: 'Type to search',
+    searchMinHint: 'Type {min} or more characters to search',
+    noResults: 'No results found',
+  };
 
   static get observedAttributes() {
     return [
       'value',
       'placeholder',
       'clear-label',
+      'search-hint',
+      'search-min-hint',
+      'no-results',
       'disabled',
       'required',
       'aria-label',
@@ -936,9 +945,9 @@ export default class PSelect extends HTMLElement {
   _emptyMessage() {
     const { src, min, query } = this.state;
     if (src && query.length < min) {
-      return min === 1 ? 'Type to search' : `Type ${min} or more characters to search`;
+      return text(this, min === 1 ? 'search-hint' : 'search-min-hint', { min });
     }
-    return 'No results found';
+    return text(this, 'no-results');
   }
 
   /**
