@@ -122,8 +122,6 @@
   justify-content: center;
   gap: #{$space-sm};
 
-  @include mix.transition(all, $duration-fast);
-
   &:disabled,
   &[disabled] {
     opacity: #{$opacity-disabled};

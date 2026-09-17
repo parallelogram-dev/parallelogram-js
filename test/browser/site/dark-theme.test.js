@@ -86,11 +86,37 @@ describe('the example stage in the dark theme', () => {
       return [getComputedStyle(button).backgroundColor, getComputedStyle(button).color];
     };
 
+    /* Computed, not measured: the modal in this example is closed, so its slotted buttons have no
+       box to measure, and a plain button on the page must match them all the same */
+    const box = button => {
+      const style = getComputedStyle(button);
+      return [
+        style.minHeight,
+        style.padding,
+        style.fontSize,
+        style.fontWeight,
+        style.lineHeight,
+      ].join();
+    };
+    const plain = mountExample(FormEnhancer, FormEnhancer.examples[0].id).querySelector('button');
+    const pure = document.createElement('button');
+    pure.className = 'btn';
+    pure.textContent = 'Plain';
+    stage.append(pure);
+
     /* The examples use the classes a page defines with the library's button mixins, and the docs
-       never defined them, so a primary and a danger button looked like every other button */
-    expect({ primary: paint('.btn--primary'), danger: paint('.btn--danger') }).toEqual({
+       never defined them, so a primary and a danger button looked like every other button; and a
+       plain button was a hand-written docs style, a different height and type from a variant */
+    expect({
+      primary: paint('.btn--primary'),
+      danger: paint('.btn--danger'),
+      boxes: [box(plain), box(pure), box(stage.querySelector('.btn--danger'))].map(
+        each => each === box(stage.querySelector('.btn--primary'))
+      ),
+    }).toEqual({
       primary: [token('--button-primary-bg'), token('--button-primary-color')],
       danger: [token('--button-danger-bg'), token('--button-danger-color')],
+      boxes: [true, true, true],
     });
   });
 });
