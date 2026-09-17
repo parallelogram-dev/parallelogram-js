@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The package ships one file with everything in it, `dist/parallelogram.js`, which `unpkg` and `jsdelivr` now point at. A page loading the library straight from a CDN gets it in one request instead of discovering each module from the one before it. It carries every component whether the page uses one or not, about 74 kB over the wire, so the individual files remain the better choice behind a bundler or for a page using one or two components -- Getting started now says which to reach for and why.
+- `<p-select>` documents the seven custom properties its own stylesheet reads and its contract had never listed: the control background, border, border width and radius, padding, placeholder colour, and the outline drawn while the list is open. DataTable documents `--datatable-error-default`.
+
+### Changed
+
+- Two tests keep the documented custom properties honest: every property a component's own stylesheet reads must be documented, and every documented property must be read by something. `<p-modal>` documented 14 of the 51 it read and nothing failed, which is how that gap lasted. The dozen values `<p-modal>` and `<p-datetime>` use only to stay consistent with themselves are named in the test as deliberately internal, so excluding them is a decision on the record rather than an omission.
+
 ## [0.7.7] - 2026-09-17
 
 ### Added

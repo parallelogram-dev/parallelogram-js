@@ -4,8 +4,8 @@
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
   "main": "./dist/index.js",
-  "unpkg": "./dist/index.js",
-  "jsdelivr": "./dist/index.js",
+  "unpkg": "./dist/parallelogram.js",
+  "jsdelivr": "./dist/parallelogram.js",
   "types": "./dist/types/index.d.ts",
   "customElements": "./dist/custom-elements.json",
   "scripts": {
@@ -148,6 +148,7 @@
     "@parcel/watcher@2.5.1": true
   },
   "sizeBudget": {
+    "parallelogram.js": 78000,
     "index.js": 16662,
     "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3944,

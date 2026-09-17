@@ -238,6 +238,12 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
   ],
   cssProperties: [
     {
+      name: '--datatable-error-default',
+      default: 'var(--color-danger-text)',
+      description:
+        'The load error colour used when neither --datatable-error-color nor --brand-danger is set',
+    },
+    {
       name: '--datatable-border-color',
       description:
         'Borders of the search box and pagination buttons; by default the search box uses --surface-control-border-color and the buttons --color-border-strong',
