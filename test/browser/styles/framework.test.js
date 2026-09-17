@@ -101,15 +101,15 @@ describe('framework stylesheet', () => {
 
       /* Danger had all five roles; success and warning had no -contrast and no -text, so their
          text fell back to white -- fine on the light theme's solids, unreadable on the dark
-         theme's -- and their tints carried the dark -strong text over a dark surface. A solid is
-         a button or a badge, held to the 3:1 the palette was drawn to; a message on a tint or a
-         strong is body text, held to 4.5:1 */
+         theme's -- and their tints carried the dark -strong text over a dark surface. Every
+         pairing is held to 4.5:1: the light theme's solids were drawn at 3:1 and stepped down to
+         clear it, and the warning keeps its orange by carrying dark text instead */
       expect(result).toEqual(
         Object.fromEntries(
           ['danger', 'success', 'warning'].map(status => [
             status,
             {
-              onSolid: expect.toSatisfy(ratio => ratio >= 3),
+              onSolid: expect.toSatisfy(ratio => ratio >= 4.5),
               onStrong: expect.toSatisfy(ratio => ratio >= 4.5),
               onTint: expect.toSatisfy(ratio => ratio >= 4.5),
               declared: true,

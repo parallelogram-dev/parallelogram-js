@@ -127,7 +127,7 @@
 /* The panel only takes focus when it has nothing focusable, so show it like any other focus */
 .modal__panel:focus-visible {
   outline: var(--framework-focus-width, 2px) solid
-    var(--framework-focus-color, var(--color-accent, #3b82f6));
+    var(--framework-focus-color, var(--color-accent, #2563eb));
   outline-offset: var(--framework-focus-offset, 2px);
 }
 

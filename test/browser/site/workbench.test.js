@@ -66,7 +66,7 @@ describe('design workbench', () => {
       radius: field('--surface-panel-radius').value,
       picker: token('--color-accent').querySelector('.tokens__picker')?.value,
       slider: token('--surface-panel-radius').querySelector('.tokens__slider')?.value,
-    }).toEqual({ beforeStyles: ['', ''], radius: '0.5em', picker: '#3b82f6', slider: '0.5' });
+    }).toEqual({ beforeStyles: ['', ''], radius: '0.5em', picker: '#2563eb', slider: '0.5' });
   });
 
   it('writes a change onto the page and into the CSS to copy, and undoes it on reset', async () => {
