@@ -39,9 +39,28 @@ const record = (picker, type) => {
   return events;
 };
 
+const partsOf = picker =>
+  [...picker.shadowRoot.querySelectorAll('[part]')].flatMap(element =>
+    element.getAttribute('part').split(/\s+/)
+  );
+
 describe('p-datetime', () => {
   afterEach(() => {
     document.body.replaceChildren();
+  });
+
+  it('exposes the parts a page needs to restyle the calendar', async () => {
+    const picker = renderPicker();
+    trigger(picker).click();
+    await nextFrame();
+    await wait(20);
+
+    /* Without these a page can reach the host and nothing inside it, so "make the days circular"
+       means forking the component */
+    const parts = partsOf(picker);
+    expect(
+      ['panel', 'grid', 'day', 'time-select', 'action'].filter(name => !parts.includes(name))
+    ).toEqual([]);
   });
 
   it('opens from its trigger after being moved on the page', async () => {

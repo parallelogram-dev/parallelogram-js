@@ -72,10 +72,32 @@ Filtering keeps the current sort, pagination is a labelled navigation region wit
     {
       name: 'data-datatable-status-message',
       type: 'string',
-      default: 'Showing {from}–{to} of {total} rows',
+      default: 'Showing {from}–{to} of {total} rows{sort}',
       option: 'statusMessage',
       description:
-        'The status shown and announced after each change, with {from}, {to} and {total}',
+        'The status shown and announced after each change, with {from}, {to}, {total} and {sort}',
+    },
+    {
+      name: 'data-datatable-sort-status',
+      type: 'string',
+      default: ', sorted by {column}, {direction}',
+      option: 'sortStatus',
+      description:
+        'The {sort} part of the status while a column is sorted, with {column} and {direction}; without it the status reads the same before and after a sort',
+    },
+    {
+      name: 'data-datatable-sort-ascending',
+      type: 'string',
+      default: 'ascending',
+      option: 'sortAscending',
+      description: 'The {direction} of an ascending sort',
+    },
+    {
+      name: 'data-datatable-sort-descending',
+      type: 'string',
+      default: 'descending',
+      option: 'sortDescending',
+      description: 'The {direction} of a descending sort',
     },
     {
       name: 'data-datatable-pagination-label',

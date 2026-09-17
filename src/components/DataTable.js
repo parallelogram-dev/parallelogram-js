@@ -85,7 +85,10 @@ export class DataTable extends BaseComponent {
       searchLabel: 'Search',
       searchPlaceholder: 'Search table…',
       emptyMessage: 'No matching rows',
-      statusMessage: 'Showing {from}–{to} of {total} rows',
+      statusMessage: 'Showing {from}–{to} of {total} rows{sort}',
+      sortStatus: ', sorted by {column}, {direction}',
+      sortAscending: 'ascending',
+      sortDescending: 'descending',
       paginationLabel: 'Table pagination',
       previousText: 'Previous',
       previousLabel: 'Previous page',
@@ -186,6 +189,9 @@ export class DataTable extends BaseComponent {
       emptyMessage: this.getAttr(element, 'empty-message', defaults.emptyMessage),
       ...this._getConfigFromAttrs(element, {
         statusMessage: 'status-message',
+        sortStatus: 'sort-status',
+        sortAscending: 'sort-ascending',
+        sortDescending: 'sort-descending',
         paginationLabel: 'pagination-label',
         previousText: 'previous-text',
         previousLabel: 'previous-label',
@@ -213,6 +219,8 @@ export class DataTable extends BaseComponent {
         index,
         key: cell.dataset.sort,
         type: cell.dataset.sortType || 'string',
+        /* Read before _setupSorting wraps the cell, so the sort icon's text stays out of it */
+        label: cell.textContent.trim(),
       }));
   }
 
@@ -479,7 +487,12 @@ export class DataTable extends BaseComponent {
         state,
         total === 0
           ? config.emptyMessage
-          : fill(config.statusMessage, { from: start + 1, to: start + visible.length, total })
+          : fill(config.statusMessage, {
+              from: start + 1,
+              to: start + visible.length,
+              total,
+              sort: this._sortStatus(state, config),
+            })
       );
     }
 
@@ -501,6 +514,25 @@ export class DataTable extends BaseComponent {
     }
     cell.textContent = text;
     return row;
+  }
+
+  /**
+   * The sorted-by clause of the status, empty while nothing is sorted
+   *
+   * The status is a live region, and sorting changes the order of the rows without changing how
+   * many are showing, so without this the sentence is identical before and after and a screen
+   * reader is told nothing at all. Every word of it is configurable, as the rest of this
+   * component's text is.
+   */
+  _sortStatus(state, config) {
+    const { column: key, direction } = state.currentSort;
+    if (!key) return '';
+
+    const column = state.columns.find(candidate => candidate.key === key);
+    return fill(config.sortStatus, {
+      column: column?.label || key,
+      direction: direction === 'desc' ? config.sortDescending : config.sortAscending,
+    });
   }
 
   _announce(state, message) {

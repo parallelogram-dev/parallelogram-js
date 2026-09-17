@@ -8,7 +8,7 @@ const INTERACTIVE =
 
 /** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
 const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
-const TARGET_ATTRIBUTES = ['id', 'hidden', 'data-toggle-state'];
+const TARGET_ATTRIBUTES = ['id', 'hidden', 'inert', 'data-toggle-state'];
 
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
@@ -448,12 +448,21 @@ export default class Toggle extends BaseComponent {
   }
 
   /**
-   * Record a target's open state in `data-toggle-state`, and hide it with the `hidden` attribute
-   * once it is closed
+   * Record a target's open state in `data-toggle-state`, hide it with the `hidden` attribute once it
+   * is closed, and keep it out of the tab order from the moment it starts closing
+   *
+   * A closing target is still on the page and still animating, while its trigger already reports
+   * `aria-expanded="false"`, so without this everything focusable inside it stays reachable from a
+   * state the page has called shut. Only while it is closing: once it is closed `hidden` has it, and
+   * a page that overrides that to show the target anyway -- a sidebar that is a drawer on a narrow
+   * screen and a column on a wide one -- means it, and inert it could not override. It is set as an
+   * attribute rather than the property so unmounting restores it with the rest of
+   * TARGET_ATTRIBUTES.
    */
   _setTargetState(target, value) {
     this.setAttr(target, 'state', value);
     target.hidden = value === 'closed';
+    target.toggleAttribute('inert', value === 'closing');
   }
 
   _getTargetState(target) {
