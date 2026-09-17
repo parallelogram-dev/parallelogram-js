@@ -12,25 +12,23 @@ The package is ESM only. Load it with `import`, or with `await import()` from Co
 
 ### Without a bundler
 
-The package is plain ES modules with relative specifiers, so a browser can load it straight from a CDN with no build step at all:
+The package ships one file with everything in it, so a page can load the library straight from a CDN with no build step and a single request:
 
 ```html
 <script type="module">
-  import { Parallelogram } from 'https://cdn.jsdelivr.net/npm/@parallelogram-js/core@0.7.6/dist/index.js';
+  import { Parallelogram, Toggle } from 'https://cdn.jsdelivr.net/npm/@parallelogram-js/core';
 
   const app = Parallelogram.create();
-  app.components.add(
-    '[data-toggle]',
-    () =>
-      import('https://cdn.jsdelivr.net/npm/@parallelogram-js/core@0.7.6/dist/components/Toggle.js')
-  );
+  app.components.add('[data-toggle]', () => Toggle);
   app.run();
 </script>
 ```
 
-Pin the version, as above: an unpinned URL follows the newest release, and before 1.0 a minor may break things.
+Pin the version once you have tested against one, as in `@parallelogram-js/core@1.2.3`. The URL above follows the newest release, which before 1.0 is how a minor breaks a page nobody touched. The bare specifier reaches the bundle through the package’s `jsdelivr` and `unpkg` fields; name `dist/parallelogram.js` yourself if you would rather be explicit.
 
-The honest caveat is the request waterfall. Each module imports the next, so the browser discovers them in rounds rather than all at once, and a component's module is fetched when a page first uses it. Over HTTP/2 on a warm CDN that is usually a handful of small requests; on a slow connection it is noticeable. A bundler resolves the same files into one request, which is why the instructions above start there.
+The bundle carries every component whether the page uses one or not, so it is larger than what a bundler would produce for the same page: about 74 kB over the wire against a few kB for one or two components. In exchange there is no request waterfall, which is what the individual files give a browser that loads them directly -- each module names the next, so they arrive in rounds rather than at once.
+
+The individual files are still there and still work without a bundler, at `dist/index.js` and `dist/components/<Name>.js`. Reach for them when a page uses one or two components and the extra requests cost less than the bytes.
 
 It targets Baseline 2023: Chrome and Edge 120, Firefox 121, and Safari 17.2 on macOS and iOS, or later. It ships modern JavaScript without transpiling it, so a bundler only needs to resolve and bundle it. Older browsers aren't tested or supported. The [versioning and security policy](https://github.com/parallelogram-dev/parallelogram-js#versions-and-browser-support) covers which releases may break things and which get fixes.
 
