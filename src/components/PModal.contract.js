@@ -130,6 +130,12 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       default: 'var(--surface-dialog-shadow)',
       description: 'Panel shadow',
     },
+    {
+      name: '--modal-close-inset',
+      default: 'var(--modal-padding-y)',
+      description:
+        "Distance from the top of the panel to the close button, and the least height of the header, so the title sits on the button's line",
+    },
     { name: '--modal-padding-x', description: 'Horizontal padding' },
     { name: '--modal-padding-y', description: 'Vertical padding' },
     {
