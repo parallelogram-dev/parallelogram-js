@@ -215,6 +215,28 @@ describe('p-modal with a part left out', () => {
     expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(false);
   });
 
+  it('leaves out the header when nothing is slotted into the title', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(true);
+  });
+
+  it('keeps the header for a slotted title', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(false);
+  });
+
+  it('pins the close button to the panel rather than the header, so it never scrolls', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+
+    expect([close.parentElement.localName, getComputedStyle(close).position]).toEqual([
+      'dialog',
+      'absolute',
+    ]);
+  });
+
   it('shows no placeholder where a title was left out, but still names the dialog', () => {
     const modal = render('<p>Table 12 is held.</p>');
 
