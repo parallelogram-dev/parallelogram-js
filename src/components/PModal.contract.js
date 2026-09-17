@@ -161,5 +161,33 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
         { attribute: 'data-modal-keyboard' },
       ],
     },
+    {
+      id: 'no-actions',
+      title: 'Without actions',
+      description:
+        'With nothing slotted into `actions` the footer is left out, so a modal that only tells the reader something ends at its content. The close button in the header still closes it, as do Escape and a click on the backdrop.',
+      markup: `<button type="button" data-modal data-modal-target="#booking-confirmed">Show confirmation</button>
+
+<p-modal id="booking-confirmed">
+  <h2 slot="title">Booking confirmed</h2>
+  <p>Table 12 is held until 7.15pm. The details are on their way by email.</p>
+</p-modal>`,
+      controls: [{ attribute: 'data-modal-size' }],
+    },
+    {
+      id: 'no-title',
+      title: 'Without a title',
+      description:
+        'A modal with nothing in `title` shows no heading at all. It is still named "Dialog" for assistive technology, which is all anyone using a screen reader will hear when it opens, so give a modal a title wherever you can.',
+      markup: `<button type="button" data-modal data-modal-target="#held-note">Open the note</button>
+
+<p-modal id="held-note">
+  <p>Table 12 is held until 7.15pm.</p>
+  <div slot="actions">
+    <button type="button" class="btn btn--primary" data-modal-close>Close</button>
+  </div>
+</p-modal>`,
+      controls: [{ attribute: 'data-modal-size' }],
+    },
   ],
 };
