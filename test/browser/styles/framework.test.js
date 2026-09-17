@@ -46,6 +46,80 @@ describe('framework stylesheet', () => {
     ]);
   });
 
+  it.each(['light', 'dark'])(
+    'gives every status colour readable text on its solid, its strong and its tint, in the %s theme',
+    theme => {
+      const root = document.documentElement;
+      root.dataset.theme = theme;
+      const probe = document.createElement('div');
+      document.body.append(probe);
+      const rgb = value => {
+        probe.style.color = value;
+        return getComputedStyle(probe)
+          .color.match(/[\d.]+/g)
+          .map(Number);
+      };
+      const composite = (top, under) => {
+        const a = top[3] ?? 1;
+        return [0, 1, 2].map(i => top[i] * a + under[i] * (1 - a));
+      };
+      const luminance = ([r, g, b]) => {
+        const channel = v => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      };
+      const contrast = (text, ground) => {
+        const [a, b] = [luminance(text), luminance(ground)];
+        return Math.round(((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)) * 10) / 10;
+      };
+      const token = name => getComputedStyle(root).getPropertyValue(name).trim();
+      const surface = rgb(token('--color-surface'));
+
+      const result = Object.fromEntries(
+        ['danger', 'success', 'warning'].map(status => [
+          status,
+          {
+            onSolid: contrast(
+              rgb(token(`--color-${status}-contrast`)),
+              rgb(token(`--color-${status}`))
+            ),
+            onStrong: contrast(
+              rgb(token('--color-on-status')),
+              rgb(token(`--color-${status}-strong`))
+            ),
+            onTint: contrast(
+              rgb(token(`--color-${status}-text`)),
+              composite(rgb(token(`--color-${status}-tint`)), surface)
+            ),
+            declared: ['', '-contrast', '-strong', '-tint', '-text'].every(role =>
+              Boolean(token(`--color-${status}${role}`))
+            ),
+          },
+        ])
+      );
+      delete root.dataset.theme;
+      probe.remove();
+
+      /* Danger had all five roles; success and warning had no -contrast and no -text, so their
+         text fell back to white -- fine on the light theme's solids, unreadable on the dark
+         theme's -- and their tints carried the dark -strong text over a dark surface. A solid is
+         a button or a badge, held to the 3:1 the palette was drawn to; a message on a tint or a
+         strong is body text, held to 4.5:1 */
+      expect(result).toEqual(
+        Object.fromEntries(
+          ['danger', 'success', 'warning'].map(status => [
+            status,
+            {
+              onSolid: expect.toSatisfy(ratio => ratio >= 3),
+              onStrong: expect.toSatisfy(ratio => ratio >= 4.5),
+              onTint: expect.toSatisfy(ratio => ratio >= 4.5),
+              declared: true,
+            },
+          ])
+        )
+      );
+    }
+  );
+
   it('hides a web component until its module upgrades it', () => {
     /* This file never imports the components, so these tags stay unupgraded and :not(:defined)
        applies, which is the state a page is in while the module is still on its way */
