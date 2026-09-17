@@ -4,11 +4,15 @@ import scss from '../scripts/rollup-plugin-scss.js';
 import {
   componentsDir,
   guidesDir,
+  loadContracts,
   loadDiscoveryFiles,
+  loadGuides,
   repoRoot,
   siteRoot,
   writePages,
 } from './build/pages.js';
+import { chunksFor, modulesFor, pagesAffectedBy } from './build/preload.js';
+import { RESOLVED_ID, contractRegistry } from './build/vite-plugin-contracts.js';
 
 const styles = path.join(repoRoot, 'src/styles');
 
@@ -31,7 +35,9 @@ function componentStyles() {
 }
 
 /**
- * Regenerate the pages when a contract or a guide changes during development
+ * Regenerate the pages when a contract or a guide changes during development, and tell the open
+ * pages which of them went stale. Only those reload: a full reload sent every open page back
+ * through the whole unbundled module graph for a change to one of them.
  */
 function contractPages() {
   return {
@@ -41,8 +47,42 @@ function contractPages() {
       server.watcher.on('change', async file => {
         if (!file.endsWith('.contract.js') && !file.startsWith(guidesDir + path.sep)) return;
         await writePages();
-        server.ws.send({ type: 'full-reload' });
+        const registry = server.moduleGraph.getModuleById(RESOLVED_ID);
+        if (registry) server.moduleGraph.invalidateModule(registry);
+        const site = {
+          contracts: await loadContracts(),
+          guides: loadGuides(),
+          componentsDir,
+          guidesDir,
+        };
+        server.ws.send('parallelogram:pages-changed', { slugs: pagesAffectedBy(file, site) });
       });
+    },
+  };
+}
+
+/**
+ * Preload, on each built page, the chunks it will import once main runs: the managers every page
+ * loads and the components its markup uses. Without this a page discovers them one dynamic import
+ * at a time, three round trips deep.
+ */
+function preloadChunks() {
+  let contracts;
+  return {
+    name: 'preload-chunks',
+    async buildStart() {
+      contracts = await loadContracts();
+    },
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, { bundle, chunk }) {
+        if (!bundle || !chunk) return;
+        return chunksFor(modulesFor(html, contracts), bundle, chunk).map(file => ({
+          tag: 'link',
+          attrs: { rel: 'modulepreload', crossorigin: true, href: `./${file}` },
+          injectTo: 'head',
+        }));
+      },
     },
   };
 }
@@ -84,7 +124,13 @@ export default defineConfig({
   root: siteRoot,
   base: './',
   publicDir: 'public',
-  plugins: [componentStyles(), contractPages(), discoveryFiles()],
+  plugins: [
+    componentStyles(),
+    contractRegistry(),
+    contractPages(),
+    discoveryFiles(),
+    preloadChunks(),
+  ],
   css: {
     preprocessorOptions: {
       scss: { loadPaths: [styles] },
@@ -93,11 +139,24 @@ export default defineConfig({
   server: {
     port: 3000,
     fs: { allow: [repoRoot] },
+    /* Compile the framework's core before the first request asks for it */
+    warmup: { clientFiles: ['./src/main.js', '../src/index.js', '../src/managers/*.js'] },
   },
   preview: { port: 3000 },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    rolldownOptions: { input },
+    rolldownOptions: {
+      input,
+      output: {
+        /* The framework's core is shared by every page; named for what it is rather than for
+           whichever module happened to pull it in first */
+        advancedChunks: {
+          groups: [
+            { name: 'core', test: /[\\/]src[\\/](index\.js|core[\\/]|managers[\\/]|utils[\\/])/ },
+          ],
+        },
+      },
+    },
   },
 });

@@ -16,7 +16,7 @@
   :where(img, video) {
     max-width: 100%;
     height: auto;
-    border-radius: var(--surface-item-radius);
+    border-radius: var(--surface-control-radius);
   }
 
   :where(.menu) {
@@ -55,7 +55,7 @@
 
   :where(.card) {
     padding: 1rem;
-    border: var(--surface-card-border-width) solid var(--surface-card-border-color);
+    border: var(--surface-card-border-width) solid var(--color-border-strong);
     border-radius: var(--surface-card-radius);
     background: var(--surface-card-color-bg);
     color: var(--surface-card-color-text);

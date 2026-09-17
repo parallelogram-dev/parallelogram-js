@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContracts } from '../../../site/build/pages.js';
 import { designSystemPage, previewDocument } from '../../../site/build/render.js';
-import { tokenGroups } from '../../../site/build/tokens.js';
+import { tokenGroups, tokenReaders, tokenSources } from '../../../site/build/tokens.js';
 import { exportCss } from '../../../site/src/workbench/tokens.js';
 
 const contracts = await loadContracts();
@@ -35,6 +35,33 @@ describe('design system workbench', () => {
       tokenNames.filter(name => fields.filter(field => field === name).length !== 1),
       tokenNames.filter(name => !copies.includes(`#token${name.replace(/^-+/, '-')}`)),
     ]).toEqual([[], []]);
+  });
+
+  it('counts a token another token follows as read, and says which', () => {
+    const groups = tokenGroups();
+    const names = groups.flatMap(group => group.tokens.map(token => token.name));
+    const page = new DOMParser().parseFromString(
+      designSystemPage(new Map(), tokenSources(names), groups),
+      'text/html'
+    );
+    const token = page
+      .querySelector('[name="--surface-panel-border-width"]')
+      .closest('.tokens__token');
+
+    /* The dropdown border follows the panel border; the page called the panel border unread
+       because only component stylesheets were counted as readers */
+    expect([token.classList.contains('tokens__token--unread'), token.textContent]).toEqual([
+      false,
+      expect.stringContaining('Followed by --surface-dropdown-border-width'),
+    ]);
+  });
+
+  it('counts a var() a formatter wrapped onto the next line as a reader', () => {
+    /* PSelect.scss reads this token as `var(\n  --surface-dropdown-item-current-bg,`; a search for
+       the contiguous `var(--name` called it unread, and it was nearly deleted for that */
+    expect(
+      tokenReaders(['--surface-dropdown-item-current-bg']).get('--surface-dropdown-item-current-bg')
+    ).toEqual(['<pselect>']);
   });
 
   it('offers every token the design system declares', () => {

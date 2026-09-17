@@ -99,9 +99,6 @@ export function layout({ title, description, current, contracts, guides, content
 <link rel="icon" href="favicon.png" type="image/png" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" href="fonts/Haffer-Regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/src/styles/site.scss">
 <script type="module" src="/src/main.js"></script>
 </head>
@@ -636,10 +633,18 @@ export function designSystemPage(readers = new Map(), sources = new Map(), group
     swatch: '',
   };
 
+  /* A token another token follows is read, by that token: the dropdown border reads the panel
+     border, though no component stylesheet names the panel border */
+  const followers = new Map();
+  for (const [name, { follows }] of sources) {
+    if (follows) followers.set(follows, [...(followers.get(follows) ?? []), name]);
+  }
+
   const field = token => {
     const id = tokenId(token.name);
     const scope = token.kind === 'colour' ? 'theme' : 'both';
-    const unread = (readers.get(token.name) ?? []).length === 0;
+    const followedBy = followers.get(token.name) ?? [];
+    const unread = (readers.get(token.name) ?? []).length === 0 && followedBy.length === 0;
     const { source = '', follows = null } = sources.get(token.name) ?? {};
     /* Carried from the stylesheet because the browser substitutes var() before anything can see it:
        a token that follows another is otherwise indistinguishable from one holding its own value */
@@ -654,14 +659,18 @@ export function designSystemPage(readers = new Map(), sources = new Map(), group
       <button type="button" class="tokens__copy" data-copytoclipboard data-copytoclipboard-target="#${id}" aria-label="Copy ${escapeHtml(token.name)}"><span aria-hidden="true">&#10697;</span><span class="visually-hidden" data-copytoclipboard-label>Copy</span></button>
     </span>
     ${follows ? `<p class="tokens__follows">Follows <code>${escapeHtml(follows)}</code></p>` : ''}
+    ${followedBy.length ? `<p class="tokens__follows">Followed by ${followedBy.map(name => `<code>${escapeHtml(name)}</code>`).join(', ')}</p>` : ''}
   </div>`;
   };
 
   const row = tokenRow => {
     const read = [...new Set(tokenRow.tokens.flatMap(t => readers.get(t.name) ?? []))];
+    const followed = tokenRow.tokens.some(t => followers.has(t.name));
     const used = read.length
       ? `<p class="tokens__read">Read by ${escapeHtml(read.join(', '))}</p>`
-      : '<p class="tokens__read tokens__read--none">Declared, and nothing reads these yet</p>';
+      : followed
+        ? '<p class="tokens__read">Read through the tokens that follow these</p>'
+        : '<p class="tokens__read tokens__read--none">Declared, and nothing reads these yet</p>';
 
     return `<div class="tokens__row">
   <div class="tokens__field">

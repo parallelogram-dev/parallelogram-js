@@ -1,7 +1,5 @@
-const contracts = import.meta.glob('../../src/components/*.contract.js', {
-  eager: true,
-  import: 'default',
-});
+import contracts from 'virtual:contracts';
+
 const modules = import.meta.glob([
   '../../src/components/*.js',
   '!../../src/components/*.contract.js',
@@ -22,7 +20,7 @@ const withExampleTracker = load => async () => {
  * @param {import('../../src/index.js').Parallelogram} app
  */
 export function registerComponents(app) {
-  for (const contract of Object.values(contracts)) {
+  for (const contract of contracts) {
     const selector = contract.match ?? contract.tag ?? `[${contract.selector}]`;
     const load = modules[`../../src/${contract.module}.js`];
     app.components.add(

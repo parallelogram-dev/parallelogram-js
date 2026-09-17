@@ -33,7 +33,7 @@ describe('framework stylesheet', () => {
     const root = document.documentElement;
     const read = name => getComputedStyle(root).getPropertyValue(name).trim();
 
-    const untouched = [read('--color-secondary'), read('--color-complimentary')];
+    const untouched = [read('--color-secondary'), read('--color-complementary')];
     root.style.setProperty('--brand-secondary', 'rgb(4, 5, 6)');
     const set = read('--color-secondary');
     root.style.removeProperty('--brand-secondary');
