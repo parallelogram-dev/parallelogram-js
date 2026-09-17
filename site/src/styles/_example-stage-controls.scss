@@ -1,7 +1,45 @@
+@use 'design-system' as ds;
+
 /* Demo styling for plain buttons and form fields in documentation examples. It loads before the
    framework styles and sits inside :where(), so component styles always win, such as DataTable's
    current page and sort buttons. */
 :where(.example__stage) {
+  /* The library's button classes, defined the way a page defines them: with its mixins. A rule
+     from the page always beats a component's ::slotted() rule, so p-modal's slotted variants only
+     show when the page defines the variants too. */
+  .btn {
+    @include ds.button-base;
+    @include ds.button-secondary;
+  }
+
+  .btn--primary {
+    @include ds.button-primary;
+  }
+
+  .btn--secondary {
+    @include ds.button-secondary;
+  }
+
+  .btn--danger {
+    @include ds.button-danger;
+  }
+
+  .btn--ghost {
+    @include ds.button-ghost;
+  }
+
+  .btn--brand {
+    @include ds.button-brand;
+  }
+
+  .btn--sm {
+    @include ds.button-sm;
+  }
+
+  .btn--lg {
+    @include ds.button-lg;
+  }
+
   :where(button) {
     padding: 0.45rem 0.9rem;
     border: var(--surface-button-border-width) solid var(--button-secondary-border);
