@@ -511,10 +511,10 @@ ${paragraphs(contract.withoutJs)}
     : ''
 }
 ${usage(contract)}
+</div>
 <div class="doc__reference">
 ${reference(contract, '')}
 ${elements}
-</div>
 </div>
 </div>
 </article>`;
@@ -529,7 +529,6 @@ export function homePage(contracts, version) {
   const start = `import { Parallelogram } from '${PACKAGE}';
 
 const app = Parallelogram.create({
-  router: {},
   pageManager: { containerSelector: '[data-view="main"]' },
 });
 
@@ -543,7 +542,7 @@ app.run();`;
 <header class="doc__header">
   <p class="doc__eyebrow">${PACKAGE} ${escapeHtml(version)}</p>
   <h1 id="doc-title">Progressive enhancement, one component at a time</h1>
-  <p class="doc__summary">Parallelogram adds behaviour to server-rendered HTML through data attributes and a small set of web components. Each component loads the first time a page uses it, and links swap the page in place instead of reloading it.</p>
+  <p class="doc__summary">Parallelogram adds behaviour to server-rendered HTML through data attributes and a small set of web components. Each component loads the first time a page uses it, and, if you want it, links can swap the page in place instead of reloading it.</p>
 </header>
 <section class="doc__section" aria-labelledby="install">
 <h2 id="install">Install</h2>
@@ -551,12 +550,14 @@ app.run();`;
 </section>
 <section class="doc__section" aria-labelledby="start">
 <h2 id="start">Start the framework</h2>
-<p>Register the components your pages use. The router swaps the element marked ${code('data-view="main"')} when a link is followed, and components inside it mount and unmount with it.</p>
+<p>Register the components your pages use, and the framework loads each one the first time a page contains it.</p>
 <pre><code>${escapeHtml(start)}</code></pre>
+<p>The router is optional, and off unless you ask for it. Add ${code('router: {}')} and links swap the element marked ${code('data-view="main"')} in place instead of reloading the page, with the components inside it mounting and unmounting as it changes. Leave it out and every link is an ordinary link.</p>
 <p>Enhancement components that need styles use the package stylesheet, ${code(`@import '${PACKAGE}/styles';`)}, or one file per component.</p>
 </section>
 <section class="doc__section" aria-labelledby="components">
 <h2 id="components">Components</h2>
+<p>An <strong>enhancement</strong> is behaviour added to markup you already have, through a data attribute: the element works without it and does more with it. A <strong>web component</strong> is an element of its own, which the browser upgrades when its module arrives. Each page below says which it is, and what its markup does before the module loads.</p>
 <ul class="component-grid">
 ${[...contracts].sort(byName).map(card).join('\n')}
 </ul>

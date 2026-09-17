@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   componentPage,
   controlField,
+  homePage,
   inline,
   layout,
   sidebar,
@@ -117,6 +118,14 @@ describe('documentation site rendering', () => {
     ]).toEqual([true, true, 'Playground']);
   });
 
+  it('says the router is optional on the page that first shows it', () => {
+    const page = parse(homePage([Tabs], '1.0.0')).textContent;
+
+    /* The reader this page is written for came to avoid a framework, and the only quickstart on it
+       switched the router on without saying it was a choice */
+    expect(page.includes('optional')).toBe(true);
+  });
+
   it('leaves the playground out when an example has none to show', () => {
     const page = parse(componentPage({ ...PSelect, examples: [] }));
 
@@ -132,7 +141,7 @@ describe('documentation site rendering', () => {
     expect([
       page.querySelector('.doc__main #about') !== null,
       page.querySelector('.doc__main #usage') !== null,
-      page.querySelector('.doc__main .doc__reference #attributes') !== null,
+      page.querySelector('.doc__columns > .doc__reference #attributes') !== null,
       page.querySelector('.doc__aside [data-example]') !== null,
     ]).toEqual([true, true, true, true]);
   });
