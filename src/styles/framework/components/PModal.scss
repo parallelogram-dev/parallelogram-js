@@ -267,9 +267,17 @@
   flex-shrink: 0;
   padding: var(--modal-footer-padding);
   gap: var(--modal-gap);
-  justify-content: flex-end;
+  justify-content: space-between;
   background: var(--modal-footer-bg);
   border-top: var(--panel-footer-border, var(--modal-border-width) solid var(--modal-panel-border));
+}
+
+/* Each end of the footer holds its own row, so a page says where a button belongs rather than how
+   to push it. With nothing at the leading end that group is empty and takes no room. */
+.modal__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--modal-gap);
 }
 
 /* Slotted button styles (BEM classes) */

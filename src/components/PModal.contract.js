@@ -86,6 +86,11 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
     { name: 'title', description: 'The title, which also names the dialog' },
     { name: '', description: 'The content' },
     {
+      name: 'secondary',
+      description:
+        'A secondary action, such as deleting what the modal is about, held against the leading end of the footer and away from the buttons in actions; the footer shows while either slot has something in it',
+    },
+    {
       name: 'actions',
       description: 'Footer buttons; any element with data-modal-close closes the modal',
     },
@@ -175,7 +180,7 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
     },
     {
       id: 'no-actions',
-      title: 'Without actions',
+      title: 'No action',
       description:
         'With nothing slotted into `actions` the footer is left out, so a modal that only tells the reader something ends at its content. The close button in the header still closes it, as do Escape and a click on the backdrop.',
       markup: `<button type="button" data-modal data-modal-target="#booking-confirmed">Show confirmation</button>
@@ -188,7 +193,7 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
     },
     {
       id: 'no-title',
-      title: 'Without a title',
+      title: 'No title',
       description:
         'A modal with nothing in `title` shows no heading at all. It is still named "Dialog" for assistive technology, which is all anyone using a screen reader will hear when it opens, so give a modal a title wherever you can.',
       markup: `<button type="button" data-modal data-modal-target="#held-note">Open the note</button>
@@ -198,6 +203,22 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
   <div slot="actions">
     <button type="button" class="btn btn--primary" data-modal-close>Close</button>
   </div>
+</p-modal>`,
+      controls: [{ attribute: 'data-modal-size' }],
+    },
+    {
+      id: 'actions',
+      title: 'Actions',
+      description:
+        'A button slotted into `secondary` is held against the leading end of the footer while the rest stay together at the other, so the markup says where a button belongs rather than how to push it. Nothing needs styling, and with nothing in `secondary` the buttons sit together as they always have.',
+      markup: `<button type="button" data-modal data-modal-target="#edit-booking">Edit booking</button>
+
+<p-modal id="edit-booking">
+  <h2 slot="title">Edit booking</h2>
+  <p>Table 12 on Friday at 7pm, for four.</p>
+  <button type="button" class="btn btn--danger" slot="secondary" data-modal-close>Cancel booking</button>
+  <button type="button" class="btn" slot="actions" data-modal-close>Close</button>
+  <button type="button" class="btn btn--primary" slot="actions" data-modal-close>Save changes</button>
 </p-modal>`,
       controls: [{ attribute: 'data-modal-size' }],
     },

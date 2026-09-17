@@ -44,6 +44,7 @@ let lockedOverflow = null;
  * @slots
  * - title: the title, which also names the dialog
  * - (default): the content
+ * - secondary: a secondary action, held against the leading end of the footer, away from the rest
  * - actions: footer buttons; any element with `data-modal-close` closes the modal
  *
  * @events
@@ -85,7 +86,8 @@ export default class PModal extends HTMLElement {
           <slot></slot>
         </section>
         <footer class="modal__footer" data-modal-footer part="footer">
-          <slot name="actions"></slot>
+          <div class="modal__actions"><slot name="secondary"></slot></div>
+          <div class="modal__actions"><slot name="actions"></slot></div>
         </footer>
       </dialog>
     `
@@ -96,6 +98,7 @@ export default class PModal extends HTMLElement {
     this._closeButton = root.querySelector('[data-modal-close-btn]');
     this._titleSlot = root.querySelector('slot[name="title"]');
     this._actionsSlot = root.querySelector('slot[name="actions"]');
+    this._secondarySlot = root.querySelector('slot[name="secondary"]');
     this._footer = root.querySelector('[data-modal-footer]');
     this._header = root.querySelector('[data-modal-header]');
     this._returnFocus = null;
@@ -172,6 +175,7 @@ export default class PModal extends HTMLElement {
       { signal }
     );
     this._actionsSlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
+    this._secondarySlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
     this._updateName();
     this._updateHeader();
     this._updateFooter();
@@ -402,7 +406,9 @@ export default class PModal extends HTMLElement {
    * Keep the footer out of the dialog until the page slots something into it
    */
   _updateFooter() {
-    this._footer.hidden = this._actionsSlot.assignedNodes().length === 0;
+    this._footer.hidden =
+      this._actionsSlot.assignedNodes().length === 0 &&
+      this._secondarySlot.assignedNodes().length === 0;
   }
 
   /**
