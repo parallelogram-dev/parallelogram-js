@@ -207,8 +207,42 @@ export function exampleBlock(contract, example, { titled = true } = {}) {
 
   return `<section class="example" data-example="${escapeHtml(contract.name)}:${escapeHtml(example.id)}" ${titled ? `aria-labelledby="${id}-title"` : `aria-label="${escapeHtml(example.title)}"`}>
 ${header}
+<div class="example__views" data-tabs>
+  <div class="example__tabs" data-tabs-list>
+    <a href="#${id}-output" data-tab="${id}-output">Output</a>
+    <a href="#${id}-markup" data-tab="${id}-markup">Markup</a>
+    ${writesState ? `<a href="#${id}-state" data-tab="${id}-state">State</a>` : ''}
+    <a href="#${id}-events" data-tab="${id}-events">Events</a>
+  </div>
+  <div data-tabs-panels>
+    <section id="${id}-output" data-tab-panel="active" aria-label="Output">
 <div class="example__stage" data-example-stage>
 ${example.markup}
+</div>
+    </section>
+    <section id="${id}-markup" data-tab-panel aria-label="Markup">
+<div class="example__code">
+<pre><code id="${id}-code" data-example-code>${escapeHtml(example.markup)}</code></pre>
+<button type="button" class="tool-button example__copy" data-copytoclipboard data-copytoclipboard-target="#${id}-code"><span data-copytoclipboard-label>Copy markup</span></button>
+</div>
+    </section>
+    ${
+      writesState
+        ? `<section id="${id}-state" data-tab-panel aria-label="State">
+<section class="example__state" data-example-state hidden aria-label="The state the component writes">
+  <dl data-example-state-list></dl>
+</section>
+    </section>`
+        : ''
+    }
+    <section id="${id}-events" data-tab-panel aria-label="Events">
+<section class="example__log" data-example-log hidden aria-label="The events the component sends">
+  <button type="button" class="tool-button" data-example-log-clear>Clear</button>
+  <ol data-example-log-list></ol>
+  <p data-example-log-empty>Use the example to see the events it sends.</p>
+</section>
+    </section>
+  </div>
 </div>
 ${
   controls
@@ -218,24 +252,6 @@ ${controls}
 </form>`
     : ''
 }
-${
-  writesState
-    ? `<section class="example__state" data-example-state hidden aria-labelledby="${id}-state-title">
-  <h3 id="${id}-state-title">State</h3>
-  <dl data-example-state-list></dl>
-</section>`
-    : ''
-}
-<div class="example__code">
-<pre><code id="${id}-code" data-example-code>${escapeHtml(example.markup)}</code></pre>
-<button type="button" class="tool-button example__copy" data-copytoclipboard data-copytoclipboard-target="#${id}-code"><span data-copytoclipboard-label>Copy markup</span></button>
-</div>
-<section class="example__log" data-example-log hidden aria-labelledby="${id}-log-title">
-  <h3 id="${id}-log-title">Events</h3>
-  <button type="button" class="tool-button" data-example-log-clear>Clear</button>
-  <ol data-example-log-list></ol>
-  <p data-example-log-empty>Use the example to see the events it sends.</p>
-</section>
 <template data-example-source>${example.markup}</template>
 </section>`;
 }
@@ -440,7 +456,10 @@ ${reference(element, `${element.tag}-`, 3)}
     )
     .join('\n');
 
+  const examples = playground(contract);
+
   return `<article class="doc doc--split" aria-labelledby="doc-title">
+<div class="doc__columns">
 <header class="doc__header">
   <div class="doc__intro">
     <p class="doc__eyebrow">${contract.kind === 'element' ? 'Web component' : 'Enhancement'}</p>
@@ -449,7 +468,14 @@ ${reference(element, `${element.tag}-`, 3)}
   </div>
   <dl class="doc__facts">${facts}</dl>
 </header>
-<div class="doc__columns">
+${
+  examples
+    ? `<div class="doc__aside">
+<h2 class="doc__aside-title" id="playground">Playground</h2>
+${examples}
+</div>`
+    : ''
+}
 <div class="doc__main">
 <section class="doc__section" aria-labelledby="about">
 <h2 id="about">About</h2>
@@ -457,14 +483,11 @@ ${paragraphs(contract.description)}
 ${accessibility}
 </section>
 ${usage(contract)}
-</div>
-<div class="doc__aside">
-${playground(contract)}
-</div>
-</div>
 <div class="doc__reference">
 ${reference(contract, '')}
 ${elements}
+</div>
+</div>
 </div>
 </article>`;
 }
