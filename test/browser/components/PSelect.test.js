@@ -1001,3 +1001,27 @@ describe('p-select disabled', () => {
     expect(Number(getComputedStyle(select).opacity)).toBeLessThan(1);
   });
 });
+
+describe('p-select from the keyboard alone', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('clears a chosen value and searches again without a pointer', async () => {
+    const select = mountSelect(
+      `<p-select name="fruit" aria-label="Fruit"><option value="a">Apple</option><option value="b">Banana</option></p-select>`
+    );
+    const input = inputOf(select);
+
+    input.focus();
+    press(select, 'ArrowDown');
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(2), WAIT);
+    press(select, 'Enter');
+
+    expect([select.value, input.readOnly]).toEqual(['a', true]);
+
+    press(select, 'Backspace');
+
+    expect([select.value, input.readOnly, input.value]).toEqual(['', false, '']);
+  });
+});

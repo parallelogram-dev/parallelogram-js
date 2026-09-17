@@ -13,6 +13,8 @@ export default {
 
 Details that share a \`name\` close each other with the same animation, including in browsers that don't support \`name\` on details yet. An item opened or closed another way, such as by find in page or a script setting \`open\`, changes at once. The animation is skipped when the user prefers reduced motion.`,
   states: STATES,
+  /* Mounted by the framework only: this one has no static enhanceAll() */
+  enhanceAll: false,
   attributes: [
     {
       name: 'data-accordion',

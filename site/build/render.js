@@ -56,7 +56,11 @@ export function sidebar(contracts, current, guides = []) {
       .sort(byName)
       .map(contract => link(slugFor(contract), escapeHtml(titleFor(contract))));
 
+  /* A second trigger for the same panel, shown only while the panel is a drawer */
+  const close = `<button class="sidebar__close" type="button" data-toggle data-toggle-target="#sidebar-nav" aria-label="Close the documentation menu"><svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>`;
+
   return [
+    close,
     group('Start', [link('index', 'Overview'), link('design-system', 'Design system')]),
     ...(guides.length
       ? [group('Guides', guides.map(guide => link(guide.slug, escapeHtml(guide.title))))]
@@ -104,12 +108,15 @@ export function layout({ title, description, current, contracts, guides, content
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
 <header class="site-header">
+  <button class="sidebar__trigger" type="button" data-toggle data-toggle-target="#sidebar-nav" data-toggle-capture aria-label="Documentation menu">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+  </button>
   <a class="brand" href="index.html"><svg class="brand__mark" aria-hidden="true" focusable="false" viewBox="0 0 401 365.81"><g fill="#0000ff" stroke="#fff"><path d="M40.16 40.16L40.16 40.16L133.04 133.04L40.16 40.16"/><path d="M40.16 40.16L7.31 7.31C3.1 11.51 0.5 17.32 0.5 23.73L0.5 265.59L133.04 133.04L40.16 40.16"/><path d="M0.5 265.59L92.98 358.07L93.82 358.9C97.98 362.86 103.61 365.31 109.81 365.31C122.64 365.31 133.04 354.91 133.04 342.07L133.04 265.59L0.5 265.59"/><path d="M393.9 116.84L393.47 116.41L284.73 7.66L284.04 6.98C279.87 2.97 274.21 0.5 267.97 0.5L23.73 0.5C17.32 0.5 11.51 3.1 7.31 7.31L40.16 40.16L133.04 133.04L133.04 133.04L354.03 133.04L400.5 133.04C400.5 126.74 397.98 121.03 393.9 116.84"/><path d="M354.03 133.04L133.04 133.04L0.5 265.59L133.04 265.59L267.69 265.59C267.78 265.59 267.88 265.6 267.97 265.6C268.07 265.6 268.17 265.59 268.26 265.59C274.29 265.51 279.75 263.14 283.84 259.31L284.92 258.22L393.47 149.68L393.9 149.25C397.98 145.06 400.5 139.35 400.5 133.04L354.03 133.04"/></g></svg>Parallelogram</a>
   <span class="site-header__version">${escapeHtml(version)}</span>
   <a class="site-header__link" href="${REPOSITORY}" aria-label="Parallelogram on GitHub"><svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="22" height="22" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
 </header>
 <div class="site">
-<nav class="sidebar" data-view="sidebar" aria-label="Documentation">
+<nav class="sidebar" id="sidebar-nav" data-view="sidebar" aria-label="Documentation">
 ${sidebar(contracts, current, guides)}
 </nav>
 <main id="content" class="content" data-view="main" tabindex="-1">
@@ -396,10 +403,19 @@ app.run();`;
 <pre><code>@import '${PACKAGE}/${escapeHtml(contract.stylesheet)}';</code></pre>`
     : '';
 
+  /* Every enhancement but the two whose contracts say otherwise has a static enhanceAll() */
+  const alone =
+    contract.kind === 'enhancement' && contract.enhanceAll !== false
+      ? `<p>The framework is optional. ${code(`${contract.name}.enhanceAll()`)} mounts the component on every matching element by itself, for a page that wants one enhancement rather than a framework:</p>
+<pre><code>${escapeHtml(`import ${contract.name} from '${PACKAGE}/${contract.module}';\n\n${contract.name}.enhanceAll();`)}</code></pre>
+<p>It takes a selector and the component's options, and returns the instance it mounted them with. What it leaves out is what the framework adds: loading a component only on the pages that use it, mounting again after a page swap, and ordering with ${code('dependsOn')}.</p>`
+      : '';
+
   return `<section class="doc__section" aria-labelledby="usage">
 <h2 id="usage">Usage</h2>
 <p>Register the component and the framework loads it the first time a page contains ${code(matchFor(contract))}.</p>
 <pre><code>${escapeHtml(script)}</code></pre>
+${alone}
 ${stylesheet}
 </section>`;
 }
