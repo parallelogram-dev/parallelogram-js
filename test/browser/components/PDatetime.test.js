@@ -1,5 +1,7 @@
+import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import PDatetime from '../../../src/components/PDatetime.js';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const renderPicker = (attributes = {}) => {
   const picker = document.createElement('p-datetime');
@@ -746,5 +748,39 @@ describe('p-datetime', () => {
     await nextFrame();
 
     expect(picker.validationMessage).toBe('date requis');
+  });
+  it('shows quick dates as muted pills with the text colour, and as the accent under the pointer', async () => {
+    const style = document.createElement('style');
+    style.textContent = frameworkStyles;
+    document.head.append(style);
+    try {
+      const picker = renderPicker({ 'show-quick-dates': '' });
+      trigger(picker).click();
+      await nextFrame();
+      const preset = shadow(picker, '.preset');
+      const probe = document.createElement('div');
+      document.body.append(probe);
+      const token = name => {
+        probe.style.color = getComputedStyle(document.documentElement).getPropertyValue(name);
+        return getComputedStyle(probe).color;
+      };
+      const paint = () => [
+        getComputedStyle(preset).backgroundColor,
+        getComputedStyle(preset).color,
+      ];
+
+      const resting = paint();
+      await userEvent.hover(preset);
+      const hovered = paint();
+
+      /* They were ghost buttons: transparent with muted text, and a hover that painted the
+         strong accent under the panel's background colour rather than the accent's contrast */
+      expect({ resting, hovered }).toEqual({
+        resting: [token('--color-surface-muted'), token('--color-text')],
+        hovered: [token('--color-accent'), token('--color-accent-contrast')],
+      });
+    } finally {
+      style.remove();
+    }
   });
 });
