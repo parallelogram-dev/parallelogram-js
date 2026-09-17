@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.10] - 2026-09-17
+
 ### Added
 
 - `--color-success-contrast`, `--color-success-text`, `--color-warning-contrast` and `--color-warning-text`, so every status colour has the five roles danger had: the solid, the text on it, the strong, the tint a message sits on, and the text on that tint. Success and warning had no `-contrast`, so text on their solids fell back to `--color-on-status`, white in both themes -- readable on the light theme's solids and 1.7:1 on the dark theme's light green -- and no `-text`, so a message on their tint had nothing to be but the dark `-strong`, 1.8:1 over a dark surface. A browser test now holds every status pairing in both themes: 3:1 on a solid, which is a button or a badge, and 4.5:1 for a message on a tint or a strong.
