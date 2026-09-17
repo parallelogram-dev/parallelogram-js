@@ -502,11 +502,18 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
-   * Ask for the next page of the current search, while the source says there is one
+   * Ask for the next page of the current search, while the source says there is one and the
+   * element is still on the page
    */
   _loadMore() {
     const next = this.state.page + 1;
-    if (this.state.more && !this.state.loading && this.state.open && next > this._requestedPage) {
+    if (
+      this.isConnected &&
+      this.state.more &&
+      !this.state.loading &&
+      this.state.open &&
+      next > this._requestedPage
+    ) {
       this._fetchOptions(this.state.query, next);
     }
   }
@@ -516,6 +523,7 @@ export default class PSelect extends HTMLElement {
    * adds to it
    */
   async _fetchOptions(query, page = 1) {
+    if (!this.isConnected) return;
     this._cancelPendingRequest();
     const controller = new AbortController();
     this._abortController = controller;

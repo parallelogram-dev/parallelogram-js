@@ -236,6 +236,8 @@ describe('Toggle', () => {
       <nav id="site-menu"><a id="faq" href="#faq">FAQ</a><a id="pricing" href="/pricing">Pricing</a></nav>`);
     $('#site-menu').addEventListener('click', event => event.preventDefault());
     $('#menu-button').click();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
+
     $('#faq').click();
     await pause(150);
     const afterAnchor = stateOf('#site-menu');
@@ -246,6 +248,24 @@ describe('Toggle', () => {
       () => expect([afterAnchor, stateOf('#site-menu')]).toEqual(['open', 'closed']),
       WAIT
     );
+  });
+
+  it('stays open for links that go nowhere, whatever case their scheme uses', async () => {
+    build(`
+      <button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu">
+        <a id="run" href="JavaScript:void(0)">Run</a>
+        <a id="write" href="MailTo:hello@example.com">Email</a>
+      </nav>`);
+    $('#site-menu').addEventListener('click', event => event.preventDefault());
+    $('#menu-button').click();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
+
+    $('#run').click();
+    $('#write').click();
+    await pause(150);
+
+    expect(stateOf('#site-menu')).toBe('open');
   });
 
   it('stops closing on outside clicks once unmounted', async () => {
