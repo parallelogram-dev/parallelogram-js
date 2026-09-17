@@ -8,6 +8,7 @@ export default {
   description: `Files are added by dropping them or through a button that opens the file picker, and each one uploads as multipart form data with its progress shown. Existing files are \`<p-uploader-file>\` children. Each feature appears only when its server address is set: uploading, editing fields, deleting and reordering.
 
 With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.`,
+  withoutJs: `The file input lives in this element's shadow root, so before the module loads there is no way to choose a file, and \`<p-uploader-file>\` children show nothing. The package stylesheet hides the element while scripts are running. An upload posts to its own endpoint rather than with the surrounding form, so there is nothing here to fall back to: where uploading has to work without scripts, render an ordinary \`<input type="file">\` form and use this element in place of it once the module is in.`,
   attributes: [
     {
       name: 'upload-action',

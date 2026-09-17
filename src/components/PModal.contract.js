@@ -12,6 +12,7 @@ export default {
 
 Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\` trigger handled by the Modal component.`,
   states: STATES,
+  withoutJs: `The title, content and actions are the page's own markup, so before the module loads they are ordinary elements sitting in the flow rather than a dialog. The package stylesheet hides the element while scripts are running, so that content does not appear inline for the moment before it upgrades; with scripting off it stays visible and readable, which is better than content nothing is coming to bring back.`,
   attributes: [
     {
       name: 'open',

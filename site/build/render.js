@@ -486,6 +486,14 @@ ${examples}
 ${paragraphs(contract.description)}
 ${accessibility}
 </section>
+${
+  contract.withoutJs
+    ? `<section class="doc__section" aria-labelledby="without-javascript">
+<h2 id="without-javascript">Without JavaScript</h2>
+${paragraphs(contract.withoutJs)}
+</section>`
+    : ''
+}
 ${usage(contract)}
 <div class="doc__reference">
 ${reference(contract, '')}

@@ -18,6 +18,27 @@ describe('framework stylesheet', () => {
     document.body.replaceChildren();
   });
 
+  it('hides a web component until its module upgrades it', () => {
+    /* This file never imports the components, so these tags stay unupgraded and :not(:defined)
+       applies, which is the state a page is in while the module is still on its way */
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<p-modal id="modal"><h2 slot="title">Release this table?</h2><p>It goes to the waitlist.</p></p-modal>
+       <p-select id="select"><option value="bar">Bar</option></p-select>
+       <p-datetime id="datetime"></p-datetime>
+       <p-uploader id="uploader"></p-uploader>
+       <p-toasts id="toasts"></p-toasts>`
+    );
+
+    expect(['#modal', '#select', '#datetime', '#uploader', '#toasts'].map(displayOf)).toEqual([
+      'none',
+      'none',
+      'none',
+      'none',
+      'none',
+    ]);
+  });
+
   it('hides closed toggle targets', () => {
     document.body.innerHTML = '<nav id="menu" data-toggle-state="closed">Links</nav>';
 

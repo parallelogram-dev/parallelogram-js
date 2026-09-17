@@ -108,6 +108,8 @@
  * @property {string} module - The import path within the package, such as `components/Toggle`
  * @property {string} summary - One line saying what the component does
  * @property {string} [description] - Paragraphs separated by blank lines; `code` in backticks
+ * @property {string} [withoutJs] - What this leaves on the page before the module loads, and if it
+ *   never loads. Required reading for an element, whose markup is inert until it upgrades
  * @property {string} [stylesheet] - The package stylesheet it needs, such as `styles/toggle.css`
  * @property {string[]} [states] - Values of its `data-<component>-state` attribute
  * @property {AttributeContract[]} attributes
