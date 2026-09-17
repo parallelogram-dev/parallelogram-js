@@ -185,18 +185,18 @@ export default class PDatetime extends HTMLElement {
     setStaticHTML(
       this.shadowRoot,
       `
-          <div class="field">
-            <button type="button" class="input" data-datetime-input aria-haspopup="dialog" aria-expanded="false" data-placeholder="Select date..."></button>
-            <button type="button" class="input" data-datetime-input-to aria-haspopup="dialog" aria-expanded="false" hidden data-placeholder="End date..."></button>
-            <button type="button" class="calendar-btn" data-datetime-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date">${iconMarkup(calendar, { size: 'sm' })}</button>
+          <div class="field" part="field">
+            <button type="button" class="input" part="input" data-datetime-input aria-haspopup="dialog" aria-expanded="false" data-placeholder="Select date..."></button>
+            <button type="button" class="input" part="input" data-datetime-input-to aria-haspopup="dialog" aria-expanded="false" hidden data-placeholder="End date..."></button>
+            <button type="button" class="calendar-btn" part="trigger" data-datetime-trigger aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date">${iconMarkup(calendar, { size: 'sm' })}</button>
           </div>
 
-          <div class="panel" data-datetime-panel role="dialog" aria-label="Choose date" tabindex="-1" hidden>
+          <div class="panel" part="panel" data-datetime-panel role="dialog" aria-label="Choose date" tabindex="-1" hidden>
             <div class="range-info" data-datetime-range-info aria-live="polite" hidden>Click to select start date, then select end date</div>
 
-            <div class="nav" data-datetime-nav>
+            <div class="nav" part="nav" data-datetime-nav>
               <button type="button" data-datetime-nav-btn="prev" aria-label="Previous month">${iconMarkup(arrowLeft, { size: 'sm' })}</button>
-              <button type="button" class="month-year" id="month-year" data-datetime-month-year aria-live="polite">
+              <button type="button" class="month-year" part="month-year" id="month-year" data-datetime-month-year aria-live="polite">
                 <span data-slot="month"></span>
                 <span data-slot="year"></span>
                 ${iconMarkup(selector, { size: 'sm' })}
@@ -205,24 +205,24 @@ export default class PDatetime extends HTMLElement {
             </div>
 
             <div class="grid-container" data-datetime-grid-container>
-              <div class="grid" data-datetime-grid aria-labelledby="month-year"></div>
+              <div class="grid" part="grid" data-datetime-grid aria-labelledby="month-year"></div>
             </div>
 
             <div class="quick-dates" data-datetime-quick-dates hidden></div>
 
             <div class="time" data-datetime-time hidden>
-              <select class="time-select" data-datetime-hour aria-label="Hour"></select>
+              <select class="time-select" part="time-select" data-datetime-hour aria-label="Hour"></select>
               <div class="time-separator">:</div>
-              <select class="time-select" data-datetime-minute aria-label="Minute"></select>
-              <select class="ampm" data-datetime-ampm aria-label="AM or PM" hidden>
+              <select class="time-select" part="time-select" data-datetime-minute aria-label="Minute"></select>
+              <select class="ampm" part="time-select ampm" data-datetime-ampm aria-label="AM or PM" hidden>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
             </div>
 
             <div class="actions">
-              <button type="button" class="btn" data-datetime-action="clear">Clear</button>
-              <button type="button" class="btn primary" data-datetime-action="apply">Apply</button>
+              <button type="button" class="btn" part="action" data-datetime-action="clear">Clear</button>
+              <button type="button" class="btn primary" part="action primary" data-datetime-action="apply">Apply</button>
             </div>
           </div>
         `
@@ -1178,6 +1178,7 @@ export default class PDatetime extends HTMLElement {
         {
           type: 'button',
           class: 'day',
+          part: 'day',
           'data-date': this._dateString(dt),
           'aria-label': dateFormat({ dateStyle: 'full' }).format(dt),
         },

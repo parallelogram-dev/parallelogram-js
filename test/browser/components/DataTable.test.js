@@ -42,6 +42,17 @@ describe('DataTable', () => {
     document.body.replaceChildren();
   });
 
+  it('announces what the sort changed, not only how many rows are showing', async () => {
+    const table = mount(build(PEOPLE));
+    const status = () => document.querySelector('.datatable__status')?.textContent ?? '';
+
+    sortButton(table, 'name').click();
+
+    /* Without the sort in it the status is the same string before and after, so a screen reader is
+       told a table changed and then read the sentence it already had */
+    await vi.waitFor(() => expect(status()).toContain('Name'), WAIT);
+  });
+
   it('sorts from a header button and reports the order with aria-sort', () => {
     const table = mount(build(PEOPLE));
 
