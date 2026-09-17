@@ -9,6 +9,7 @@ import {
 import Tabs from '../../../src/components/Tabs.contract.js';
 import PModal from '../../../src/components/PModal.contract.js';
 import CopyToClipboard from '../../../src/components/CopyToClipboard.contract.js';
+import PSelect from '../../../src/components/PSelect.contract.js';
 
 const parse = html => {
   const doc = document.implementation.createHTMLDocument('');
@@ -79,6 +80,56 @@ describe('documentation site rendering', () => {
       withState.querySelector('[data-example-state]') !== null,
       withoutState.querySelector('[data-example-state]') === null,
     ]).toEqual([true, false]);
+  });
+
+  it('sets the import and tag facts beside the title', () => {
+    const header = parse(componentPage(PSelect)).querySelector('.doc__header');
+
+    expect([
+      header.querySelector('.doc__intro h1') !== null,
+      header.querySelector('.doc__facts') !== null,
+    ]).toEqual([true, true]);
+  });
+
+  it('puts About and Usage beside the playground, with the reference below both', () => {
+    const page = parse(componentPage(PSelect));
+
+    expect([
+      page.querySelector('.doc__main #about') !== null,
+      page.querySelector('.doc__main #usage') !== null,
+      page.querySelector('.doc__aside [data-example]') !== null,
+      page.querySelector('.doc__reference #attributes') !== null,
+    ]).toEqual([true, true, true, true]);
+  });
+
+  it('offers a control for every attribute an example can change, the named ones first', () => {
+    const page = parse(componentPage(PSelect));
+    const controls = [
+      ...page.querySelectorAll('[data-example="PSelect:form"] [data-attribute]'),
+    ].map(field => field.getAttribute('data-attribute'));
+
+    expect([controls.slice(0, 4), new Set(controls)]).toEqual([
+      ['placeholder', 'required', 'disabled', 'data-select-open-on-focus'],
+      new Set(PSelect.attributes.map(attribute => attribute.name)),
+    ]);
+  });
+
+  it('puts several examples in tabs and shows the first', () => {
+    const tabs = parse(componentPage(PSelect)).querySelector('.doc__aside [data-tabs]');
+
+    expect([
+      [...tabs.querySelectorAll('[data-tabs-list] [data-tab]')].map(tab => tab.textContent.trim()),
+      tabs.querySelector('[data-tab-panel="active"] [data-example]')?.getAttribute('data-example'),
+    ]).toEqual([PSelect.examples.map(example => example.title), 'PSelect:form']);
+  });
+
+  it('shows a lone example without tabs', () => {
+    const page = parse(componentPage(CopyToClipboard));
+
+    expect([
+      page.querySelector('[data-tabs]') === null,
+      page.querySelector('.doc__aside [data-example]') !== null,
+    ]).toEqual([true, true]);
   });
 
   it('offers a control suited to each attribute type', () => {
