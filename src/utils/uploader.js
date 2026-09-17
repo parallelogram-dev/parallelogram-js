@@ -42,3 +42,39 @@ export const boolAttr = (element, name, defaultValue) => {
   const value = element.getAttribute(name);
   return value === null ? defaultValue : !['false', '0'].includes(value.trim().toLowerCase());
 };
+
+/**
+ * The text the uploader and its file cards show, shared so a card on its own has the same words.
+ * A site changes these once through PUploader.defaults; a page changes one with the matching
+ * attribute on <p-uploader>, {name} placeholders included.
+ */
+export const uploaderText = {
+  addLabel: 'Drag/Add files',
+  addOneLabel: 'Drag/Add file',
+  noActionMessage: 'Files can’t be added because no upload-action is set.',
+  tooLargeMessage: '{file} is larger than {size}.',
+  wrongTypeMessage: '{file} isn’t an accepted file type.',
+  limitMessage: 'You can add up to {count} files.',
+  limitOneMessage: 'You can add up to {count} file.',
+  movedMessage: 'Moved {file} to position {position} of {count}.',
+  unnamedFile: 'the file',
+  orderError: 'The new order couldn’t be saved, so the files are back in their previous order.',
+  uploadError: 'Upload failed',
+  serverError: 'Server error',
+  deleteError: 'Delete failed: {error}',
+  saveError: 'Changes couldn’t be saved: {error}',
+  progressLabel: 'Upload progress',
+  deleteHeading: 'Delete this file?',
+  cancelDeleteLabel: 'Cancel delete',
+  confirmDeleteLabel: 'Confirm delete',
+  editLabel: 'Edit details',
+  cancelEditLabel: 'Cancel editing',
+  saveLabel: 'Save details',
+  removeLabel: 'Remove file',
+  cancelUploadLabel: 'Cancel',
+  moveUpLabel: 'Move up',
+  moveDownLabel: 'Move down',
+  replaceLabel: 'Replace',
+  deleteLabel: 'Delete file',
+  fileInfoLabel: 'File information for {file}',
+};
