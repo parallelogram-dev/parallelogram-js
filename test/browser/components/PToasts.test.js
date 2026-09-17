@@ -270,4 +270,43 @@ describe('p-toasts', () => {
       }
     }
   );
+  it('floats the toasts below a dismissed one up to their new place rather than jumping', async () => {
+    const host = document.createElement('p-toasts');
+    document.body.append(host);
+    const dismissFirst = host.toast({ message: 'First', timeout: 0 });
+    host.toast({ message: 'Second', timeout: 0 });
+    const second = host.shadowRoot.querySelectorAll('.toast')[1];
+    /* Where the second toast is in the frame before the first is removed: the first's leave
+       animation runs first, so this is sampled every frame until the removal */
+    let before = second.getBoundingClientRect().top;
+    let sampling = true;
+    const sample = () => {
+      if (!sampling) return;
+      before = second.getBoundingClientRect().top;
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+    const removed = new Promise(resolve => {
+      new MutationObserver((records, observer) => {
+        if (records.some(record => record.removedNodes.length)) {
+          observer.disconnect();
+          sampling = false;
+          resolve();
+        }
+      }).observe(second.parentNode, { childList: true });
+    });
+
+    dismissFirst();
+    await removed;
+    const justAfter = second.getBoundingClientRect().top;
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const settled = second.getBoundingClientRect().top;
+
+    /* The first toast's space closes the moment it is removed; the second used to be drawn at its
+       new place in that same frame. It starts from where it was and arrives over the animation */
+    expect({
+      staysPutAtFirst: Math.abs(justAfter - before) < 2,
+      arrives: settled < before - 10,
+    }).toEqual({ staysPutAtFirst: true, arrives: true });
+  });
 });
