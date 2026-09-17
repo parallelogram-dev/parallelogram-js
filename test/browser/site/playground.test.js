@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { exampleBlock } from '../../../site/build/render.js';
 import Toggle from '../../../src/components/Toggle.contract.js';
+import PSelect from '../../../src/components/PSelect.contract.js';
+import '../../../src/components/PSelect.js';
 import ExamplePlayground from '../../../site/src/playground/ExamplePlayground.js';
 
 const mountExample = (contract, exampleId) => {
@@ -60,6 +62,32 @@ describe('example playground', () => {
         .querySelector('[data-example-code]')
         .textContent.includes('data-toggle-close-escape="false"'),
     ]).toEqual(['false', true]);
+  });
+
+  it('changes a web component in place, keeping the element it is mounted on', () => {
+    const { element } = mountExample(PSelect, 'form');
+    const before = stageOf(element).querySelector('p-select');
+    const field = control(element, 'placeholder');
+
+    field.value = 'Pick an area';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect([
+      stageOf(element).querySelector('p-select') === before,
+      before.getAttribute('placeholder'),
+    ]).toEqual([true, 'Pick an area']);
+  });
+
+  it('mounts an enhancement again, since it reads its options only when it mounts', () => {
+    const { element } = mountExample(Toggle, 'menu');
+    const before = stageOf(element).querySelector('[data-toggle]');
+    const field = control(element, 'data-toggle-capture');
+
+    field.value = 'false';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const after = stageOf(element).querySelector('[data-toggle]');
+    expect([after === before, after.getAttribute('data-toggle-capture')]).toEqual([false, 'false']);
   });
 
   it('puts the original markup back when reset', async () => {
