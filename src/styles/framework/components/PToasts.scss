@@ -65,23 +65,21 @@
   pointer-events: auto;
 }
 
-/* Types fill with the strong status colours behind white text in both themes */
-.toast.success,
-.toast.warning,
-.toast.error {
-  color: var(--toast-text-color, var(--color-on-status, #fff));
-}
-
+/* Types fill with the status colour behind its contrast text: a success toast is the success
+   colour, the same one a page paints its own success with */
 .toast.success {
-  background: var(--toast-bg-success, var(--color-success-strong, #065f46));
+  background: var(--toast-bg-success, var(--color-success, #15803d));
+  color: var(--toast-text-color, var(--color-success-contrast, #fff));
 }
 
 .toast.warning {
-  background: var(--toast-bg-warning, var(--toast-bg-warn, var(--color-warning-strong, #7c2d12)));
+  background: var(--toast-bg-warning, var(--toast-bg-warn, var(--color-warning, #f97316)));
+  color: var(--toast-text-color, var(--color-warning-contrast, #431407));
 }
 
 .toast.error {
-  background: var(--toast-bg-error, var(--color-danger-strong, #7f1d1d));
+  background: var(--toast-bg-error, var(--color-danger, #dc2626));
+  color: var(--toast-text-color, var(--color-danger-contrast, #fff));
 }
 
 .row {

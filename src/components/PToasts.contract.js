@@ -69,23 +69,23 @@ Where popovers are supported the element shows itself as a manual popover and mo
     },
     {
       name: '--toast-bg-success',
-      default: 'var(--color-success-strong)',
+      default: 'var(--color-success)',
       description: 'Background of success toasts',
     },
     {
       name: '--toast-bg-warning',
-      default: 'var(--color-warning-strong)',
+      default: 'var(--color-warning)',
       description: 'Background of warning toasts',
     },
     {
       name: '--toast-bg-error',
-      default: 'var(--color-danger-strong)',
+      default: 'var(--color-danger)',
       description: 'Background of error toasts',
     },
     {
       name: '--toast-text-color',
       description:
-        'Text colour of every toast; defaults to --color-inverse-text on info toasts and --color-on-status on success, warning and error toasts',
+        'Text colour of every toast; defaults to --color-inverse-text on info toasts and to the status colour’s -contrast on the others',
     },
     { name: '--toast-border-radius', description: 'Corner radius' },
     {
