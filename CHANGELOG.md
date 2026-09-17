@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.11] - 2026-09-17
+
 ### Changed
 
 - The light theme's solid colours clear 4.5:1 under their text. The accent is `#2563eb`, which was its hover, with `#1d4ed8` as the hover; it was `#3b82f6`, 3.7:1 under white and the same ratio as link text on a white page, which fails for body text outright. Success is `#15803d`, was `#16a34a` at 3.3:1. Warning keeps its orange -- brighter, `#f97316` -- and carries dark text, `#431407`, at 5.3:1, because every orange that reads under white is a brown. Danger was already 4.8:1 and is unchanged, as is the whole dark theme. The status contrast test holds every pairing to 4.5:1 now rather than 3:1 for a solid.
