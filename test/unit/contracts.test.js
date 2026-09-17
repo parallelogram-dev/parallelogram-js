@@ -209,6 +209,14 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
       ).toEqual(withOption.map(attribute => [attribute.name, attribute.default]));
     });
 
+    it('keeps its defaults as one object, so a site can change them once', async () => {
+      const Component = await componentOf(contract);
+
+      /* A getter that hands back a fresh copy makes `Toggle.defaults.openClass = 'open'` a no-op
+         nothing reports; every enhancement did that until 0.8.0 */
+      expect(Component.defaults).toBe(Component.defaults);
+    });
+
     it('has examples containing the component and the elements their controls change', () => {
       const problems = [];
       for (const example of contract.examples) {

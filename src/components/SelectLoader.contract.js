@@ -52,6 +52,21 @@ Fragments are inserted as HTML, through the \`parallelogram\` policy on pages th
       description: 'Text shown when nothing is chosen',
     },
     {
+      name: 'data-selectloader-error-message',
+      type: 'string',
+      default: 'Failed to load content',
+      option: 'errorMessage',
+      description:
+        'Shown when a fragment fails to load and the error carries no message of its own',
+    },
+    {
+      name: 'data-selectloader-retry-label',
+      type: 'string',
+      default: 'Retry',
+      option: 'retryLabel',
+      description: 'The button beside that message, which loads the same choice again',
+    },
+    {
       name: 'data-selectloader-loading-class',
       type: 'string',
       default: 'loading',

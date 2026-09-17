@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import '../../../src/components/PDatetime.js';
+import PDatetime from '../../../src/components/PDatetime.js';
 
 const renderPicker = (attributes = {}) => {
   const picker = document.createElement('p-datetime');
@@ -689,5 +689,62 @@ describe('p-datetime', () => {
         firstHeader: new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(monday),
       });
     });
+  });
+  it('names months and weekdays in the language of the nearest lang, not the browser', async () => {
+    const french = renderPicker({ value: '2026-03-15', lang: 'fr' });
+    const german = document.createElement('div');
+    german.lang = 'de';
+    document.body.append(german);
+    const inherited = document.createElement('p-datetime');
+    inherited.setAttribute('value', '2026-03-15');
+    german.append(inherited);
+    trigger(french).click();
+    await nextFrame();
+    trigger(inherited).click();
+    await nextFrame();
+
+    expect([
+      shadow(french, '[data-slot="month"]').textContent,
+      shadow(inherited, '[data-slot="month"]').textContent,
+    ]).toEqual(['mars', 'März']);
+  });
+
+  it('uses the words the page chose, in the order the page wrote them', () => {
+    const picker = renderPicker({
+      'date-noun': 'fecha',
+      placeholder: 'Elige {what}…',
+      'choose-label': 'Elegir {what}',
+      'apply-label': 'Aplicar',
+      'empty-value': 'sin valor',
+      'value-label': '{value} — {label}',
+    });
+    const field = shadow(picker, '[data-datetime-input]');
+
+    /* The noun feeds the placeholder and the trigger, and the field label's fallback is the same
+       noun capitalised, so one word set in the page's language reaches every sentence that names it */
+    expect([
+      field.getAttribute('data-placeholder'),
+      trigger(picker).getAttribute('aria-label'),
+      shadow(picker, '[data-datetime-action="apply"]').textContent,
+      field.getAttribute('aria-label'),
+    ]).toEqual(['Elige fecha…', 'Elegir fecha', 'Aplicar', 'sin valor — Fecha']);
+  });
+
+  it('lets a site change a word for every picker at once', () => {
+    PDatetime.defaults.clearLabel = 'Effacer';
+    try {
+      const picker = renderPicker();
+
+      expect(shadow(picker, '[data-datetime-action="clear"]').textContent).toBe('Effacer');
+    } finally {
+      PDatetime.defaults.clearLabel = 'Clear';
+    }
+  });
+
+  it('reports a missing value in the words the page chose', async () => {
+    const picker = renderPicker({ required: '', 'required-message': '{what} requis' });
+    await nextFrame();
+
+    expect(picker.validationMessage).toBe('date requis');
   });
 });

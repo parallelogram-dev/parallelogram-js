@@ -5,6 +5,7 @@ import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
+import { text } from '../utils/text.js';
 
 /** Modals that are open, most recently opened last, shared by every p-modal on the page */
 const openModals = [];
@@ -66,8 +67,11 @@ let lockedOverflow = null;
  *   `var(--surface-dialog-color-bg)` and `var(--surface-dialog-color-text)`)
  */
 export default class PModal extends HTMLElement {
+  /** The text the modal shows: a site changes it here once, a page changes one with the attribute */
+  static defaults = { closeLabel: 'Close' };
+
   static get observedAttributes() {
-    return ['open'];
+    return ['open', 'close-label'];
   }
 
   constructor() {
@@ -109,6 +113,7 @@ export default class PModal extends HTMLElement {
 
   connectedCallback() {
     followFocusSource(this);
+    this._closeButton.setAttribute('aria-label', text(this, 'close-label'));
     /* Custom element constructors may not add attributes, so the initial state is set here */
     if (!this.hasAttribute('data-modal-state')) {
       this._setModalState('closed');
@@ -196,7 +201,11 @@ export default class PModal extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name !== 'open' || oldValue === newValue || !this.isConnected) return;
+    if (oldValue === newValue || !this.isConnected) return;
+    if (name === 'close-label') {
+      this._closeButton.setAttribute('aria-label', text(this, 'close-label'));
+      return;
+    }
 
     if (newValue !== null) {
       this._onOpen();

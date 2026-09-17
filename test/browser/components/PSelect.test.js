@@ -1024,4 +1024,58 @@ describe('p-select from the keyboard alone', () => {
 
     expect([select.value, input.readOnly, input.value]).toEqual(['', false, '']);
   });
+
+  it('names its clear button, and lets a page or a site rename it', () => {
+    const label = select => select.shadowRoot.querySelector('.clear').getAttribute('aria-label');
+    const plain = document.createElement('p-select');
+    const page = document.createElement('p-select');
+    page.setAttribute('clear-label', 'Effacer');
+    document.body.append(plain, page);
+    page.setAttribute('clear-label', 'Borrar');
+
+    PSelect.defaults.clearLabel = 'Auswahl löschen';
+    const site = document.createElement('p-select');
+    document.body.append(site);
+    try {
+      expect([label(plain), label(page), label(site)]).toEqual([
+        'Clear the selection',
+        'Borrar',
+        'Auswahl löschen',
+      ]);
+    } finally {
+      PSelect.defaults.clearLabel = 'Clear the selection';
+    }
+  });
+
+  it("shows the site's placeholder when the page set none", () => {
+    PSelect.defaults.placeholder = 'Choisir…';
+    const select = document.createElement('p-select');
+    document.body.append(select);
+    try {
+      expect(select.shadowRoot.querySelector('input').placeholder).toBe('Choisir…');
+    } finally {
+      PSelect.defaults.placeholder = 'Select…';
+    }
+  });
+
+  it('asks for a search, or says nothing was found, in the words the page or the site chose', () => {
+    PSelect.defaults.noResults = 'Aucun résultat';
+    try {
+      renderForm(`
+        <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
+        <p-select name="country"><option value="fr">France</option></p-select>
+      `);
+      const [remote, local] = document.querySelectorAll('p-select');
+      const message = select => select.shadowRoot.querySelector('.noresults')?.textContent;
+      remote.open();
+      local.open();
+      const input = local.shadowRoot.querySelector('.input');
+      input.value = 'zzz';
+      input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+      expect([message(remote), message(local)]).toEqual(['Tapez 2 caractères', 'Aucun résultat']);
+    } finally {
+      PSelect.defaults.noResults = 'No results found';
+    }
+  });
 });

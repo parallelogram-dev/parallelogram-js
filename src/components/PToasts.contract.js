@@ -13,6 +13,13 @@ Where popovers are supported the element shows itself as a manual popover and mo
   withoutJs: `This element renders nothing of its own, so before the module loads there is no stack and \`toast()\` is not there to call. Nothing on the page is lost, since a toast is something the page asks for rather than content it already had. A message the server already knows about is better rendered as ordinary HTML, which needs no script at all.`,
   attributes: [
     {
+      name: 'dismiss-label',
+      type: 'string',
+      default: 'Dismiss notification',
+      option: 'dismissLabel',
+      description: 'The accessible name of the dismiss button on each toast',
+    },
+    {
       name: 'placement',
       type: 'enum',
       options: [

@@ -4,8 +4,7 @@ import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
-
-const DEFAULT_PLACEHOLDER = 'Select…';
+import { text } from '../utils/text.js';
 
 /** How many options Page Up and Page Down move by */
 const PAGE_SIZE = 10;
@@ -121,10 +120,23 @@ const richOptionContent = ({ label, secondary, description, image }) => {
 export default class PSelect extends HTMLElement {
   static formAssociated = true;
 
+  /** The text the select shows: a site changes it here once, a page changes one with the attribute */
+  static defaults = {
+    placeholder: 'Select…',
+    clearLabel: 'Clear the selection',
+    searchHint: 'Type to search',
+    searchMinHint: 'Type {min} or more characters to search',
+    noResults: 'No results found',
+  };
+
   static get observedAttributes() {
     return [
       'value',
       'placeholder',
+      'clear-label',
+      'search-hint',
+      'search-min-hint',
+      'no-results',
       'disabled',
       'required',
       'aria-label',
@@ -158,7 +170,7 @@ export default class PSelect extends HTMLElement {
       debounce: 200,
       min: 0,
       openOnFocus: false,
-      placeholder: DEFAULT_PLACEHOLDER,
+      placeholder: this.constructor.defaults.placeholder,
       disabled: false,
       required: false,
       loading: false,
@@ -181,6 +193,7 @@ export default class PSelect extends HTMLElement {
   }
 
   connectedCallback() {
+    this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
     followFocusSource(this);
     this._readConfig();
     this._parseOptionsFromDOM();
@@ -222,7 +235,7 @@ export default class PSelect extends HTMLElement {
         this._updateValue(newValue);
         break;
       case 'placeholder':
-        this.state.placeholder = newValue || DEFAULT_PLACEHOLDER;
+        this.state.placeholder = newValue || this.constructor.defaults.placeholder;
         this._els.input.placeholder = this.state.placeholder;
         break;
       case 'disabled':
@@ -233,6 +246,9 @@ export default class PSelect extends HTMLElement {
         break;
       case 'aria-label':
         this._updateName();
+        break;
+      case 'clear-label':
+        this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
         break;
       default:
         this._readConfig();
@@ -929,9 +945,9 @@ export default class PSelect extends HTMLElement {
   _emptyMessage() {
     const { src, min, query } = this.state;
     if (src && query.length < min) {
-      return min === 1 ? 'Type to search' : `Type ${min} or more characters to search`;
+      return text(this, min === 1 ? 'search-hint' : 'search-min-hint', { min });
     }
-    return 'No results found';
+    return text(this, 'no-results');
   }
 
   /**

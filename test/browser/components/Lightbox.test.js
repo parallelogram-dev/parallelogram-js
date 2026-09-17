@@ -284,4 +284,52 @@ describe('Lightbox', () => {
 
     expect(states).not.toContain('transitioning');
   });
+
+  it('names its controls, and lets a page or a site rename them', async () => {
+    Lightbox.defaults.nextLabel = 'Image suivante';
+    try {
+      const { links } = mountGallery([IMAGE, IMAGE], {}, { 'data-lightbox-close-label': 'Fermer' });
+      links[0].click();
+      await vi.waitFor(() => expect(lightboxState()).toBe('open'), WAIT);
+      const label = action =>
+        overlay().querySelector(`[data-lightbox-action="${action}"]`).getAttribute('aria-label');
+
+      expect([
+        overlay().getAttribute('aria-label'),
+        label('close'),
+        label('prev'),
+        label('next'),
+      ]).toEqual(['Image viewer', 'Fermer', 'Previous image', 'Image suivante']);
+    } finally {
+      Lightbox.defaults.nextLabel = 'Next image';
+    }
+  });
+
+  it('says an image failed to load in the words the page chose, naming it when it can', async () => {
+    const { links } = mountGallery(
+      ['/missing-lightbox-image.png'],
+      {},
+      {
+        'data-lightbox-load-error': 'Impossible de charger {image}',
+      }
+    );
+    const untitled = document.createElement('a');
+    untitled.href = '/missing-lightbox-image.png';
+    untitled.dataset.lightbox = 'untitled';
+    document.body.append(untitled);
+    new Lightbox().mount(untitled);
+
+    links[0].click();
+    await vi.waitFor(() => expect(errorMessage()?.hidden).toBe(false), WAIT);
+    const named = errorMessage().textContent;
+    press('Escape');
+    await vi.waitFor(() => expect(overlay()).toBeNull(), WAIT);
+    untitled.click();
+    await vi.waitFor(() => expect(errorMessage()?.hidden).toBe(false), WAIT);
+
+    expect([named, errorMessage().textContent]).toEqual([
+      'Impossible de charger Photo 1',
+      "The image couldn't be loaded",
+    ]);
+  });
 });
