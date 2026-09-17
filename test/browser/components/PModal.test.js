@@ -244,6 +244,21 @@ describe('p-modal with a part left out', () => {
     ]).toEqual([true, true]);
   });
 
+  it('sets the close button in from the panel edge as far as the content', () => {
+    const modal = render('<h2 slot="title">Edit booking</h2><p>Table 12 is held.</p>');
+    /* The mismatch only shows on a page that sets the panel family; unset, both resolve alike */
+    modal.style.setProperty('--panel-padding', '24px');
+    modal.open();
+    const panel = modal.shadowRoot.querySelector('dialog');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+    const content = modal.shadowRoot.querySelector('[data-modal-content]');
+    const inset = element =>
+      panel.getBoundingClientRect().right - element.getBoundingClientRect().right;
+    const padding = Number.parseFloat(getComputedStyle(content).paddingRight);
+
+    expect(Math.abs(inset(close) - padding) < 1).toBe(true);
+  });
+
   it('lines a title up with the pinned close button', () => {
     const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
     modal.open();

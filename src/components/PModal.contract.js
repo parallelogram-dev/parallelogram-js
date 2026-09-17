@@ -147,6 +147,12 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       description:
         "Space between the elements the page puts in the modal, which give up the margins the browser would give them so the content meets the panel's padding",
     },
+    {
+      name: '--modal-close-inset-x',
+      default: 'var(--modal-content-padding)',
+      description:
+        "Distance from the side of the panel to the close button, following the content's own padding so the button lines up with what sits under it; set it where a page gives the panel padding more than one value",
+    },
     { name: '--modal-padding-x', description: 'Horizontal padding' },
     { name: '--modal-padding-y', description: 'Vertical padding' },
     {
