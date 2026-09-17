@@ -160,7 +160,8 @@ const attributesOf = contract =>
  * Every attribute an example can set, with the element a control for it writes to
  *
  * An attribute the component writes itself, or a deprecated one, isn't something to change: the
- * first belongs in the State panel and the second shouldn't be encouraged.
+ * first belongs in the State panel and the second shouldn't be encouraged. Nor is the attribute
+ * that marks the element for the component, since taking it away only unmounts the example.
  */
 const configurableOf = contract =>
   [
@@ -168,7 +169,10 @@ const configurableOf = contract =>
     ...(contract.elements ?? []).flatMap(element =>
       (element.attributes ?? []).map(attribute => ({ attribute, target: element.tag }))
     ),
-  ].filter(({ attribute }) => !attribute.readonly && !attribute.deprecated);
+  ].filter(
+    ({ attribute }) =>
+      !attribute.readonly && !attribute.deprecated && attribute.name !== contract.selector
+  );
 
 export function exampleBlock(contract, example, { titled = true } = {}) {
   const id = `${slugFor(contract)}-${example.id}`;

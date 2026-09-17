@@ -10,6 +10,7 @@ import Tabs from '../../../src/components/Tabs.contract.js';
 import PModal from '../../../src/components/PModal.contract.js';
 import CopyToClipboard from '../../../src/components/CopyToClipboard.contract.js';
 import PSelect from '../../../src/components/PSelect.contract.js';
+import Toggle from '../../../src/components/Toggle.contract.js';
 
 const parse = html => {
   const doc = document.implementation.createHTMLDocument('');
@@ -172,6 +173,17 @@ describe('documentation site rendering', () => {
     const example = parse(componentPage(PSelect)).querySelector('[data-example="PSelect:form"]');
 
     expect(example.querySelector('.example__views [data-example-controls]')).toBe(null);
+  });
+
+  it('leaves the attribute that marks the component out of the controls', () => {
+    const controls = [
+      ...parse(componentPage(Toggle)).querySelectorAll('[data-example] [data-attribute]'),
+    ].map(field => field.getAttribute('data-attribute'));
+
+    expect([controls.includes('data-toggle'), controls.includes('data-toggle-capture')]).toEqual([
+      false,
+      true,
+    ]);
   });
 
   it('offers a control suited to each attribute type', () => {
