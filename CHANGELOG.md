@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every hover in the library eases over `--framework-transition-duration`, 0.2s, and none of them does for a visitor who prefers reduced motion. Buttons built on the design system's `button-base` eased everything over a literal 0.15s, and an accordion's summary switched hard; `button-base` eases its background, text and border over the framework token now, and the `transition` mixin takes a list of properties and eases each alike, inside the media query that respects the preference. `<p-select>` and `<p-uploader>`'s drop zone eased on literal durations with no reduced-motion rule, and have one; `--framework-transition-duration` itself is `0s` under the preference, so everything reading it -- focus outlines included -- follows. `<p-datetime>`'s quick dates ease over the picker's own 0.15s. The documentation's example buttons ease the same way.
 - `<p-datetime>`'s quick dates are pills on the muted surface in the text colour, and the accent with its contrast text under the pointer. They were ghost buttons -- transparent, muted text -- with a hover that painted the strong accent under the panel's background colour, and a second hover rule that applied on touch screens too. The four `--datetime-preset-*` properties follow `--color-surface-muted`, `--color-text`, `--color-accent` and `--color-accent-contrast`; `--datetime-preset-hover-color` is new.
 
+### Fixed
+
+- When a toast is dismissed, the toasts below it float up to their new place over the toast animation's duration rather than jumping there in the frame its space closes; a new toast that pushes others along floats them the same way. Nothing floats for a visitor who prefers reduced motion.
+
 ## [0.7.10] - 2026-09-17
 
 ### Added
