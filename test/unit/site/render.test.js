@@ -82,23 +82,34 @@ describe('documentation site rendering', () => {
     ]).toEqual([true, false]);
   });
 
-  it('sets the import and tag facts beside the title', () => {
-    const header = parse(componentPage(PSelect)).querySelector('.doc__header');
+  it('sets the import and tag facts under the title, with the playground beside them', () => {
+    const page = parse(componentPage(PSelect));
+    const header = page.querySelector('.doc__columns > .doc__header');
 
     expect([
       header.querySelector('.doc__intro h1') !== null,
       header.querySelector('.doc__facts') !== null,
-    ]).toEqual([true, true]);
+      page.querySelector('.doc__aside .doc__aside-title')?.textContent,
+    ]).toEqual([true, true, 'Playground']);
   });
 
-  it('puts About and Usage beside the playground, with the reference below both', () => {
+  it('leaves the playground out when an example has none to show', () => {
+    const page = parse(componentPage({ ...PSelect, examples: [] }));
+
+    expect([
+      page.querySelector('.doc__aside'),
+      page.querySelector('.doc__main #about') !== null,
+    ]).toEqual([null, true]);
+  });
+
+  it('reads down the left column, with the playground beside all of it', () => {
     const page = parse(componentPage(PSelect));
 
     expect([
       page.querySelector('.doc__main #about') !== null,
       page.querySelector('.doc__main #usage') !== null,
+      page.querySelector('.doc__main .doc__reference #attributes') !== null,
       page.querySelector('.doc__aside [data-example]') !== null,
-      page.querySelector('.doc__reference #attributes') !== null,
     ]).toEqual([true, true, true, true]);
   });
 
@@ -115,10 +126,11 @@ describe('documentation site rendering', () => {
   });
 
   it('puts several examples in tabs and shows the first', () => {
-    const tabs = parse(componentPage(PSelect)).querySelector('.doc__aside [data-tabs]');
+    const tabs = parse(componentPage(PSelect)).querySelector('.doc__aside .playground');
+    const list = tabs.querySelector('.playground__tabs');
 
     expect([
-      [...tabs.querySelectorAll('[data-tabs-list] [data-tab]')].map(tab => tab.textContent.trim()),
+      [...list.children].map(tab => tab.textContent.trim()),
       tabs.querySelector('[data-tab-panel="active"] [data-example]')?.getAttribute('data-example'),
     ]).toEqual([PSelect.examples.map(example => example.title), 'PSelect:form']);
   });
@@ -127,9 +139,39 @@ describe('documentation site rendering', () => {
     const page = parse(componentPage(CopyToClipboard));
 
     expect([
-      page.querySelector('[data-tabs]') === null,
+      page.querySelector('.playground') === null,
       page.querySelector('.doc__aside [data-example]') !== null,
     ]).toEqual([true, true]);
+  });
+
+  it('shows an example as Output and Markup tabs, so it stays short', () => {
+    const views = parse(componentPage(PSelect)).querySelector(
+      '[data-example="PSelect:form"] .example__views'
+    );
+
+    expect([
+      [...views.querySelector('.example__tabs').children].map(tab => tab.textContent.trim()),
+      views.querySelector('[data-tab-panel="active"] [data-example-stage]') !== null,
+      views.querySelector('[data-example-code]') !== null,
+    ]).toEqual([['Output', 'Markup', 'Events'], true, true]);
+  });
+
+  it('adds a State tab only for a component that writes state attributes', () => {
+    const tabsOf = contract =>
+      [...parse(componentPage(contract)).querySelector('.example__tabs').children].map(tab =>
+        tab.textContent.trim()
+      );
+
+    expect([tabsOf(Tabs), tabsOf(PSelect)]).toEqual([
+      ['Output', 'Markup', 'State', 'Events'],
+      ['Output', 'Markup', 'Events'],
+    ]);
+  });
+
+  it('keeps the controls out of the tabs, so they stay to hand', () => {
+    const example = parse(componentPage(PSelect)).querySelector('[data-example="PSelect:form"]');
+
+    expect(example.querySelector('.example__views [data-example-controls]')).toBe(null);
   });
 
   it('offers a control suited to each attribute type', () => {

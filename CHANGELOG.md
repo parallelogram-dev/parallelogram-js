@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- A component's documentation page is laid out in two columns on a wide screen: the title and summary beside the import and tag, what there is to read beside the playground, and the reference tables across both underneath. Below 80rem it stacks, with the playground first. A component with more than one example shows them in tabs.
+- A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
 - An example's controls cover every attribute the example can set, rather than the few each contract named: eleven for `<p-select>` instead of four, and the named ones lead. Changing a control now sets the attribute on the mounted component instead of rebuilding the example from its markup, so a web component is told about the change as a page would tell it and keeps what the visitor has done; an enhancement, which reads its options only when it mounts, is mounted again.
 
 ### Fixed
