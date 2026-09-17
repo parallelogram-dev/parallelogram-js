@@ -7,13 +7,9 @@ export default defineConfig({
   test: {
     restoreMocks: true,
     unstubGlobals: true,
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.js'],
-      exclude: ['src/**/*.contract.js'],
-      /* The unit project's coverage when these were set, rounded down; raise them as it grows */
-      thresholds: { statements: 51, branches: 44, functions: 50, lines: 53 },
-    },
+    /* Coverage is reported by vitest.coverage.config.js, which runs both projects: v8 will not
+       instrument the three browsers this config runs, and a number from the unit project alone
+       describes the half of the suite that covers the least. */
     projects: [
       {
         extends: true,

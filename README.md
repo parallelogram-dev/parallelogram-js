@@ -18,7 +18,7 @@ The framework is optional. Any enhancement can be used on its own — `import To
 ## Versions and browser support
 
 - Releases follow [semantic versioning](https://semver.org). Before 1.0, a minor release (0.x.0) may include breaking changes and a patch release (0.x.y) never does.
-- Deprecations are announced in the [changelog](CHANGELOG.md) and keep working for at least one minor release before they are removed. Each breaking release has an upgrade guide.
+- Deprecations are announced in the [changelog](CHANGELOG.md) and keep working for at least one minor release **and thirty days**, whichever is longer, before they are removed. Each breaking release has an upgrade guide. The wall-clock half matters: 0.5.0 to 0.6.0 took six hours, and a window measured only in releases is no window at all when a release costs an afternoon.
 - The browser floor is Baseline 2023: Chrome and Edge 120, Firefox 121, and Safari 17.2 on macOS and iOS, or later. Older browsers aren't tested or supported.
 - Only the latest minor release line gets security fixes. See [SECURITY.md](SECURITY.md) for how to report a vulnerability.
 

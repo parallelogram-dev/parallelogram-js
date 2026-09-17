@@ -154,7 +154,7 @@ Failed loads are retried with a growing delay. Don't lazy load the largest image
     },
     {
       name: '--lazy-error-bg',
-      default: 'var(--color-danger-bg)',
+      default: 'var(--color-danger-tint)',
       description: 'Background after an error: the danger tint',
     },
     {
