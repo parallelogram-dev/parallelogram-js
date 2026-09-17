@@ -170,6 +170,11 @@
   align-items: center;
 }
 
+/* display: flex would otherwise outrank the browser's own rule for the hidden attribute */
+.modal__footer[hidden] {
+  display: none;
+}
+
 /* Element: Modal header */
 .modal__header {
   flex-shrink: 0;
