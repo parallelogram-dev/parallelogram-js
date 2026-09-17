@@ -1,4 +1,4 @@
-import { TOKEN_GROUPS, rowsOf } from '../src/workbench/tokens.js';
+import { rowsOf } from './token-rows.js';
 
 /**
  * HTML for the documentation site, rendered from component contracts
@@ -574,7 +574,7 @@ ${[...contracts].sort(byName).map(card).join('\n')}
  *
  * @returns {string}
  */
-export function designSystemPage(readers = new Map(), sources = new Map()) {
+export function designSystemPage(readers = new Map(), sources = new Map(), groups = []) {
   const tokenId = name => `token${name.replace(/^-+/, '-')}`;
 
   /* A demo is given its family's tokens by role, worked out from each name's ending, so the demo
@@ -699,7 +699,7 @@ ${rowsOf(group).map(row).join('\n')}
     <button type="reset" class="tool-button">Reset all</button>
     <span class="tokens__count">Changed <span class="badge" data-workbench-count>0</span></span>
   </div>
-${TOKEN_GROUPS.map(layer).join('\n')}
+${groups.map(layer).join('\n')}
 </form>
 <section class="tokens__export" aria-labelledby="tokens-export">
   <h2 id="tokens-export">Changed values</h2>
