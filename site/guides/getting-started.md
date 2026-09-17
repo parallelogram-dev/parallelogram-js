@@ -283,7 +283,7 @@ A page changes one instance with the attribute, which wins over the default:
 <p-modal close-label="Fermer sans enregistrer"></p-modal>
 ```
 
-Enhancements have had both layers all along, through `defaults` and their `data-*` options: `DataTable.defaults.sortStatus` is the sort every table reports, `data-datatable-sort-status` the one this table does. Text with `{name}` placeholders keeps them in whatever order the sentence needs, which is what makes a translation possible at all.
+Enhancements work the same way through `defaults` and their `data-*` options: `DataTable.defaults.sortStatus` is the sort every table reports, `data-datatable-sort-status` the one this table does. Text with `{name}` placeholders keeps them in whatever order the sentence needs, which is what makes a translation possible at all.
 
 Nothing is translated for you, on purpose: a bundled translation that could not be checked would look finished and be wrong, and the French above is an example of the shape rather than a translation to ship. Dates, times, month and weekday names come from the browser's own `Intl` and are already in every language. Each component's page lists its text under _Attributes_, with the English beside it.
 

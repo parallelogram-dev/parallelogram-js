@@ -27,16 +27,14 @@ import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 export default class Scrollreveal extends BaseComponent {
   static selector = 'data-reveal';
 
-  static get defaults() {
-    return {
-      threshold: 0.1,
-      rootMargin: '0px',
-      once: true,
-      delay: 0,
-      stagger: 100,
-      initialState: 'hidden',
-    };
-  }
+  static defaults = {
+    threshold: 0.1,
+    rootMargin: '0px',
+    once: true,
+    delay: 0,
+    stagger: 100,
+    initialState: 'hidden',
+  };
 
   constructor(options = {}) {
     super(options);

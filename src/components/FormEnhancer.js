@@ -77,16 +77,14 @@ const isValidated = field => field.willValidate === true && !BUTTON_TYPES.has(fi
 export class FormEnhancer extends BaseComponent {
   static selector = 'data-form-enhancer';
 
-  static get defaults() {
-    return {
-      validateOnInput: true,
-      validateOnBlur: true,
-      showErrorsImmediately: false,
-      debounce: 300,
-      errorClass: 'is-invalid',
-      validClass: 'is-valid',
-    };
-  }
+  static defaults = {
+    validateOnInput: true,
+    validateOnBlur: true,
+    showErrorsImmediately: false,
+    debounce: 300,
+    errorClass: 'is-invalid',
+    validClass: 'is-valid',
+  };
 
   _init(element) {
     const state = super._init(element);

@@ -38,16 +38,14 @@ import { trustedHTML } from '../utils/trusted.js';
 export default class SelectLoader extends BaseComponent {
   static selector = 'data-selectloader';
 
-  static get defaults() {
-    return {
-      loadingClass: 'loading',
-      errorClass: 'error',
-      transition: 'fade',
-      transitionDuration: 300,
-      retainScroll: false,
-      emptyMessage: 'Please select an option',
-    };
-  }
+  static defaults = {
+    loadingClass: 'loading',
+    errorClass: 'error',
+    transition: 'fade',
+    transitionDuration: 300,
+    retainScroll: false,
+    emptyMessage: 'Please select an option',
+  };
 
   _init(element) {
     const state = super._init(element);

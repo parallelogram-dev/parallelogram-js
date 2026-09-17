@@ -47,20 +47,18 @@ import { prefersReducedMotion } from '../utils/motion.js';
 export default class Videoplay extends BaseComponent {
   static selector = 'data-videoplay';
 
-  static get defaults() {
-    return {
-      playThreshold: 0.3,
-      pauseThreshold: 0.1,
-      pauseOnExit: true,
-      muteWhenPlaying: null,
-      restoreVolumeOnPause: false,
-      rootMargin: '0px',
-      enableInBackground: false,
-      preloadOnMount: true,
-      requireUserInteraction: false,
-      playsInline: true,
-    };
-  }
+  static defaults = {
+    playThreshold: 0.3,
+    pauseThreshold: 0.1,
+    pauseOnExit: true,
+    muteWhenPlaying: null,
+    restoreVolumeOnPause: false,
+    rootMargin: '0px',
+    enableInBackground: false,
+    preloadOnMount: true,
+    requireUserInteraction: false,
+    playsInline: true,
+  };
 
   constructor(options = {}) {
     super(options);

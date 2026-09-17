@@ -61,24 +61,22 @@ export default class Modal extends BaseComponent {
   /**
    * Default options for modal enhancement
    */
-  static get defaults() {
-    return {
-      /* Modal size: xs, sm, md, lg, xl, fullscreen */
-      size: 'md',
-      /* Whether modal can be closed */
-      closable: true,
-      /* Close on backdrop click */
-      backdropClose: true,
-      /* Enable keyboard navigation */
-      keyboard: true,
-      /* Auto-focus when opened */
-      focus: true,
-      /* Allow multiple modals */
-      multiple: false,
-      /* Where to append modal elements */
-      appendTo: 'body',
-    };
-  }
+  static defaults = {
+    /* Modal size: xs, sm, md, lg, xl, fullscreen */
+    size: 'md',
+    /* Whether modal can be closed */
+    closable: true,
+    /* Close on backdrop click */
+    backdropClose: true,
+    /* Enable keyboard navigation */
+    keyboard: true,
+    /* Auto-focus when opened */
+    focus: true,
+    /* Allow multiple modals */
+    multiple: false,
+    /* Where to append modal elements */
+    appendTo: 'body',
+  };
 
   /**
    * Initialize modal enhancement for a trigger element
