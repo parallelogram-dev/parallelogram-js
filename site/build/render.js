@@ -1,4 +1,4 @@
-import { TOKEN_GROUPS } from '../src/workbench/tokens.js';
+import { TOKEN_GROUPS, rowsOf } from '../src/workbench/tokens.js';
 
 /**
  * HTML for the documentation site, rendered from component contracts
@@ -574,62 +574,138 @@ ${[...contracts].sort(byName).map(card).join('\n')}
  *
  * @returns {string}
  */
-export function designSystemPage() {
+export function designSystemPage(readers = new Map(), sources = new Map()) {
   const tokenId = name => `token${name.replace(/^-+/, '-')}`;
+
+  /* A demo is given its family's tokens by role, worked out from each name's ending, so the demo
+     knows which of Accent's three values is the text colour without anything saying so twice. */
+  const ROLES = [
+    ['--demo-hover', /-hover(-bg)?$/],
+    ['--demo-text', /(-contrast|-color|-text)$/],
+    ['--demo-muted', /-muted$/],
+    ['--demo-border', /(-border|-border-color)$/],
+    ['--demo-width', /-(border-)?width$/],
+    ['--demo-radius', /-radius$/],
+    ['--demo-shadow', /-shadow$/],
+    ['--demo-offset', /-offset$/],
+    ['--demo-duration', /-duration$/],
+    ['--demo-easing', /-easing$/],
+    ['--demo-strong', /-strong$/],
+    ['--demo-bg', /(-bg|-surface)$/],
+  ];
+
+  const demoStyle = row => {
+    const taken = new Set();
+    const parts = [];
+    for (const [property, pattern] of ROLES) {
+      const token = row.tokens.find(t => pattern.test(t.name) && !taken.has(t.name));
+      if (token) {
+        taken.add(token.name);
+        parts.push(`${property}: var(${token.name})`);
+      }
+    }
+    /* Whatever is left over is the family's plain value: the accent itself, not its hover */
+    const base = row.tokens.find(t => !taken.has(t.name));
+    if (base) parts.push(`--demo-base: var(${base.name})`);
+    return parts.join('; ');
+  };
+
+  /* Some families need more than one specimen to be honest: a status colour is a solid chip and a
+     tinted message, and its contrast and strong values belong to one each. */
+  const SAMPLES = {
+    status: [
+      ['solid', 'Solid'],
+      ['tint', 'Message'],
+    ],
+  };
+
+  const LABEL = {
+    button: 'Button',
+    status: 'Message',
+    surface: 'Surface',
+    text: 'Muted text',
+    field: 'Placeholder',
+    focus: 'Focused',
+    motion: 'Motion',
+    inverse: 'Inverse',
+    overlay: 'Overlay',
+    shadow: 'Shadow',
+    swatch: '',
+  };
+
   const field = token => {
     const id = tokenId(token.name);
-    if (token.kind !== 'colour') {
-      return `<div class="workbench__token">
-  <label for="${id}"><code>${escapeHtml(token.name)}</code></label>
-  <input id="${id}" name="${escapeHtml(token.name)}" data-token-input="both" autocomplete="off" spellcheck="false" disabled>
-</div>`;
-    }
-    const theme = mode => `<span class="workbench__value">
-    <span class="workbench__swatch" data-token-swatch="${mode}" aria-hidden="true"></span>
-    <input id="${id}-${mode}" name="${escapeHtml(token.name)}" data-token-input="${mode}" aria-label="${escapeHtml(token.name)}, ${mode} theme" autocomplete="off" spellcheck="false" disabled>
-  </span>`;
-    return `<div class="workbench__token workbench__token--colour">
-  <span class="workbench__name"><code>${escapeHtml(token.name)}</code></span>
-  ${theme('light')}
-  ${theme('dark')}
+    const scope = token.kind === 'colour' ? 'theme' : 'both';
+    const unread = (readers.get(token.name) ?? []).length === 0;
+    const { source = '', follows = null } = sources.get(token.name) ?? {};
+    /* Carried from the stylesheet because the browser substitutes var() before anything can see it:
+       a token that follows another is otherwise indistinguishable from one holding its own value */
+    const link = follows
+      ? ` data-token-follows="${escapeHtml(follows)}"`
+      : '';
+    return `<div class="tokens__token${unread ? ' tokens__token--unread' : ''}" data-token-source="${escapeHtml(source)}"${link}>
+    <label class="tokens__label" for="${id}"><code>${escapeHtml(token.name)}</code></label>
+    <span class="tokens__control">
+      <span class="tokens__swatch" style="--demo: var(${escapeHtml(token.name)})" aria-hidden="true"></span>
+      <input id="${id}" name="${escapeHtml(token.name)}" data-token-input="${scope}" autocomplete="off" spellcheck="false" disabled>
+      <button type="button" class="tokens__copy" data-copytoclipboard data-copytoclipboard-target="#${id}" aria-label="Copy ${escapeHtml(token.name)}"><span aria-hidden="true">&#10697;</span><span class="visually-hidden" data-copytoclipboard-label>Copy</span></button>
+    </span>
+    ${follows ? `<p class="tokens__follows">Follows <code>${escapeHtml(follows)}</code></p>` : ''}
+  </div>`;
+  };
+
+  const row = tokenRow => {
+    const read = [...new Set(tokenRow.tokens.flatMap(t => readers.get(t.name) ?? []))];
+    const used = read.length
+      ? `<p class="tokens__read">Read by ${escapeHtml(read.join(', '))}</p>`
+      : '<p class="tokens__read tokens__read--none">Declared, and nothing reads these yet</p>';
+
+    return `<div class="tokens__row">
+  <div class="tokens__field">
+    <h3 class="tokens__family">${escapeHtml(tokenRow.title)}</h3>
+    <div class="tokens__list">
+${tokenRow.tokens.map(field).join('\n')}
+    </div>
+    ${used}
+  </div>
+  <div class="tokens__demo" data-token-demo="${tokenRow.demo}" style="${demoStyle(tokenRow)}">
+    ${(SAMPLES[tokenRow.demo] ?? [[null, LABEL[tokenRow.demo] ?? '']])
+      .map(
+        ([part, label]) =>
+          `<span class="tokens__sample"${part ? ` data-part="${part}"` : ''}>${escapeHtml(label)}</span>`
+      )
+      .join('')}
+  </div>
 </div>`;
   };
-  const group = (tokenGroup, index) => `<details class="workbench__group"${index === 1 ? ' open' : ''}>
-<summary>${escapeHtml(tokenGroup.title)}</summary>
-${tokenGroup.note ? `<p class="workbench__note">${inline(tokenGroup.note)}</p>` : ''}
-${tokenGroup.tokens.map(field).join('\n')}
-</details>`;
 
-  return `<article class="workbench" data-design-workbench aria-labelledby="doc-title">
+  const layer = (group, index) => `<section class="tokens__layer" aria-labelledby="tokens-${group.id}">
+<h2 id="tokens-${group.id}"><span class="tokens__step">${index + 1}</span> ${escapeHtml(group.title)}</h2>
+${group.note ? `<p class="tokens__note">${inline(group.note)}</p>` : ''}
+<div class="tokens__rows">
+${rowsOf(group).map(row).join('\n')}
+</div>
+</section>`;
+
+  return `<article class="tokens" data-design-workbench aria-labelledby="doc-title">
 <header class="doc__header">
   <p class="doc__eyebrow">Design system</p>
-  <h1 id="doc-title">Design system workbench</h1>
-  <p class="doc__summary">Every component example in a light and a dark frame. Change a token and both frames follow; colours take a separate value for each theme. Copy the changed values as CSS when they look right.</p>
+  <h1 id="doc-title">The tokens, and what reads them</h1>
+  <p class="doc__summary">Everything the library draws comes from these values, in four layers. The first reaches every component at once; each one after it narrows what you are changing. Related values sit together with something showing them at work. Colours carry a value for each theme; the switch decides which one you are looking at and editing.</p>
 </header>
-<div class="workbench__layout">
-<aside class="workbench__panel" aria-labelledby="workbench-tokens">
-  <h2 id="workbench-tokens">Tokens</h2>
-  <form class="workbench__controls" data-workbench-controls aria-labelledby="workbench-tokens">
-${TOKEN_GROUPS.map(group).join('\n')}
-<button type="reset" class="tool-button">Reset all</button>
-  </form>
-  <section class="workbench__export" aria-labelledby="workbench-export">
-    <h2 id="workbench-export">Changed values <span class="badge" data-workbench-count>0</span></h2>
-    <pre><code id="workbench-css" data-workbench-output>/* No changes yet */</code></pre>
-    <button type="button" class="tool-button" data-copytoclipboard data-copytoclipboard-target="#workbench-css"><span data-copytoclipboard-label>Copy CSS</span></button>
-  </section>
-</aside>
-<div class="workbench__frames">
-  <figure class="workbench__frame">
-    <figcaption>Light</figcaption>
-    <iframe src="design-system-preview.html?theme=light" data-workbench-frame="light" title="Every component in the light theme"></iframe>
-  </figure>
-  <figure class="workbench__frame">
-    <figcaption>Dark</figcaption>
-    <iframe src="design-system-preview.html?theme=dark" data-workbench-frame="dark" title="Every component in the dark theme"></iframe>
-  </figure>
-</div>
-</div>
+<form data-workbench-controls>
+  <div class="tokens__bar">
+    <button type="button" class="tool-button" data-token-theme aria-pressed="false">Dark theme</button>
+    <button type="reset" class="tool-button">Reset all</button>
+    <span class="tokens__count">Changed <span class="badge" data-workbench-count>0</span></span>
+  </div>
+${TOKEN_GROUPS.map(layer).join('\n')}
+</form>
+<section class="tokens__export" aria-labelledby="tokens-export">
+  <h2 id="tokens-export">Changed values</h2>
+  <pre><code id="workbench-css" data-workbench-output>/* No changes yet */</code></pre>
+  <button type="button" class="tool-button" data-copytoclipboard data-copytoclipboard-target="#workbench-css"><span data-copytoclipboard-label>Copy CSS</span></button>
+</section>
 </article>`;
 }
 

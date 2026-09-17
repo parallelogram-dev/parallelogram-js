@@ -2,6 +2,8 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { discoveryFiles } from './discovery.js';
+import { tokenReaders, tokenSources } from './tokens.js';
+import { TOKEN_GROUPS } from '../src/workbench/tokens.js';
 import { orderGuides, readGuide } from './guides.js';
 import {
   componentPage,
@@ -96,7 +98,10 @@ export async function writePages() {
       description:
         'Every component in a light and a dark frame, with live controls for the design tokens',
       current: 'design-system',
-      content: designSystemPage(),
+      content: designSystemPage(
+        tokenReaders(TOKEN_GROUPS.flatMap(group => group.tokens.map(token => token.name))),
+        tokenSources(TOKEN_GROUPS.flatMap(group => group.tokens.map(token => token.name)))
+      ),
     }),
     'design-system-preview': previewDocument(contracts),
   };

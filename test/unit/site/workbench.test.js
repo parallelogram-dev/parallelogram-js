@@ -18,19 +18,36 @@ describe('design system workbench', () => {
     expect(tokenNames.filter(name => !declared.includes(`${name}:`))).toEqual([]);
   });
 
+  it('puts every declared token on the page exactly once, with a way to copy it', () => {
+    const page = new DOMParser().parseFromString(designSystemPage(), 'text/html');
+    const fields = [...page.querySelectorAll('[data-token-input]')].map(input => input.name);
+    const copies = [...page.querySelectorAll('[data-copytoclipboard-target]')].map(button =>
+      button.getAttribute('data-copytoclipboard-target')
+    );
+
+    /* Rows are grouped by family and derived from the names, so a token could otherwise fall out of
+       the page without anything failing */
+    expect([
+      tokenNames.filter(name => fields.filter(field => field === name).length !== 1),
+      tokenNames.filter(name => !copies.includes(`#token${name.replace(/^-+/, '-')}`)),
+    ]).toEqual([[], []]);
+  });
+
   it('offers each token once', () => {
     expect(tokenNames.length).toBe(new Set(tokenNames).size);
   });
 
-  it('gives colour tokens a light and a dark field, and other tokens one field for both', () => {
+  it('gives a colour token a field for the theme on show, and other tokens one for both', () => {
     const page = new DOMParser().parseFromString(designSystemPage(), 'text/html');
     const scopes = name =>
       [...page.querySelectorAll('[data-token-input]')]
         .filter(input => input.name === name)
         .map(input => input.dataset.tokenInput);
 
+    /* A colour holds a value per theme and the switch decides which one is being edited, so it has
+       one field rather than two; everything else holds one value both themes share. */
     expect([scopes('--surface-panel-color-bg'), scopes('--surface-panel-radius')]).toEqual([
-      ['light', 'dark'],
+      ['theme'],
       ['both'],
     ]);
   });
