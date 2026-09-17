@@ -285,7 +285,7 @@ A page changes one instance with the attribute, which wins over the default:
 
 Enhancements work the same way through `defaults` and their `data-*` options: `DataTable.defaults.sortStatus` is the sort every table reports, `data-datatable-sort-status` the one this table does. Text with `{name}` placeholders keeps them in whatever order the sentence needs, which is what makes a translation possible at all.
 
-Nothing is translated for you, on purpose: a bundled translation that could not be checked would look finished and be wrong, and the French above is an example of the shape rather than a translation to ship. Dates, times, month and weekday names come from the browser's own `Intl` and are already in every language. Each component's page lists its text under _Attributes_, with the English beside it.
+Nothing is translated for you, on purpose: a bundled translation that could not be checked would look finished and be wrong, and the French above is an example of the shape rather than a translation to ship. Dates, times, month and weekday names come from the browser's own `Intl` and are already in every language: `<p-datetime>` formats them in the language of the nearest `lang`, and a language without a region keeps the visitor's own conventions, so `<html lang="en">` shows an Australian 15 Jan 2024 and `lang="en-US"` shows everyone Jan 15. Each component's page lists its text under _Attributes_, with the English beside it.
 
 ## Styles
 
