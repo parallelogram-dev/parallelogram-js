@@ -4,6 +4,8 @@
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
   "main": "./dist/index.js",
+  "unpkg": "./dist/index.js",
+  "jsdelivr": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "customElements": "./dist/custom-elements.json",
   "scripts": {
@@ -27,7 +29,7 @@
     "test:browser": "vitest run --project browser",
     "test:browser:local": "vitest run --config vitest.local.config.js",
     "test:watch": "vitest --project unit",
-    "coverage": "vitest run --project unit --coverage",
+    "coverage": "vitest run --coverage --config vitest.coverage.config.js",
     "prepack": "npm run build"
   },
   "keywords": [

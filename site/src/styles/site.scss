@@ -94,6 +94,8 @@ pre {
   margin: 0;
   padding: 1rem;
   overflow-x: auto;
+  /* Thin, but there: a clipped sample should say that it continues */
+  scrollbar-width: thin;
   border-radius: 8px;
   background: var(--site-code-bg);
   color: var(--site-code-ink);
@@ -368,6 +370,13 @@ pre {
 
   .doc--split .doc__main > .doc__section:first-child {
     margin-top: 2rem;
+  }
+
+  /* The reference runs under both columns. In the reading column it had about 600px for tables that
+     want 650, so descriptions clipped mid-word and the type column broke inside its own values. */
+  .doc--split .doc__reference {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
 

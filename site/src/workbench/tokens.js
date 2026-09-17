@@ -29,7 +29,7 @@ export const TOKEN_GROUPS = [
   {
     id: 'palette',
     title: 'Colour palette',
-    note: 'The colour roles surfaces read, and components as they move to them. Setting a surface colour below overrides its role for that surface.',
+    note: 'Start here. These are the roles the whole library reads, so a change here reaches every component at once — an accent set here is the accent of buttons, focus rings, selected days and links. Reach for a surface or a component property below only when you want one thing to differ from the rest.',
     tokens: [
       colour('--color-accent'),
       colour('--color-accent-hover'),
@@ -61,7 +61,7 @@ export const TOKEN_GROUPS = [
   {
     id: 'surfaces',
     title: 'Surfaces',
-    note: 'Shared shapes and colours for the parts components are made of. Components that don’t follow a change here still use their own values.',
+    note: 'The second layer: the shapes components are built from, rather than the colours they are painted in. A dialog radius set here is the radius of every dialog, and a component keeps its own value only where it sets one. Use these when the palette is right and the shape is not.',
     tokens: [
       ...surface('control', FULL_SURFACE),
       ...surface('button', ['radius', 'border-width', 'shadow']),
@@ -81,6 +81,7 @@ export const TOKEN_GROUPS = [
   {
     id: 'controls',
     title: 'Buttons and fields',
+    note: 'What every button and field in the library follows, whoever drew it. A component that shows buttons of its own — a modal’s footer, the picker’s Apply — reads these first and falls back to its own only where it must, so setting a primary button here is usually the whole job.',
     tokens: [
       colour('--button-primary-bg'),
       colour('--button-primary-color'),
@@ -97,6 +98,7 @@ export const TOKEN_GROUPS = [
   {
     id: 'focus',
     title: 'Focus and motion',
+    note: 'The two things people notice when they are not looking for them. The focus ring is shown to keyboard users and hidden from pointer users automatically, so it can afford to be loud. Motion is skipped entirely for anyone who asks their system for less of it, which is why a duration here is a maximum rather than a promise.',
     tokens: [
       colour('--framework-focus-color'),
       length('--framework-focus-width'),
