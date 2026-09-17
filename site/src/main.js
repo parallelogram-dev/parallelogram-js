@@ -21,3 +21,15 @@ app.components.add('[data-example]', () => import('./playground/ExamplePlaygroun
 app.components.add('[data-design-workbench]', () => import('./workbench/DesignWorkbench.js'));
 
 app.run();
+
+if (import.meta.hot) {
+  /* During development a page reloads only when a save made it stale, not on every save */
+  import.meta.hot.on('parallelogram:pages-changed', ({ slugs }) => {
+    const current =
+      location.pathname
+        .split('/')
+        .pop()
+        .replace(/\.html$/, '') || 'index';
+    if (slugs.includes(current)) location.reload();
+  });
+}

@@ -1,14 +1,9 @@
+import contracts from 'virtual:contracts';
 import { BaseComponent } from '../../../src/core/BaseComponent.js';
 import { MockUpload } from '../mocks.js';
 import { describeDetail, describeElement, serializeMarkup } from './format.js';
 
-const contracts = import.meta.glob('../../../src/components/*.contract.js', {
-  eager: true,
-  import: 'default',
-});
-const contractsByName = new Map(
-  Object.values(contracts).map(contract => [contract.name, contract])
-);
+const contractsByName = new Map(contracts.map(contract => [contract.name, contract]));
 
 /** Payload keys that may hold the element an event bus message is about */
 const ELEMENT_KEYS = ['element', 'target', 'trigger', 'video', 'modal', 'targetElement'];
