@@ -916,6 +916,17 @@ describe('p-select paging', () => {
     expect(calls.map(call => call.page)).toEqual([1, 2]);
   });
 
+  it('shows the label for a value chosen before its options arrive', async () => {
+    pagedSource();
+    const select = mountSelect(
+      '<p-select name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"></p-select>'
+    );
+
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    expect(inputOf(select).value).toBe('Row 5');
+  });
+
   it('takes a new search back to the top of the list', async () => {
     pagedSource();
     const select = pagedSelect();
