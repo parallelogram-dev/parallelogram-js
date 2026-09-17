@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- A component's documentation page is laid out in two columns on a wide screen: the title and summary beside the import and tag, what there is to read beside the playground, and the reference tables across both underneath. Below 80rem it stacks, with the playground first. A component with more than one example shows them in tabs.
+- An example's controls cover every attribute the example can set, rather than the few each contract named: eleven for `<p-select>` instead of four, and the named ones lead. Changing a control now sets the attribute on the mounted component instead of rebuilding the example from its markup, so a web component is told about the change as a page would tell it and keeps what the visitor has done; an enhancement, which reads its options only when it mounts, is mounted again.
+
 ### Fixed
 
 - Toggle decided whether a click was leaving the page by matching the start of the `href`, so a link written `JavaScript:` or `MailTo:`, or with a scheme it didn't know, closed the toggle as though the page were changing. The destination is resolved instead: only an `http:` or `https:` address that differs from the current page counts, and fragments on this page still leave the toggle open.
