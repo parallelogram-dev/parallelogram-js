@@ -88,7 +88,7 @@ describe('form control contrast', () => {
     const activeOption = getComputedStyle(option);
     const menuBg = over(shadowStyle(select, '.menu').backgroundColor, surface);
     const roles = getComputedStyle(document.documentElement);
-    const dangerBg = over(roles.getPropertyValue('--color-danger-bg').trim(), surface);
+    const dangerBg = over(roles.getPropertyValue('--color-danger-tint').trim(), surface);
     const dangerText = roles.getPropertyValue('--color-danger-text').trim();
 
     const measured = {

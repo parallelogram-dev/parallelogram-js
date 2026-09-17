@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the tinted grounds behind a status message are named `--color-danger-tint`, `--color-success-tint` and `--color-warning-tint`, not `-bg`. A status colour has two grounds -- the solid colour a button is filled with, and the tint a message sits on -- and naming one of them `-bg` said which CSS property it happened to be set on rather than which of the two it is, so `--color-danger` and `--color-danger-bg` read as two backgrounds without saying how they differ. `-tint` names the role, and stays true in both themes: the value is a pale red in the light theme and a translucent one in the dark. Only `--color-danger-tint` was read by anything, by `<p-uploader>` and Lazysrc; the other two were read by nothing.
+
 - A page can set its brand colour once. `--color-accent` now reads `var(--brand-primary, ...)`, with `--brand-primary-hover` and `--brand-primary-contrast` beside it, in the light theme and the dark one. `--brand-primary` existed before as a hook referenced in exactly one place and declared nowhere, so it did nothing; it is now the entry point, and `--color-accent` is the mechanical role every component reads. Nothing changes for a page that does not set it.
 - A dropdown surface follows the panel surface for everything the two had identical -- border width and colour, background, text and shadow -- and keeps its own radius and its three item-state colours, which are the parts that genuinely differ. Changing a panel now changes dropdowns with it, where before five values happened to agree and would silently drift apart. The resolved values are unchanged.
 

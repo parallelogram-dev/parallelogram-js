@@ -460,7 +460,7 @@ input {
 
 .error-message {
   color: var(--color-danger-text, #b91c1c);
-  background: var(--color-danger-bg, #{$color-error-bg});
+  background: var(--color-danger-tint, #{$color-error-bg});
   padding: $space-md;
   font-size: $font-sm;
 }

@@ -591,7 +591,7 @@ export function designSystemPage(readers = new Map(), sources = new Map()) {
     ['--demo-duration', /-duration$/],
     ['--demo-easing', /-easing$/],
     ['--demo-strong', /-strong$/],
-    ['--demo-bg', /(-bg|-surface)$/],
+    ['--demo-bg', /(-bg|-tint|-surface)$/],
   ];
 
   const demoStyle = row => {
