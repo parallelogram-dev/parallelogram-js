@@ -110,6 +110,77 @@ export const TOKEN_GROUPS = [
 ];
 
 /**
+ * @typedef {{ id: string, title: string, demo: string, tokens: Token[] }} TokenRow
+ */
+
+/** Which family a token belongs to, and so which row it is shown on */
+const familyOf = name => {
+  const surface = name.match(/^--surface-([a-z]+)-/);
+  if (surface) return `surface-${surface[1]}`;
+  const button = name.match(/^--button-([a-z]+)-/);
+  if (button) return `button-${button[1]}`;
+  if (name.startsWith('--form-control-')) return 'form-control';
+  if (name.startsWith('--framework-focus-')) return 'focus';
+  if (name.startsWith('--framework-transition-')) return 'motion';
+  const colour = name.match(/^--color-([a-z]+)/);
+  if (colour) return `color-${colour[1]}`;
+  return 'other';
+};
+
+/** How a family is shown working: the demo that uses its tokens together */
+const FAMILY = {
+  'color-accent': ['Accent', 'button'],
+  'color-danger': ['Danger', 'status'],
+  'color-success': ['Success', 'status'],
+  'color-warning': ['Warning', 'status'],
+  'color-surface': ['Page surface', 'surface'],
+  'color-text': ['Text', 'text'],
+  'color-border': ['Borders', 'surface'],
+  'color-hover': ['Hover', 'surface'],
+  'color-control': ['Control border', 'surface'],
+  'color-inverse': ['Inverse', 'inverse'],
+  'color-overlay': ['Overlay', 'overlay'],
+  'color-shadow': ['Shadow', 'shadow'],
+  'color-on': ['Text on a status', 'on-status'],
+  'surface-control': ['Controls', 'surface'],
+  'surface-button': ['Buttons', 'surface'],
+  'surface-panel': ['Panels', 'surface'],
+  'surface-dialog': ['Dialogs', 'surface'],
+  'surface-dropdown': ['Dropdowns', 'surface'],
+  'surface-item': ['Items', 'surface'],
+  'surface-card': ['Cards', 'surface'],
+  'surface-touch': ['Touch targets', 'surface'],
+  'button-primary': ['Primary button', 'button'],
+  'button-secondary': ['Secondary button', 'button'],
+  'form-control': ['Fields', 'field'],
+  focus: ['Focus ring', 'focus'],
+  motion: ['Motion', 'motion'],
+  other: ['Other', 'swatch'],
+};
+
+/**
+ * A group's tokens as rows, one per family, in the order the tokens are declared
+ *
+ * Derived from the names rather than listed by hand, so every token lands on exactly one row and
+ * a token added to a group cannot quietly fail to appear.
+ *
+ * @param {TokenGroup} group
+ * @returns {TokenRow[]}
+ */
+export function rowsOf(group) {
+  const rows = new Map();
+  for (const token of group.tokens) {
+    const id = familyOf(token.name);
+    if (!rows.has(id)) {
+      const [title, demo] = FAMILY[id] ?? FAMILY.other;
+      rows.set(id, { id, title, demo, tokens: [] });
+    }
+    rows.get(id).tokens.push(token);
+  }
+  return [...rows.values()];
+}
+
+/**
  * CSS for the values that differ from the design system: shared and light values on the root, dark
  * values on the dark theme
  *

@@ -1057,172 +1057,6 @@ tbody th {
   }
 }
 
-/* Design system workbench: token controls beside a light and a dark preview frame */
-.workbench {
-  padding: 1.5rem 1.25rem 2rem;
-
-  .doc__header {
-    max-width: 62rem;
-  }
-}
-
-.workbench__layout {
-  display: grid;
-  grid-template-columns: 19rem minmax(0, 1fr);
-  gap: 1.25rem;
-  align-items: start;
-  margin-top: 1.25rem;
-}
-
-.workbench__panel {
-  position: sticky;
-  top: calc(var(--site-header) + 1rem);
-  display: grid;
-  gap: 1rem;
-  max-height: calc(100vh - var(--site-header) - 2rem);
-  overflow-y: auto;
-  padding-right: 0.25rem;
-
-  h2 {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin: 0;
-    font-size: 1rem;
-  }
-}
-
-.workbench__controls {
-  display: grid;
-  gap: 0.5rem;
-
-  > .tool-button {
-    justify-self: start;
-  }
-}
-
-.workbench__group {
-  border: 1px solid var(--site-line);
-  border-radius: 8px;
-  background: var(--site-surface);
-
-  summary {
-    padding: 0.55rem 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  &[open] summary {
-    border-bottom: 1px solid var(--site-line);
-  }
-}
-
-.workbench__note {
-  margin: 0.6rem 0.75rem 0;
-  color: var(--site-muted);
-  font-size: 0.82rem;
-}
-
-.workbench__token {
-  display: grid;
-  gap: 0.3rem;
-  padding: 0.5rem 0.75rem;
-
-  & + & {
-    border-top: 1px solid var(--site-line);
-  }
-
-  label,
-  .workbench__name {
-    font-size: 0.78rem;
-    overflow-wrap: anywhere;
-  }
-
-  input {
-    width: 100%;
-    min-width: 0;
-    padding: 0.3rem 0.45rem;
-    border: 1px solid var(--site-line);
-    border-radius: 6px;
-    background: var(--site-ground);
-    color: var(--site-ink);
-    font: 0.78rem var(--site-mono);
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
-}
-
-.workbench__token--colour {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-
-  .workbench__name {
-    grid-column: 1 / -1;
-  }
-}
-
-.workbench__value {
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
-  min-width: 0;
-}
-
-.workbench__swatch {
-  flex: none;
-  width: 1.1rem;
-  height: 1.1rem;
-  border: 1px solid var(--site-line);
-  border-radius: 4px;
-  background-image: repeating-conic-gradient(var(--site-code-bg) 0% 25%, transparent 0% 50%);
-  background-size: 8px 8px;
-}
-
-.workbench__export {
-  display: grid;
-  gap: 0.5rem;
-
-  pre {
-    max-height: 16rem;
-    margin: 0;
-    overflow: auto;
-    font-size: 0.78rem;
-  }
-
-  .tool-button {
-    justify-self: start;
-  }
-}
-
-.workbench__frames {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.workbench__frame {
-  display: grid;
-  gap: 0.4rem;
-  margin: 0;
-
-  figcaption {
-    color: var(--site-muted);
-    font: 600 0.72rem/1 var(--site-font);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  iframe {
-    width: 100%;
-    height: calc(100vh - var(--site-header) - 6rem);
-    min-height: 32rem;
-    border: 1px solid var(--site-line);
-    border-radius: 10px;
-    background: var(--site-surface);
-  }
-}
-
 @media (max-width: 1200px) {
   .workbench__layout {
     grid-template-columns: minmax(0, 1fr);
@@ -1238,4 +1072,400 @@ tbody th {
   .workbench__frames {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The token page: every value the library draws from, with what it does beside it.
+   No frames and nothing that scrolls inside itself -- the page is the container. */
+.tokens {
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 5rem;
+
+  .doc__header {
+    max-width: 62rem;
+  }
+}
+
+.tokens__bar {
+  position: sticky;
+  top: var(--site-header);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--site-line);
+  background: var(--site-ground);
+}
+
+.tokens__count {
+  color: var(--site-muted);
+  font-size: 0.85rem;
+}
+
+.tokens__layer {
+  max-width: 74rem;
+  margin-top: 3rem;
+
+  h2 {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    margin: 0 0 0.4rem;
+    font: 600 1.35rem/1.2 var(--site-display);
+  }
+}
+
+.tokens__step {
+  color: var(--site-accent);
+  font: 600 0.8rem/1 var(--site-mono);
+}
+
+.tokens__note {
+  max-width: 60ch;
+  margin: 0 0 1.25rem;
+  color: var(--site-muted);
+}
+
+.tokens__rows {
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--site-line);
+  border-radius: 10px;
+  background: var(--site-line);
+  overflow: hidden;
+}
+
+/* Swatch and value are one control: same height, shared edge, rounded only on the outside */
+.tokens__control {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--site-line);
+  border-radius: 7px;
+  overflow: hidden;
+
+  /* The ring goes around the whole group. On the input alone it is offset outwards from the middle
+     segment, which puts it on top of the swatch beside it. */
+  &:focus-within {
+    outline: 2px solid var(--site-accent);
+    outline-offset: 2px;
+  }
+
+  :is(input, button):focus-visible {
+    outline: none;
+  }
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.35rem 0.5rem;
+    border: 0;
+    border-left: 1px solid var(--site-line);
+    background: var(--site-ground);
+    color: var(--site-ink);
+    font: 0.78rem var(--site-mono);
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+/* The colour is drawn as its own layer over the chequerboard, because a background shorthand
+   only accepts a colour in its last layer: a var() colour in front of another layer makes the
+   whole declaration invalid, and the swatch paints nothing at all. */
+/* Swatch, value and copy are one control: the copy button is the library's own CopyToClipboard,
+   pointed at the input, which it reads the value of rather than the text. */
+/* A colour picker or a slider sits in the group beside the value it is driving. Both are added by
+   the workbench once it knows what a token holds, so a token that holds neither keeps the plain
+   field it started with. */
+.tokens__picker {
+  flex: none;
+  width: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--site-line);
+  background: none;
+  cursor: pointer;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+
+  &::-webkit-color-swatch,
+  &::-moz-color-swatch {
+    border: 0;
+    border-radius: 4px;
+  }
+}
+
+.tokens__slider {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  accent-color: var(--site-accent);
+}
+
+.tokens__follows {
+  margin: 0.2rem 0 0;
+  color: var(--site-muted);
+  font-size: 0.72rem;
+
+  code {
+    font-size: 0.95em;
+  }
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--site-accent);
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
+.tokens__copy {
+  flex: none;
+  padding: 0 0.5rem;
+  border: 0;
+  border-left: 1px solid var(--site-line);
+  background: var(--site-surface);
+  color: var(--site-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--site-ink);
+    background: var(--site-code-bg);
+  }
+
+  /* Inset, because the group clips anything drawn outside it */
+  &:focus-visible {
+    background: var(--site-code-bg);
+    color: var(--site-ink);
+    box-shadow: inset 0 0 0 2px var(--site-accent);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.tokens__swatch {
+  flex: none;
+  width: 2.25rem;
+  background-image:
+    linear-gradient(var(--demo, transparent), var(--demo, transparent)),
+    repeating-conic-gradient(var(--site-code-bg) 0% 25%, transparent 0% 50%);
+  background-size:
+    auto,
+    8px 8px;
+}
+
+.tokens__row {
+  display: grid;
+  grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding: 0.9rem;
+  background: var(--site-surface);
+}
+
+.tokens__field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.tokens__family {
+  margin: 0;
+  font: 600 0.95rem/1.2 var(--site-font);
+}
+
+.tokens__list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tokens__token {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.tokens__token--unread .tokens__label {
+  color: var(--site-warn);
+}
+
+.tokens__label {
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+/* The demo, built from whichever of the family's values fill each role */
+.tokens__demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 4.5rem;
+  padding: 0.9rem;
+  border-radius: 10px;
+  background: var(--site-ground);
+}
+
+.tokens__sample {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7rem;
+  min-height: 2.4rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font: 500 0.82rem var(--site-font);
+}
+
+[data-token-demo='button'] .tokens__sample {
+  background: var(--demo-base, var(--demo-bg));
+  color: var(--demo-text, #fff);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--demo-hover, var(--demo-base));
+  }
+}
+
+/* A status colour does two jobs, so it is shown doing both: the solid colour carrying its contrast
+   text, and the tint carrying its strong text with the solid as its edge. The contrast value is for
+   text on the solid colour and is unreadable on the tint, which is the whole point of having two. */
+[data-token-demo='status'] {
+  .tokens__sample[data-part='solid'] {
+    background: var(--demo-base);
+    color: var(--demo-text, #fff);
+  }
+
+  .tokens__sample[data-part='tint'] {
+    border-left: 4px solid var(--demo-base);
+    border-radius: 0 7px 7px 0;
+    background: var(--demo-bg, var(--demo-muted));
+    color: var(--demo-strong, var(--demo-base));
+  }
+}
+
+/* A colour meant for text on a status needs a status to sit on */
+[data-token-demo='on-status'] .tokens__sample {
+  background: var(--color-danger, #b3261e);
+  color: var(--demo-base);
+}
+
+[data-token-demo='surface'] .tokens__sample {
+  border-color: var(--demo-border, var(--site-line));
+  border-width: var(--demo-width, 1px);
+  border-radius: var(--demo-radius, 7px);
+  background: var(--demo-bg, var(--demo-muted, var(--site-surface)));
+  box-shadow: var(--demo-shadow, none);
+  color: var(--demo-text, inherit);
+}
+
+[data-token-demo='text'] .tokens__sample {
+  background: var(--site-surface);
+  color: var(--demo-text, var(--demo-muted, var(--demo-base)));
+}
+
+[data-token-demo='field'] .tokens__sample {
+  border-color: var(--demo-border, var(--site-line));
+  border-width: var(--demo-width, 1px);
+  background: var(--site-surface);
+  color: var(--demo-text, var(--site-muted));
+  outline: var(--demo-width, 2px) solid var(--demo-base, transparent);
+  outline-offset: 1px;
+}
+
+[data-token-demo='focus'] .tokens__sample {
+  background: var(--site-surface);
+  outline: var(--demo-width, 2px) solid var(--demo-base, var(--site-accent));
+  outline-offset: var(--demo-offset, 2px);
+}
+
+[data-token-demo='inverse'] .tokens__sample {
+  background: var(--demo-bg, var(--demo-base));
+  color: var(--demo-text, #fff);
+}
+
+[data-token-demo='overlay'] .tokens__sample {
+  background: var(--demo-base);
+  color: #fff;
+}
+
+[data-token-demo='shadow'] .tokens__sample {
+  background: var(--site-surface);
+  box-shadow: 0 0.5rem 1.5rem var(--demo-base);
+}
+
+[data-token-demo='motion'] .tokens__sample {
+  background: var(--site-accent-soft);
+  transition: translate var(--demo-duration, 0.2s) var(--demo-easing, ease);
+
+  &:hover {
+    translate: 1.5rem 0;
+  }
+}
+
+.tokens__read {
+  margin: 0;
+  color: var(--site-muted);
+  font-size: 0.75rem;
+}
+
+.tokens__read--none {
+  color: var(--site-warn);
+}
+
+@media (max-width: 56rem) {
+  .tokens__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tokens__export {
+  max-width: 74rem;
+  margin-top: 3rem;
+  display: grid;
+  gap: 0.5rem;
+
+  h2 {
+    margin: 0;
+    font: 600 1.35rem/1.2 var(--site-display);
+  }
+
+  .tool-button {
+    justify-self: start;
+  }
+}
+
+/* The design tokens follow data-theme already; the site's own chrome has to be told */
+:root[data-theme='dark'] {
+  --site-ground: #10141b;
+  --site-surface: #171d26;
+  --site-ink: #e4e8ee;
+  --site-muted: #9aa3b1;
+  --site-line: #29313d;
+  --site-accent: #9aa6ff;
+  --site-accent-soft: #232a48;
+  --site-code-bg: #1e2531;
+  --site-code-ink: #d7dce5;
+  --site-warn: #fdba74;
+
+  color-scheme: dark;
 }
