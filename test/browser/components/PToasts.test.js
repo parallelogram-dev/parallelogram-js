@@ -276,21 +276,17 @@ describe('p-toasts', () => {
     const dismissFirst = host.toast({ message: 'First', timeout: 0 });
     host.toast({ message: 'Second', timeout: 0 });
     const second = host.shadowRoot.querySelectorAll('.toast')[1];
-    /* Where the second toast is in the frame before the first is removed: the first's leave
-       animation runs first, so this is sampled every frame until the removal */
-    let before = second.getBoundingClientRect().top;
-    let sampling = true;
-    const sample = () => {
-      if (!sampling) return;
-      before = second.getBoundingClientRect().top;
-      requestAnimationFrame(sample);
-    };
-    requestAnimationFrame(sample);
+    /* Both toasts are still arriving; the positions only mean something once they have */
+    await Promise.all(
+      [...host.shadowRoot.querySelectorAll('.toast')].flatMap(toast =>
+        toast.getAnimations().map(animation => animation.finished)
+      )
+    );
+    const before = second.getBoundingClientRect().top;
     const removed = new Promise(resolve => {
       new MutationObserver((records, observer) => {
         if (records.some(record => record.removedNodes.length)) {
           observer.disconnect();
-          sampling = false;
           resolve();
         }
       }).observe(second.parentNode, { childList: true });
