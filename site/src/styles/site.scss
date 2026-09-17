@@ -499,11 +499,12 @@ pre {
 .example__stage {
   margin: 1rem 1.25rem;
   padding: 1.5rem;
-  border: 1px dashed #cfd4dd;
+  /* The library's own surface, so an example sits on the ground a page using it would give it,
+     in whichever theme the visitor has */
+  border: 1px dashed var(--color-border);
   border-radius: 8px;
-  background: #fff;
-  color: #1f2430;
-  color-scheme: light;
+  background: var(--color-surface);
+  color: var(--color-text);
 
   img,
   video {
@@ -517,9 +518,9 @@ pre {
     width: max-content;
     margin-top: 0.5rem;
     padding: 0.5rem;
-    border: 1px solid #d4d8e0;
+    border: var(--surface-dropdown-border-width) solid var(--surface-dropdown-border-color);
     border-radius: 8px;
-    background: #fff;
+    background: var(--surface-dropdown-color-bg);
 
     a {
       display: block;
@@ -545,7 +546,7 @@ pre {
   .card {
     padding: 1.25rem;
     border-radius: 8px;
-    background: #eef0fb;
+    background: var(--site-accent-soft);
   }
 
   .hero {
@@ -615,7 +616,7 @@ pre {
 
     [data-error-for] {
       margin: 0;
-      color: #b42318;
+      color: var(--color-danger-text);
       font-size: 0.85rem;
     }
   }
@@ -658,7 +659,7 @@ pre {
     min-height: 5rem;
     margin-top: 0.75rem;
     padding: 1rem;
-    border: 1px solid #d4d8e0;
+    border: var(--surface-panel-border-width) solid var(--surface-panel-border-color);
     border-radius: 8px;
   }
 
@@ -1361,8 +1362,9 @@ tbody th {
 }
 
 [data-token-demo='button'] .tokens__sample {
-  background: var(--demo-base, var(--demo-bg));
-  color: var(--demo-text, #fff);
+  /* A family with no colour of its own, such as the button's shape, shows a primary button */
+  background: var(--demo-base, var(--demo-bg, var(--button-primary-bg)));
+  color: var(--demo-text, var(--button-primary-color));
   cursor: pointer;
 
   &:hover {
@@ -1383,13 +1385,13 @@ tbody th {
     border-left: 4px solid var(--demo-base);
     border-radius: 0 7px 7px 0;
     background: var(--demo-bg, var(--demo-muted));
-    color: var(--demo-strong, var(--demo-base));
+    color: var(--demo-tint-text, var(--demo-strong));
   }
 }
 
 /* A colour meant for text on a status needs a status to sit on */
 [data-token-demo='on-status'] .tokens__sample {
-  background: var(--color-danger, #b3261e);
+  background: var(--color-danger-strong);
   color: var(--demo-base);
 }
 
