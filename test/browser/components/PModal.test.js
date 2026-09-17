@@ -228,6 +228,22 @@ describe('p-modal with a part left out', () => {
     expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(false);
   });
 
+  it('starts and ends unstyled content at the padding edges, not on its own margins', () => {
+    const modal = render('<p>Table 12 is held.</p><p>Ask at the desk.</p>');
+    modal.open();
+    const content = modal.shadowRoot.querySelector('[data-modal-content]');
+    const paragraphs = [...modal.querySelectorAll('p')];
+    const box = element => element.getBoundingClientRect();
+    const style = getComputedStyle(content);
+    const top = Number.parseFloat(style.paddingTop);
+    const bottom = Number.parseFloat(style.paddingBottom);
+
+    expect([
+      Math.abs(box(paragraphs.at(0)).top - box(content).top - top) < 1,
+      Math.abs(box(content).bottom - bottom - box(paragraphs.at(-1)).bottom) < 1,
+    ]).toEqual([true, true]);
+  });
+
   it('lines a title up with the pinned close button', () => {
     const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
     modal.open();

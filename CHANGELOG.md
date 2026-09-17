@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Content a page puts in a `<p-modal>` no longer starts below the margins the browser would give it. An unstyled paragraph sat 16px under the panel's padding, below the pinned close button, and added another 16px to the panel's depth; what the page puts in the modal now gives up those margins and the content area spaces it with a new `--modal-content-gap` instead. A page that sets the margins itself still outranks this, and padding or a wrapper brings outer space back.
 - An example on the documentation site shows a component as a page that hasn't styled it would. The site's own heading styles reached into the example stage and outranked what a component gives a slotted heading, which for slotted content a page's styles always do, so `<p-modal>`'s title was drawn in the site's type rather than its own.
 - A `<p-modal>`'s title sits on its close button's line. The button is pinned a set distance from the top of the panel while the header took its padding from the panel family, so the two were a few pixels apart; the header now takes the button's own band as its least height and centres the title in it, whatever padding the page has given it.
 - A title slotted into a `<p-modal>` no longer carries the browser's default heading margins inside the header. The rule meant to reset them matched only the fallback heading in the shadow tree, never the page's own element, so a page without its own heading reset got a title sitting low in its row; `::slotted([slot='title'])` now carries the reset, along with the size, line height and weight it always meant to, all of which a page's own styles still outrank.
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `<p-modal>`'s documentation gains a long-form example: booking terms with headings, a list and small print, showing content scrolling inside the panel while the title, the close button and the actions stay where they are.
 - A `<p-modal>`'s close button is pinned to the top right of the panel instead of sitting in the header, so it stays where it is while the content scrolls and is there whether or not the modal has a title. A modal given no title now has no header at all, rather than an empty row.
 - `<p-modal>`'s documentation shows what happens when the markup leaves a slot out: one example without `actions`, which has no footer, and one without a title.
 - A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
