@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-09-17
+
 ### Added
 
 - `<p-modal>` takes a second group of footer buttons, through a new `secondary` slot. What goes in it is held against the leading end of the footer while the rest stay together at the other, so the markup says where a button belongs rather than how to push it: no styling, no wrapper elements, and no inline styles. An empty group takes no room, the footer shows while either slot has something in it, and a modal that uses only `actions` looks exactly as it did.
+
+### Changed
+
+- `<p-modal>`'s documentation gains a long-form example: booking terms with headings, a list and small print, showing content scrolling inside the panel while the title, the close button and the actions stay where they are.
+- A `<p-modal>`'s close button is pinned to the top right of the panel instead of sitting in the header, so it stays where it is while the content scrolls and is there whether or not the modal has a title. A modal given no title now has no header at all, rather than an empty row.
+- `<p-modal>`'s documentation shows what happens when the markup leaves a slot out: one example without `actions`, which has no footer, and one without a title.
+- A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
+- An example's controls cover every attribute the example can set, rather than the few each contract named: eleven for `<p-select>` instead of four, and the named ones lead. Changing a control now sets the attribute on the mounted component instead of rebuilding the example from its markup, so a web component is told about the change as a page would tell it and keeps what the visitor has done; an enhancement, which reads its options only when it mounts, is mounted again.
 
 ### Fixed
 
@@ -23,17 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `<p-modal>` with no `title` no longer shows the word "Dialog" where its heading would be. That was the slot's fallback content, shown to everyone; the dialog is still named "Dialog" for assistive technology, which it already fell back to.
 - A disabled `<p-select>` looks disabled. It already stopped responding — the input is disabled and the list closes — but was drawn exactly as an enabled one, so nothing on screen said why. It now takes the shared disabled opacity through a new `--select-disabled-opacity`, which falls back to the form control's, and shows the not-allowed cursor.
 - Everything the package dims when it is disabled now takes that amount from one place rather than choosing its own: DataTable's pagination buttons, which were lighter than the rest at 0.5, `<p-uploader>`'s buttons, which were 0.35, and `<p-datetime>`'s and Lightbox's controls, which already matched it. A disabled option inside a `<p-select>` list keeps its own 0.5, since an option has to stay readable to be worth showing.
-
-### Changed
-
-- `<p-modal>`'s documentation gains a long-form example: booking terms with headings, a list and small print, showing content scrolling inside the panel while the title, the close button and the actions stay where they are.
-- A `<p-modal>`'s close button is pinned to the top right of the panel instead of sitting in the header, so it stays where it is while the content scrolls and is there whether or not the modal has a title. A modal given no title now has no header at all, rather than an empty row.
-- `<p-modal>`'s documentation shows what happens when the markup leaves a slot out: one example without `actions`, which has no footer, and one without a title.
-- A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
-- An example's controls cover every attribute the example can set, rather than the few each contract named: eleven for `<p-select>` instead of four, and the named ones lead. Changing a control now sets the attribute on the mounted component instead of rebuilding the example from its markup, so a web component is told about the change as a page would tell it and keeps what the visitor has done; an enhancement, which reads its options only when it mounts, is mounted again.
-
-### Fixed
-
 - Toggle decided whether a click was leaving the page by matching the start of the `href`, so a link written `JavaScript:` or `MailTo:`, or with a scheme it didn't know, closed the toggle as though the page were changing. The destination is resolved instead: only an `http:` or `https:` address that differs from the current page counts, and fragments on this page still leave the toggle open.
 - The documentation's `llms-full.txt` escaped a `|` in a description but not a `\`, so a description ending in a backslash could break the table row it sat in. Backslashes are escaped first.
 - A `<p-select>` taken off the page kept asking for more pages. Removing it aborted the request in flight, but an event already queued for it — a scroll of its list, or a key that moved the highlight to the last option — still reached it afterwards and started a new one, so a removed select went on fetching. It now asks only while it is on the page.
