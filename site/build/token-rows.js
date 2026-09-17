@@ -28,7 +28,7 @@ const familyOf = name => {
 const FAMILY = {
   'color-accent': ['Accent', 'button'],
   'color-secondary': ['Secondary brand', 'button'],
-  'color-complimentary': ['Complimentary brand', 'button'],
+  'color-complementary': ['Complementary brand', 'button'],
   'color-danger': ['Danger', 'status'],
   'color-success': ['Success', 'status'],
   'color-warning': ['Warning', 'status'],
