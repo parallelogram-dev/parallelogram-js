@@ -455,7 +455,12 @@ export class Lightbox extends BaseComponent {
 
     if (config.showCounter) {
       const counter = this.lightboxElement.querySelector(`.${config.counterClass.split(' ')[0]}`);
-      counter.textContent = `${index + 1} / ${state.galleryElements.length}`;
+      /* The counter is the only live region here, so the image's name goes in it rather than in a
+         second one that would announce over it. It is not shown: the badge still reads 1 / 3. */
+      const name = document.createElement('span');
+      name.className = 'lightbox__counter-name';
+      name.textContent = imageData.alt;
+      counter.replaceChildren(`${index + 1} / ${state.galleryElements.length}`, name);
     }
 
     if (config.showNavigation) {

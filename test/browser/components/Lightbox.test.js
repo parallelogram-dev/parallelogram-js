@@ -10,7 +10,8 @@ const WAIT = { timeout: 2500 };
 
 const overlay = () => document.querySelector('.lightbox__overlay');
 const lightboxState = () => overlay()?.getAttribute('data-lightbox-state');
-const counter = () => overlay()?.querySelector('.lightbox__counter')?.textContent;
+const counter = () => overlay()?.querySelector('.lightbox__counter')?.firstChild?.textContent;
+const counterName = () => overlay()?.querySelector('.lightbox__counter-name')?.textContent;
 const errorMessage = () => overlay()?.querySelector('.lightbox__error');
 const viewerImage = () => overlay()?.querySelector('.lightbox__image');
 const press = key =>
@@ -71,6 +72,18 @@ describe('Lightbox', () => {
     press('Escape');
 
     await vi.waitFor(() => expect(overlay()).toBeNull(), WAIT);
+  });
+
+  it('names the image it moved to, not only its place in the gallery', async () => {
+    const { links } = mountGallery();
+    links[0].click();
+    await vi.waitFor(() => expect(lightboxState()).toBe('open'), WAIT);
+
+    press('ArrowRight');
+
+    /* The counter is the only live region here, so "2 / 3" is everything a screen reader is told
+       about an image it cannot see */
+    await vi.waitFor(() => expect(counterName()).toBe('Photo 2'), WAIT);
   });
 
   it('moves between images with the arrow keys', async () => {
