@@ -254,4 +254,12 @@ describe('documentation site rendering', () => {
       control('number').type,
     ]).toEqual(['checkbox', ['', 'true', 'false'], ['not set (sm)', 'sm', 'lg'], 'number']);
   });
+  it('says how a site changes an attribute for every instance, next to the attribute', () => {
+    const page = parse(componentPage(PSelect));
+    const row = [...page.querySelectorAll('tr')].find(
+      tr => tr.querySelector('th')?.textContent === 'clear-label'
+    );
+
+    expect(row.textContent).toContain('PSelect.defaults.clearLabel');
+  });
 });

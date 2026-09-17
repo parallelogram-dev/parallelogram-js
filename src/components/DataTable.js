@@ -1,6 +1,7 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { createElement, generateId } from '../utils/dom-utils.js';
 import { arrowDown, arrowUp, iconElement, selector } from '../utils/icons.js';
+import { fill } from '../utils/text.js';
 
 /** Page numbers shown either side of the current page */
 const PAGE_WINDOW = 2;
@@ -14,10 +15,6 @@ const cellsOf = row => childrenNamed(row, 'td', 'th');
 
 /** The number of columns cells cover, counting their colspan */
 const spanOf = cells => cells.reduce((total, cell) => total + (cell.colSpan || 1), 0);
-
-/** Replace `{name}` placeholders with values */
-const fill = (template, values) =>
-  template.replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
 
 /**
  * DataTable - sorting, filtering and pagination for an existing table

@@ -1024,4 +1024,37 @@ describe('p-select from the keyboard alone', () => {
 
     expect([select.value, input.readOnly, input.value]).toEqual(['', false, '']);
   });
+
+  it('names its clear button, and lets a page or a site rename it', () => {
+    const label = select => select.shadowRoot.querySelector('.clear').getAttribute('aria-label');
+    const plain = document.createElement('p-select');
+    const page = document.createElement('p-select');
+    page.setAttribute('clear-label', 'Effacer');
+    document.body.append(plain, page);
+    page.setAttribute('clear-label', 'Borrar');
+
+    PSelect.defaults.clearLabel = 'Auswahl löschen';
+    const site = document.createElement('p-select');
+    document.body.append(site);
+    try {
+      expect([label(plain), label(page), label(site)]).toEqual([
+        'Clear the selection',
+        'Borrar',
+        'Auswahl löschen',
+      ]);
+    } finally {
+      PSelect.defaults.clearLabel = 'Clear the selection';
+    }
+  });
+
+  it("shows the site's placeholder when the page set none", () => {
+    PSelect.defaults.placeholder = 'Choisir…';
+    const select = document.createElement('p-select');
+    document.body.append(select);
+    try {
+      expect(select.shadowRoot.querySelector('input').placeholder).toBe('Choisir…');
+    } finally {
+      PSelect.defaults.placeholder = 'Select…';
+    }
+  });
 });

@@ -72,6 +72,25 @@ const fieldEntry = property =>
   );
 
 /**
+ * The static a site assigns to, typed from the attributes that carry an option
+ *
+ * @param {import('../../src/contract.js').AttributeContract[]} attributes
+ * @returns {Object}
+ */
+const defaultsEntry = attributes => ({
+  kind: 'field',
+  name: 'defaults',
+  static: true,
+  type: {
+    text: `{ ${attributes
+      .map(attribute => `${attribute.option}: ${attributeValueType(attribute)}`)
+      .join('; ')} }`,
+  },
+  description:
+    'What every instance starts from; a site changes these once, before its elements are on the page',
+});
+
+/**
  * @param {import('../../src/contract.js').MethodContract} method
  * @returns {Object}
  */
@@ -111,7 +130,9 @@ function classDeclaration({ name, item }) {
   };
 
   declaration = withEntries(declaration, 'attributes', (item.attributes ?? []).map(attributeEntry));
+  const defaults = (item.attributes ?? []).filter(attribute => attribute.option);
   declaration = withEntries(declaration, 'members', [
+    ...(defaults.length ? [defaultsEntry(defaults)] : []),
     ...propertiesOf(item).map(fieldEntry),
     ...(item.methods ?? []).map(methodEntry),
   ]);
