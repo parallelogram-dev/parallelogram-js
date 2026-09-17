@@ -29,7 +29,7 @@ export const TOKEN_GROUPS = [
   {
     id: 'palette',
     title: 'Colour palette',
-    note: 'Start here. These are the roles the whole library reads, so a change here reaches every component at once — an accent set here is the accent of buttons, focus rings, selected days and links. Reach for a surface or a component property below only when you want one thing to differ from the rest.',
+    note: 'Start here. These are the roles the whole library reads, so a change here reaches every component at once — an accent set here is the accent of buttons, focus rings, selected days and links. A page with a brand colour can set `--brand-primary` instead, which the accent follows in both themes, along with `--brand-primary-hover` and `--brand-primary-contrast`. Reach for a surface or a component property below only when you want one thing to differ from the rest.',
     tokens: [
       colour('--color-accent'),
       colour('--color-accent-hover'),

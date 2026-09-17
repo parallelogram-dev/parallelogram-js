@@ -20,7 +20,7 @@
 :root {
   --framework-transition-duration: #{var(--transition-normal, 0.2s)};
   --framework-transition-easing: #{var(--ease-in-out, ease-in-out)};
-  --framework-focus-color: #{var(--brand-primary, var(--color-accent))};
+  --framework-focus-color: #{var(--color-accent)};
   --framework-focus-offset: 2px;
   --framework-focus-width: 2px;
 }
