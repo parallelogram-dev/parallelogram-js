@@ -13,6 +13,8 @@ npm install @parallelogram-js/core
 
 The package is ESM only and targets Baseline 2023 browsers: Chrome and Edge 120, Firefox 121, and Safari 17.2 or later.
 
+The framework is optional. Any enhancement can be used on its own — `import Toggle from '@parallelogram-js/core/components/Toggle'`, then `Toggle.enhanceAll()` mounts it on every matching element, with no framework and no build step beyond your bundler.
+
 ## Versions and browser support
 
 - Releases follow [semantic versioning](https://semver.org). Before 1.0, a minor release (0.x.0) may include breaking changes and a patch release (0.x.y) never does.

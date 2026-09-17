@@ -3,6 +3,7 @@ import {
   componentPage,
   controlField,
   inline,
+  layout,
   sidebar,
   slugFor,
 } from '../../../site/build/render.js';
@@ -49,6 +50,28 @@ describe('documentation site rendering', () => {
     expect(
       [...nav.querySelectorAll('.sidebar__heading')].map(heading => heading.textContent)
     ).toEqual(['Start', 'Guides', 'Web components', 'Enhancements']);
+  });
+
+  it('gives the documentation menu a trigger of its own', () => {
+    const page = parse(
+      layout({
+        title: 'Tabs',
+        description: 'Tabs',
+        current: 'tabs',
+        contracts: [Tabs],
+        guides: [],
+        content: '',
+        version: '0.0.0',
+      })
+    );
+    const trigger = page.querySelector('[data-toggle]');
+
+    expect([
+      trigger?.getAttribute('data-toggle-target'),
+      page.querySelector('#sidebar-nav') !== null,
+      page.querySelectorAll('[data-toggle][data-toggle-target="#sidebar-nav"]').length,
+      page.querySelector('#sidebar-nav .sidebar__close') !== null,
+    ]).toEqual(['#sidebar-nav', true, 2, true]);
   });
 
   it('lists attributes with their allowed values and defaults', () => {
@@ -191,6 +214,16 @@ describe('documentation site rendering', () => {
     const section = page.querySelector('#without-javascript')?.closest('section');
 
     expect([section !== null, section?.textContent.includes('script')]).toEqual([true, true]);
+  });
+
+  it('points enhancement components at their framework-free mount path', () => {
+    const enhancement = parse(componentPage(Toggle)).textContent;
+    const element = parse(componentPage(PModal)).textContent;
+
+    expect([enhancement.includes('enhanceAll'), element.includes('enhanceAll')]).toEqual([
+      true,
+      false,
+    ]);
   });
 
   it('offers a control suited to each attribute type', () => {
