@@ -18,6 +18,17 @@ describe('framework stylesheet', () => {
     document.body.replaceChildren();
   });
 
+  it('lets a page set the brand once and the accent follow it', () => {
+    const root = document.documentElement;
+    root.style.setProperty('--brand-primary', 'rgb(1, 2, 3)');
+    const accent = getComputedStyle(root).getPropertyValue('--color-accent').trim();
+    root.style.removeProperty('--brand-primary');
+
+    /* The brand layer is where a page sets its colour once; --color-accent is the mechanical role
+       every component reads, and it follows the brand unless the page overrides the role itself */
+    expect(accent).toBe('rgb(1, 2, 3)');
+  });
+
   it('hides a web component until its module upgrades it', () => {
     /* This file never imports the components, so these tags stay unupgraded and :not(:defined)
        applies, which is the state a page is in while the module is still on its way */

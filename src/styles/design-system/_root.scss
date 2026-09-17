@@ -13,9 +13,11 @@
 :root {
   color-scheme: light;
   --color-text: #{$color-text};
-  --color-accent: #{$primary};
-  --color-accent-hover: #{$primary-dark};
-  --color-accent-contrast: #ffffff;
+  /* The brand layer: a page sets these once and the accent follows in both themes. They are the
+     entry point, and --color-accent is the mechanical role every component reads. */
+  --color-accent: var(--brand-primary, #{$primary});
+  --color-accent-hover: var(--brand-primary-hover, #{$primary-dark});
+  --color-accent-contrast: var(--brand-primary-contrast, #ffffff);
   --color-text-muted: #{$color-text-muted};
   --color-surface: #ffffff;
   --color-surface-muted: #{$neutral-100};
@@ -44,9 +46,9 @@
 @include mix.dark-theme {
   color-scheme: dark;
   --color-text: #{$color-text-dark};
-  --color-accent: #60a5fa;
-  --color-accent-hover: #93c5fd;
-  --color-accent-contrast: #0b1220;
+  --color-accent: var(--brand-primary, #60a5fa);
+  --color-accent-hover: var(--brand-primary-hover, #93c5fd);
+  --color-accent-contrast: var(--brand-primary-contrast, #0b1220);
   --color-text-muted: rgba(255, 255, 255, 0.6);
   --color-surface: #171d26;
   --color-surface-muted: #202733;
@@ -103,11 +105,13 @@
 
   /* Dropdown surfaces */
   --surface-dropdown-radius: #{$radius-sm};
-  --surface-dropdown-border-width: #{$border-width};
-  --surface-dropdown-border-color: var(--color-border);
-  --surface-dropdown-color-bg: var(--color-surface);
-  --surface-dropdown-color-text: var(--color-text, #{$color-text});
-  --surface-dropdown-shadow: 0 4px 6px var(--color-shadow);
+  /* A dropdown is a panel with a tighter radius: it follows the panel for everything the two had
+     identical, so changing a panel changes dropdowns with it, and keeps only what differs. */
+  --surface-dropdown-border-width: var(--surface-panel-border-width);
+  --surface-dropdown-border-color: var(--surface-panel-border-color);
+  --surface-dropdown-color-bg: var(--surface-panel-color-bg);
+  --surface-dropdown-color-text: var(--surface-panel-color-text);
+  --surface-dropdown-shadow: var(--surface-panel-shadow);
 
   /* Dropdown item states */
   --surface-dropdown-item-hover-bg: var(--color-hover);
