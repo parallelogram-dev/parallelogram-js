@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.9] - 2026-09-17
+
 ### Changed
 
 - **Breaking:** the third brand colour is spelled `--brand-complementary`, with `--color-complementary`, `-hover` and `-contrast` to match. It shipped a day ago as `complimentary`, which means free of charge; a colour that completes another is complementary. A page that set the old name sets the new one; nothing else moves.
