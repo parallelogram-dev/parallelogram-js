@@ -96,6 +96,7 @@
   --modal-fullscreen-inset: 3em; /* 48px */
   --modal-close-size: 1.75em; /* 28px */
   --modal-close-inset: var(--modal-padding-y);
+  --modal-close-inset-x: var(--modal-content-padding);
   --modal-font-sm: 0.875em; /* 14px */
   --modal-font-md: 1.125em; /* 18px */
   --modal-btn-min-height: 3.125em; /* 50px */
@@ -216,7 +217,7 @@
   all: unset;
   position: absolute;
   top: var(--modal-close-inset);
-  right: var(--modal-padding-x);
+  right: var(--modal-close-inset-x);
   z-index: 1;
   display: inline-flex;
   align-items: center;
