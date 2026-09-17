@@ -10,6 +10,28 @@ npm install @parallelogram-js/core
 
 The package is ESM only. Load it with `import`, or with `await import()` from CommonJS code. There is no `require` export condition.
 
+### Without a bundler
+
+The package is plain ES modules with relative specifiers, so a browser can load it straight from a CDN with no build step at all:
+
+```html
+<script type="module">
+  import { Parallelogram } from 'https://cdn.jsdelivr.net/npm/@parallelogram-js/core@0.7.6/dist/index.js';
+
+  const app = Parallelogram.create();
+  app.components.add(
+    '[data-toggle]',
+    () =>
+      import('https://cdn.jsdelivr.net/npm/@parallelogram-js/core@0.7.6/dist/components/Toggle.js')
+  );
+  app.run();
+</script>
+```
+
+Pin the version, as above: an unpinned URL follows the newest release, and before 1.0 a minor may break things.
+
+The honest caveat is the request waterfall. Each module imports the next, so the browser discovers them in rounds rather than all at once, and a component's module is fetched when a page first uses it. Over HTTP/2 on a warm CDN that is usually a handful of small requests; on a slow connection it is noticeable. A bundler resolves the same files into one request, which is why the instructions above start there.
+
 It targets Baseline 2023: Chrome and Edge 120, Firefox 121, and Safari 17.2 on macOS and iOS, or later. It ships modern JavaScript without transpiling it, so a bundler only needs to resolve and bundle it. Older browsers aren't tested or supported. The [versioning and security policy](https://github.com/parallelogram-dev/parallelogram-js#versions-and-browser-support) covers which releases may break things and which get fixes.
 
 ## Import paths

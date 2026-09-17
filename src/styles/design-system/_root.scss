@@ -13,9 +13,11 @@
 :root {
   color-scheme: light;
   --color-text: #{$color-text};
-  --color-accent: #{$primary};
-  --color-accent-hover: #{$primary-dark};
-  --color-accent-contrast: #ffffff;
+  /* The brand layer: a page sets these once and the accent follows in both themes. They are the
+     entry point, and --color-accent is the mechanical role every component reads. */
+  --color-accent: var(--brand-primary, #{$primary});
+  --color-accent-hover: var(--brand-primary-hover, #{$primary-dark});
+  --color-accent-contrast: var(--brand-primary-contrast, #ffffff);
   --color-text-muted: #{$color-text-muted};
   --color-surface: #ffffff;
   --color-surface-muted: #{$neutral-100};
@@ -26,13 +28,13 @@
   --color-overlay: #{$color-bg-overlay};
   --color-shadow: #{$color-shadow};
   --color-danger: #{$error-dark};
-  --color-danger-bg: #{$color-error-bg};
+  --color-danger-tint: #{$color-error-bg};
   --color-danger-contrast: #ffffff;
   --color-danger-text: #b91c1c;
   --color-success: #{$success-dark};
-  --color-success-bg: #{$color-success-bg};
+  --color-success-tint: #{$color-success-bg};
   --color-warning: #{$warning-dark};
-  --color-warning-bg: #{$color-warning-bg};
+  --color-warning-tint: #{$color-warning-bg};
   --color-inverse-surface: #111827;
   --color-inverse-text: #ffffff;
   --color-success-strong: #065f46;
@@ -44,9 +46,9 @@
 @include mix.dark-theme {
   color-scheme: dark;
   --color-text: #{$color-text-dark};
-  --color-accent: #60a5fa;
-  --color-accent-hover: #93c5fd;
-  --color-accent-contrast: #0b1220;
+  --color-accent: var(--brand-primary, #60a5fa);
+  --color-accent-hover: var(--brand-primary-hover, #93c5fd);
+  --color-accent-contrast: var(--brand-primary-contrast, #0b1220);
   --color-text-muted: rgba(255, 255, 255, 0.6);
   --color-surface: #171d26;
   --color-surface-muted: #202733;
@@ -57,13 +59,13 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   --color-shadow: rgba(0, 0, 0, 0.5);
   --color-danger: #f87171;
-  --color-danger-bg: rgba(248, 113, 113, 0.16);
+  --color-danger-tint: rgba(248, 113, 113, 0.16);
   --color-danger-contrast: #1a0a0a;
   --color-danger-text: #f87171;
   --color-success: #4ade80;
-  --color-success-bg: rgba(74, 222, 128, 0.16);
+  --color-success-tint: rgba(74, 222, 128, 0.16);
   --color-warning: #fb923c;
-  --color-warning-bg: rgba(251, 146, 60, 0.16);
+  --color-warning-tint: rgba(251, 146, 60, 0.16);
   --color-inverse-surface: #2a3342;
   --color-inverse-text: #e4e8ee;
   --color-success-strong: #166534;
@@ -103,11 +105,13 @@
 
   /* Dropdown surfaces */
   --surface-dropdown-radius: #{$radius-sm};
-  --surface-dropdown-border-width: #{$border-width};
-  --surface-dropdown-border-color: var(--color-border);
-  --surface-dropdown-color-bg: var(--color-surface);
-  --surface-dropdown-color-text: var(--color-text, #{$color-text});
-  --surface-dropdown-shadow: 0 4px 6px var(--color-shadow);
+  /* A dropdown is a panel with a tighter radius: it follows the panel for everything the two had
+     identical, so changing a panel changes dropdowns with it, and keeps only what differs. */
+  --surface-dropdown-border-width: var(--surface-panel-border-width);
+  --surface-dropdown-border-color: var(--surface-panel-border-color);
+  --surface-dropdown-color-bg: var(--surface-panel-color-bg);
+  --surface-dropdown-color-text: var(--surface-panel-color-text);
+  --surface-dropdown-shadow: var(--surface-panel-shadow);
 
   /* Dropdown item states */
   --surface-dropdown-item-hover-bg: var(--color-hover);

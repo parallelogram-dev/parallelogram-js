@@ -872,8 +872,8 @@ describe('p-uploader layout', () => {
     return uploader;
   };
 
-  it('spaces files by --puploader-files-gap', async () => {
-    const uploader = await renderList({ style: '--puploader-files-gap: 20px' });
+  it('spaces files by --uploader-files-gap', async () => {
+    const uploader = await renderList({ style: '--uploader-files-gap: 20px' });
 
     expect(getComputedStyle(uploader.shadowRoot.querySelector('[part~="files"]')).rowGap).toBe(
       '20px'
