@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the third brand colour is spelled `--brand-complementary`, with `--color-complementary`, `-hover` and `-contrast` to match. It shipped a day ago as `complimentary`, which means free of charge; a colour that completes another is complementary. A page that set the old name sets the new one; nothing else moves.
+- The design system page counts a token another token follows as read, and says by which: the dropdown border reads `--surface-panel-border-width`, and `--button-brand-bg` reads `--color-secondary`, and the page called both unread because only component stylesheets were counted. Six tokens were mislabelled that way, and a seventh, `--surface-dropdown-item-current-bg`, was called unread because `<p-select>` reads it through a `var()` a formatter had wrapped onto two lines and the search wanted them on one; it counts either now.
 - The documentation site loads in one wave rather than three. Every page shipped the full text of every contract -- descriptions, examples, custom properties, 37 kB gzipped -- as JavaScript, because the runtime read three fields from them to know which module to load for which tag; it reads those fields from a module generated at build time now, and the contracts stay on the build side. Each page also discovered its chunks one dynamic import at a time, three round trips deep; each page now preloads the chunks its own markup will need, and the framework's core, which every page loads, is one chunk named for what it is. On the p-datetime page that is 21 requests to 12 and 82 kB of script to 47. During development a save reloads only the pages it made stale instead of every open page, `npm run site:lan` serves the built site to another device on the network at a tenth of the dev server's weight, and the core modules are compiled before the first request.
+
+### Removed
+
+- Fourteen declared tokens nothing read and no token followed: `--surface-control-shadow`, `--surface-button-shadow`, `--surface-dropdown-color-text`, four of the `--surface-item-*` family (its border colour and text colour stay, read by Accordion), five of the `--surface-touch-*` family (its radius, border width and shadow stay, read by the uploader), `--surface-card-border-color` and `--panel-color`. Setting any of them changed nothing, so removing them changes nothing. `--color-success-tint` and `--color-warning-tint` stay although no component reads them yet: they are the message ground a page's own status messages sit on, the same role `--color-danger-tint` plays for the uploader.
 
 ## [0.7.8] - 2026-09-17
 

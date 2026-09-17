@@ -19,14 +19,14 @@
   --color-accent-hover: var(--brand-primary-hover, #{$primary-dark});
   --color-accent-contrast: var(--brand-primary-contrast, #ffffff);
 
-  /* The rest of the brand layer. A page sets --brand-secondary or --brand-complimentary and the
+  /* The rest of the brand layer. A page sets --brand-secondary or --brand-complementary and the
      roles follow; until it does they are the accent, so nothing on any page looks different. */
   --color-secondary: var(--brand-secondary, var(--color-accent));
   --color-secondary-hover: var(--brand-secondary-hover, var(--color-accent-hover));
   --color-secondary-contrast: var(--brand-secondary-contrast, var(--color-accent-contrast));
-  --color-complimentary: var(--brand-complimentary, var(--color-accent));
-  --color-complimentary-hover: var(--brand-complimentary-hover, var(--color-accent-hover));
-  --color-complimentary-contrast: var(--brand-complimentary-contrast, var(--color-accent-contrast));
+  --color-complementary: var(--brand-complementary, var(--color-accent));
+  --color-complementary-hover: var(--brand-complementary-hover, var(--color-accent-hover));
+  --color-complementary-contrast: var(--brand-complementary-contrast, var(--color-accent-contrast));
   --color-text-muted: #{$color-text-muted};
   --color-surface: #ffffff;
   --color-surface-muted: #{$neutral-100};
@@ -89,12 +89,10 @@
   --surface-control-border-color: var(--color-control-border);
   --surface-control-color-bg: var(--color-surface);
   --surface-control-color-text: var(--color-text, #{$color-text});
-  --surface-control-shadow: none;
 
   /* Button surfaces */
   --surface-button-radius: #{$radius-sm};
   --surface-button-border-width: #{$border-width};
-  --surface-button-shadow: none;
 
   /* Panel surfaces (cards, containers, file items) */
   --surface-panel-radius: #{$radius-md};
@@ -119,7 +117,6 @@
   --surface-dropdown-border-width: var(--surface-panel-border-width);
   --surface-dropdown-border-color: var(--surface-panel-border-color);
   --surface-dropdown-color-bg: var(--surface-panel-color-bg);
-  --surface-dropdown-color-text: var(--surface-panel-color-text);
   --surface-dropdown-shadow: var(--surface-panel-shadow);
 
   /* Dropdown item states */
@@ -128,17 +125,12 @@
   --surface-dropdown-item-current-bg: var(--color-surface-muted);
 
   /* Item surfaces (list items, chips, tags) */
-  --surface-item-radius: #{$radius-sm};
-  --surface-item-border-width: #{$border-width};
   --surface-item-border-color: var(--color-border);
-  --surface-item-color-bg: transparent;
   --surface-item-color-text: var(--color-text, #{$color-text});
-  --surface-item-shadow: none;
 
   /* Card surfaces (nested items within panels) */
   --surface-card-radius: #{$radius-xs};
   --surface-card-border-width: #{$border-width};
-  --surface-card-border-color: var(--color-border-strong);
   --surface-card-color-bg: var(--color-surface);
   --surface-card-color-text: var(--color-text, #{$color-text});
   --surface-card-shadow: none;
@@ -146,12 +138,7 @@
   /* Touch surfaces (interactive areas with hover feedback) */
   --surface-touch-radius: #{$radius-xs};
   --surface-touch-border-width: #{$border-width};
-  --surface-touch-border-color: var(--color-border-strong);
-  --surface-touch-color-bg: var(--color-surface-muted);
-  --surface-touch-color-text: var(--color-text, #{$color-text});
   --surface-touch-shadow: none;
-  --surface-touch-hover-bg: var(--color-surface-muted);
-  --surface-touch-hover-border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
 
 /* Base Form Control Tokens */
@@ -257,7 +244,6 @@
   --panel-border-width: var(--surface-panel-border-width);
   --panel-border-color: var(--surface-panel-border-color);
   --panel-border-radius: var(--surface-panel-radius);
-  --panel-color: var(--surface-panel-color-text);
   --panel-shadow: var(--surface-panel-shadow);
 
   /* Padding */
