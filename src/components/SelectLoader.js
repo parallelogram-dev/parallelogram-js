@@ -45,6 +45,8 @@ export default class SelectLoader extends BaseComponent {
     transitionDuration: 300,
     retainScroll: false,
     emptyMessage: 'Please select an option',
+    errorMessage: 'Failed to load content',
+    retryLabel: 'Retry',
   };
 
   _init(element) {
@@ -63,6 +65,8 @@ export default class SelectLoader extends BaseComponent {
       transitionDuration: 'transition-duration',
       retainScroll: 'retain-scroll',
       emptyMessage: 'empty-message',
+      errorMessage: 'error-message',
+      retryLabel: 'retry-label',
     });
 
     const targetElement = this._getTargetElement(element, 'target', { required: true });
@@ -340,11 +344,11 @@ export default class SelectLoader extends BaseComponent {
     const wrapper = document.createElement('div');
     wrapper.className = 'select-loader__error';
     const paragraph = document.createElement('p');
-    paragraph.textContent = error.message || 'Failed to load content';
+    paragraph.textContent = error.message || state.config.errorMessage;
     const retry = document.createElement('button');
     retry.type = 'button';
     retry.className = 'btn btn--sm';
-    retry.textContent = 'Retry';
+    retry.textContent = state.config.retryLabel;
     retry.addEventListener(
       'click',
       () => {
