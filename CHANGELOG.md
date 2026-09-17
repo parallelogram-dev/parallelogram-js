@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A title slotted into a `<p-modal>` no longer carries the browser's default heading margins inside the header. The rule meant to reset them matched only the fallback heading in the shadow tree, never the page's own element, so a page without its own heading reset got a title sitting low in its row; `::slotted([slot='title'])` now carries the reset, along with the size, line height and weight it always meant to, all of which a page's own styles still outrank.
 - Opening a `<p-modal>` with a click no longer leaves a focus ring on its close button. A modal moves focus inside itself as it opens, and the close button is where that focus lands when nothing in the content can take it, so a pointer user was shown a ring they never asked for. It now follows the same keyboard-only focus rings as the other components, through `data-focus-source`.
 - A `<p-modal>` given nothing to put in its `actions` slot no longer draws an empty footer. The footer was always in the dialog, so a modal that only tells the reader something ended in a bordered, padded strip with nothing in it; it is now left out until the page slots something into it.
 - A `<p-modal>` with no `title` no longer shows the word "Dialog" where its heading would be. That was the slot's fallback content, shown to everyone; the dialog is still named "Dialog" for assistive technology, which it already fell back to.
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A `<p-modal>`'s close button is pinned to the top right of the panel instead of sitting in the header, so it stays where it is while the content scrolls and is there whether or not the modal has a title. A modal given no title now has no header at all, rather than an empty row.
 - `<p-modal>`'s documentation shows what happens when the markup leaves a slot out: one example without `actions`, which has no footer, and one without a title.
 - A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
 - An example's controls cover every attribute the example can set, rather than the few each contract named: eleven for `<p-select>` instead of four, and the named ones lead. Changing a control now sets the attribute on the mounted component instead of rebuilding the example from its markup, so a web component is told about the change as a page would tell it and keeps what the visitor has done; an enhancement, which reads its options only when it mounts, is mounted again.

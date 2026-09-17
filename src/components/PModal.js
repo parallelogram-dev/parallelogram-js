@@ -77,10 +77,9 @@ export default class PModal extends HTMLElement {
       root,
       `
       <dialog class="modal__panel" data-modal-panel part="panel" tabindex="-1">
+        <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
         <header class="modal__header" data-modal-header part="header">
           <div class="modal__title" part="title"><slot name="title"></slot></div>
-          <div class="modal__spacer"></div>
-          <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
         </header>
         <section class="modal__content" data-modal-content part="content">
           <slot></slot>
@@ -98,6 +97,7 @@ export default class PModal extends HTMLElement {
     this._titleSlot = root.querySelector('slot[name="title"]');
     this._actionsSlot = root.querySelector('slot[name="actions"]');
     this._footer = root.querySelector('[data-modal-footer]');
+    this._header = root.querySelector('[data-modal-header]');
     this._returnFocus = null;
     this._lastReturnFocus = null;
     this._pendingReturnFocus = undefined;
@@ -163,9 +163,17 @@ export default class PModal extends HTMLElement {
       { signal }
     );
 
-    this._titleSlot.addEventListener('slotchange', () => this._updateName(), { signal });
+    this._titleSlot.addEventListener(
+      'slotchange',
+      () => {
+        this._updateName();
+        this._updateHeader();
+      },
+      { signal }
+    );
     this._actionsSlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
     this._updateName();
+    this._updateHeader();
     this._updateFooter();
 
     this._upgradeOpenProperty();
@@ -379,6 +387,15 @@ export default class PModal extends HTMLElement {
       .replace(/\s+/g, ' ')
       .trim();
     this._dialog.setAttribute('aria-label', title || 'Dialog');
+  }
+
+  /**
+   * Keep the header out of the dialog until the page slots a title into it
+   *
+   * The close button sits on the panel rather than in the header, so it is there either way.
+   */
+  _updateHeader() {
+    this._header.hidden = this._titleSlot.assignedNodes().length === 0;
   }
 
   /**
