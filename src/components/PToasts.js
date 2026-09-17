@@ -168,7 +168,7 @@ export default class PToasts extends HTMLElement {
       row.append(closeButton);
     }
 
-    this._stack.append(element);
+    this._reflow(() => this._stack.append(element));
     this._toasts.set(id, entry);
     this._raise();
     this._startTimer(entry);
@@ -181,6 +181,47 @@ export default class PToasts extends HTMLElement {
     return entry.dismiss;
   }
 
+  /**
+   * Change the stack, and float every toast that moved from where it was to where it is
+   *
+   * A removed toast's space closes in the same frame, and the toasts below it were drawn at their
+   * new place in that frame, a jump. Each starts from its old place and arrives over the toast
+   * animation's duration. Nothing floats for a visitor who prefers reduced motion.
+   *
+   * @param {() => void} change
+   */
+  _reflow(change) {
+    const before = new Map(
+      [...this._stack.children].map(toast => [toast, toast.getBoundingClientRect().top])
+    );
+    change();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const declared = getComputedStyle(this).getPropertyValue('--toast-animation-duration').trim();
+    const duration = declared.endsWith('ms')
+      ? parseFloat(declared)
+      : (parseFloat(declared) || 0.18) * 1000;
+    for (const [toast, top] of before) {
+      if (!toast.isConnected) continue;
+      const delta = top - toast.getBoundingClientRect().top;
+      if (Math.abs(delta) < 0.5) continue;
+      /* Set inline first: a new animation is pending until the next frame, and the toast would be
+         painted at its new place for that one frame */
+      toast.style.transform = `translateY(${delta}px)`;
+      const animation = toast.animate(
+        [{ transform: `translateY(${delta}px)` }, { transform: 'none' }],
+        { duration, easing: 'ease-out', fill: 'forwards' }
+      );
+      animation.finished.then(
+        () => {
+          animation.cancel();
+          toast.style.transform = '';
+        },
+        () => {}
+      );
+    }
+  }
+
   _dismiss(id) {
     const entry = this._toasts.get(id);
     if (!entry) return;
@@ -188,7 +229,7 @@ export default class PToasts extends HTMLElement {
     clearTimeout(entry.timer);
     this._toasts.delete(id);
     entry.element.setAttribute('data-state', 'leaving');
-    whenAnimationsFinish(entry.element).then(() => entry.element.remove());
+    whenAnimationsFinish(entry.element).then(() => this._reflow(() => entry.element.remove()));
 
     dispatchComponentEvent(this, 'p-toasts:close', {
       id,
