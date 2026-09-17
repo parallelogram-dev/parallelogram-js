@@ -109,6 +109,11 @@
   border-radius: var(--button-border-radius);
   background: var(--button-bg);
   color: var(--button-color);
+  @include mix.transition(
+    (background-color, color, border-color),
+    var(--framework-transition-duration, #{$duration-fast}),
+    var(--framework-transition-easing, #{$ease-smooth})
+  );
   font-size: var(--button-font-size);
   font-weight: var(--button-font-weight);
   cursor: pointer;
@@ -116,8 +121,6 @@
   align-items: center;
   justify-content: center;
   gap: #{$space-sm};
-
-  @include mix.transition(all, $duration-fast);
 
   &:disabled,
   &[disabled] {

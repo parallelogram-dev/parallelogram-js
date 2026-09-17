@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PToasts from '../../../src/components/PToasts.js';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 import '../../../src/components/PModal.js';
 
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
@@ -228,4 +229,45 @@ describe('p-toasts', () => {
       PToasts.defaults.dismissLabel = 'Dismiss notification';
     }
   });
+  it.each(['light', 'dark'])(
+    'paints a status toast in the status colour with its contrast text, %s theme',
+    theme => {
+      const style = document.createElement('style');
+      style.textContent = frameworkStyles;
+      document.head.append(style);
+      document.documentElement.dataset.theme = theme;
+      try {
+        const host = document.createElement('p-toasts');
+        document.body.append(host);
+        host.toast({ message: 'Saved', type: 'success', timeout: 0 });
+        host.toast({ message: 'Careful', type: 'warn', timeout: 0 });
+        host.toast({ message: 'Failed', type: 'error', timeout: 0 });
+        const probe = document.createElement('div');
+        document.body.append(probe);
+        const token = name => {
+          probe.style.color = getComputedStyle(document.documentElement).getPropertyValue(name);
+          return getComputedStyle(probe).color;
+        };
+        const paint = selector => {
+          const toast = host.shadowRoot.querySelector(selector);
+          return [getComputedStyle(toast).backgroundColor, getComputedStyle(toast).color];
+        };
+
+        /* They were the -strong shades under white, a deeper third set beside the solids a page
+         paints with; a success toast is the success colour */
+        expect({
+          success: paint('.toast.success'),
+          warning: paint('.toast.warning'),
+          error: paint('.toast.error'),
+        }).toEqual({
+          success: [token('--color-success'), token('--color-success-contrast')],
+          warning: [token('--color-warning'), token('--color-warning-contrast')],
+          error: [token('--color-danger'), token('--color-danger-contrast')],
+        });
+      } finally {
+        style.remove();
+        delete document.documentElement.dataset.theme;
+      }
+    }
+  );
 });

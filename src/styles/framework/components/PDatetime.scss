@@ -29,8 +29,8 @@
   /* Colors — follow the colour roles and dark theme; override at the host with --datetime-*. */
   --datetime-text: var(--color-text, #171717);
   --datetime-muted: var(--color-text-muted, rgba(0, 0, 0, 0.55));
-  --datetime-accent: var(--color-accent, #3b82f6);
-  --datetime-accent-strong: var(--color-accent-hover, #2563eb);
+  --datetime-accent: var(--color-accent, #2563eb);
+  --datetime-accent-strong: var(--color-accent-hover, #1d4ed8);
   --datetime-hover: var(--color-hover, rgba(0, 0, 0, 0.05));
   --datetime-bg: var(--surface-dropdown-color-bg, var(--color-surface, #fff));
   --datetime-border: var(--color-border, rgba(0, 0, 0, 0.1));
@@ -101,9 +101,11 @@
     --button-primary-hover-bg,
     var(--datetime-accent-strong)
   );
-  --datetime-preset-bg: var(--button-ghost-bg, transparent);
-  --datetime-preset-color: var(--button-ghost-color, var(--datetime-muted));
-  --datetime-preset-hover-bg: var(--button-ghost-hover-bg, var(--datetime-hover));
+  /* A quick date is a muted pill in the text colour, and the accent under the pointer */
+  --datetime-preset-bg: var(--color-surface-muted, var(--datetime-hover));
+  --datetime-preset-color: var(--color-text, var(--datetime-text));
+  --datetime-preset-hover-bg: var(--color-accent, var(--datetime-accent));
+  --datetime-preset-hover-color: var(--color-accent-contrast, var(--datetime-bg));
 }
 
 /* Shared - Border Properties */
@@ -219,9 +221,8 @@ button:disabled {
   }
 
   .preset:hover {
-    background: var(--datetime-accent-strong);
-    color: var(--datetime-bg);
-    border-color: var(--datetime-accent-strong);
+    background: var(--datetime-preset-hover-bg);
+    color: var(--datetime-preset-hover-color);
   }
 
   .btn:hover {
@@ -528,10 +529,9 @@ button:disabled {
   border-radius: var(--datetime-radius-xl);
   background: var(--datetime-preset-bg);
   color: var(--datetime-preset-color);
-}
-
-.preset:hover {
-  background: var(--datetime-preset-hover-bg);
+  transition:
+    background-color var(--datetime-transition),
+    color var(--datetime-transition);
 }
 
 /* Action Buttons */
