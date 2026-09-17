@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import '../../../src/components/PUploader.js';
+import PUploader from '../../../src/components/PUploader.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const PAYLOAD = '<img src="data:," onerror="window.__puploaderInjected = true">';
@@ -423,6 +423,26 @@ describe('p-uploader host', () => {
       alerts: alerts.mock.calls.length,
       message: uploader.shadowRoot.querySelector('[part~="message"]')?.textContent,
     }).toEqual({ limits: [1], alerts: 0, message: 'You can add up to 1 file.' });
+  });
+
+  it('refuses and limits files in the words the page chose', async () => {
+    const uploader = await renderUploader(
+      {
+        'max-files': '1',
+        'upload-action': '/api/upload',
+        'accept-types': 'image/*',
+        'wrong-type-message': '{file} : type refusé',
+        'limit-one-message': 'Un seul fichier ({count}).',
+      },
+      ['photo']
+    );
+    const message = () => uploader.shadowRoot.querySelector('[part~="message"]')?.textContent;
+
+    addFiles(uploader, [new File(['x'], 'notes.txt', { type: 'text/plain' })]);
+    const refused = message();
+    addFiles(uploader, [new File(['x'], 'second.png', { type: 'image/png' })]);
+
+    expect([refused, message()]).toEqual(['notes.txt : type refusé', 'Un seul fichier (1).']);
   });
 
   it('rejects files that are too large or not an accepted type', async () => {
@@ -1062,5 +1082,52 @@ describe('p-uploader ordering and replacing without dragging', () => {
       deleted: remove.mock.calls.map(([url, init]) => [url, JSON.parse(init.body)]),
       full: uploader.hasAttribute('full'),
     }).toEqual({ picked: 1, deleted: [['/api/delete', { id: 'old' }]], full: true });
+  });
+
+  it('reports a move in the words the page chose, in the order the page wrote them', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    const uploader = await renderFiles(
+      { 'sequence-action': '/api/sequence', 'moved-message': '{file} → {position}/{count}' },
+      ['first', 'second']
+    );
+    const saved = new Promise(resolve =>
+      uploader.addEventListener('p-uploader:sequence-update', resolve, { once: true })
+    );
+
+    control(uploader, 'first', 'move-down')?.click();
+    await saved;
+
+    expect(uploader.shadowRoot.querySelector('[part~="message"]')?.textContent).toBe(
+      'first.jpg → 2/2'
+    );
+  });
+
+  it('names its controls, and lets a page or a site rename them', async () => {
+    PUploader.defaults.moveUpLabel = 'Monter';
+    try {
+      const uploader = await renderFiles(
+        {
+          'sequence-action': '/api/sequence',
+          'move-down-label': 'Descendre',
+          'add-label': 'Glisser ou ajouter',
+        },
+        ['first', 'second']
+      );
+      const down = control(uploader, 'first', 'move-down');
+      const up = control(uploader, 'second', 'move-up');
+
+      /* One label per control: the tooltip and the accessible name are the same words */
+      expect([
+        down.getAttribute('aria-label'),
+        down.title,
+        up.getAttribute('aria-label'),
+        uploader.shadowRoot.querySelector('.uploader__add-label').textContent,
+      ]).toEqual(['Descendre', 'Descendre', 'Monter', 'Glisser ou ajouter']);
+    } finally {
+      PUploader.defaults.moveUpLabel = 'Move up';
+    }
   });
 });
