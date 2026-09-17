@@ -899,6 +899,22 @@ describe('p-select paging', () => {
     expect(calls.map(call => call.page)).toEqual([1, 2]);
   });
 
+  it('stops asking for pages once it is taken off the page', async () => {
+    const calls = pagedSource();
+    const select = pagedSelect();
+    select.open();
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    scrollToEnd(select);
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(20), WAIT);
+
+    select.remove();
+    scrollToEnd(select);
+    press(select, 'End');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(calls.map(call => call.page)).toEqual([1, 2]);
+  });
+
   it('starts again from page 1 for a new search', async () => {
     const calls = pagedSource();
     const select = pagedSelect();
@@ -922,7 +938,10 @@ describe('p-select paging', () => {
     press(select, 'End');
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    expect(calls.length).toBe(1);
+    expect({
+      laterPages: calls.filter(call => call.page > 1),
+      options: optionsOf(select).length,
+    }).toEqual({ laterPages: [], options: 10 });
   });
 
   it('tells a screen reader more is on the way while there is', async () => {
