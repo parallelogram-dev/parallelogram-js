@@ -10,6 +10,12 @@
     color: var(--button-secondary-color);
     font: inherit;
     cursor: pointer;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition:
+        background-color var(--framework-transition-duration) var(--framework-transition-easing),
+        border-color var(--framework-transition-duration) var(--framework-transition-easing);
+    }
   }
 
   :where(button:hover) {

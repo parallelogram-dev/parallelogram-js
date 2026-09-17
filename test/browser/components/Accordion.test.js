@@ -97,4 +97,14 @@ describe('Accordion', () => {
       0,
     ]);
   });
+  it('eases the summary background under the pointer, over the framework duration', () => {
+    const summary = shipping.querySelector('summary');
+    const eased = getComputedStyle(summary);
+
+    /* The hover switched hard; every other hover in the library already eased */
+    expect([eased.transitionProperty, eased.transitionDuration]).toEqual([
+      'background-color',
+      '0.2s',
+    ]);
+  });
 });

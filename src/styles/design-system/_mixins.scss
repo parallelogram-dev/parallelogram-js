@@ -1,16 +1,22 @@
 /* Design System Mixins */
 /* Utility mixins for common patterns */
 
+@use 'sass:list';
 @use 'tokens' as *;
 
 /* ============================================================================
    Accessibility Mixins
    ============================================================================ */
 
-/* Conditional transition that respects prefers-reduced-motion */
+/* Conditional transition that respects prefers-reduced-motion. A list of properties eases each
+   of them alike: (background-color, color) */
 @mixin transition($property: all, $duration: $duration-fast, $easing: $ease-smooth) {
+  $transitions: ();
+  @each $each in $property {
+    $transitions: list.append($transitions, $each $duration $easing, comma);
+  }
   @media (prefers-reduced-motion: no-preference) {
-    transition: $property $duration $easing;
+    transition: $transitions;
   }
 }
 

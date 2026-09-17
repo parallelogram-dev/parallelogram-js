@@ -192,3 +192,10 @@
 :host([data-focus-source='pointer']) :focus {
   outline: none;
 }
+
+/* Every transition above is a literal duration; a visitor who prefers reduced motion gets none */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none;
+  }
+}
