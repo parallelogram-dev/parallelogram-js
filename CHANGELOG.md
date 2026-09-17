@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-09-17
+
 ### Added
 
 - Each element's documentation page says what its markup does before the module loads, under _Without JavaScript_, and what to render on the server where that matters — a `<select>` in place of a `<p-select>`, an `<input type="file">` in place of a `<p-uploader>`. The enhancement components have always answered this question on their pages; the five elements never did. The answer lives on the component contract as a `withoutJs` field, so a new element cannot quietly ship without one.
