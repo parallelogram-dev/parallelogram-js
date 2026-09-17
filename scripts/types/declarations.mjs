@@ -5,6 +5,7 @@ import {
   isFrameworkEvent,
   listenableEvents,
   parseSignature,
+  attributeValueType,
   propertiesOf,
 } from './members.mjs';
 
@@ -90,6 +91,20 @@ function listenerMethods(className) {
 function classDeclaration({ name, item, isDefault }) {
   const events = mappedEvents(item);
 
+  /* An attribute with an option is one a site can change for every instance at once, so the class
+     declares the static the guide tells a page to assign to */
+  const defaults = (item.attributes ?? []).filter(attribute => attribute.option);
+  const defaultsMember = defaults.length
+    ? [
+        `${docComment(['What every instance starts from; a site changes these once, before its elements are on the page'], '  ')}  static defaults: {\n${defaults
+          .map(
+            attribute =>
+              `${docComment([attribute.description], '    ')}    ${attribute.option}: ${attributeValueType(attribute)};`
+          )
+          .join('\n')}\n  };`,
+      ]
+    : [];
+
   const properties = propertiesOf(item).map(
     property =>
       `${docComment([property.description, deprecation(property)], '  ')}  ${property.readonly ? 'readonly ' : ''}${property.name}: ${property.type};`
@@ -104,7 +119,12 @@ function classDeclaration({ name, item, isDefault }) {
       .join(', ');
     return `${docComment([method.description], '  ')}  ${method.name}(${list}): ${returns};`;
   });
-  const members = [...properties, ...methods, ...(events.length ? listenerMethods(name) : [])];
+  const members = [
+    ...defaultsMember,
+    ...properties,
+    ...methods,
+    ...(events.length ? listenerMethods(name) : []),
+  ];
 
   const eventMap = events.length
     ? `export interface ${name}EventMap extends HTMLElementEventMap {\n${eventEntries(events, '  ')}\n}\n\n`

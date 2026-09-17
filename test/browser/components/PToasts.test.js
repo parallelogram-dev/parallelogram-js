@@ -202,4 +202,30 @@ describe('p-toasts', () => {
     const expected = Math.min(300, window.innerWidth - 32);
     expect(lastToast(host).getBoundingClientRect().width).toBeGreaterThanOrEqual(expected - 1);
   });
+
+  it('names its dismiss button, and lets a page or a site rename it', () => {
+    const label = host =>
+      host.shadowRoot.querySelector('.close')?.getAttribute('aria-label') ??
+      host.querySelector('.close')?.getAttribute('aria-label');
+    const plain = document.createElement('p-toasts');
+    const page = document.createElement('p-toasts');
+    page.setAttribute('dismiss-label', 'Fermer la notification');
+    document.body.append(plain, page);
+    plain.toast({ message: 'Saved', timeout: 0 });
+    page.toast({ message: 'Saved', timeout: 0 });
+
+    PToasts.defaults.dismissLabel = 'Benachrichtigung schließen';
+    const site = document.createElement('p-toasts');
+    document.body.append(site);
+    site.toast({ message: 'Saved', timeout: 0 });
+    try {
+      expect([label(plain), label(page), label(site)]).toEqual([
+        'Dismiss notification',
+        'Fermer la notification',
+        'Benachrichtigung schließen',
+      ]);
+    } finally {
+      PToasts.defaults.dismissLabel = 'Dismiss notification';
+    }
+  });
 });

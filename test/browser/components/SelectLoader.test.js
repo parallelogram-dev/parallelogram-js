@@ -77,4 +77,36 @@ describe('SelectLoader before the router loads', () => {
 
     expect([router.get.mock.calls.length, target.textContent.trim()]).toEqual([0, '']);
   });
+
+  it('shows the error and a retry in the words the page or the site chose', async () => {
+    SelectLoader.defaults.retryLabel = 'Réessayer';
+    try {
+      const router = {
+        get: vi.fn(async () => {
+          throw new Error('');
+        }),
+      };
+      document.body.innerHTML = `
+        <select data-selectloader data-selectloader-target="#product-details" data-selectloader-transition="none" data-selectloader-error-message="Le chargement a échoué">
+          <option value="">Choose a product</option>
+          <option value="/fragments/phone.html">Phone</option>
+        </select>
+        <div id="product-details"></div>`;
+      const select = document.querySelector('select');
+      new SelectLoader({ eventBus: new EventManager(), router }).mount(select);
+      select.value = '/fragments/phone.html';
+      select.dispatchEvent(new Event('change'));
+      await vi.waitFor(() =>
+        expect(document.querySelector('.select-loader__error')).not.toBeNull()
+      );
+      const error = document.querySelector('.select-loader__error');
+
+      expect([
+        error.querySelector('p').textContent,
+        error.querySelector('button').textContent,
+      ]).toEqual(['Le chargement a échoué', 'Réessayer']);
+    } finally {
+      SelectLoader.defaults.retryLabel = 'Retry';
+    }
+  });
 });

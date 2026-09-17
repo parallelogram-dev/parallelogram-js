@@ -2,16 +2,17 @@ import styles from '../styles/framework/components/PDatetime.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { followFocusSource } from '../utils/focus-source.js';
 import { arrowLeft, arrowRight, calendar, iconMarkup, selector } from '../utils/icons.js';
+import { text } from '../utils/text.js';
 
 const formats = new Map();
 
 /**
- * A cached Intl.DateTimeFormat in the page's locale
+ * A cached Intl.DateTimeFormat in a locale; undefined is the browser's
  */
-const dateFormat = options => {
-  const key = JSON.stringify(options);
+const dateFormat = (options, locale) => {
+  const key = `${locale ?? ''}|${JSON.stringify(options)}`;
   if (!formats.has(key)) {
-    formats.set(key, new Intl.DateTimeFormat(undefined, options));
+    formats.set(key, new Intl.DateTimeFormat(locale, options));
   }
   return formats.get(key);
 };
@@ -152,33 +153,18 @@ export default class PDatetime extends HTMLElement {
         showTime: false,
         showQuickDates: true,
         formatOpts: { dateStyle: 'medium' },
-        placeholders: {
-          single: 'Select date...',
-          rangeFrom: 'Start date...',
-          rangeTo: 'End date...',
-        },
       },
       datetime: {
         showCalendar: true,
         showTime: true,
         showQuickDates: true,
         formatOpts: { dateStyle: 'medium', timeStyle: 'short' },
-        placeholders: {
-          single: 'Select date & time...',
-          rangeFrom: 'Start date & time...',
-          rangeTo: 'End date & time...',
-        },
       },
       time: {
         showCalendar: false,
         showTime: true,
         showQuickDates: false,
         formatOpts: { timeStyle: 'short' },
-        placeholders: {
-          single: 'Select time...',
-          rangeFrom: 'Start time...',
-          rangeTo: 'End time...',
-        },
       },
     };
 
@@ -329,9 +315,78 @@ export default class PDatetime extends HTMLElement {
     document.addEventListener('input', listener, { capture: true, signal });
   }
 
+  /** The text the picker shows: a site changes it here once, a page changes one with the attribute */
+  static defaults = {
+    dateNoun: 'date',
+    datetimeNoun: 'date and time',
+    timeNoun: 'time',
+    placeholder: 'Select {what}...',
+    fromPlaceholder: 'Start {what}...',
+    toPlaceholder: 'End {what}...',
+    chooseLabel: 'Choose {what}',
+    chooseRangeLabel: 'Choose {what} range',
+    valueLabel: '{label}: {value}',
+    emptyValue: 'not set',
+    fromLabel: 'From',
+    toLabel: 'To',
+    prevMonthLabel: 'Previous month',
+    nextMonthLabel: 'Next month',
+    prevYearLabel: 'Previous year',
+    nextYearLabel: 'Next year',
+    prevYearsLabel: 'Previous years',
+    nextYearsLabel: 'Next years',
+    hourLabel: 'Hour',
+    minuteLabel: 'Minute',
+    ampmLabel: 'AM or PM',
+    clearLabel: 'Clear',
+    applyLabel: 'Apply',
+    rangeStartHint: 'Click to select start date',
+    rangeEndHint: 'Start date selected. Now select end date',
+    rangeDoneHint: 'Range selected. Click dates to modify.',
+    yesterdayLabel: 'Yesterday',
+    todayLabel: 'Today',
+    tomorrowLabel: 'Tomorrow',
+    requiredMessage: 'Please choose a {what}.',
+    requiredRangeMessage: 'Please choose a start and end {what}.',
+    minMessage: 'Please choose a date on or after {date}.',
+    maxMessage: 'Please choose a date on or before {date}.',
+  };
+
   static get observedAttributes() {
     return [
       'name',
+      'date-noun',
+      'datetime-noun',
+      'time-noun',
+      'placeholder',
+      'from-placeholder',
+      'to-placeholder',
+      'choose-label',
+      'choose-range-label',
+      'value-label',
+      'empty-value',
+      'prev-month-label',
+      'next-month-label',
+      'prev-year-label',
+      'next-year-label',
+      'prev-years-label',
+      'next-years-label',
+      'hour-label',
+      'minute-label',
+      'ampm-label',
+      'clear-label',
+      'apply-label',
+      'range-start-hint',
+      'range-end-hint',
+      'range-done-hint',
+      'yesterday-label',
+      'today-label',
+      'tomorrow-label',
+      'required-message',
+      'required-range-message',
+      'min-message',
+      'max-message',
+      'lang',
       'value',
       'mode',
       'time-format',
@@ -645,13 +700,13 @@ export default class PDatetime extends HTMLElement {
     v ? this.setAttribute('range-to', v) : this.removeAttribute('range-to');
   }
   get fromLabel() {
-    return this.getAttribute('from-label') || 'From';
+    return this._text('from-label');
   }
   set fromLabel(v) {
     this.setAttribute('from-label', v);
   }
   get toLabel() {
-    return this.getAttribute('to-label') || 'To';
+    return this._text('to-label');
   }
   set toLabel(v) {
     this.setAttribute('to-label', v);
@@ -958,8 +1013,63 @@ export default class PDatetime extends HTMLElement {
     this._open ? this.close() : this.open();
   }
 
+  /**
+   * The language for month and weekday names and formatted values: the nearest lang, else the
+   * browser's, which Intl reads as undefined
+   */
+  get _locale() {
+    const lang = this.closest('[lang]')?.getAttribute('lang');
+    if (!lang) return undefined;
+    /* The page decides the language and the visitor keeps their own region's conventions when
+       the page names none: <html lang="en"> shows an Australian 15 Jan 2024, not an American
+       Jan 15, and only lang="en-US" asks for the latter */
+    try {
+      const page = new Intl.Locale(lang);
+      const own = new Intl.Locale(new Intl.DateTimeFormat().resolvedOptions().locale);
+      return !page.region && own.language === page.language ? undefined : lang;
+    } catch {
+      return lang;
+    }
+  }
+
+  /**
+   * One of the picker's strings, from the attribute or the class default, with {name} filled in
+   */
+  _text(name, values) {
+    return text(this, name, values);
+  }
+
+  /** The mode's noun, for the sentences that name what is being chosen */
+  _noun() {
+    return this._text(`${this._modeConfig[this.mode] ? this.mode : 'date'}-noun`);
+  }
+
+  /**
+   * The noun standing on its own as a label. Sentence-initial capitals are near enough universal
+   * in the scripts that have them, and a no-op in the ones that don't, so this is derived rather
+   * than asked for a second time
+   */
+  _nounLabel() {
+    const noun = this._noun();
+    return noun.charAt(0).toLocaleUpperCase(this._locale) + noun.slice(1);
+  }
+
+  /** The labels and buttons the template stamps in English */
+  _renderText() {
+    const set = (selector, attribute, name) =>
+      this.shadowRoot.querySelector(selector).setAttribute(attribute, this._text(name));
+    set('[data-datetime-hour]', 'aria-label', 'hour-label');
+    set('[data-datetime-minute]', 'aria-label', 'minute-label');
+    set('[data-datetime-ampm]', 'aria-label', 'ampm-label');
+    this.shadowRoot.querySelector('[data-datetime-action="clear"]').textContent =
+      this._text('clear-label');
+    this.shadowRoot.querySelector('[data-datetime-action="apply"]').textContent =
+      this._text('apply-label');
+  }
+
   _render() {
     this._renderQueued = false;
+    this._renderText();
     this._renderMode();
     this._renderCalendar();
     this._renderTime();
@@ -968,9 +1078,12 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderMode() {
-    const noun = { date: 'date', datetime: 'date and time', time: 'time' }[this.mode] ?? 'date';
-    this._btn.setAttribute('aria-label', `Choose ${noun}`);
-    this._panel.setAttribute('aria-label', this.range ? `Choose ${noun} range` : `Choose ${noun}`);
+    const what = this._noun();
+    this._btn.setAttribute('aria-label', this._text('choose-label', { what }));
+    this._panel.setAttribute(
+      'aria-label',
+      this._text(this.range ? 'choose-range-label' : 'choose-label', { what })
+    );
 
     if (this.range) {
       this._input.hidden = false; /* Show first input (from date) */
@@ -979,11 +1092,11 @@ export default class PDatetime extends HTMLElement {
 
       /* Update range info text based on current state */
       if (!this.value) {
-        this._rangeInfo.textContent = `Click to select start date`;
+        this._rangeInfo.textContent = this._text('range-start-hint');
       } else if (!this.rangeToValue) {
-        this._rangeInfo.textContent = `Start date selected. Now select end date`;
+        this._rangeInfo.textContent = this._text('range-end-hint');
       } else {
-        this._rangeInfo.textContent = `Range selected. Click dates to modify.`;
+        this._rangeInfo.textContent = this._text('range-done-hint');
       }
     } else {
       this._input.hidden = false; /* Show first input */
@@ -1005,12 +1118,16 @@ export default class PDatetime extends HTMLElement {
     const month = this._view.getMonth();
 
     const [previous, next] = {
-      day: ['Previous month', 'Next month'],
-      month: ['Previous year', 'Next year'],
-      year: ['Previous years', 'Next years'],
+      day: ['prev-month-label', 'next-month-label'],
+      month: ['prev-year-label', 'next-year-label'],
+      year: ['prev-years-label', 'next-years-label'],
     }[this._viewMode];
-    this._nav.querySelector('[data-datetime-nav-btn="prev"]').setAttribute('aria-label', previous);
-    this._nav.querySelector('[data-datetime-nav-btn="next"]').setAttribute('aria-label', next);
+    this._nav
+      .querySelector('[data-datetime-nav-btn="prev"]')
+      .setAttribute('aria-label', this._text(previous));
+    this._nav
+      .querySelector('[data-datetime-nav-btn="next"]')
+      .setAttribute('aria-label', this._text(next));
 
     /* Update title based on view mode */
     if (this._viewMode === 'year') {
@@ -1022,7 +1139,7 @@ export default class PDatetime extends HTMLElement {
       this._month.textContent = String(year);
       this._year.textContent = '';
     } else {
-      this._month.textContent = dateFormat({ month: 'long' }).format(this._view);
+      this._month.textContent = dateFormat({ month: 'long' }, this._locale).format(this._view);
       this._year.textContent = String(year);
     }
 
@@ -1150,9 +1267,9 @@ export default class PDatetime extends HTMLElement {
           {
             class: 'wd',
             role: 'columnheader',
-            'aria-label': dateFormat({ weekday: 'long' }).format(weekday),
+            'aria-label': dateFormat({ weekday: 'long' }, this._locale).format(weekday),
           },
-          dateFormat({ weekday: 'narrow' }).format(weekday)
+          dateFormat({ weekday: 'narrow' }, this._locale).format(weekday)
         )
       );
     }
@@ -1180,7 +1297,7 @@ export default class PDatetime extends HTMLElement {
           class: 'day',
           part: 'day',
           'data-date': this._dateString(dt),
-          'aria-label': dateFormat({ dateStyle: 'full' }).format(dt),
+          'aria-label': dateFormat({ dateStyle: 'full' }, this._locale).format(dt),
         },
         String(dt.getDate())
       );
@@ -1306,9 +1423,11 @@ export default class PDatetime extends HTMLElement {
           type: 'button',
           class: 'month',
           'data-month': String(monthIndex),
-          'aria-label': dateFormat({ month: 'long', year: 'numeric' }).format(monthDate),
+          'aria-label': dateFormat({ month: 'long', year: 'numeric' }, this._locale).format(
+            monthDate
+          ),
         },
-        dateFormat({ month: 'short' }).format(monthDate)
+        dateFormat({ month: 'short' }, this._locale).format(monthDate)
       );
 
       if (monthIndex === today.getMonth() && year === today.getFullYear()) {
@@ -1473,20 +1592,24 @@ export default class PDatetime extends HTMLElement {
   }
 
   _renderInput() {
-    const { formatOpts, placeholders } = this._modeConfig[this.mode] ?? this._modeConfig.date;
+    const { formatOpts } = this._modeConfig[this.mode] ?? this._modeConfig.date;
+    const what = this._noun();
     const show = (field, value, placeholder, label) => {
       const date = this._parseValue(value);
-      const text = date ? dateFormat(formatOpts).format(date) : '';
-      field.textContent = text;
-      field.setAttribute('data-placeholder', placeholder);
-      field.setAttribute('aria-label', `${label}: ${text || 'not set'}`);
+      const shown = date ? dateFormat(formatOpts, this._locale).format(date) : '';
+      field.textContent = shown;
+      field.setAttribute('data-placeholder', this._text(placeholder, { what }));
+      field.setAttribute(
+        'aria-label',
+        this._text('value-label', { label, value: shown || this._text('empty-value') })
+      );
     };
 
     if (this.range) {
-      show(this._input, this.value, placeholders.rangeFrom, this.fromLabel);
-      show(this._toInput, this.rangeToValue, placeholders.rangeTo, this.toLabel);
+      show(this._input, this.value, 'from-placeholder', this.fromLabel);
+      show(this._toInput, this.rangeToValue, 'to-placeholder', this.toLabel);
     } else {
-      show(this._input, this.value, placeholders.single, this._fieldLabel());
+      show(this._input, this.value, 'placeholder', this._fieldLabel());
     }
   }
 
@@ -1503,7 +1626,7 @@ export default class PDatetime extends HTMLElement {
       )
       .filter(Boolean)
       .join(' ');
-    return text || { date: 'Date', datetime: 'Date and time', time: 'Time' }[this.mode] || 'Date';
+    return text || this._nounLabel();
   }
 
   _renderQuickDates() {
@@ -1522,15 +1645,18 @@ export default class PDatetime extends HTMLElement {
       effMin?.getTime(),
       effMax?.getTime(),
       this._dateString(new Date()),
+      this._text('yesterday-label'),
+      this._text('today-label'),
+      this._text('tomorrow-label'),
     ].join('|');
     if (presets === this._presets) return;
     this._presets = presets;
 
     const dates = this.quickDates.split(',').map(s => s.trim());
     const dateMap = {
-      yesterday: { days: -1, label: 'Yesterday' },
-      today: { days: 0, label: 'Today' },
-      tomorrow: { days: 1, label: 'Tomorrow' },
+      yesterday: { days: -1, label: this._text('yesterday-label') },
+      today: { days: 0, label: this._text('today-label') },
+      tomorrow: { days: 1, label: this._text('tomorrow-label') },
     };
 
     this._quickDates.replaceChildren();
@@ -1761,11 +1887,11 @@ export default class PDatetime extends HTMLElement {
   }
 
   _validityProblem() {
-    const noun = this.mode === 'time' ? 'time' : 'date';
+    const what = this._noun();
     if (this.required && (!this.value || (this.range && !this.rangeToValue))) {
       return {
         flags: { valueMissing: true },
-        message: this.range ? `Please choose a start and end ${noun}.` : `Please choose a ${noun}.`,
+        message: this._text(this.range ? 'required-range-message' : 'required-message', { what }),
       };
     }
     if (this.mode === 'time') return null;
@@ -1775,18 +1901,18 @@ export default class PDatetime extends HTMLElement {
     const dates = [this.value, this.range ? this.rangeToValue : '']
       .map(value => this._parseValue(value))
       .filter(Boolean);
-    const describe = date => dateFormat({ dateStyle: 'medium' }).format(date);
+    const describe = date => dateFormat({ dateStyle: 'medium' }, this._locale).format(date);
 
     if (min && dates.some(date => this._isDayOutOfRange(date, min, null))) {
       return {
         flags: { rangeUnderflow: true },
-        message: `Please choose a date on or after ${describe(min)}.`,
+        message: this._text('min-message', { date: describe(min) }),
       };
     }
     if (max && dates.some(date => this._isDayOutOfRange(date, null, max))) {
       return {
         flags: { rangeOverflow: true },
-        message: `Please choose a date on or before ${describe(max)}.`,
+        message: this._text('max-message', { date: describe(max) }),
       };
     }
     return null;

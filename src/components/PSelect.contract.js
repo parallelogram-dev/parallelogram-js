@@ -18,7 +18,41 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description:
         'The initial value, restored when the form resets; takes precedence over a selected option',
     },
-    { name: 'placeholder', type: 'string', description: 'Shown when nothing is chosen' },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: 'Select…',
+      option: 'placeholder',
+      description: 'Shown when nothing is chosen',
+    },
+    {
+      name: 'clear-label',
+      type: 'string',
+      default: 'Clear the selection',
+      option: 'clearLabel',
+      description: 'The accessible name of the clear button',
+    },
+    {
+      name: 'search-hint',
+      type: 'string',
+      default: 'Type to search',
+      option: 'searchHint',
+      description: 'What the list says before a search with data-select-min of 1 has begun',
+    },
+    {
+      name: 'search-min-hint',
+      type: 'string',
+      default: 'Type {min} or more characters to search',
+      option: 'searchMinHint',
+      description: 'The same when data-select-min is higher, with {min} for it',
+    },
+    {
+      name: 'no-results',
+      type: 'string',
+      default: 'No results found',
+      option: 'noResults',
+      description: 'What the list says when nothing matches',
+    },
     { name: 'disabled', type: 'flag', property: 'disabled', description: 'Disables the select' },
     {
       name: 'required',

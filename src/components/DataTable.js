@@ -1,6 +1,7 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { createElement, generateId } from '../utils/dom-utils.js';
 import { arrowDown, arrowUp, iconElement, selector } from '../utils/icons.js';
+import { fill } from '../utils/text.js';
 
 /** Page numbers shown either side of the current page */
 const PAGE_WINDOW = 2;
@@ -14,10 +15,6 @@ const cellsOf = row => childrenNamed(row, 'td', 'th');
 
 /** The number of columns cells cover, counting their colspan */
 const spanOf = cells => cells.reduce((total, cell) => total + (cell.colSpan || 1), 0);
-
-/** Replace `{name}` placeholders with values */
-const fill = (template, values) =>
-  template.replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
 
 /**
  * DataTable - sorting, filtering and pagination for an existing table
@@ -75,34 +72,32 @@ const fill = (template, values) =>
 export class DataTable extends BaseComponent {
   static selector = 'data-datatable';
 
-  static get defaults() {
-    return {
-      sortable: true,
-      filterable: false,
-      paginate: false,
-      pageSize: 10,
-      searchDelay: 300,
-      searchLabel: 'Search',
-      searchPlaceholder: 'Search table…',
-      emptyMessage: 'No matching rows',
-      statusMessage: 'Showing {from}–{to} of {total} rows{sort}',
-      sortStatus: ', sorted by {column}, {direction}',
-      sortAscending: 'ascending',
-      sortDescending: 'descending',
-      paginationLabel: 'Table pagination',
-      previousText: 'Previous',
-      previousLabel: 'Previous page',
-      nextText: 'Next',
-      nextLabel: 'Next page',
-      pageLabel: 'Page {page}',
-      /* Icons from the shared set; a page can pass text instead */
-      sortIcons: {
-        unsorted: selector,
-        asc: arrowUp,
-        desc: arrowDown,
-      },
-    };
-  }
+  static defaults = {
+    sortable: true,
+    filterable: false,
+    paginate: false,
+    pageSize: 10,
+    searchDelay: 300,
+    searchLabel: 'Search',
+    searchPlaceholder: 'Search table…',
+    emptyMessage: 'No matching rows',
+    statusMessage: 'Showing {from}–{to} of {total} rows{sort}',
+    sortStatus: ', sorted by {column}, {direction}',
+    sortAscending: 'ascending',
+    sortDescending: 'descending',
+    paginationLabel: 'Table pagination',
+    previousText: 'Previous',
+    previousLabel: 'Previous page',
+    nextText: 'Next',
+    nextLabel: 'Next page',
+    pageLabel: 'Page {page}',
+    /* Icons from the shared set; a page can pass text instead */
+    sortIcons: {
+      unsorted: selector,
+      asc: arrowUp,
+      desc: arrowDown,
+    },
+  };
 
   constructor(options = {}) {
     super(options);

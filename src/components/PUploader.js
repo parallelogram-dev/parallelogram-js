@@ -3,7 +3,8 @@ import hostStyles from '../styles/framework/components/PUploaderHost.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
-import { boolAttr, errorMessage } from '../utils/uploader.js';
+import { boolAttr, errorMessage, uploaderText } from '../utils/uploader.js';
+import { text } from '../utils/text.js';
 import { iconMarkup, plus } from '../utils/icons.js';
 import { PUploaderFile } from './PUploaderFile.js';
 
@@ -105,6 +106,39 @@ const formatBytes = bytes => {
  * `p-uploader-fields` declares them; read-only files hide fields that have no value, and
  * editable files edit every field in one dialog.
  */
+/** The attributes that carry text; a change to one re-labels the drop zone and every card */
+const TEXT_ATTRIBUTES = [
+  'add-label',
+  'add-one-label',
+  'no-action-message',
+  'too-large-message',
+  'wrong-type-message',
+  'limit-message',
+  'limit-one-message',
+  'moved-message',
+  'unnamed-file',
+  'order-error',
+  'upload-error',
+  'invalid-response-message',
+  'server-error',
+  'delete-error',
+  'save-error',
+  'progress-label',
+  'delete-heading',
+  'cancel-delete-label',
+  'confirm-delete-label',
+  'edit-label',
+  'cancel-edit-label',
+  'save-label',
+  'remove-label',
+  'cancel-upload-label',
+  'move-up-label',
+  'move-down-label',
+  'replace-label',
+  'delete-label',
+  'file-info-label',
+];
+
 export default class PUploader extends HTMLElement {
   constructor() {
     super();
@@ -147,8 +181,11 @@ export default class PUploader extends HTMLElement {
     this._inFlight.clear();
   }
 
+  static defaults = uploaderText;
+
   static get observedAttributes() {
     return [
+      ...TEXT_ATTRIBUTES,
       'max-files',
       'upload-action',
       'update-action',
@@ -168,7 +205,17 @@ export default class PUploader extends HTMLElement {
     } else if (name === 'max-files' && this.isConnected) {
       this._updateFullState();
       this._syncAddLabel();
+    } else if (TEXT_ATTRIBUTES.includes(name)) {
+      this._syncAddLabel();
+      for (const file of this.querySelectorAll('p-uploader-file')) file._render();
     }
+  }
+
+  /**
+   * One of the uploader's strings, from the attribute or the class default, with {name} filled in
+   */
+  _text(name, values) {
+    return text(this, name, values);
   }
 
   /**
@@ -177,7 +224,7 @@ export default class PUploader extends HTMLElement {
   _syncAddLabel() {
     const label = this.shadowRoot.querySelector('.uploader__add-label');
     if (label) {
-      label.textContent = this.config.maxFiles === 1 ? 'Drag/Add file' : 'Drag/Add files';
+      label.textContent = this._text(this.config.maxFiles === 1 ? 'add-one-label' : 'add-label');
     }
   }
 
@@ -288,7 +335,11 @@ export default class PUploader extends HTMLElement {
 
     const position = [...this.querySelectorAll('p-uploader-file')].indexOf(file) + 1;
     this._showMessage(
-      `Moved ${file.getAttribute('filename') || 'the file'} to position ${position} of ${files.length}.`
+      this._text('moved-message', {
+        file: file.getAttribute('filename') || this._text('unnamed-file'),
+        position,
+        count: files.length,
+      })
     );
     this._updateSequence();
   }
@@ -593,7 +644,7 @@ export default class PUploader extends HTMLElement {
     const messages = [];
 
     if (!this.config.uploadAction) {
-      this._showMessage('Files can’t be added because no upload-action is set.');
+      this._showMessage(this._text('no-action-message'));
       this.logger?.error('PUploader: set upload-action to add files');
       return;
     }
@@ -614,8 +665,11 @@ export default class PUploader extends HTMLElement {
       if (this.dispatchEvent(rejection)) {
         messages.push(
           reason === 'size'
-            ? `${file.name} is larger than ${formatBytes(this.config.maxFileSize)}.`
-            : `${file.name} isn’t an accepted file type.`
+            ? this._text('too-large-message', {
+                file: file.name,
+                size: formatBytes(this.config.maxFileSize),
+              })
+            : this._text('wrong-type-message', { file: file.name })
         );
       }
       return false;
@@ -635,7 +689,9 @@ export default class PUploader extends HTMLElement {
         detail: { maxFiles, accepted: toUpload, rejected: overLimit },
       });
       if (this.dispatchEvent(limit)) {
-        messages.push(`You can add up to ${maxFiles} file${maxFiles === 1 ? '' : 's'}.`);
+        messages.push(
+          this._text(maxFiles === 1 ? 'limit-one-message' : 'limit-message', { count: maxFiles })
+        );
       }
     }
 
@@ -736,10 +792,13 @@ export default class PUploader extends HTMLElement {
           const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
           this._handleUploadSuccess(fileData, response);
         } catch {
-          this._handleUploadError(fileData, 'Invalid server response');
+          this._handleUploadError(fileData, this._text('invalid-response-message'));
         }
       } else {
-        this._handleUploadError(fileData, errorMessage(xhr.responseText, 'Upload failed'));
+        this._handleUploadError(
+          fileData,
+          errorMessage(xhr.responseText, this._text('upload-error'))
+        );
       }
     });
 
@@ -1009,9 +1068,7 @@ export default class PUploader extends HTMLElement {
     if (failure) {
       this._restoreOrder(this._confirmedOrder);
       this._sequenceFailed = true;
-      this._showMessage(
-        'The new order couldn’t be saved, so the files are back in their previous order.'
-      );
+      this._showMessage(this._text('order-error'));
       this.logger?.error('Failed to update sequence:', failure);
       return;
     }

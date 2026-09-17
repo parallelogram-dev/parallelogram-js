@@ -2,7 +2,8 @@ import { generateId } from '../utils/dom-utils.js';
 import fileStyles from '../styles/framework/components/PUploader.scss';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
-import { boolAttr, errorMessage } from '../utils/uploader.js';
+import { boolAttr, errorMessage, uploaderText } from '../utils/uploader.js';
+import { text } from '../utils/text.js';
 import { followFocusSource } from '../utils/focus-source.js';
 import { arrowDown, arrowUp, check, iconElement, pencil, trash, x } from '../utils/icons.js';
 
@@ -111,6 +112,48 @@ export class PUploaderFile extends HTMLElement {
     this._render();
   }
 
+  static defaults = uploaderText;
+
+  connectedCallback() {
+    /* Built before it had an uploader, so the words its uploader carries are read now */
+    this._render();
+  }
+
+  /**
+   * One of the card's strings: its uploader's attribute, else the class default the two share
+   */
+  _text(name, values) {
+    return text(this._uploader() ?? this, name, values);
+  }
+
+  /** The words on the controls built once, read again on each render */
+  _renderText() {
+    const root = this.shadowRoot;
+    const label = (control, name) => {
+      control.setAttribute('aria-label', this._text(name));
+      if (control.hasAttribute('title')) control.title = this._text(name);
+    };
+    root
+      .querySelector('.uploader__progress')
+      .setAttribute('aria-label', this._text('progress-label'));
+    const deletePanel = root.querySelector('[data-panel="delete"]');
+    deletePanel.querySelector('.uploader__heading').textContent = this._text('delete-heading');
+    label(deletePanel.querySelector('[data-action="cancel"]'), 'cancel-delete-label');
+    label(deletePanel.querySelector('[data-action="confirm-delete"]'), 'confirm-delete-label');
+    const editPanel = root.querySelector('[data-panel="edit"]');
+    editPanel.setAttribute('aria-label', this._text('edit-label'));
+    root.querySelector('.uploader__form').setAttribute('aria-label', this._text('edit-label'));
+    label(editPanel.querySelector('[data-action="cancel"]'), 'cancel-edit-label');
+    label(editPanel.querySelector('[data-action="save"]'), 'save-label');
+    label(this._errorButtons.remove, 'remove-label');
+    label(this._errorButtons.cancel, 'cancel-upload-label');
+    label(this._toolbarButtons.edit, 'edit-label');
+    label(this._toolbarButtons['move-up'], 'move-up-label');
+    label(this._toolbarButtons['move-down'], 'move-down-label');
+    this._toolbarButtons.replace.textContent = this._text('replace-label');
+    label(this._toolbarButtons['show-delete'], 'delete-label');
+  }
+
   static get observedAttributes() {
     return [
       'state',
@@ -151,7 +194,7 @@ export class PUploaderFile extends HTMLElement {
     deletePanel.setAttribute('aria-labelledby', headingId);
     deletePanel.querySelector('.uploader__heading').id = headingId;
     /* The edit panel names itself on its form, since its own heading only repeated the button */
-    root.querySelector('[data-panel="edit"]').setAttribute('aria-label', 'Edit details');
+    root.querySelector('[data-panel="edit"]').setAttribute('aria-label', this._text('edit-label'));
 
     /* The panels answer with icons, so each of their buttons is given one */
     for (const [action, paths] of Object.entries({
@@ -180,7 +223,7 @@ export class PUploaderFile extends HTMLElement {
           type: 'button',
           class: 'uploader__btn uploader__btn--delete',
           'data-action': 'confirm-delete',
-          'aria-label': 'Remove file',
+          'aria-label': this._text('remove-label'),
         },
         'Remove'
       ),
@@ -190,7 +233,7 @@ export class PUploaderFile extends HTMLElement {
           type: 'button',
           class: 'uploader__btn uploader__btn--secondary',
           'data-action': 'cancel',
-          'aria-label': 'Cancel',
+          'aria-label': this._text('cancel-upload-label'),
         },
         'Cancel'
       ),
@@ -204,8 +247,8 @@ export class PUploaderFile extends HTMLElement {
           class: 'uploader__pill',
           'data-action': 'edit',
           part: 'edit-button',
-          title: 'Edit details',
-          'aria-label': 'Edit details',
+          title: this._text('edit-label'),
+          'aria-label': this._text('edit-label'),
         }),
         pencil
       ),
@@ -214,8 +257,8 @@ export class PUploaderFile extends HTMLElement {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-up',
-          title: 'Move up',
-          'aria-label': 'Move up',
+          title: this._text('move-up-label'),
+          'aria-label': this._text('move-up-label'),
         }),
         arrowUp
       ),
@@ -224,23 +267,23 @@ export class PUploaderFile extends HTMLElement {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-down',
-          title: 'Move down',
-          'aria-label': 'Move down',
+          title: this._text('move-down-label'),
+          'aria-label': this._text('move-down-label'),
         }),
         arrowDown
       ),
       replace: el(
         'button',
         { type: 'button', class: 'uploader__replace', 'data-action': 'replace' },
-        'Replace'
+        this._text('replace-label')
       ),
       'show-delete': withIcon(
         el('button', {
           type: 'button',
           class: 'uploader__pill uploader__pill--delete',
           'data-action': 'show-delete',
-          title: 'Delete file',
-          'aria-label': 'Delete file',
+          title: this._text('delete-label'),
+          'aria-label': this._text('delete-label'),
         }),
         trash
       ),
@@ -257,6 +300,7 @@ export class PUploaderFile extends HTMLElement {
     const state = this.getAttribute('state') || 'uploaded';
     const filename = this.getAttribute('filename') || '';
     const root = this.shadowRoot;
+    this._renderText();
 
     /* Load field data from slotted elements */
     if (this.querySelector('p-uploader-data') && !this._fieldData.size) {
@@ -279,7 +323,7 @@ export class PUploaderFile extends HTMLElement {
 
     root
       .querySelector('[data-panel="info"]')
-      .setAttribute('aria-label', `File information for ${filename}`);
+      .setAttribute('aria-label', this._text('file-info-label', { file: filename }));
     root.querySelector('.uploader__filename').textContent = filename;
 
     this._renderDetails(state);
@@ -713,7 +757,7 @@ export class PUploaderFile extends HTMLElement {
     } catch (error) {
       if (error.name === 'AbortError') return;
       uploader.logger?.error('Failed to update field:', error);
-      message.textContent = `Changes couldn’t be saved: ${error.message}`;
+      message.textContent = this._text('save-error', { error: error.message });
       /* The message adds a line, so the card makes room for it */
       this._syncContentHeight('edit');
     } finally {
@@ -731,7 +775,7 @@ export class PUploaderFile extends HTMLElement {
       value,
     });
     if (!response.ok) {
-      throw new Error(errorMessage(await response.text(), 'Server error'));
+      throw new Error(errorMessage(await response.text(), this._text('server-error')));
     }
 
     this._fieldData.set(key, value);
@@ -780,7 +824,10 @@ export class PUploaderFile extends HTMLElement {
         if (uploader.logger) {
           uploader.logger.error('Failed to delete file:', errorText);
         }
-        this.setAttribute('error', `Delete failed: ${errorMessage(errorText, 'Server error')}`);
+        this.setAttribute(
+          'error',
+          this._text('delete-error', { error: errorMessage(errorText, this._text('server-error')) })
+        );
         this.setAttribute('data-current-panel', 'error');
       }
     } catch (error) {

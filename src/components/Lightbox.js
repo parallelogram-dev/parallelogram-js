@@ -2,6 +2,7 @@ import { BaseComponent } from '../core/BaseComponent.js';
 import { prefersReducedMotion, whenAnimationsFinish } from '../utils/motion.js';
 import { setStaticHTML } from '../utils/shadow.js';
 import { chevronLeft, chevronRight, iconMarkup, x } from '../utils/icons.js';
+import { fill } from '../utils/text.js';
 
 const ICONS = {
   close: iconMarkup(x),
@@ -28,37 +29,42 @@ const ICONS = {
 export class Lightbox extends BaseComponent {
   static selector = 'data-lightbox';
 
-  static get defaults() {
-    return {
-      closeOnEscape: true,
-      closeOnBackdrop: true,
-      showCounter: true,
-      showNavigation: true,
-      keyNavigation: true,
-      useDirectionalTransitions: true,
-      /* 'adjacent' | 'all' | 'none' */
-      preloadStrategy: 'adjacent',
-      /* BEM class names */
-      baseClass: 'lightbox',
-      overlayClass: 'lightbox__overlay',
-      containerClass: 'lightbox__container',
-      closeClass: 'lightbox__close',
-      prevClass: 'lightbox__nav lightbox__nav--prev',
-      nextClass: 'lightbox__nav lightbox__nav--next',
-      contentClass: 'lightbox__content',
-      imageClass: 'lightbox__image',
-      counterClass: 'lightbox__counter',
-      /* State classes */
-      stateOpeningClass: 'is-opening',
-      stateOpenClass: 'is-open',
-      stateTransitioningClass: 'is-transitioning',
-      stateClosingClass: 'is-closing',
-      /* Utility classes */
-      showClass: 'show',
-      slideLeftClass: 'slide-left',
-      slideRightClass: 'slide-right',
-    };
-  }
+  static defaults = {
+    closeOnEscape: true,
+    closeOnBackdrop: true,
+    showCounter: true,
+    showNavigation: true,
+    keyNavigation: true,
+    useDirectionalTransitions: true,
+    /* 'adjacent' | 'all' | 'none' */
+    preloadStrategy: 'adjacent',
+    /* Text; a site changes these once, a page changes one with the matching attribute */
+    viewerLabel: 'Image viewer',
+    closeLabel: 'Close',
+    prevLabel: 'Previous image',
+    nextLabel: 'Next image',
+    loadError: "{image} couldn't be loaded",
+    loadErrorUntitled: "The image couldn't be loaded",
+    /* BEM class names */
+    baseClass: 'lightbox',
+    overlayClass: 'lightbox__overlay',
+    containerClass: 'lightbox__container',
+    closeClass: 'lightbox__close',
+    prevClass: 'lightbox__nav lightbox__nav--prev',
+    nextClass: 'lightbox__nav lightbox__nav--next',
+    contentClass: 'lightbox__content',
+    imageClass: 'lightbox__image',
+    counterClass: 'lightbox__counter',
+    /* State classes */
+    stateOpeningClass: 'is-opening',
+    stateOpenClass: 'is-open',
+    stateTransitioningClass: 'is-transitioning',
+    stateClosingClass: 'is-closing',
+    /* Utility classes */
+    showClass: 'show',
+    slideLeftClass: 'slide-left',
+    slideRightClass: 'slide-right',
+  };
 
   /**
    * @param {import('../core/BaseComponent.js').ComponentContext} [options]
@@ -130,6 +136,12 @@ export class Lightbox extends BaseComponent {
       keyNavigation: 'key-nav',
       useDirectionalTransitions: 'directional-transitions',
       preloadStrategy: 'preload',
+      viewerLabel: 'viewer-label',
+      closeLabel: 'close-label',
+      prevLabel: 'prev-label',
+      nextLabel: 'next-label',
+      loadError: 'load-error',
+      loadErrorUntitled: 'load-error-untitled',
       /* BEM class names */
       baseClass: 'base-class',
       overlayClass: 'overlay-class',
@@ -331,7 +343,7 @@ export class Lightbox extends BaseComponent {
 
     const overlay = document.createElement('dialog');
     overlay.className = config.overlayClass;
-    overlay.setAttribute('aria-label', 'Image viewer');
+    overlay.setAttribute('aria-label', config.viewerLabel);
 
     const button = (action, className, label) => {
       const control = document.createElement('button');
@@ -343,11 +355,11 @@ export class Lightbox extends BaseComponent {
       return control;
     };
 
-    overlay.append(button('close', config.closeClass, 'Close'));
+    overlay.append(button('close', config.closeClass, config.closeLabel));
     if (config.showNavigation) {
       overlay.append(
-        button('prev', config.prevClass, 'Previous image'),
-        button('next', config.nextClass, 'Next image')
+        button('prev', config.prevClass, config.prevLabel),
+        button('next', config.nextClass, config.nextLabel)
       );
     }
 
@@ -363,7 +375,9 @@ export class Lightbox extends BaseComponent {
     error.hidden = true;
     image.addEventListener('error', () => {
       if (!image.getAttribute('src')) return;
-      error.textContent = `${image.alt || 'The image'} couldn't be loaded`;
+      error.textContent = image.alt
+        ? fill(config.loadError, { image: image.alt })
+        : config.loadErrorUntitled;
       error.hidden = false;
       image.hidden = true;
     });

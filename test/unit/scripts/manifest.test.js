@@ -22,6 +22,33 @@ describe('custom elements manifest', () => {
     });
   });
 
+  it('lists the defaults a site changes once as a static field, typed from the attributes', () => {
+    const [declaration] = customElementsManifest([
+      elementContract({
+        attributes: [
+          {
+            name: 'close-label',
+            type: 'string',
+            default: 'Close',
+            option: 'closeLabel',
+            description: 'The accessible name of the close button',
+          },
+          { name: 'size', type: 'enum', options: ['sm', 'md'], default: 'md', option: 'size' },
+          { name: 'open', type: 'flag', description: 'Present while open' },
+        ],
+      }),
+    ]).modules[0].declarations;
+
+    expect(declaration.members.find(member => member.name === 'defaults')).toEqual({
+      kind: 'field',
+      name: 'defaults',
+      static: true,
+      type: { text: "{ closeLabel: string; size: 'sm' | 'md' }" },
+      description:
+        'What every instance starts from; a site changes these once, before its elements are on the page',
+    });
+  });
+
   it('exports the default class, named child classes and their tag definitions', () => {
     const module = 'dist/components/PWidget.js';
 

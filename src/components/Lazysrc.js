@@ -83,19 +83,17 @@ const cssUrl = url =>
 export default class Lazysrc extends BaseComponent {
   static selector = 'data-lazysrc';
 
-  static get defaults() {
-    return {
-      rootMargin: '600px 0px',
-      threshold: 0,
-      fetchPriority: '',
-      retryAttempts: 3,
-      retryDelay: 1000,
-      fadeInDuration: 300,
-      loadingClass: 'lazysrc--loading',
-      loadedClass: 'lazysrc--loaded',
-      errorClass: 'lazysrc--error',
-    };
-  }
+  static defaults = {
+    rootMargin: '600px 0px',
+    threshold: 0,
+    fetchPriority: '',
+    retryAttempts: 3,
+    retryDelay: 1000,
+    fadeInDuration: 300,
+    loadingClass: 'lazysrc--loading',
+    loadedClass: 'lazysrc--loaded',
+    errorClass: 'lazysrc--error',
+  };
 
   constructor(options = {}) {
     super(options);
