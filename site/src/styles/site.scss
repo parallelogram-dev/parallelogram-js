@@ -256,6 +256,69 @@ pre {
   }
 }
 
+/* A component page splits in two once there is room for it: the facts beside the title, the
+   playground beside what there is to read, and the reference tables across both underneath.
+   The gap matches the page's own side padding. Stacked, the playground leads, as it did before. */
+.doc__header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.doc__columns {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.doc__aside {
+  order: -1;
+  min-width: 0;
+
+  .example {
+    margin-top: 0;
+  }
+}
+
+.doc__main {
+  min-width: 0;
+}
+
+@media (min-width: 80rem) {
+  .doc--split {
+    max-width: 96rem;
+  }
+
+  .doc--split .doc__header,
+  .doc--split .doc__columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 4vw, 3rem);
+    align-items: start;
+  }
+
+  .doc--split .doc__aside {
+    order: 0;
+  }
+
+  .doc--split .doc__summary {
+    margin-bottom: 0;
+  }
+
+  .doc--split .doc__main > .doc__section:first-child {
+    margin-top: 2rem;
+  }
+}
+
+.playground {
+  margin-top: 2.5rem;
+
+  [data-tabs-panels] {
+    margin-top: 1rem;
+  }
+}
+
+.playground__tabs {
+  flex-wrap: wrap;
+}
+
 .doc__eyebrow {
   margin: 0;
   color: var(--site-accent);
