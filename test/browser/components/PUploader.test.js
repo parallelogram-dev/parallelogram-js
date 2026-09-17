@@ -1130,4 +1130,37 @@ describe('p-uploader ordering and replacing without dragging', () => {
       PUploader.defaults.moveUpLabel = 'Move up';
     }
   });
+
+  it('reports a response it cannot read in the words the page chose', async () => {
+    class GarbledUpload {
+      upload = new EventTarget();
+      #events = new EventTarget();
+      status = 0;
+      responseText = '';
+      addEventListener(type, listener) {
+        this.#events.addEventListener(type, listener);
+      }
+      open() {}
+      send() {
+        this.status = 200;
+        this.responseText = 'not json';
+        queueMicrotask(() => this.#events.dispatchEvent(new Event('load')));
+      }
+    }
+    const { uploader } = await mountUploader({
+      attributes: { 'invalid-response-message': 'Réponse illisible' },
+    });
+    uploader.setXHR(GarbledUpload);
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['hello'], 'notes.txt', { type: 'text/plain' }));
+    const input = uploader.shadowRoot.querySelector('.uploader__fileinput');
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change'));
+
+    const failed = () => uploader.querySelector('p-uploader-file[state="error"]');
+    await vi.waitFor(() => expect(failed()).not.toBeNull());
+    expect(failed().shadowRoot.querySelector('.error-message').textContent).toBe(
+      'Réponse illisible'
+    );
+  });
 });

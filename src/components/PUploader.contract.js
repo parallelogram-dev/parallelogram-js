@@ -155,6 +155,13 @@ A failed request is read for something worth showing: JSON contributes its \`mes
       description: 'Shown on a card whose upload failed with a response carrying no message',
     },
     {
+      name: 'invalid-response-message',
+      type: 'string',
+      default: 'Invalid server response',
+      option: 'invalidResponseMessage',
+      description: 'Shown on a card whose upload answered with something that is not JSON',
+    },
+    {
       name: 'server-error',
       type: 'string',
       default: 'Server error',

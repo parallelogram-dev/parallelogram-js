@@ -119,6 +119,7 @@ const TEXT_ATTRIBUTES = [
   'unnamed-file',
   'order-error',
   'upload-error',
+  'invalid-response-message',
   'server-error',
   'delete-error',
   'save-error',
@@ -791,7 +792,7 @@ export default class PUploader extends HTMLElement {
           const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
           this._handleUploadSuccess(fileData, response);
         } catch {
-          this._handleUploadError(fileData, 'Invalid server response');
+          this._handleUploadError(fileData, this._text('invalid-response-message'));
         }
       } else {
         this._handleUploadError(
