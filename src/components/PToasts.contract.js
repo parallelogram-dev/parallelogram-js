@@ -10,6 +10,7 @@ export default {
   description: `Toasts are announced through two live regions that exist from the moment the element is created: info and success messages politely, warnings and errors straight away. Toasts close after a timeout, except errors, which stay until dismissed, and every timer waits while the pointer or keyboard focus is on the stack.
 
 Where popovers are supported the element shows itself as a manual popover and moves to the top of the top layer with each new toast. While a \`<p-modal>\` or modal \`<dialog>\` is open, the element moves inside it to show a toast, because everything outside an open modal is inert, and returns to its place when the modal closes, or with the next toast when the modal was removed without closing.`,
+  withoutJs: `This element renders nothing of its own, so before the module loads there is no stack and \`toast()\` is not there to call. Nothing on the page is lost, since a toast is something the page asks for rather than content it already had. A message the server already knows about is better rendered as ordinary HTML, which needs no script at all.`,
   attributes: [
     {
       name: 'placement',

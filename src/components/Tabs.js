@@ -91,6 +91,7 @@ export default class Tabs extends BaseComponent {
         'Tabs: Missing required elements (data-tabs-list or data-tabs-panels)',
         element
       );
+      this._giveUp(element);
       return state;
     }
 
@@ -104,6 +105,7 @@ export default class Tabs extends BaseComponent {
 
     if (tabs.length === 0 || panels.length === 0) {
       this.logger?.warn('Tabs: No tabs or panels found', element);
+      this._giveUp(element);
       return state;
     }
 
@@ -178,6 +180,17 @@ export default class Tabs extends BaseComponent {
   /**
    * Add the tab, tab list and panel roles, and link each tab to its panel
    */
+  /**
+   * Mark a container Tabs could not use, so the stylesheet stops hiding panels it will never show
+   *
+   * The shipped rule hides every panel but one until `data-tabs-enhanced` appears. Bailing without
+   * writing it leaves the page's own content hidden for good, which is worse than an unenhanced
+   * tab set: the marker says Tabs has been here, and the value says it did nothing.
+   */
+  _giveUp(element) {
+    this.setAttr(element, 'enhanced', 'false');
+  }
+
   _setupTabs(state) {
     state.tabs.forEach(tab => {
       tab.setAttribute('role', 'tab');

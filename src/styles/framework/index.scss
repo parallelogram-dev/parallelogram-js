@@ -35,6 +35,19 @@
    focus styles alone */
 $framework-elements: '[data-lazysrc], [data-modal], [data-lightbox], [data-form-enhancer], [data-copytoclipboard], [data-datatable], [data-lightbox-action], [data-toggle], [data-tabs], [data-accordion], [data-selectloader], p-select, p-datetime, p-modal, p-uploader, p-toasts';
 
+/* The package's own custom elements */
+$framework-tags: 'p-select, p-datetime, p-modal, p-uploader, p-toasts';
+
+/* A custom element is inert markup until its module defines it: no shadow root, no behaviour, and
+   for p-modal and p-uploader the slotted content would otherwise land inline in the page. Hide them
+   until they upgrade. Only where scripts are running, though: with scripting off the module is
+   never coming, and hiding content nothing will bring back is worse than showing it unstyled. */
+@media (scripting: enabled) {
+  :is(#{$framework-tags}):not(:defined) {
+    display: none;
+  }
+}
+
 /* Pointer users don't need focus rings; trackFocusSource() records the last input on <html> */
 :root[data-focus-source='pointer'] {
   :is(#{$framework-elements}):focus,
