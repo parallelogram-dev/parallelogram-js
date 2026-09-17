@@ -183,6 +183,11 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: "Width and height of an option's thumbnail",
     },
     {
+      name: '--select-disabled-opacity',
+      default: 'var(--form-control-disabled-opacity, 0.3)',
+      description: 'Opacity while the select is disabled',
+    },
+    {
       name: '--menu-bg',
       default: 'var(--surface-dropdown-color-bg)',
       description: 'List background',

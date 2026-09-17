@@ -960,3 +960,17 @@ describe('p-select paging', () => {
     await vi.waitFor(() => expect(live.textContent).toBe('15 results available'), WAIT);
   });
 });
+
+describe('p-select disabled', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('looks disabled, not only unusable', () => {
+    const select = mountSelect(
+      '<p-select aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
+    );
+
+    expect(Number(getComputedStyle(select).opacity)).toBeLessThan(1);
+  });
+});
