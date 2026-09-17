@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A disabled `<p-select>` looks disabled. It already stopped responding — the input is disabled and the list closes — but was drawn exactly as an enabled one, so nothing on screen said why. It now takes the shared disabled opacity through a new `--select-disabled-opacity`, which falls back to the form control's, and shows the not-allowed cursor.
+- Everything the package dims when it is disabled now takes that amount from one place rather than choosing its own: DataTable's pagination buttons, which were lighter than the rest at 0.5, `<p-uploader>`'s buttons, which were 0.35, and `<p-datetime>`'s and Lightbox's controls, which already matched it. A disabled option inside a `<p-select>` list keeps its own 0.5, since an option has to stay readable to be worth showing.
+
 ### Changed
 
 - A component's documentation page is laid out in two columns on a wide screen. Everything there is to read runs down the left — the title, the import and tag, About, Usage and the whole reference — and the playground sits beside it, keeping its place as the page scrolls past. Below 80rem the page stacks, with the playground under the title. A component with more than one example shows them in tabs, and each example's output, markup, state and events are tabs of their own, so the playground stays short enough to see at once.
