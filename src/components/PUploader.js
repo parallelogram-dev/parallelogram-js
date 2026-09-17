@@ -91,14 +91,14 @@ const formatBytes = bytes => {
  * @csspart add-button - the button that opens the file picker
  * @csspart message - messages about refused files and failed saves
  *
- * @cssprop --puploader-radius - host corner radius
- * @cssprop --puploader-border-width - host border width
- * @cssprop --puploader-border-color - host border colour (default `var(--surface-panel-border-color)`)
- * @cssprop --puploader-bg - host background (default `var(--surface-panel-color-bg)`)
- * @cssprop --puploader-color - host text colour (default `var(--surface-panel-color-text)`)
- * @cssprop --puploader-shadow - host shadow (default `var(--surface-panel-shadow)`)
- * @cssprop --puploader-padding - host padding
- * @cssprop --puploader-files-gap - space between files (default the small spacing step)
+ * @cssprop --uploader-radius - host corner radius
+ * @cssprop --uploader-border-width - host border width
+ * @cssprop --uploader-border-color - host border colour (default `var(--surface-panel-border-color)`)
+ * @cssprop --uploader-bg - host background (default `var(--surface-panel-color-bg)`)
+ * @cssprop --uploader-color - host text colour (default `var(--surface-panel-color-text)`)
+ * @cssprop --uploader-shadow - host shadow (default `var(--surface-panel-shadow)`)
+ * @cssprop --uploader-padding - host padding
+ * @cssprop --uploader-files-gap - space between files (default the small spacing step)
  *
  * Files are `p-uploader-file` elements, which expose the parts `preview`, `progress`, `panel`,
  * `fields`, `field`, `filename`, `toolbar`, `actions`, `edit-button` and `dialog`. Fields are shown only when

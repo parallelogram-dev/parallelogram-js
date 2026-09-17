@@ -103,7 +103,7 @@ input {
 
   &__container {
     display: flex;
-    gap: var(--puploader-preview-gap, 1rem);
+    gap: var(--uploader-preview-gap, 1rem);
     position: relative;
   }
 
@@ -214,9 +214,9 @@ input {
 
   &__fields {
     display: grid;
-    grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
-    row-gap: var(--puploader-field-gap, #{$space-sm});
-    column-gap: var(--puploader-preview-gap, 1rem);
+    grid-template-columns: var(--uploader-label-width, 4rem) minmax(0, 1fr);
+    row-gap: var(--uploader-field-gap, #{$space-sm});
+    column-gap: var(--uploader-preview-gap, 1rem);
     align-items: baseline;
     flex: 1;
     min-width: 0;
@@ -261,8 +261,8 @@ input {
     /* The buttons are joined by their keyline, so the row's own spacing has no place here */
     gap: 0;
     border-radius: 999px;
-    border: $border-width solid var(--puploader-pill-border, var(--color-border, #{$color-border}));
-    background: var(--puploader-pill-bg, var(--color-surface-muted, #{$neutral-100}));
+    border: $border-width solid var(--uploader-pill-border, var(--color-border, #{$color-border}));
+    background: var(--uploader-pill-bg, var(--color-surface-muted, #{$neutral-100}));
     overflow: hidden;
     pointer-events: auto;
   }
@@ -280,8 +280,8 @@ input {
     + .uploader__pill {
       border-left: $border-width solid
         var(
-          --puploader-pill-keyline,
-          var(--puploader-pill-border, var(--color-border, #{$color-border}))
+          --uploader-pill-keyline,
+          var(--uploader-pill-border, var(--color-border, #{$color-border}))
         );
     }
 
@@ -478,7 +478,7 @@ slot {
   /* The fields take the room, the pill sits at the end of the row, centred against them */
   flex-direction: row;
   align-items: center;
-  gap: var(--puploader-preview-gap, 1rem);
+  gap: var(--uploader-preview-gap, 1rem);
 
   .uploader__edit-body {
     display: flex;
@@ -510,9 +510,9 @@ slot {
 /* Label beside field, the fields growing to fill the row, spaced like the card's own edge */
 .uploader__edit-fields {
   display: grid;
-  grid-template-columns: var(--puploader-label-width, 4rem) minmax(0, 1fr);
-  row-gap: var(--puploader-field-gap, #{$space-sm});
-  column-gap: var(--puploader-preview-gap, 1rem);
+  grid-template-columns: var(--uploader-label-width, 4rem) minmax(0, 1fr);
+  row-gap: var(--uploader-field-gap, #{$space-sm});
+  column-gap: var(--uploader-preview-gap, 1rem);
   /* The label sits at the top of its cell, on the same baseline as the field's first line */
   align-items: baseline;
 }
