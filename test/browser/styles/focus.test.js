@@ -66,6 +66,39 @@ describe('focus indicators', () => {
     expect([modal.shadowRoot.activeElement, visible(outlineOf(panel))]).toEqual([panel, true]);
   });
 
+  it('hides the close button ring on a modal opened by pointer', () => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = '<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>';
+    document.body.append(modal);
+    cleanups.push(() => {
+      modal.remove();
+      document.body.style.overflow = '';
+    });
+    /* The tracker records the last real input, so a pointer press is what makes it pointer */
+    document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+
+    modal.open();
+
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+    expect([modal.shadowRoot.activeElement, visible(outlineOf(close))]).toEqual([close, false]);
+  });
+
+  it('outlines the close button on a modal opened by keyboard', () => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = '<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>';
+    document.body.append(modal);
+    cleanups.push(() => {
+      modal.remove();
+      document.body.style.overflow = '';
+    });
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+
+    modal.open();
+
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+    expect(visible(outlineOf(close))).toBe(true);
+  });
+
   it('outlines the DataTable search box on focus', () => {
     const style = addStyles(datatableStyles);
     cleanups.push(() => style.remove());

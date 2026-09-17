@@ -61,6 +61,7 @@
     var(--modal-padding-y) var(--modal-padding-x)
   );
   --modal-content-padding: var(--panel-padding, var(--modal-padding-x));
+  --modal-content-gap: var(--modal-space-xl);
   --modal-footer-padding: var(
     --panel-footer-padding,
     var(--modal-padding-y) var(--modal-padding-x)
@@ -94,6 +95,8 @@
   --modal-max-height: 86vh;
   --modal-fullscreen-inset: 3em; /* 48px */
   --modal-close-size: 1.75em; /* 28px */
+  --modal-close-inset: var(--modal-padding-y);
+  --modal-close-inset-x: var(--modal-content-padding);
   --modal-font-sm: 0.875em; /* 14px */
   --modal-font-md: 1.125em; /* 18px */
   --modal-btn-min-height: 3.125em; /* 50px */
@@ -102,6 +105,7 @@
 /* Block: Modal panel, the <dialog> */
 .modal__panel {
   box-sizing: border-box;
+  position: relative;
   flex-direction: column;
   min-width: min(var(--modal-max-width), var(--modal-size-md));
   max-width: var(--modal-max-width);
@@ -166,6 +170,7 @@
 .modal__close,
 .modal__header,
 .modal__footer {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
 }
@@ -186,21 +191,34 @@
   min-width: 0;
 }
 
-.modal__header h2 {
+/* The title is the page's own element, so a page's own styles beat these; only the box is ours */
+::slotted([slot='title']) {
   margin: 0;
   font-size: var(--modal-font-md);
   line-height: 1.3;
   font-weight: 600;
 }
 
-/* Element: Header spacer */
-.modal__spacer {
-  flex: 1;
+/* Room for the pinned close button, over whatever sits at the top of the panel. The header takes
+   the button's own band as its least height, so the title sits on the button's line however the
+   page has set the header's padding. */
+.modal__panel:has(.modal__close:not([hidden])) .modal__header {
+  min-height: calc(var(--modal-close-size) + 2 * var(--modal-close-inset));
+  padding-right: calc(var(--modal-padding-x) + var(--modal-close-size) + var(--modal-gap));
+}
+
+.modal__panel:has(.modal__close:not([hidden])):has(.modal__header[hidden]) .modal__content {
+  padding-right: calc(var(--modal-padding-x) + var(--modal-close-size) + var(--modal-gap));
 }
 
 /* Element: Close button */
+/* Pinned to the panel, so it stays put while the content scrolls and is there without a header */
 .modal__close {
   all: unset;
+  position: absolute;
+  top: var(--modal-close-inset);
+  right: var(--modal-close-inset-x);
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -219,13 +237,30 @@
   outline-offset: 2px;
 }
 
+/* Opening a modal moves focus into it, so a pointer user would see a ring they never asked for */
+:host([data-focus-source='pointer']) :focus {
+  outline: none;
+}
+
 /* Element: Modal content */
 .modal__content {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--modal-content-gap);
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
   padding: var(--modal-content-padding);
+}
+
+/* Content the page hasn't styled arrives with the browser's own margins, which would set it below
+   the pinned close button and deepen the panel. Everything the page puts in the modal, rather than
+   in a slot of its own, gives up those margins, and the content area spaces them instead, so the
+   spacing holds however the markup is ordered. A page that sets margins itself outranks this, as it
+   does anything said about slotted content, and padding or a wrapper brings outer space back. */
+.modal__content ::slotted(:not([slot])) {
+  margin-block: 0;
 }
 
 /* Element: Modal footer */
@@ -233,9 +268,17 @@
   flex-shrink: 0;
   padding: var(--modal-footer-padding);
   gap: var(--modal-gap);
-  justify-content: flex-end;
+  justify-content: space-between;
   background: var(--modal-footer-bg);
   border-top: var(--panel-footer-border, var(--modal-border-width) solid var(--modal-panel-border));
+}
+
+/* Each end of the footer holds its own row, so a page says where a button belongs rather than how
+   to push it. With nothing at the leading end that group is empty and takes no room. */
+.modal__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--modal-gap);
 }
 
 /* Slotted button styles (BEM classes) */

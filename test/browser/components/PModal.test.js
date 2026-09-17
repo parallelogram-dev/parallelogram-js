@@ -188,3 +188,155 @@ describe('p-modal', () => {
     });
   });
 });
+
+describe('p-modal with a part left out', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    document.body.style.overflow = '';
+  });
+
+  const render = markup => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = markup;
+    document.body.append(modal);
+    return modal;
+  };
+
+  it('leaves out the footer when nothing is slotted into actions', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(true);
+  });
+
+  it('keeps the footer for slotted actions', () => {
+    const modal = render(
+      '<h2 slot="title">Release table?</h2><p>It goes to the waitlist.</p><div slot="actions"><button type="button" data-modal-close>Keep it</button></div>'
+    );
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(false);
+  });
+
+  it('leaves out the header when nothing is slotted into the title', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(true);
+  });
+
+  it('keeps the header for a slotted title', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-header]').hidden).toBe(false);
+  });
+
+  it('starts and ends unstyled content at the padding edges, not on its own margins', () => {
+    const modal = render('<p>Table 12 is held.</p><p>Ask at the desk.</p>');
+    modal.open();
+    const content = modal.shadowRoot.querySelector('[data-modal-content]');
+    const paragraphs = [...modal.querySelectorAll('p')];
+    const box = element => element.getBoundingClientRect();
+    const style = getComputedStyle(content);
+    const top = Number.parseFloat(style.paddingTop);
+    const bottom = Number.parseFloat(style.paddingBottom);
+
+    expect([
+      Math.abs(box(paragraphs.at(0)).top - box(content).top - top) < 1,
+      Math.abs(box(content).bottom - bottom - box(paragraphs.at(-1)).bottom) < 1,
+    ]).toEqual([true, true]);
+  });
+
+  it('sets the close button in from the panel edge as far as the content', () => {
+    const modal = render('<h2 slot="title">Edit booking</h2><p>Table 12 is held.</p>');
+    /* The mismatch only shows on a page that sets the panel family; unset, both resolve alike */
+    modal.style.setProperty('--panel-padding', '24px');
+    modal.open();
+    const panel = modal.shadowRoot.querySelector('dialog');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+    const content = modal.shadowRoot.querySelector('[data-modal-content]');
+    const inset = element =>
+      panel.getBoundingClientRect().right - element.getBoundingClientRect().right;
+    const padding = Number.parseFloat(getComputedStyle(content).paddingRight);
+
+    expect(Math.abs(inset(close) - padding) < 1).toBe(true);
+  });
+
+  it('lines a title up with the pinned close button', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+    modal.open();
+    const centre = element => {
+      const box = element.getBoundingClientRect();
+      return box.top + box.height / 2;
+    };
+
+    const title = modal.shadowRoot.querySelector('[part="title"]');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+
+    expect(Math.abs(centre(title) - centre(close))).toBeLessThan(1.5);
+  });
+
+  it('pins the close button to the panel rather than the header, so it never scrolls', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+    const close = modal.shadowRoot.querySelector('[data-modal-close-btn]');
+
+    expect([close.parentElement.localName, getComputedStyle(close).position]).toEqual([
+      'dialog',
+      'absolute',
+    ]);
+  });
+
+  it('shows no placeholder where a title was left out, but still names the dialog', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+
+    expect([
+      modal.shadowRoot.querySelector('[part="title"]').textContent.trim(),
+      modal.shadowRoot.querySelector('dialog').getAttribute('aria-label'),
+    ]).toEqual(['', 'Dialog']);
+  });
+});
+
+describe('p-modal with actions at both ends', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    document.body.style.overflow = '';
+  });
+
+  const render = markup => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = markup;
+    document.body.append(modal);
+    return modal;
+  };
+
+  it('keeps the footer for a button slotted only into secondary', () => {
+    const modal = render('<p>Table 12.</p><button type="button" slot="secondary">Delete</button>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(false);
+  });
+
+  it('sets one group against each end of the footer', () => {
+    const modal = render(
+      '<p>Table 12.</p><button type="button" slot="secondary">Delete</button><button type="button" slot="actions">Save</button>'
+    );
+    modal.open();
+    const footer = modal.shadowRoot.querySelector('[data-modal-footer]');
+    const box = footer.getBoundingClientRect();
+    const style = getComputedStyle(footer);
+    const start = modal.querySelector('[slot="secondary"]').getBoundingClientRect();
+    const end = modal.querySelector('[slot="actions"]').getBoundingClientRect();
+
+    expect([
+      Math.abs(start.left - box.left - Number.parseFloat(style.paddingLeft)) < 1,
+      Math.abs(box.right - Number.parseFloat(style.paddingRight) - end.right) < 1,
+    ]).toEqual([true, true]);
+  });
+
+  it('keeps a lone group of actions against the trailing end', () => {
+    const modal = render('<p>Table 12.</p><button type="button" slot="actions">Save</button>');
+    modal.open();
+    const footer = modal.shadowRoot.querySelector('[data-modal-footer]');
+    const box = footer.getBoundingClientRect();
+    const padding = Number.parseFloat(getComputedStyle(footer).paddingRight);
+    const end = modal.querySelector('[slot="actions"]').getBoundingClientRect();
+
+    expect(Math.abs(box.right - padding - end.right) < 1).toBe(true);
+  });
+});

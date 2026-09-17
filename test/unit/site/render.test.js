@@ -9,6 +9,8 @@ import {
 import Tabs from '../../../src/components/Tabs.contract.js';
 import PModal from '../../../src/components/PModal.contract.js';
 import CopyToClipboard from '../../../src/components/CopyToClipboard.contract.js';
+import PSelect from '../../../src/components/PSelect.contract.js';
+import Toggle from '../../../src/components/Toggle.contract.js';
 
 const parse = html => {
   const doc = document.implementation.createHTMLDocument('');
@@ -79,6 +81,109 @@ describe('documentation site rendering', () => {
       withState.querySelector('[data-example-state]') !== null,
       withoutState.querySelector('[data-example-state]') === null,
     ]).toEqual([true, false]);
+  });
+
+  it('sets the import and tag facts under the title, with the playground beside them', () => {
+    const page = parse(componentPage(PSelect));
+    const header = page.querySelector('.doc__columns > .doc__header');
+
+    expect([
+      header.querySelector('.doc__intro h1') !== null,
+      header.querySelector('.doc__facts') !== null,
+      page.querySelector('.doc__aside .doc__aside-title')?.textContent,
+    ]).toEqual([true, true, 'Playground']);
+  });
+
+  it('leaves the playground out when an example has none to show', () => {
+    const page = parse(componentPage({ ...PSelect, examples: [] }));
+
+    expect([
+      page.querySelector('.doc__aside'),
+      page.querySelector('.doc__main #about') !== null,
+    ]).toEqual([null, true]);
+  });
+
+  it('reads down the left column, with the playground beside all of it', () => {
+    const page = parse(componentPage(PSelect));
+
+    expect([
+      page.querySelector('.doc__main #about') !== null,
+      page.querySelector('.doc__main #usage') !== null,
+      page.querySelector('.doc__main .doc__reference #attributes') !== null,
+      page.querySelector('.doc__aside [data-example]') !== null,
+    ]).toEqual([true, true, true, true]);
+  });
+
+  it('offers a control for every attribute an example can change, the named ones first', () => {
+    const page = parse(componentPage(PSelect));
+    const controls = [
+      ...page.querySelectorAll('[data-example="PSelect:form"] [data-attribute]'),
+    ].map(field => field.getAttribute('data-attribute'));
+
+    expect([controls.slice(0, 4), new Set(controls)]).toEqual([
+      ['placeholder', 'required', 'disabled', 'data-select-open-on-focus'],
+      new Set(PSelect.attributes.map(attribute => attribute.name)),
+    ]);
+  });
+
+  it('puts several examples in tabs and shows the first', () => {
+    const tabs = parse(componentPage(PSelect)).querySelector('.doc__aside .playground');
+    const list = tabs.querySelector('.playground__tabs');
+
+    expect([
+      [...list.children].map(tab => tab.textContent.trim()),
+      tabs.querySelector('[data-tab-panel="active"] [data-example]')?.getAttribute('data-example'),
+    ]).toEqual([PSelect.examples.map(example => example.title), 'PSelect:form']);
+  });
+
+  it('shows a lone example without tabs', () => {
+    const page = parse(componentPage(CopyToClipboard));
+
+    expect([
+      page.querySelector('.playground') === null,
+      page.querySelector('.doc__aside [data-example]') !== null,
+    ]).toEqual([true, true]);
+  });
+
+  it('shows an example as Output and Markup tabs, so it stays short', () => {
+    const views = parse(componentPage(PSelect)).querySelector(
+      '[data-example="PSelect:form"] .example__views'
+    );
+
+    expect([
+      [...views.querySelector('.example__tabs').children].map(tab => tab.textContent.trim()),
+      views.querySelector('[data-tab-panel="active"] [data-example-stage]') !== null,
+      views.querySelector('[data-example-code]') !== null,
+    ]).toEqual([['Output', 'Markup', 'Events'], true, true]);
+  });
+
+  it('adds a State tab only for a component that writes state attributes', () => {
+    const tabsOf = contract =>
+      [...parse(componentPage(contract)).querySelector('.example__tabs').children].map(tab =>
+        tab.textContent.trim()
+      );
+
+    expect([tabsOf(Tabs), tabsOf(PSelect)]).toEqual([
+      ['Output', 'Markup', 'State', 'Events'],
+      ['Output', 'Markup', 'Events'],
+    ]);
+  });
+
+  it('keeps the controls out of the tabs, so they stay to hand', () => {
+    const example = parse(componentPage(PSelect)).querySelector('[data-example="PSelect:form"]');
+
+    expect(example.querySelector('.example__views [data-example-controls]')).toBe(null);
+  });
+
+  it('leaves the attribute that marks the component out of the controls', () => {
+    const controls = [
+      ...parse(componentPage(Toggle)).querySelectorAll('[data-example] [data-attribute]'),
+    ].map(field => field.getAttribute('data-attribute'));
+
+    expect([controls.includes('data-toggle'), controls.includes('data-toggle-capture')]).toEqual([
+      false,
+      true,
+    ]);
   });
 
   it('offers a control suited to each attribute type', () => {

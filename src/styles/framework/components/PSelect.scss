@@ -15,6 +15,12 @@
   color: var(--select-text);
 }
 
+/* A disabled select reads as disabled, not merely unresponsive */
+:host([disabled]) {
+  opacity: var(--select-disabled-opacity);
+  cursor: not-allowed;
+}
+
 /* Custom properties default to the surface tokens, then the colour roles, then light values */
 :host {
   --select-border-color: var(
@@ -27,6 +33,7 @@
   --select-placeholder: var(--color-text-muted, #{$color-text-muted});
   --select-description-color: var(--color-text-muted, #{$color-text-muted});
   --select-image-size: 1.5rem;
+  --select-disabled-opacity: var(--form-control-disabled-opacity, #{$opacity-disabled});
 
   --select-hover-bg: var(--surface-dropdown-item-hover-bg, var(--color-hover, #{$neutral-100}));
   --select-selected-bg: var(--surface-dropdown-item-selected-bg, rgba(59, 130, 246, 0.1));

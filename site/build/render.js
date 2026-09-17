@@ -156,23 +156,97 @@ export function controlField(exampleId, control, attribute) {
 const attributesOf = contract =>
   [contract, ...(contract.elements ?? [])].flatMap(item => item.attributes ?? []);
 
-export function exampleBlock(contract, example) {
+/**
+ * Every attribute an example can set, with the element a control for it writes to
+ *
+ * An attribute the component writes itself, or a deprecated one, isn't something to change: the
+ * first belongs in the State panel and the second shouldn't be encouraged. Nor is the attribute
+ * that marks the element for the component, since taking it away only unmounts the example.
+ */
+const configurableOf = contract =>
+  [
+    ...(contract.attributes ?? []).map(attribute => ({ attribute })),
+    ...(contract.elements ?? []).flatMap(element =>
+      (element.attributes ?? []).map(attribute => ({ attribute, target: element.tag }))
+    ),
+  ].filter(
+    ({ attribute }) =>
+      !attribute.readonly && !attribute.deprecated && attribute.name !== contract.selector
+  );
+
+export function exampleBlock(contract, example, { titled = true } = {}) {
   const id = `${slugFor(contract)}-${example.id}`;
-  const attributes = new Map(attributesOf(contract).map(attribute => [attribute.name, attribute]));
   const writesState = attributesOf(contract).some(
     attribute => attribute.readonly && !attribute.deprecated
   );
-  const controls = (example.controls ?? [])
-    .map(control => controlField(id, control, attributes.get(control.attribute)))
+  /* Every configurable attribute gets a control; the ones the example names lead, as its point */
+  const named = new Map((example.controls ?? []).map(control => [control.attribute, control]));
+  const configurable = configurableOf(contract);
+  const controls = [
+    ...[...named.keys()]
+      .map(name => configurable.find(item => item.attribute.name === name))
+      .filter(Boolean),
+    ...configurable.filter(item => !named.has(item.attribute.name)),
+  ]
+    .map(item =>
+      controlField(
+        id,
+        {
+          attribute: item.attribute.name,
+          target: named.get(item.attribute.name)?.target ?? item.target,
+        },
+        item.attribute
+      )
+    )
     .join('\n');
-
-  return `<section class="example" data-example="${escapeHtml(contract.name)}:${escapeHtml(example.id)}" aria-labelledby="${id}-title">
-<header class="example__header">
+  const description = example.description ? `<p>${inline(example.description)}</p>` : '';
+  const header = titled
+    ? `<header class="example__header">
   <h2 id="${id}-title">${escapeHtml(example.title)}</h2>
-  ${example.description ? `<p>${inline(example.description)}</p>` : ''}
-</header>
+  ${description}
+</header>`
+    : description
+      ? `<header class="example__header">${description}</header>`
+      : '';
+
+  return `<section class="example" data-example="${escapeHtml(contract.name)}:${escapeHtml(example.id)}" ${titled ? `aria-labelledby="${id}-title"` : `aria-label="${escapeHtml(example.title)}"`}>
+${header}
+<div class="example__views" data-tabs>
+  <div class="example__tabs" data-tabs-list>
+    <a href="#${id}-output" data-tab="${id}-output">Output</a>
+    <a href="#${id}-markup" data-tab="${id}-markup">Markup</a>
+    ${writesState ? `<a href="#${id}-state" data-tab="${id}-state">State</a>` : ''}
+    <a href="#${id}-events" data-tab="${id}-events">Events</a>
+  </div>
+  <div data-tabs-panels>
+    <section id="${id}-output" data-tab-panel="active" aria-label="Output">
 <div class="example__stage" data-example-stage>
 ${example.markup}
+</div>
+    </section>
+    <section id="${id}-markup" data-tab-panel aria-label="Markup">
+<div class="example__code">
+<pre><code id="${id}-code" data-example-code>${escapeHtml(example.markup)}</code></pre>
+<button type="button" class="tool-button example__copy" data-copytoclipboard data-copytoclipboard-target="#${id}-code"><span data-copytoclipboard-label>Copy markup</span></button>
+</div>
+    </section>
+    ${
+      writesState
+        ? `<section id="${id}-state" data-tab-panel aria-label="State">
+<section class="example__state" data-example-state hidden aria-label="The state the component writes">
+  <dl data-example-state-list></dl>
+</section>
+    </section>`
+        : ''
+    }
+    <section id="${id}-events" data-tab-panel aria-label="Events">
+<section class="example__log" data-example-log hidden aria-label="The events the component sends">
+  <button type="button" class="tool-button" data-example-log-clear>Clear</button>
+  <ol data-example-log-list></ol>
+  <p data-example-log-empty>Use the example to see the events it sends.</p>
+</section>
+    </section>
+  </div>
 </div>
 ${
   controls
@@ -182,24 +256,6 @@ ${controls}
 </form>`
     : ''
 }
-${
-  writesState
-    ? `<section class="example__state" data-example-state hidden aria-labelledby="${id}-state-title">
-  <h3 id="${id}-state-title">State</h3>
-  <dl data-example-state-list></dl>
-</section>`
-    : ''
-}
-<div class="example__code">
-<pre><code id="${id}-code" data-example-code>${escapeHtml(example.markup)}</code></pre>
-<button type="button" class="tool-button example__copy" data-copytoclipboard data-copytoclipboard-target="#${id}-code"><span data-copytoclipboard-label>Copy markup</span></button>
-</div>
-<section class="example__log" data-example-log hidden aria-labelledby="${id}-log-title">
-  <h3 id="${id}-log-title">Events</h3>
-  <button type="button" class="tool-button" data-example-log-clear>Clear</button>
-  <ol data-example-log-list></ol>
-  <p data-example-log-empty>Use the example to see the events it sends.</p>
-</section>
 <template data-example-source>${example.markup}</template>
 </section>`;
 }
@@ -348,6 +404,41 @@ ${stylesheet}
 </section>`;
 }
 
+/**
+ * The examples, in tabs when there is more than one so the column keeps one example's height
+ */
+function playground(contract) {
+  const examples = contract.examples ?? [];
+  if (examples.length === 0) return '';
+  if (examples.length === 1) return exampleBlock(contract, examples[0]);
+
+  const panelId = example => `${slugFor(contract)}-${example.id}-panel`;
+  const tabs = examples
+    .map(
+      example =>
+        `<a href="#${panelId(example)}" data-tab="${panelId(example)}">${escapeHtml(example.title)}</a>`
+    )
+    .join('\n    ');
+  /* The first panel carries active so the shipped stylesheet shows it before Tabs mounts */
+  const panels = examples
+    .map(
+      (example, index) =>
+        `<section id="${panelId(example)}" data-tab-panel${index === 0 ? '="active"' : ''}>
+${exampleBlock(contract, example, { titled: false })}
+</section>`
+    )
+    .join('\n');
+
+  return `<div class="playground" data-tabs>
+  <div class="playground__tabs" data-tabs-list>
+    ${tabs}
+  </div>
+  <div data-tabs-panels>
+${panels}
+  </div>
+</div>`;
+}
+
 export function componentPage(contract) {
   const facts = [
     ['Import', `${PACKAGE}/${contract.module}`],
@@ -369,22 +460,39 @@ ${reference(element, `${element.tag}-`, 3)}
     )
     .join('\n');
 
-  return `<article class="doc" aria-labelledby="doc-title">
+  const examples = playground(contract);
+
+  return `<article class="doc doc--split" aria-labelledby="doc-title">
+<div class="doc__columns">
 <header class="doc__header">
-  <p class="doc__eyebrow">${contract.kind === 'element' ? 'Web component' : 'Enhancement'}</p>
-  <h1 id="doc-title">${escapeHtml(titleFor(contract))}</h1>
-  <p class="doc__summary">${inline(contract.summary)}</p>
+  <div class="doc__intro">
+    <p class="doc__eyebrow">${contract.kind === 'element' ? 'Web component' : 'Enhancement'}</p>
+    <h1 id="doc-title">${escapeHtml(titleFor(contract))}</h1>
+    <p class="doc__summary">${inline(contract.summary)}</p>
+  </div>
   <dl class="doc__facts">${facts}</dl>
 </header>
-${contract.examples.map(example => exampleBlock(contract, example)).join('\n')}
+${
+  examples
+    ? `<div class="doc__aside">
+<h2 class="doc__aside-title" id="playground">Playground</h2>
+${examples}
+</div>`
+    : ''
+}
+<div class="doc__main">
 <section class="doc__section" aria-labelledby="about">
 <h2 id="about">About</h2>
 ${paragraphs(contract.description)}
 ${accessibility}
 </section>
 ${usage(contract)}
+<div class="doc__reference">
 ${reference(contract, '')}
 ${elements}
+</div>
+</div>
+</div>
 </article>`;
 }
 
