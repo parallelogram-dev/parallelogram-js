@@ -224,8 +224,46 @@ pre {
   padding: 2.5rem clamp(1rem, 4vw, 3rem) 5rem;
   outline: none;
 
+  /* Delayed, so a navigation that resolves quickly never flashes a dim */
+  transition: opacity 0.2s 0.45s;
+
   .router-loading & {
-    opacity: 0.6;
+    opacity: 0.55;
+  }
+}
+
+/* The router gives the new page's heading `tabindex="-1"` and focuses it, so a screen reader lands
+   on the content instead of the top of the document. Someone who clicked a link doesn't need to see
+   that as a focus ring, and trackFocusSource() has already recorded which it was. A keyboard
+   navigation still shows it, because that is the one case where the ring is the point. */
+:root[data-focus-source='pointer'] .content [tabindex='-1']:focus {
+  outline: none;
+}
+
+/* Page transitions for router navigation. FragmentSwapper adds the class and waits for whatever
+   animation it starts, passing its own duration only as a fallback timeout, so the timing is
+   entirely here: a short fall away, a slightly longer lift in, 0.44s for the pair. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-leave {
+    animation: page-leave 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  .page-enter {
+    animation: page-enter 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes page-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
   }
 }
 
@@ -878,6 +916,135 @@ tbody th {
 
   .sidebar__list {
     grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  }
+}
+
+/* The documentation menu on a narrow screen, from the Toggle this site documents
+
+   Every rule here waits for `data-toggle-state`, which Toggle writes when it mounts, and the
+   trigger waits for the `aria-expanded` it is given at the same time. Before that, and on a page
+   with scripting off, the nav is the plain list it has always been and the trigger is not shown:
+   the drawer is the enhancement, not the thing being enhanced. */
+.sidebar__trigger,
+.sidebar__close {
+  display: none;
+  padding: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--site-ink);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--site-line);
+  }
+}
+
+.sidebar__close {
+  background: var(--site-surface);
+}
+
+@media (max-width: 56rem) {
+  .sidebar__trigger[aria-expanded] {
+    display: inline-flex;
+  }
+
+  /* Sticky inside the scrolling panel, so the way out stays put however far the list is scrolled */
+  .sidebar[data-toggle-state] .sidebar__close[aria-expanded] {
+    display: inline-flex;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    align-self: flex-end;
+    margin-bottom: -2rem;
+  }
+
+  /* The scrim hangs off the trigger rather than the panel: a fixed child of a transformed element
+     is positioned against that element, so a scrim inside the panel would slide out with it */
+  .sidebar__trigger[aria-expanded='true']::after {
+    content: '';
+    position: fixed;
+    z-index: 11;
+    inset: var(--site-header) 0 0 0;
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  .sidebar[data-toggle-state] {
+    --toggle-transition-duration: 0.5s;
+    --toggle-transition-easing: cubic-bezier(0.85, 0, 0.15, 1);
+
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    z-index: 12;
+    inset: var(--site-header) auto 0 0;
+    width: min(20rem, 82vw);
+    max-height: none;
+    padding-bottom: 2rem;
+    border-right: 1px solid var(--site-line);
+    border-bottom: 0;
+    background: var(--site-surface);
+    box-shadow: 0 0 2rem rgb(0 0 0 / 0.2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Only the name changes: the length and easing stay the component's own, set above */
+    .sidebar[data-toggle-state='opening'] {
+      animation-name: sidebar-in;
+    }
+
+    .sidebar[data-toggle-state='closing'] {
+      animation-name: sidebar-out;
+    }
+
+    .sidebar__trigger[aria-expanded='true']::after {
+      animation: sidebar-scrim 0.25s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+  }
+}
+
+/* Toggle hides a closed target with `display: none !important`, which is right for a disclosure and
+   wrong for a sidebar that is only a disclosure while the screen is narrow. This is what keeps the
+   nav on a wide screen, where the trigger is not shown and nothing could reopen it.
+
+   The selector matches the framework's own, which is `:root:not(:has(...)) [data-toggle-state]` and
+   so more specific than a class and an attribute on their own: an override has to reach past it
+   rather than merely repeat `!important`. */
+@media (min-width: 56.01rem) {
+  :root:not(:has([data-toggle].component-error)) .sidebar[data-toggle-state],
+  :root .site .sidebar[hidden] {
+    display: block !important;
+  }
+}
+
+@keyframes sidebar-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes sidebar-out {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes sidebar-scrim {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A tab strip wider than a phone scrolls inside its own box rather than pushing the page sideways */
+.example__tabs {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+
+  a {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 
