@@ -435,6 +435,9 @@ export default class PSelect extends HTMLElement {
         if (!event.altKey && this.state.highlightedIndex < 0) {
           this._setHighlight(key === 'ArrowDown' ? 0 : this.state.filtered.length - 1);
         }
+      } else if (this._clearsValue(key)) {
+        event.preventDefault();
+        this._clearForSearch();
       }
       return;
     }
@@ -480,6 +483,13 @@ export default class PSelect extends HTMLElement {
         this._chooseHighlighted();
         this.close();
         break;
+      case 'Backspace':
+      case 'Delete':
+        if (this._clearsValue(key)) {
+          event.preventDefault();
+          this._clearForSearch();
+        }
+        break;
       case 'Escape':
         event.preventDefault();
         this.close();
@@ -492,6 +502,26 @@ export default class PSelect extends HTMLElement {
     if (option && !option.disabled) {
       this.select(option.value);
     }
+  }
+
+  _clearsValue(key) {
+    return (
+      (key === 'Backspace' || key === 'Delete') && this.state.value !== '' && !this.state.disabled
+    );
+  }
+
+  /**
+   * Clear a chosen value from the keyboard and put the input back to searching
+   *
+   * Choosing a value makes the input read-only, and the clear button that undoes that is hidden
+   * until the list is open and is not in the tab order, so without this there is no way back to the
+   * search for someone not using a pointer. Clearing runs the same search an emptied input would,
+   * so a remote source is asked again rather than answering out of the last query's page.
+   */
+  _clearForSearch() {
+    this._choose('');
+    this._els.input.value = '';
+    this._handleInput({ target: this._els.input });
   }
 
   _cancelPendingRequest() {

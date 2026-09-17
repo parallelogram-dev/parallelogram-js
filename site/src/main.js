@@ -9,6 +9,10 @@ const app = Parallelogram.create({
   pageManager: {
     containerSelector: '[data-view="main"]',
     targetGroups: { main: ['main', 'sidebar'] },
+    /* Only the reading column animates; the sidebar swap is just the current-page marker moving */
+    targetGroupTransitions: {
+      main: { out: 'page-leave', in: 'page-enter', duration: 300 },
+    },
   },
 });
 

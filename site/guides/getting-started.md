@@ -173,6 +173,8 @@ app.eventBus.on('page:component-load-error', ({ componentName }) => {
 });
 ```
 
+When the bundle itself never runs — a 404, a blocked request, a Content Security Policy that rejects it, an error thrown earlier in your own code — none of the above happens, because none of it is running. That is not the same as a loader failing, and it doesn't look the same: no element gets the `component-error` class, no `page:component-load-error` is emitted, and the stylesheets that hide content until a component mounts go on hiding it. A `[data-tabs]` container shows one panel, a closed `[data-toggle]` target stays hidden, and `[data-reveal]` content stays transparent, because each of those rules waits for a marker that only the framework writes. Content a visitor must be able to read should not be behind one of those rules, and a deploy is worth gating on the bundle actually loading.
+
 Removing an element unmounts its component. Adding matching markup, whether through the router or your own script, mounts it.
 
 ### Components added after `run()`
@@ -184,6 +186,22 @@ await app.run();
 
 app.components.add('[data-datatable]', () => import('@parallelogram-js/core/components/DataTable'));
 ```
+
+### Without the framework
+
+An enhancement component doesn't need `Parallelogram` either. Each one has a static `enhanceAll()` that finds matching elements and mounts itself on them:
+
+```js
+import Toggle from '@parallelogram-js/core/components/Toggle';
+
+Toggle.enhanceAll();
+```
+
+It takes the selector to look for and the component's options, so `Toggle.enhanceAll('[data-menu]', { capture: true })` mounts only that markup, and it returns the instance holding those elements. Call it again after adding markup to mount what's new.
+
+What you give up is what the framework adds: a component's module loading only on the pages that use it, mounting again after a page swap, `dependsOn` ordering, and the shared logger and event bus. For a page with one or two enhancements and no router, that is a fair trade.
+
+`Accordion` and `SelectLoader` are the exceptions. They are mounted by the framework only.
 
 ## Web components
 
