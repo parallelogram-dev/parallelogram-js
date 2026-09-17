@@ -29,6 +29,23 @@ describe('framework stylesheet', () => {
     expect(accent).toBe('rgb(1, 2, 3)');
   });
 
+  it('lets a page set a second brand colour, and leaves it as the accent until it does', () => {
+    const root = document.documentElement;
+    const read = name => getComputedStyle(root).getPropertyValue(name).trim();
+
+    const untouched = [read('--color-secondary'), read('--color-complimentary')];
+    root.style.setProperty('--brand-secondary', 'rgb(4, 5, 6)');
+    const set = read('--color-secondary');
+    root.style.removeProperty('--brand-secondary');
+
+    /* The promise is that adding these roles changed nothing for a page that does not set them:
+       both are the accent until asked otherwise, so the second value here is what guards that */
+    expect([set, untouched]).toEqual([
+      'rgb(4, 5, 6)',
+      [read('--color-accent'), read('--color-accent')],
+    ]);
+  });
+
   it('hides a web component until its module upgrades it', () => {
     /* This file never imports the components, so these tags stay unupgraded and :not(:defined)
        applies, which is the state a page is in while the module is still on its way */
