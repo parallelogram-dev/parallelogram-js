@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Tabs no longer hides a page's own panels for good when it cannot use their markup. The shipped stylesheet shows one panel until `data-tabs-enhanced` appears, and Tabs gave up without writing it when a tab list, a panel container, or any tabs or panels were missing — so the cheapest markup mistake removed content from the page and nothing put it back. Tabs now writes the attribute either way, `true` when it mounted and `false` when it could not, and `data-tabs-list` and `data-tabs-panels` are marked required in the documentation.
+- A `<p-select>` given a `value` before its remote options arrive shows the matching label rather than the bare value. Options from `data-select-src` replaced the list without resolving the value against it, so an edit form redisplaying a saved row showed its id — `r5` instead of `Row 5` — until someone opened the list and chose again. The label resolves once the rows land, and only for a fetch of the empty query, so a search in progress keeps what the visitor typed.
+
 ## [0.7.6] - 2026-09-17
 
 ### Fixed
