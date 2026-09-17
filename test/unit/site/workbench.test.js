@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContracts } from '../../../site/build/pages.js';
 import { designSystemPage, previewDocument } from '../../../site/build/render.js';
-import { TOKEN_GROUPS, exportCss } from '../../../site/src/workbench/tokens.js';
+import { tokenGroups } from '../../../site/build/tokens.js';
+import { exportCss } from '../../../site/src/workbench/tokens.js';
 
 const contracts = await loadContracts();
-const tokenNames = TOKEN_GROUPS.flatMap(group => group.tokens.map(token => token.name));
+const tokenNames = tokenGroups().flatMap(group => group.tokens.map(token => token.name));
 const declared = [
   '../../../src/styles/design-system/_root.scss',
   '../../../src/styles/framework/index.scss',
@@ -19,7 +20,10 @@ describe('design system workbench', () => {
   });
 
   it('puts every declared token on the page exactly once, with a way to copy it', () => {
-    const page = new DOMParser().parseFromString(designSystemPage(), 'text/html');
+    const page = new DOMParser().parseFromString(
+      designSystemPage(new Map(), new Map(), tokenGroups()),
+      'text/html'
+    );
     const fields = [...page.querySelectorAll('[data-token-input]')].map(input => input.name);
     const copies = [...page.querySelectorAll('[data-copytoclipboard-target]')].map(button =>
       button.getAttribute('data-copytoclipboard-target')
@@ -33,12 +37,23 @@ describe('design system workbench', () => {
     ]).toEqual([[], []]);
   });
 
+  it('offers every token the design system declares', () => {
+    const declaredNames = [...declared.matchAll(/^\s*(--[a-z0-9-]+):/gm)].map(match => match[1]);
+
+    /* The page once showed 90 of the 158 tokens declared, and nothing failed. The other assertion
+       guards the opposite direction, which is why that went unnoticed. */
+    expect([...new Set(declaredNames)].filter(name => !tokenNames.includes(name))).toEqual([]);
+  });
+
   it('offers each token once', () => {
     expect(tokenNames.length).toBe(new Set(tokenNames).size);
   });
 
   it('gives a colour token a field for the theme on show, and other tokens one for both', () => {
-    const page = new DOMParser().parseFromString(designSystemPage(), 'text/html');
+    const page = new DOMParser().parseFromString(
+      designSystemPage(new Map(), new Map(), tokenGroups()),
+      'text/html'
+    );
     const scopes = name =>
       [...page.querySelectorAll('[data-token-input]')]
         .filter(input => input.name === name)
