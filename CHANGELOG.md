@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Each element's documentation page says what its markup does before the module loads, under _Without JavaScript_, and what to render on the server where that matters — a `<select>` in place of a `<p-select>`, an `<input type="file">` in place of a `<p-uploader>`. The enhancement components have always answered this question on their pages; the five elements never did. The answer lives on the component contract as a `withoutJs` field, so a new element cannot quietly ship without one.
+
 ### Fixed
 
 - Tabs no longer hides a page's own panels for good when it cannot use their markup. The shipped stylesheet shows one panel until `data-tabs-enhanced` appears, and Tabs gave up without writing it when a tab list, a panel container, or any tabs or panels were missing — so the cheapest markup mistake removed content from the page and nothing put it back. Tabs now writes the attribute either way, `true` when it mounted and `false` when it could not, and `data-tabs-list` and `data-tabs-panels` are marked required in the documentation.
 - A `<p-select>` given a `value` before its remote options arrive shows the matching label rather than the bare value. Options from `data-select-src` replaced the list without resolving the value against it, so an edit form redisplaying a saved row showed its id — `r5` instead of `Row 5` — until someone opened the list and chose again. The label resolves once the rows land, and only for a fetch of the empty query, so a search in progress keeps what the visitor typed.
+- The package's own elements no longer put their contents into the page before the module that defines them arrives. A custom element is inert markup until it upgrades, so a `<p-modal>`'s title, body and buttons sat in the flow as ordinary elements for as long as the module took to load. The framework stylesheet now hides the five tags until they are defined — but only where scripts are running: with scripting off the module is never coming, and hiding content nothing will bring back is worse than showing it unstyled.
 
 ## [0.7.6] - 2026-09-17
 
