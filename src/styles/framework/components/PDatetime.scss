@@ -529,6 +529,9 @@ button:disabled {
   border-radius: var(--datetime-radius-xl);
   background: var(--datetime-preset-bg);
   color: var(--datetime-preset-color);
+  transition:
+    background-color var(--datetime-transition),
+    color var(--datetime-transition);
 }
 
 /* Action Buttons */
