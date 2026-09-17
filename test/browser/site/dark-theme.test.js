@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { exampleBlock } from '../../../site/build/render.js';
 import Accordion from '../../../src/components/Accordion.contract.js';
 import FormEnhancer from '../../../src/components/FormEnhancer.contract.js';
+import PModal from '../../../src/components/PModal.contract.js';
 import siteStyles from '../../../site/src/styles/site.scss';
 
 const luminance = colour => {
@@ -68,5 +69,28 @@ describe('the example stage in the dark theme', () => {
         luminance(getComputedStyle(stage).backgroundColor)
       )
     ).toBeGreaterThanOrEqual(4.5);
+  });
+  it('paints the library’s button classes with the design system’s button tokens', () => {
+    const example = PModal.examples.find(
+      item => /btn--primary/.test(item.markup) && /btn--danger/.test(item.markup)
+    );
+    const stage = mountExample(PModal, example.id);
+    const probe = document.createElement('div');
+    document.body.append(probe);
+    const token = name => {
+      probe.style.color = getComputedStyle(document.documentElement).getPropertyValue(name);
+      return getComputedStyle(probe).color;
+    };
+    const paint = selector => {
+      const button = stage.querySelector(selector);
+      return [getComputedStyle(button).backgroundColor, getComputedStyle(button).color];
+    };
+
+    /* The examples use the classes a page defines with the library's button mixins, and the docs
+       never defined them, so a primary and a danger button looked like every other button */
+    expect({ primary: paint('.btn--primary'), danger: paint('.btn--danger') }).toEqual({
+      primary: [token('--button-primary-bg'), token('--button-primary-color')],
+      danger: [token('--button-danger-bg'), token('--button-danger-color')],
+    });
   });
 });
