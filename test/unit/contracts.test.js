@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { validateContract } from '../../src/contract.js';
 import { classNameFor, propertiesOf } from '../../scripts/types/members.mjs';
@@ -229,3 +229,80 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
     });
   }
 );
+
+/* Deliberately not documented: a component reads these to stay consistent with itself, and listing
+   them would bury the values a page would actually set. Named here so the omission is a decision on
+   the record rather than something nobody noticed. */
+const INTERNAL_PROPERTIES = new Set([
+  '--modal-font-md',
+  '--modal-font-sm',
+  '--modal-radius-lg',
+  '--modal-radius-xl',
+  '--modal-space-lg',
+  '--modal-space-xl',
+  '--datetime-font-md',
+  '--datetime-font-sm',
+  '--datetime-radius-xl',
+  '--datetime-space-lg',
+  '--datetime-space-sm',
+  '--datetime-space-xs',
+]);
+
+/**
+ * Where a component is styled, from what it references: the scss its module imports, or the
+ * stylesheet its contract names. Never inferred from a component's name, because `Modal` and
+ * `PModal` would then claim each other's properties.
+ */
+const stylesheetsFor = contract => {
+  const files = new Set();
+  const source = read(`src/components/${contract.name}.js`);
+  for (const match of source.matchAll(/from\s+['"]([^'"]+\.scss)['"]/g)) {
+    files.add(`src/styles/framework/components/${match[1].split('/').pop()}`);
+  }
+  if (contract.stylesheet) {
+    const name = contract.stylesheet
+      .split('/')
+      .pop()
+      .replace(/\.css$/, '.scss');
+    files.add(`src/styles/framework/components/${name}`);
+  }
+  return [...files].filter(file => existsSync(`${root}${file}`));
+};
+
+describe('custom properties', () => {
+  it('documents every one a component reads of its own', () => {
+    const undocumented = contracts.flatMap(contract => {
+      const files = stylesheetsFor(contract);
+      if (files.length === 0) return [];
+
+      const css = files.map(file => read(file)).join('\n');
+      /* A component owns the namespaces it declares properties in */
+      const owned = unique(
+        [...css.matchAll(/^\s*(--[a-z0-9]+(?:-[a-z0-9]+)?)-[a-z0-9-]+:/gm)].map(
+          match => `${match[1]}-`
+        )
+      );
+      const documented = new Set((contract.cssProperties ?? []).map(property => property.name));
+
+      return unique([...css.matchAll(/var\(\s*(--[a-z0-9-]+)/g)].map(match => match[1]))
+        .filter(name => owned.some(prefix => name.startsWith(prefix)))
+        .filter(name => !documented.has(name) && !INTERNAL_PROPERTIES.has(name))
+        .map(name => `${contract.name} ${name}`);
+    });
+
+    /* p-modal documented 14 of the 51 it read, and nothing failed */
+    expect(undocumented).toEqual([]);
+  });
+
+  it('documents none that nothing reads', () => {
+    const dead = contracts.flatMap(contract =>
+      (contract.cssProperties ?? [])
+        .map(property => property.name)
+        /* var() may wrap, so the name need not follow the bracket on the same line */
+        .filter(name => !new RegExp(`var\\(\\s*${name}\\s*[,)]`).test(styles))
+        .map(name => `${contract.name} ${name}`)
+    );
+
+    expect(dead).toEqual([]);
+  });
+});

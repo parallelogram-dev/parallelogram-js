@@ -144,6 +144,41 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   cssProperties: [
     {
+      name: '--select-bg',
+      default: 'var(--surface-control-color-bg)',
+      description: 'Background of the closed control; follows the control surface',
+    },
+    {
+      name: '--select-border',
+      default: 'var(--select-border-width) solid var(--select-border-color)',
+      description: "The control's border, built from its width and colour",
+    },
+    {
+      name: '--select-border-width',
+      default: 'var(--surface-control-border-width)',
+      description: 'Width of that border; follows the control surface',
+    },
+    {
+      name: '--select-border-radius',
+      default: 'var(--surface-control-radius)',
+      description: 'Corner radius of the control; follows the control surface',
+    },
+    {
+      name: '--select-padding',
+      default: '0.45rem 0.6rem',
+      description: 'Padding inside the control',
+    },
+    {
+      name: '--select-placeholder',
+      default: 'var(--color-text-muted)',
+      description: 'Colour of the placeholder while nothing is chosen',
+    },
+    {
+      name: '--select-active-outline',
+      default: 'var(--color-accent-hover)',
+      description: 'Outline drawn around the control while its list is open',
+    },
+    {
       name: '--select-text',
       default: 'var(--surface-control-color-text)',
       description: 'Text colour',

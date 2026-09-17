@@ -63,7 +63,28 @@ const build = ({ dir, production }) => ({
   ],
 });
 
+/**
+ * One file with everything in it, for a page loading the library straight from a CDN with no
+ * bundler: one request instead of a waterfall of them. Its own graph, so the entry points above
+ * keep loading a component only when a page uses one.
+ */
+const bundle = () => {
+  const [, ...rest] = [null, ...build({ dir: 'dist', production: true }).plugins];
+  return {
+    input: 'src/bundle.js',
+    output: {
+      file: 'dist/parallelogram.js',
+      format: 'es',
+      inlineDynamicImports: true,
+      sourcemap: true,
+      sourcemapExcludeSources: true,
+    },
+    plugins: rest,
+  };
+};
+
 export default [
   build({ dir: 'dist', production: true }),
   build({ dir: 'dist/dev', production: false }),
+  bundle(),
 ];

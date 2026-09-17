@@ -104,7 +104,7 @@ const LAYERS = [
   {
     id: 'palette',
     title: 'Colour palette',
-    note: 'Start here. These are the roles the whole library reads, so a change here reaches every component at once \u2014 an accent set here is the accent of buttons, focus rings, selected days and links. A page with a brand colour can set `--brand-primary` instead, which the accent follows in both themes, along with `--brand-primary-hover` and `--brand-primary-contrast`. Reach for a surface or a component property below only when you want one thing to differ from the rest.',
+    note: 'Start here. These are the roles the whole library reads, so a change here reaches every component at once \u2014 an accent set here is the accent of buttons, focus rings, selected days and links. A page with a brand colour can set `--brand-primary` instead, which the accent follows in both themes, along with `--brand-primary-hover` and `--brand-primary-contrast`. A second and a third brand colour have the same hooks, `--brand-secondary` and `--brand-complimentary`; until a page sets one they are the accent, so leaving them alone changes nothing, and no component reads them on its own. Reach for a surface or a component property below only when you want one thing to differ from the rest.',
     holds: name => name.startsWith('--color-'),
   },
   {

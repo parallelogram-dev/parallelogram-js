@@ -7,7 +7,7 @@
  */
 
 /* A family is one row: the values that are only meaningful together */
-const VARIANTS = ['primary', 'secondary', 'danger', 'ghost'];
+const VARIANTS = ['primary', 'secondary', 'danger', 'ghost', 'brand'];
 
 const familyOf = name => {
   let match = name.match(/^--surface-([a-z]+)-/);
@@ -27,6 +27,8 @@ const familyOf = name => {
 /** How a family is shown working: the demo that uses its values together */
 const FAMILY = {
   'color-accent': ['Accent', 'button'],
+  'color-secondary': ['Secondary brand', 'button'],
+  'color-complimentary': ['Complimentary brand', 'button'],
   'color-danger': ['Danger', 'status'],
   'color-success': ['Success', 'status'],
   'color-warning': ['Warning', 'status'],
@@ -52,6 +54,7 @@ const FAMILY = {
   'button-secondary': ['Secondary button', 'button'],
   'button-danger': ['Danger button', 'button'],
   'button-ghost': ['Ghost button', 'button'],
+  'button-brand': ['Brand button', 'button'],
   'form-control': ['Fields', 'field'],
   panel: ['Panel', 'surface'],
   modal: ['Modal', 'surface'],

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The package ships one file with everything in it, `dist/parallelogram.js`, which `unpkg` and `jsdelivr` now point at. A page loading the library straight from a CDN gets it in one request instead of discovering each module from the one before it. It carries every component whether the page uses one or not, about 74 kB over the wire, so the individual files remain the better choice behind a bundler or for a page using one or two components -- Getting started now says which to reach for and why.
+- A page can set a second and a third brand colour, `--brand-secondary` and `--brand-complimentary`, the way it can already set `--brand-primary`, each with a hover and a contrast beside it. They feed two roles a component can read, `--color-secondary` and `--color-complimentary`, and until a page sets one both are the accent, so a page that leaves them alone looks exactly as it did. Nothing in the library reads them on its own: a `button-brand` mixin sits beside the `button-primary`, `button-secondary`, `button-danger` and `button-ghost` mixins for a page that wants a button in its own colour. `--button-secondary-*` is untouched and still the quiet outline it has always been -- it was never a second brand colour, which is the confusion these roles settle.
+- `<p-select>` documents the seven custom properties its own stylesheet reads and its contract had never listed: the control background, border, border width and radius, padding, placeholder colour, and the outline drawn while the list is open. DataTable documents `--datatable-error-default`.
+
+### Changed
+
+- Two tests keep the documented custom properties honest: every property a component's own stylesheet reads must be documented, and every documented property must be read by something. `<p-modal>` documented 14 of the 51 it read and nothing failed, which is how that gap lasted. The dozen values `<p-modal>` and `<p-datetime>` use only to stay consistent with themselves are named in the test as deliberately internal, so excluding them is a decision on the record rather than an omission.
+
 ## [0.7.7] - 2026-09-17
 
 ### Added

@@ -18,6 +18,15 @@
   --color-accent: var(--brand-primary, #{$primary});
   --color-accent-hover: var(--brand-primary-hover, #{$primary-dark});
   --color-accent-contrast: var(--brand-primary-contrast, #ffffff);
+
+  /* The rest of the brand layer. A page sets --brand-secondary or --brand-complimentary and the
+     roles follow; until it does they are the accent, so nothing on any page looks different. */
+  --color-secondary: var(--brand-secondary, var(--color-accent));
+  --color-secondary-hover: var(--brand-secondary-hover, var(--color-accent-hover));
+  --color-secondary-contrast: var(--brand-secondary-contrast, var(--color-accent-contrast));
+  --color-complimentary: var(--brand-complimentary, var(--color-accent));
+  --color-complimentary-hover: var(--brand-complimentary-hover, var(--color-accent-hover));
+  --color-complimentary-contrast: var(--brand-complimentary-contrast, var(--color-accent-contrast));
   --color-text-muted: #{$color-text-muted};
   --color-surface: #ffffff;
   --color-surface-muted: #{$neutral-100};
@@ -231,6 +240,14 @@
   --button-ghost-color: currentColor;
   --button-ghost-border: currentColor;
   --button-ghost-hover-bg: var(--color-hover);
+
+  /* An opt-in variant for a page's own brand colour. Nothing in the library uses it by default,
+     so a secondary button stays the quiet outline it has always been. */
+  --button-brand-bg: var(--color-secondary);
+  --button-brand-color: var(--color-secondary-contrast);
+  --button-brand-border: var(--color-secondary);
+  --button-brand-hover-bg: var(--color-secondary-hover);
+  --button-brand-hover-border: var(--color-secondary-hover);
 }
 
 /* Panel Tokens */
