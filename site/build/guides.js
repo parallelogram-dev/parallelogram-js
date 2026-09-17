@@ -27,6 +27,7 @@ export const GUIDE_ORDER = [
   'writing-components',
   'events-and-alerts',
   'trackers',
+  'upgrading-within-0-7',
   'upgrading',
   'upgrading-from-0-4',
 ];
