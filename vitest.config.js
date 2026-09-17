@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import scss from './scripts/rollup-plugin-scss.js';
+import { contractRegistry } from './site/build/vite-plugin-contracts.js';
 
 export default defineConfig({
-  plugins: [scss({ loadPaths: ['src/styles'] })],
+  plugins: [scss({ loadPaths: ['src/styles'] }), contractRegistry()],
   test: {
     restoreMocks: true,
     unstubGlobals: true,

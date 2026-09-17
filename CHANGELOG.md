@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The documentation site loads in one wave rather than three. Every page shipped the full text of every contract -- descriptions, examples, custom properties, 37 kB gzipped -- as JavaScript, because the runtime read three fields from them to know which module to load for which tag; it reads those fields from a module generated at build time now, and the contracts stay on the build side. Each page also discovered its chunks one dynamic import at a time, three round trips deep; each page now preloads the chunks its own markup will need, and the framework's core, which every page loads, is one chunk named for what it is. On the p-datetime page that is 21 requests to 12 and 82 kB of script to 47. During development a save reloads only the pages it made stale instead of every open page, `npm run site:lan` serves the built site to another device on the network at a tenth of the dev server's weight, and the core modules are compiled before the first request.
+
 ## [0.7.8] - 2026-09-17
 
 ### Added

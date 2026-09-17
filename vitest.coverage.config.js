@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import scss from './scripts/rollup-plugin-scss.js';
+import { contractRegistry } from './site/build/vite-plugin-contracts.js';
 
 /**
  * Coverage over both projects, which the ordinary config cannot report
@@ -11,7 +12,7 @@ import scss from './scripts/rollup-plugin-scss.js';
  * stays where it belongs, on the test run that is checking for engine differences.
  */
 export default defineConfig({
-  plugins: [scss({ loadPaths: ['src/styles'] })],
+  plugins: [scss({ loadPaths: ['src/styles'] }), contractRegistry()],
   test: {
     restoreMocks: true,
     unstubGlobals: true,
