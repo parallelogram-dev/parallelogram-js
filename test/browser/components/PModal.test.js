@@ -277,3 +277,51 @@ describe('p-modal with a part left out', () => {
     ]).toEqual(['', 'Dialog']);
   });
 });
+
+describe('p-modal with actions at both ends', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    document.body.style.overflow = '';
+  });
+
+  const render = markup => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = markup;
+    document.body.append(modal);
+    return modal;
+  };
+
+  it('keeps the footer for a button slotted only into secondary', () => {
+    const modal = render('<p>Table 12.</p><button type="button" slot="secondary">Delete</button>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(false);
+  });
+
+  it('sets one group against each end of the footer', () => {
+    const modal = render(
+      '<p>Table 12.</p><button type="button" slot="secondary">Delete</button><button type="button" slot="actions">Save</button>'
+    );
+    modal.open();
+    const footer = modal.shadowRoot.querySelector('[data-modal-footer]');
+    const box = footer.getBoundingClientRect();
+    const style = getComputedStyle(footer);
+    const start = modal.querySelector('[slot="secondary"]').getBoundingClientRect();
+    const end = modal.querySelector('[slot="actions"]').getBoundingClientRect();
+
+    expect([
+      Math.abs(start.left - box.left - Number.parseFloat(style.paddingLeft)) < 1,
+      Math.abs(box.right - Number.parseFloat(style.paddingRight) - end.right) < 1,
+    ]).toEqual([true, true]);
+  });
+
+  it('keeps a lone group of actions against the trailing end', () => {
+    const modal = render('<p>Table 12.</p><button type="button" slot="actions">Save</button>');
+    modal.open();
+    const footer = modal.shadowRoot.querySelector('[data-modal-footer]');
+    const box = footer.getBoundingClientRect();
+    const padding = Number.parseFloat(getComputedStyle(footer).paddingRight);
+    const end = modal.querySelector('[slot="actions"]').getBoundingClientRect();
+
+    expect(Math.abs(box.right - padding - end.right) < 1).toBe(true);
+  });
+});

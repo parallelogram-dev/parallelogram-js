@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `<p-modal>` takes a second group of footer buttons, through a new `secondary` slot. What goes in it is held against the leading end of the footer while the rest stay together at the other, so the markup says where a button belongs rather than how to push it: no styling, no wrapper elements, and no inline styles. An empty group takes no room, the footer shows while either slot has something in it, and a modal that uses only `actions` looks exactly as it did.
+
 ### Fixed
 
 - Content a page puts in a `<p-modal>` no longer starts below the margins the browser would give it. An unstyled paragraph sat 16px under the panel's padding, below the pinned close button, and added another 16px to the panel's depth; what the page puts in the modal now gives up those margins and the content area spaces it with a new `--modal-content-gap` instead. A page that sets the margins itself still outranks this, and padding or a wrapper brings outer space back.
