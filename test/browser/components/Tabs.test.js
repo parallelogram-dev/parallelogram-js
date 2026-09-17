@@ -152,6 +152,31 @@ describe('Tabs panels and styles', () => {
     expect(shownPanels(container)).toEqual(['panel-shipping']);
   });
 
+  it('shows every panel again when the markup is missing a wrapper it needs', () => {
+    style = document.createElement('style');
+    style.textContent = tabsStyles;
+    document.head.append(style);
+    /* No data-tabs-list, so Tabs gives up on this container before it can enhance anything */
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<div data-tabs>
+        <nav>
+          <button data-tab="panel-a">A</button>
+          <button data-tab="panel-b">B</button>
+        </nav>
+        <div data-tabs-panels>
+          <div id="panel-a" data-tab-panel>First</div>
+          <div id="panel-b" data-tab-panel>Second</div>
+        </div>
+      </div>`
+    );
+    const container = document.querySelector('[data-tabs]');
+
+    mount(container);
+
+    expect(shownPanels(container)).toEqual(['panel-a', 'panel-b']);
+  });
+
   it('shows only the panel the markup marks active before Tabs has loaded', () => {
     const container = render();
     document.getElementById('panel-returns').setAttribute('data-tab-panel', 'active');

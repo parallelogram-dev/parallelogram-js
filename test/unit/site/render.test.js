@@ -186,6 +186,13 @@ describe('documentation site rendering', () => {
     ]);
   });
 
+  it('says what a web component does before its module loads', () => {
+    const page = parse(componentPage(PModal));
+    const section = page.querySelector('#without-javascript')?.closest('section');
+
+    expect([section !== null, section?.textContent.includes('script')]).toEqual([true, true]);
+  });
+
   it('offers a control suited to each attribute type', () => {
     const control = (type, extra = {}) =>
       parse(

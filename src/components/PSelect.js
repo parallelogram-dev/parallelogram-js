@@ -563,6 +563,12 @@ export default class PSelect extends HTMLElement {
       const highlighted = this.state.highlightedIndex;
       this._filterLocal('', { announce: true, keepScroll: page > 1 });
       if (page > 1) this._setHighlight(highlighted);
+      /* A value set before its options arrived is shown as the bare value, since there was nothing
+         to take a label from. Resolve it now the rows are here, but only for a fetch of the empty
+         query: while someone is searching, the input is theirs and must keep what they typed. */
+      if (query === '' && this.state.value !== '' && !this._selectedOption) {
+        this._setValue(this.state.value);
+      }
     } catch (error) {
       if (error.name !== 'AbortError') {
         this._handleFetchError(error);

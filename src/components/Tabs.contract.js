@@ -16,6 +16,7 @@ Deep links keep working: when the address names a panel, or an element inside on
     {
       name: 'data-tabs-list',
       type: 'flag',
+      required: true,
       on: 'the element holding the tabs',
       description:
         'Marks the tab list. Tabs gives it aria-orientation="horizontal" unless it has one; the Up and Down arrow keys move between tabs only when it is "vertical"',
@@ -24,6 +25,7 @@ Deep links keep working: when the address names a panel, or an element inside on
     {
       name: 'data-tabs-panels',
       type: 'flag',
+      required: true,
       on: 'the element holding the panels',
       description: 'Marks the panel container',
     },
@@ -62,7 +64,8 @@ Deep links keep working: when the address names a panel, or an element inside on
       name: 'data-tabs-enhanced',
       type: 'flag',
       readonly: true,
-      description: 'Set once Tabs has mounted',
+      description:
+        'Written once Tabs has seen the container: true when it mounted, false when the markup was missing a tab list, a panel container, or any tabs or panels. Either way the stylesheet stops hiding panels, so markup Tabs cannot use is left showing rather than hidden for good',
     },
   ],
   events: [
