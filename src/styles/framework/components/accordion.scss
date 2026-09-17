@@ -73,6 +73,11 @@
       var(--framework-focus-color, var(--color-accent, #2563eb));
     outline-offset: calc(-1 * var(--framework-focus-width, 2px));
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color var(--framework-transition-duration, 0.2s)
+      var(--framework-transition-easing, ease-in-out);
+  }
 }
 
 /* The icon turns while the item is open or opening, and turns back as soon as it starts closing */
