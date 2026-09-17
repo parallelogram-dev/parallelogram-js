@@ -581,6 +581,7 @@ export function designSystemPage(readers = new Map(), sources = new Map(), group
      knows which of Accent's three values is the text colour without anything saying so twice. */
   const ROLES = [
     ['--demo-hover', /-hover(-bg)?$/],
+    ['--demo-tint-text', /-text$/],
     ['--demo-text', /(-contrast|-color|-text)$/],
     ['--demo-muted', /-muted$/],
     ['--demo-border', /(-border|-border-color)$/],
@@ -604,9 +605,10 @@ export function designSystemPage(readers = new Map(), sources = new Map(), group
         parts.push(`${property}: var(${token.name})`);
       }
     }
-    /* Whatever is left over is the family's plain value: the accent itself, not its hover */
+    /* Whatever is left over is the family's plain value: the accent itself, not its hover. A
+       length or a duration is never a background, so only a colour is offered as one */
     const base = row.tokens.find(t => !taken.has(t.name));
-    if (base) parts.push(`--demo-base: var(${base.name})`);
+    if (base && base.kind === 'colour') parts.push(`--demo-base: var(${base.name})`);
     return parts.join('; ');
   };
 
