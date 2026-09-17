@@ -183,7 +183,181 @@ export default {
       description: 'The dialog closed; changed says whether the value differs from when it opened',
     },
   ],
+  parts: [
+    { name: 'field', description: 'The row holding the value buttons and the calendar button' },
+    { name: 'input', description: 'Each value button, which shows the date and opens the panel' },
+    { name: 'trigger', description: 'The calendar button at the end of the field' },
+    { name: 'panel', description: 'The dialog holding the calendar, the time and the actions' },
+    { name: 'nav', description: 'The month navigation row' },
+    { name: 'month-year', description: 'The month and year button in that row' },
+    { name: 'grid', description: 'The day grid' },
+    { name: 'day', description: 'Each day button in the grid' },
+    { name: 'time-select', description: 'Each time select: the hour, the minute and AM/PM' },
+    { name: 'ampm', description: 'The AM/PM select, which also carries time-select' },
+    { name: 'action', description: 'Each button in the actions row' },
+    { name: 'primary', description: 'The Apply button, which also carries action' },
+  ],
   cssProperties: [
+    {
+      name: '--datetime-shadow-color',
+      default: 'var(--color-shadow)',
+      description: 'Colour the panel shadow is built from',
+    },
+    {
+      name: '--datetime-btn-hover-bg',
+      default: 'var(--color-hover)',
+      description: 'Background of a hovered navigation button',
+    },
+    {
+      name: '--datetime-placeholder-opacity',
+      default: '0.6',
+      description: 'Opacity of the placeholder in an empty field',
+    },
+    {
+      name: '--datetime-icon-opacity',
+      default: '0.7',
+      description: 'Opacity of the calendar and chevron icons',
+    },
+    {
+      name: '--datetime-disabled-opacity',
+      default: 'var(--form-control-disabled-opacity)',
+      description: 'Opacity of a disabled field; follows the form control family',
+    },
+    {
+      name: '--datetime-padding-x',
+      default: '0.75em',
+      description: 'Horizontal padding of the value buttons',
+    },
+    {
+      name: '--datetime-padding-y',
+      default: '0.375em',
+      description: 'Vertical padding of the value buttons',
+    },
+    {
+      name: '--datetime-gap',
+      default: '0.5em',
+      description: 'Space between the parts of the field and the panel',
+    },
+    {
+      name: '--datetime-radius-lg',
+      default: 'var(--panel-border-radius)',
+      description: "The panel's corner radius; follows the panel family",
+    },
+    {
+      name: '--datetime-border-width',
+      default: '1px',
+      description: 'Width of the field and panel borders',
+    },
+    {
+      name: '--datetime-focus-ring-width',
+      default: '2px',
+      description: 'Width of the focus ring on days and controls',
+    },
+    {
+      name: '--datetime-today-border-width',
+      default: '2px',
+      description: "Width of the ring marking today's date",
+    },
+    {
+      name: '--datetime-transition',
+      default: '0.15s ease',
+      description: 'Length and easing of hover and focus changes',
+    },
+    {
+      name: '--datetime-panel-padding',
+      default: 'var(--panel-padding)',
+      description: 'Padding inside the panel; follows the panel family',
+    },
+    {
+      name: '--datetime-preset-bg',
+      default: 'var(--button-ghost-bg)',
+      description: 'Background of a quick-date button; follows the ghost button',
+    },
+    {
+      name: '--datetime-preset-color',
+      default: 'var(--button-ghost-color)',
+      description: 'Text of a quick-date button',
+    },
+    {
+      name: '--datetime-preset-hover-bg',
+      default: 'var(--button-ghost-hover-bg)',
+      description: 'Background of a hovered quick-date button',
+    },
+    {
+      name: '--datetime-action-btn-bg',
+      default: 'var(--button-secondary-bg)',
+      description: 'Background of an action button; follows the secondary button',
+    },
+    {
+      name: '--datetime-action-btn-color',
+      default: 'var(--button-secondary-color)',
+      description: 'Text of an action button',
+    },
+    {
+      name: '--datetime-action-btn-border',
+      default: 'var(--button-secondary-border)',
+      description: 'Border of an action button',
+    },
+    {
+      name: '--datetime-action-btn-hover-bg',
+      default: 'var(--button-secondary-hover-bg)',
+      description: 'Background of a hovered action button',
+    },
+    {
+      name: '--datetime-action-btn-hover-border',
+      default: 'var(--button-secondary-hover-border)',
+      description: 'Border of a hovered action button',
+    },
+    {
+      name: '--datetime-action-btn-primary-bg',
+      default: 'var(--button-primary-bg)',
+      description:
+        'Background of the Apply button; set the button token to change every component, or this one for the picker alone',
+    },
+    {
+      name: '--datetime-action-btn-primary-color',
+      default: 'var(--button-primary-color)',
+      description: 'Text of the Apply button',
+    },
+    {
+      name: '--datetime-action-btn-primary-hover-bg',
+      description: 'Background of the hovered Apply button',
+    },
+    {
+      name: '--datetime-action-btn-radius',
+      default: 'var(--button-border-radius)',
+      description: 'Corner radius of an action button',
+    },
+    {
+      name: '--datetime-action-btn-padding',
+      default: 'var(--button-padding-y) var(--button-padding-x)',
+      description: 'Padding of an action button',
+    },
+    {
+      name: '--datetime-action-btn-min-height',
+      default: 'var(--button-min-height)',
+      description: 'Least height of an action button',
+    },
+    {
+      name: '--datetime-action-btn-font-size',
+      default: 'var(--button-font-size)',
+      description: 'Font size of an action button',
+    },
+    {
+      name: '--datetime-action-btn-font-weight',
+      default: 'var(--button-font-weight)',
+      description: 'Font weight of an action button',
+    },
+    {
+      name: '--datetime-action-btn-text-transform',
+      default: 'none',
+      description: 'Text transform of an action button',
+    },
+    {
+      name: '--datetime-action-btn-letter-spacing',
+      default: 'normal',
+      description: 'Letter spacing of an action button',
+    },
     {
       name: '--datetime-accent',
       default: 'var(--color-accent)',

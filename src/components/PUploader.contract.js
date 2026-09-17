@@ -7,14 +7,18 @@ export default {
   summary: 'Upload, order and describe a set of files',
   description: `Files are added by dropping them or through a button that opens the file picker, and each one uploads as multipart form data with its progress shown. Existing files are \`<p-uploader-file>\` children. Each feature appears only when its server address is set: uploading, editing fields, deleting and reordering.
 
-With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.`,
+With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.
+
+The upload endpoint must answer with JSON carrying an \`id\`, which is written to the file's \`file-id\` and is the id every later update, delete and sequence request sends. Without it an upload looks like it worked and nothing that follows can name the file. A \`preview\` in the same response becomes the card's thumbnail, which is worth returning for a file the browser cannot draw itself. Everything else in the response is kept and passed to \`p-uploader:upload-success\` as \`response\`.
+
+A failed request is read for something worth showing: JSON contributes its \`message\` or \`error\`, plain text is used as it is when it is under 200 characters and contains no \`<\`, and anything else -- an HTML error page, or a 2xx whose body will not parse -- falls back to the generic message, so a stack trace never reaches the page.`,
   withoutJs: `The file input lives in this element's shadow root, so before the module loads there is no way to choose a file, and \`<p-uploader-file>\` children show nothing. The package stylesheet hides the element while scripts are running. An upload posts to its own endpoint rather than with the surrounding form, so there is nothing here to fall back to: where uploading has to work without scripts, render an ordinary \`<input type="file">\` form and use this element in place of it once the module is in.`,
   attributes: [
     {
       name: 'upload-action',
       type: 'url',
       description:
-        'Receives each new file as multipart form data; files can be added only when set',
+        'Receives each new file as multipart form data and must answer with JSON carrying an id; files can be added only when set',
     },
     {
       name: 'update-action',

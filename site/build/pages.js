@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { discoveryFiles } from './discovery.js';
@@ -59,7 +59,16 @@ export function loadGuides() {
  * @returns {Promise<Record<string, string>>} Each file's contents by its path from the site root
  */
 export async function loadDiscoveryFiles() {
-  return discoveryFiles(await loadContracts(), loadGuides());
+  const { version } = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+  const files = discoveryFiles(await loadContracts(), loadGuides(), version);
+
+  /* The manifest is written by the package build, which the site build does not depend on: serve it
+     when it is there and leave the jsDelivr copy as the link when it is not */
+  const manifest = path.join(repoRoot, 'dist/custom-elements.json');
+  if (existsSync(manifest)) {
+    files['custom-elements.json'] = readFileSync(manifest, 'utf8');
+  }
+  return files;
 }
 
 /**

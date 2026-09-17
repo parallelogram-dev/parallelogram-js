@@ -109,6 +109,162 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
   ],
   cssProperties: [
     {
+      name: '--modal-panel-border',
+      default: 'var(--surface-dialog-border-color)',
+      description: 'Panel border colour; follows the dialog surface',
+    },
+    {
+      name: '--modal-border-width',
+      default: 'var(--surface-dialog-border-width)',
+      description: 'Panel border width; follows the dialog surface',
+    },
+    {
+      name: '--modal-shadow-color',
+      default: 'var(--color-shadow)',
+      description: 'Colour the panel shadow is built from',
+    },
+    {
+      name: '--modal-header-bg',
+      default: 'var(--surface-dialog-color-bg)',
+      description: 'Header background; follows the dialog surface',
+    },
+    {
+      name: '--modal-header-padding',
+      default: 'var(--panel-header-padding)',
+      description: 'Header padding; follows the panel family',
+    },
+    {
+      name: '--modal-footer-bg',
+      default: 'var(--surface-dialog-color-bg)',
+      description: 'Footer background; follows the dialog surface',
+    },
+    {
+      name: '--modal-footer-padding',
+      default: 'var(--panel-footer-padding)',
+      description: 'Footer padding; follows the panel family',
+    },
+    {
+      name: '--modal-content-padding',
+      default: 'var(--panel-padding)',
+      description:
+        'Padding around the content; follows the panel family, and sets the close button inset',
+    },
+    {
+      name: '--modal-gap',
+      default: '0.5em',
+      description: 'Space between the title and the close button',
+    },
+    {
+      name: '--modal-close-size',
+      default: '1.75em',
+      description: 'Size of the close button, which sets the least header height',
+    },
+    {
+      name: '--modal-close-hover-bg',
+      default: 'var(--color-hover)',
+      description: 'Close button background on hover',
+    },
+    {
+      name: '--modal-btn-bg',
+      default: 'var(--button-secondary-bg)',
+      description: 'Slotted button background; follows the secondary button',
+    },
+    {
+      name: '--modal-btn-color',
+      default: 'var(--button-secondary-color)',
+      description: 'Slotted button text; follows the secondary button',
+    },
+    {
+      name: '--modal-btn-border',
+      default: 'var(--button-secondary-border)',
+      description: 'Slotted button border; follows the secondary button',
+    },
+    {
+      name: '--modal-btn-hover-bg',
+      default: 'var(--button-secondary-hover-bg)',
+      description: 'Slotted button background on hover',
+    },
+    {
+      name: '--modal-btn-hover-border',
+      default: 'var(--button-secondary-hover-border)',
+      description: 'Slotted button border on hover',
+    },
+    {
+      name: '--modal-btn-min-height',
+      default: '3.125em',
+      description: 'Least height of a slotted button',
+    },
+    {
+      name: '--modal-btn-primary-bg',
+      default: 'var(--button-primary-bg)',
+      description:
+        'A .primary slotted button background; set the button token to change every component, or this one for modals alone',
+    },
+    {
+      name: '--modal-btn-primary-color',
+      default: 'var(--button-primary-color)',
+      description: 'A .primary slotted button text colour',
+    },
+    {
+      name: '--modal-btn-primary-hover-bg',
+      default: 'var(--button-primary-hover-bg)',
+      description: 'A .primary slotted button background on hover',
+    },
+    {
+      name: '--modal-btn-danger-bg',
+      default: 'var(--button-danger-bg)',
+      description: 'A .danger slotted button background',
+    },
+    {
+      name: '--modal-btn-danger-color',
+      default: 'var(--button-danger-color)',
+      description: 'A .danger slotted button text colour',
+    },
+    {
+      name: '--modal-btn-danger-hover-bg',
+      default: 'var(--button-danger-hover-bg)',
+      description: 'A .danger slotted button background on hover',
+    },
+    {
+      name: '--modal-max-width',
+      default: '92vw',
+      description: 'Most width the panel takes, whatever size it is given',
+    },
+    {
+      name: '--modal-fullscreen-inset',
+      default: '3em',
+      description: 'Space left around a fullscreen modal',
+    },
+    {
+      name: '--modal-transition',
+      default: '0.2s ease',
+      description: 'Length and easing of hover and focus changes inside the panel',
+    },
+    {
+      name: '--modal-disabled-opacity',
+      description: 'Opacity of a disabled control in the panel',
+    },
+    {
+      name: '--modal-size-xs',
+      default: '18.75em',
+      description: "Width of size='xs'",
+    },
+    {
+      name: '--modal-size-md',
+      default: '40em',
+      description: "Width of size='md'",
+    },
+    {
+      name: '--modal-size-lg',
+      default: '50em',
+      description: "Width of size='lg'",
+    },
+    {
+      name: '--modal-size-xl',
+      default: '62.5em',
+      description: "Width of size='xl'",
+    },
+    {
       name: '--modal-animation-duration',
       default: '0.2s',
       description: 'Length of the opening and closing animations',

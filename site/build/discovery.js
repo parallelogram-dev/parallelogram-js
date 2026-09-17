@@ -8,7 +8,14 @@ import { PACKAGE, REPOSITORY, byName, matchFor, slugFor, titleFor } from './rend
 
 export const SITE_URL = 'https://dev.parallelogram.com.au';
 
-const MANIFEST_URL = `https://cdn.jsdelivr.net/npm/${PACKAGE}/dist/custom-elements.json`;
+/**
+ * The Custom Elements Manifest on jsDelivr, pinned to the release the documentation describes
+ *
+ * Unpinned it always names the newest release, which is the one thing an agent reading a fixed
+ * version of this file must not be told.
+ */
+const manifestUrl = version =>
+  `https://cdn.jsdelivr.net/npm/${PACKAGE}${version ? `@${version}` : ''}/dist/custom-elements.json`;
 
 const SUMMARY = `Parallelogram (\`${PACKAGE}\` on npm) is a small, dependency-free JavaScript library that adds behaviour to server-rendered HTML through data attributes and a small set of web components. Each component loads the first time a page uses it, and links swap the page in place instead of reloading it. The package is ESM only and targets Baseline 2023 browsers.`;
 
@@ -53,7 +60,7 @@ export function pageSlugs(contracts, guides) {
  * @param {import('./guides.js').Guide[]} guides
  * @returns {string}
  */
-export function llmsTxt(contracts, guides) {
+export function llmsTxt(contracts, guides, version) {
   const item = (title, url, summary) => `- [${title}](${url}): ${summary}`;
   const components = kind =>
     componentsOfKind(contracts, kind).map(contract =>
@@ -63,6 +70,7 @@ export function llmsTxt(contracts, guides) {
   return [
     '# Parallelogram',
     `> ${SUMMARY}`,
+    ...(version ? [`This describes version ${version} of \`${PACKAGE}\`.`] : []),
     START,
     '## Guides',
     guides.map(guide => item(guide.title, pageUrl(guide.slug), guide.description))
@@ -75,7 +83,7 @@ export function llmsTxt(contracts, guides) {
     [
       item(
         'Custom Elements Manifest',
-        MANIFEST_URL,
+        manifestUrl(version),
         'The web components as custom-elements.json'
       ),
       item(
@@ -133,6 +141,24 @@ function referenceTables(item, level) {
       ])
     ),
     ...markdownTable(
+      heading('Properties'),
+      ['Name', 'Type', 'Description'],
+      (item.properties ?? []).map(property => [
+        tick(property.name),
+        tick(property.type),
+        notes(property),
+      ])
+    ),
+    ...markdownTable(
+      heading('Methods'),
+      ['Name', 'Signature', 'Description'],
+      (item.methods ?? []).map(method => [
+        tick(method.name),
+        tick(method.signature),
+        notes(method),
+      ])
+    ),
+    ...markdownTable(
       heading('Events'),
       ['Name', 'Detail', 'Description'],
       (item.events ?? []).map(event => [
@@ -140,6 +166,16 @@ function referenceTables(item, level) {
         event.detail ? tick(event.detail) : 'none',
         notes(event),
       ])
+    ),
+    ...markdownTable(
+      heading('Slots'),
+      ['Name', 'Description'],
+      (item.slots ?? []).map(slot => [tick(slot.name), notes(slot)])
+    ),
+    ...markdownTable(
+      heading('Shadow parts'),
+      ['Name', 'Description'],
+      (item.parts ?? []).map(part => [tick(part.name), notes(part)])
     ),
     ...markdownTable(
       heading('CSS custom properties'),
@@ -160,7 +196,6 @@ function referenceTables(item, level) {
  * @returns {string}
  */
 export function componentMarkdown(contract) {
-  const [example] = contract.examples;
   const facts = [
     `- Kind: ${contract.kind === 'element' ? 'web component' : 'enhancement component'}`,
     `- Import: \`${PACKAGE}/${contract.module}\``,
@@ -180,8 +215,10 @@ export function componentMarkdown(contract) {
       element.description,
       ...referenceTables(element, 3),
     ]),
-    `## Example: ${example.title}`,
-    `\`\`\`html\n${example.markup}\n\`\`\``,
+    ...contract.examples.flatMap(example => [
+      `## Example: ${example.title}`,
+      `\`\`\`html\n${example.markup}\n\`\`\``,
+    ]),
   ].join('\n\n');
 }
 
@@ -196,9 +233,10 @@ const absoluteLinks = markdown =>
  * @param {import('./guides.js').Guide[]} guides
  * @returns {string}
  */
-export function llmsFullTxt(contracts, guides) {
+export function llmsFullTxt(contracts, guides, version) {
+  const names = version ? `\n\nThis describes version ${version} of \`${PACKAGE}\`.` : '';
   return [
-    `# Parallelogram\n\n> ${SUMMARY}\n\n${START}`,
+    `# Parallelogram\n\n> ${SUMMARY}${names}\n\n${START}`,
     ...guides.map(guide => absoluteLinks(guide.markdown)),
     ...componentsOfKind(contracts, 'enhancement').map(componentMarkdown),
     ...componentsOfKind(contracts, 'element').map(componentMarkdown),
@@ -241,10 +279,10 @@ export function robotsTxt() {
  * @param {import('./guides.js').Guide[]} guides
  * @returns {Record<string, string>}
  */
-export function discoveryFiles(contracts, guides) {
+export function discoveryFiles(contracts, guides, version) {
   return {
-    'llms.txt': llmsTxt(contracts, guides),
-    'llms-full.txt': llmsFullTxt(contracts, guides),
+    'llms.txt': llmsTxt(contracts, guides, version),
+    'llms-full.txt': llmsFullTxt(contracts, guides, version),
     'sitemap.xml': sitemapXml(contracts, guides),
     'robots.txt': robotsTxt(),
   };

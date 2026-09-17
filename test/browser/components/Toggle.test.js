@@ -37,6 +37,33 @@ describe('Toggle', () => {
     document.body.replaceChildren();
   });
 
+  it('takes the panel out of the tab order as soon as the trigger says it is closed', async () => {
+    build(
+      `<button id="menu-button" data-toggle data-toggle-target="#site-menu">Menu</button>
+      <nav id="site-menu"><a href="#one">One</a></nav>`
+    );
+
+    $('#menu-button').click();
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('open'), WAIT);
+
+    $('#menu-button').click();
+
+    /* Checked on the same tick, because the closing state is set synchronously and lasts only as
+       long as the animation: the trigger reports closed at once while the panel is still on screen,
+       so anything focusable in it is reachable from a state the page has already called shut */
+    expect([
+      $('#menu-button').getAttribute('aria-expanded'),
+      stateOf('#site-menu'),
+      $('#site-menu').inert,
+    ]).toEqual(['false', 'closing', true]);
+
+    /* And once it is closed, `hidden` has it. A page that overrides that to show the target anyway,
+       as a sidebar does when it is a drawer on a phone and a column on a desktop, gets a target it
+       can use: inert would leave it visible and dead. */
+    await vi.waitFor(() => expect(stateOf('#site-menu')).toBe('closed'), WAIT);
+    expect($('#site-menu').inert).toBe(false);
+  });
+
   it('hides a target the markup starts closed before Toggle has loaded', () => {
     document.body.insertAdjacentHTML(
       'beforeend',
