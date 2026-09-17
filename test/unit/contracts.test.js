@@ -242,6 +242,8 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
    them would bury the values a page would actually set. Named here so the omission is a decision on
    the record rather than something nobody noticed. */
 const INTERNAL_PROPERTIES = new Set([
+  /* Written by Tooltip each time it positions, so the triangle points at the control */
+  '--tooltip-arrow-offset',
   '--modal-font-md',
   '--modal-font-sm',
   '--modal-radius-lg',

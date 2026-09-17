@@ -1,0 +1,104 @@
+/**
+ * Tooltip Component Styles
+ * The tooltip element Tooltip creates at the end of the body, positioned by the component and
+ * shown with data-tooltip-state. The triangle is a rotated square in the tooltip's own colour, at
+ * --tooltip-arrow-offset along the edge facing the control, which the component sets so it keeps
+ * pointing at the control when the tooltip itself was moved to stay on screen.
+ */
+.tooltip {
+  --tooltip-bg: var(--color-inverse-surface, #111827);
+  --tooltip-color: var(--color-inverse-text, #ffffff);
+  --tooltip-radius: var(--surface-control-radius, 0.25em);
+  --tooltip-padding: 0.35em 0.6em;
+  --tooltip-font-size: 0.8125rem;
+  --tooltip-max-width: 18rem;
+  --tooltip-arrow-size: 0.5rem;
+  --tooltip-shadow: var(--surface-panel-shadow, 0 4px 12px rgba(0, 0, 0, 0.2));
+  --tooltip-z-index: 2147483646;
+  --tooltip-transition-duration: var(--framework-transition-duration, 0.2s);
+
+  position: fixed;
+  z-index: var(--tooltip-z-index);
+  max-width: var(--tooltip-max-width);
+  padding: var(--tooltip-padding);
+  border-radius: var(--tooltip-radius);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-color);
+  font-size: var(--tooltip-font-size);
+  line-height: 1.4;
+  box-shadow: var(--tooltip-shadow);
+  pointer-events: none;
+  opacity: 1;
+  transform: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: var(--tooltip-arrow-size);
+    height: var(--tooltip-arrow-size);
+    background: var(--tooltip-bg);
+    transform: rotate(45deg);
+  }
+
+  &[data-tooltip-arrow='false']::before {
+    content: none;
+  }
+
+  &[data-tooltip-placement='top']::before {
+    top: 100%;
+    left: var(--tooltip-arrow-offset, 50%);
+    translate: -50% -50%;
+  }
+
+  &[data-tooltip-placement='bottom']::before {
+    bottom: 100%;
+    left: var(--tooltip-arrow-offset, 50%);
+    translate: -50% 50%;
+  }
+
+  &[data-tooltip-placement='left']::before {
+    left: 100%;
+    top: var(--tooltip-arrow-offset, 50%);
+    translate: -50% -50%;
+  }
+
+  &[data-tooltip-placement='right']::before {
+    right: 100%;
+    top: var(--tooltip-arrow-offset, 50%);
+    translate: 50% -50%;
+  }
+
+  /* Closed: faded, and a step away from the control on its own side, so opening is a fade and a
+     move into place and closing the reverse */
+  &[data-tooltip-state='closed'] {
+    opacity: 0;
+  }
+
+  &[data-tooltip-state='closed'][data-tooltip-placement='top'] {
+    transform: translateY(4px);
+  }
+
+  &[data-tooltip-state='closed'][data-tooltip-placement='bottom'] {
+    transform: translateY(-4px);
+  }
+
+  &[data-tooltip-state='closed'][data-tooltip-placement='left'] {
+    transform: translateX(4px);
+  }
+
+  &[data-tooltip-state='closed'][data-tooltip-placement='right'] {
+    transform: translateX(-4px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity var(--tooltip-transition-duration) var(--framework-transition-easing, ease-in-out),
+      transform var(--tooltip-transition-duration) var(--framework-transition-easing, ease-in-out);
+  }
+}
+
+@media (forced-colors: active) {
+  .tooltip {
+    border: 1px solid CanvasText;
+  }
+}
