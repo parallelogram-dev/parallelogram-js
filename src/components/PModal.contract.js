@@ -20,6 +20,13 @@ Open it with the \`open\` attribute, the \`open()\` method, or a \`[data-modal]\
       description: 'Present while the modal is open; add or remove it to open or close the modal',
     },
     {
+      name: 'close-label',
+      type: 'string',
+      default: 'Close',
+      option: 'closeLabel',
+      description: 'The accessible name of the close button',
+    },
+    {
       name: 'data-modal-size',
       type: 'enum',
       options: ['xs', 'sm', 'md', 'lg', 'xl', 'fullscreen'],

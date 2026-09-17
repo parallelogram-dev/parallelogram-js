@@ -290,7 +290,7 @@ const badge = (label, modifier = '') =>
 const deprecation = item =>
   item.deprecated ? `<p class="deprecated">Deprecated. ${inline(item.deprecated)}</p>` : '';
 
-function attributeRows(attributes) {
+function attributeRows(attributes, className) {
   return attributes.map(attribute => {
     const type =
       attribute.type === 'enum'
@@ -308,8 +308,11 @@ function attributeRows(attributes) {
     const property = attribute.property
       ? ` <span class="note">Property ${code(attribute.property)}.</span>`
       : '';
+    const site = attribute.option
+      ? ` <span class="note">For every instance, ${code(`${className}.defaults.${attribute.option}`)}.</span>`
+      : '';
 
-    return `<tr${attribute.deprecated ? ' class="is-deprecated"' : ''}><th scope="row">${code(attribute.name)}${badges}</th><td>${type}</td><td>${value}</td><td>${inline(attribute.description)}${where}${property}${deprecation(attribute)}</td></tr>`;
+    return `<tr${attribute.deprecated ? ' class="is-deprecated"' : ''}><th scope="row">${code(attribute.name)}${badges}</th><td>${type}</td><td>${value}</td><td>${inline(attribute.description)}${where}${property}${site}${deprecation(attribute)}</td></tr>`;
   });
 }
 
@@ -341,7 +344,7 @@ function reference(contract, prefix, level = 2) {
       id('attributes'),
       'Attributes',
       ['Name', 'Type', 'Default', 'Description'],
-      attributeRows(contract.attributes ?? []),
+      attributeRows(contract.attributes ?? [], contract.name),
       level
     ),
     table(

@@ -263,6 +263,30 @@ loader.init();
 
 With `eager: false`, call `loader.loadComponent('p-select')` yourself, for example on the first click of a button.
 
+## Text and translation
+
+Every component ships with English text: the `Close` on a modal's close button, `Clear the selection` on a select, `Dismiss notification` on a toast. Each is a named default on the class and an attribute on the element, so there are two places to change one.
+
+A site translates once, before the elements are on the page:
+
+```js
+import PModal from '@parallelogram-js/core/components/PModal';
+import PSelect from '@parallelogram-js/core/components/PSelect';
+
+PModal.defaults.closeLabel = 'Fermer';
+Object.assign(PSelect.defaults, { placeholder: 'Choisir…', clearLabel: 'Effacer la sélection' });
+```
+
+A page changes one instance with the attribute, which wins over the default:
+
+```html
+<p-modal close-label="Fermer sans enregistrer"></p-modal>
+```
+
+Enhancements have had both layers all along, through `defaults` and their `data-*` options: `DataTable.defaults.sortStatus` is the sort every table reports, `data-datatable-sort-status` the one this table does. Text with `{name}` placeholders keeps them in whatever order the sentence needs, which is what makes a translation possible at all.
+
+Nothing is translated for you, on purpose: a bundled translation that could not be checked would look finished and be wrong, and the French above is an example of the shape rather than a translation to ship. Dates, times, month and weekday names come from the browser's own `Intl` and are already in every language. Each component's page lists its text under _Attributes_, with the English beside it.
+
 ## Styles
 
 Web components style themselves. Their styles are bundled into each module and adopted in the shadow root, so `<p-modal>` looks right without a stylesheet. Adjust them with the custom properties and shadow parts each component's page lists, such as `--modal-panel-bg` and `p-modal::part(panel)`.

@@ -29,6 +29,29 @@ describe('element declarations', () => {
     );
   });
 
+  it('declares the defaults a site changes once, from the attributes that carry an option', () => {
+    const contract = elementContract({
+      attributes: [
+        {
+          name: 'close-label',
+          type: 'string',
+          default: 'Close',
+          option: 'closeLabel',
+          description: 'The accessible name of the close button',
+        },
+        { name: 'size', type: 'enum', options: ['sm', 'md'], default: 'md', option: 'size' },
+        { name: 'open', type: 'flag', description: 'Present while open' },
+      ],
+    });
+
+    /* Without this a TypeScript page cannot write the line Getting started shows,
+       PModal.defaults.closeLabel = 'Fermer', because the class's declaration is generated from the
+       contract and never saw the static */
+    expect(elementDeclarations(contract)).toContain(
+      "  static defaults: {\n    /** The accessible name of the close button */\n    closeLabel: string;\n    size: 'sm' | 'md';\n  };"
+    );
+  });
+
   it('maps the DOM events the element dispatches, leaving out event bus messages and native events without a detail', () => {
     const map = block(elementDeclarations(elementContract()), 'export interface PWidgetEventMap');
 

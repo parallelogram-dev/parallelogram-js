@@ -339,4 +339,25 @@ describe('p-modal with actions at both ends', () => {
 
     expect(Math.abs(box.right - padding - end.right) < 1).toBe(true);
   });
+
+  it('names its close button, and lets a page or a site rename it', () => {
+    const label = modal =>
+      modal.shadowRoot.querySelector('[data-modal-close-btn]').getAttribute('aria-label');
+    const plain = document.createElement('p-modal');
+    const page = document.createElement('p-modal');
+    page.setAttribute('close-label', 'Fermer');
+    document.body.append(plain, page);
+    page.setAttribute('close-label', 'Cerrar');
+
+    /* A site sets the default once for every modal connected from then on; a page's attribute
+       still wins over it, and follows the attribute when that changes */
+    PModal.defaults.closeLabel = 'Schließen';
+    const site = document.createElement('p-modal');
+    document.body.append(site);
+    try {
+      expect([label(plain), label(page), label(site)]).toEqual(['Close', 'Cerrar', 'Schließen']);
+    } finally {
+      PModal.defaults.closeLabel = 'Close';
+    }
+  });
 });

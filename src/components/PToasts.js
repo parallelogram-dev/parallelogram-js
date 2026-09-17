@@ -5,6 +5,7 @@ import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { getOpenModal } from '../utils/modal.js';
 import { trustedHTML } from '../utils/trusted.js';
+import { text } from '../utils/text.js';
 
 /** Alternative type names, normalised to the four styled types */
 const TYPE_ALIASES = { warn: 'warning', danger: 'error' };
@@ -60,6 +61,9 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * @cssprop --toast-z-index - stacking order where popovers aren't supported
  */
 export default class PToasts extends HTMLElement {
+  /** The text the stack shows: a site changes it here once, a page changes one with the attribute */
+  static defaults = { dismissLabel: 'Dismiss notification' };
+
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
@@ -158,7 +162,7 @@ export default class PToasts extends HTMLElement {
       closeButton.type = 'button';
       closeButton.className = 'btn close';
       closeButton.setAttribute('part', 'close');
-      closeButton.setAttribute('aria-label', 'Dismiss notification');
+      closeButton.setAttribute('aria-label', text(this, 'dismiss-label'));
       closeButton.append(iconElement(x, { size: 'sm' }));
       closeButton.addEventListener('click', entry.dismiss);
       row.append(closeButton);

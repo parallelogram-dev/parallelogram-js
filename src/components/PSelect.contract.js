@@ -18,7 +18,20 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description:
         'The initial value, restored when the form resets; takes precedence over a selected option',
     },
-    { name: 'placeholder', type: 'string', description: 'Shown when nothing is chosen' },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: 'Select…',
+      option: 'placeholder',
+      description: 'Shown when nothing is chosen',
+    },
+    {
+      name: 'clear-label',
+      type: 'string',
+      default: 'Clear the selection',
+      option: 'clearLabel',
+      description: 'The accessible name of the clear button',
+    },
     { name: 'disabled', type: 'flag', property: 'disabled', description: 'Disables the select' },
     {
       name: 'required',
