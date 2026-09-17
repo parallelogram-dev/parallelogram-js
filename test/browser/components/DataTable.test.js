@@ -227,6 +227,19 @@ describe('DataTable', () => {
     expect([color, backgroundColor]).toEqual(['rgb(240, 240, 240)', 'rgba(0, 0, 0, 0)']);
   });
 
+  it('dims a disabled pagination button by the shared amount', () => {
+    const style = document.createElement('style');
+    style.textContent = datatableStyles;
+    document.head.append(style);
+    const table = build(PEOPLE, 'data-datatable-paginate="2"');
+    mount(table);
+    const previous = document.querySelector('.holder nav button');
+    const { opacity } = getComputedStyle(previous);
+    style.remove();
+
+    expect([previous.disabled, opacity]).toEqual([true, '0.3']);
+  });
+
   it('draws the search box, pagination, sort icons and status with the dark roles when data-theme is dark', () => {
     const style = document.createElement('style');
     style.textContent = frameworkStyles;
