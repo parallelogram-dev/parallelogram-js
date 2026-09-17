@@ -79,16 +79,14 @@ const containsComposed = (container, node) => {
 export default class Toggle extends BaseComponent {
   static selector = 'data-toggle';
 
-  static get defaults() {
-    return {
-      openClass: 'open',
-      capture: false,
-      manual: false,
-      animateToggle: true,
-      closeOnEscape: true,
-      closeOnNavigation: true,
-    };
-  }
+  static defaults = {
+    openClass: 'open',
+    capture: false,
+    manual: false,
+    animateToggle: true,
+    closeOnEscape: true,
+    closeOnNavigation: true,
+  };
 
   constructor(options = {}) {
     super(options);

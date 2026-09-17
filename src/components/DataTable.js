@@ -72,34 +72,32 @@ const spanOf = cells => cells.reduce((total, cell) => total + (cell.colSpan || 1
 export class DataTable extends BaseComponent {
   static selector = 'data-datatable';
 
-  static get defaults() {
-    return {
-      sortable: true,
-      filterable: false,
-      paginate: false,
-      pageSize: 10,
-      searchDelay: 300,
-      searchLabel: 'Search',
-      searchPlaceholder: 'Search table…',
-      emptyMessage: 'No matching rows',
-      statusMessage: 'Showing {from}–{to} of {total} rows{sort}',
-      sortStatus: ', sorted by {column}, {direction}',
-      sortAscending: 'ascending',
-      sortDescending: 'descending',
-      paginationLabel: 'Table pagination',
-      previousText: 'Previous',
-      previousLabel: 'Previous page',
-      nextText: 'Next',
-      nextLabel: 'Next page',
-      pageLabel: 'Page {page}',
-      /* Icons from the shared set; a page can pass text instead */
-      sortIcons: {
-        unsorted: selector,
-        asc: arrowUp,
-        desc: arrowDown,
-      },
-    };
-  }
+  static defaults = {
+    sortable: true,
+    filterable: false,
+    paginate: false,
+    pageSize: 10,
+    searchDelay: 300,
+    searchLabel: 'Search',
+    searchPlaceholder: 'Search table…',
+    emptyMessage: 'No matching rows',
+    statusMessage: 'Showing {from}–{to} of {total} rows{sort}',
+    sortStatus: ', sorted by {column}, {direction}',
+    sortAscending: 'ascending',
+    sortDescending: 'descending',
+    paginationLabel: 'Table pagination',
+    previousText: 'Previous',
+    previousLabel: 'Previous page',
+    nextText: 'Next',
+    nextLabel: 'Next page',
+    pageLabel: 'Page {page}',
+    /* Icons from the shared set; a page can pass text instead */
+    sortIcons: {
+      unsorted: selector,
+      asc: arrowUp,
+      desc: arrowDown,
+    },
+  };
 
   constructor(options = {}) {
     super(options);

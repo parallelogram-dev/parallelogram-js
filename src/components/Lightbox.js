@@ -28,37 +28,35 @@ const ICONS = {
 export class Lightbox extends BaseComponent {
   static selector = 'data-lightbox';
 
-  static get defaults() {
-    return {
-      closeOnEscape: true,
-      closeOnBackdrop: true,
-      showCounter: true,
-      showNavigation: true,
-      keyNavigation: true,
-      useDirectionalTransitions: true,
-      /* 'adjacent' | 'all' | 'none' */
-      preloadStrategy: 'adjacent',
-      /* BEM class names */
-      baseClass: 'lightbox',
-      overlayClass: 'lightbox__overlay',
-      containerClass: 'lightbox__container',
-      closeClass: 'lightbox__close',
-      prevClass: 'lightbox__nav lightbox__nav--prev',
-      nextClass: 'lightbox__nav lightbox__nav--next',
-      contentClass: 'lightbox__content',
-      imageClass: 'lightbox__image',
-      counterClass: 'lightbox__counter',
-      /* State classes */
-      stateOpeningClass: 'is-opening',
-      stateOpenClass: 'is-open',
-      stateTransitioningClass: 'is-transitioning',
-      stateClosingClass: 'is-closing',
-      /* Utility classes */
-      showClass: 'show',
-      slideLeftClass: 'slide-left',
-      slideRightClass: 'slide-right',
-    };
-  }
+  static defaults = {
+    closeOnEscape: true,
+    closeOnBackdrop: true,
+    showCounter: true,
+    showNavigation: true,
+    keyNavigation: true,
+    useDirectionalTransitions: true,
+    /* 'adjacent' | 'all' | 'none' */
+    preloadStrategy: 'adjacent',
+    /* BEM class names */
+    baseClass: 'lightbox',
+    overlayClass: 'lightbox__overlay',
+    containerClass: 'lightbox__container',
+    closeClass: 'lightbox__close',
+    prevClass: 'lightbox__nav lightbox__nav--prev',
+    nextClass: 'lightbox__nav lightbox__nav--next',
+    contentClass: 'lightbox__content',
+    imageClass: 'lightbox__image',
+    counterClass: 'lightbox__counter',
+    /* State classes */
+    stateOpeningClass: 'is-opening',
+    stateOpenClass: 'is-open',
+    stateTransitioningClass: 'is-transitioning',
+    stateClosingClass: 'is-closing',
+    /* Utility classes */
+    showClass: 'show',
+    slideLeftClass: 'slide-left',
+    slideRightClass: 'slide-right',
+  };
 
   /**
    * @param {import('../core/BaseComponent.js').ComponentContext} [options]

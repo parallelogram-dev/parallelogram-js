@@ -33,15 +33,13 @@ import { BaseComponent } from '../core/BaseComponent.js';
 export default class Scrollhide extends BaseComponent {
   static selector = 'data-scrollhide';
 
-  static get defaults() {
-    return {
-      scrollThreshold: 50,
-      overlayThreshold: 100,
-      tolerance: 5,
-      scrolledClass: 'scrollhide',
-      overlayClass: 'scrolloverlay',
-    };
-  }
+  static defaults = {
+    scrollThreshold: 50,
+    overlayThreshold: 100,
+    tolerance: 5,
+    scrolledClass: 'scrollhide',
+    overlayClass: 'scrolloverlay',
+  };
 
   constructor(options = {}) {
     super(options);

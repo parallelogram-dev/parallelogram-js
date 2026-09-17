@@ -28,11 +28,9 @@ import { AlertManager } from '../managers/AlertManager.js';
 export default class Toast extends BaseComponent {
   static selector = 'data-toast';
 
-  static get defaults() {
-    return {
-      defaultType: 'info',
-    };
-  }
+  static defaults = {
+    defaultType: 'info',
+  };
 
   _init(element) {
     const state = super._init(element);

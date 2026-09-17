@@ -71,13 +71,11 @@ const MANAGED_ATTRIBUTES = [
 export default class Tabs extends BaseComponent {
   static selector = 'data-tabs';
 
-  static get defaults() {
-    return {
-      defaultTab: null,
-      keyboardNavigation: true,
-      activation: 'auto',
-    };
-  }
+  static defaults = {
+    defaultTab: null,
+    keyboardNavigation: true,
+    activation: 'auto',
+  };
 
   _init(element) {
     const state = super._init(element);

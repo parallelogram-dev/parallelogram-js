@@ -21,15 +21,13 @@ import { announce } from '../utils/announce.js';
 export class CopyToClipboard extends BaseComponent {
   static selector = 'data-copytoclipboard';
 
-  static get defaults() {
-    return {
-      successMessage: 'Copied!',
-      errorMessage: 'Copy failed',
-      successDuration: 2000,
-      successClass: 'copy-success',
-      errorClass: 'copy-error',
-    };
-  }
+  static defaults = {
+    successMessage: 'Copied!',
+    errorMessage: 'Copy failed',
+    successDuration: 2000,
+    successClass: 'copy-success',
+    errorClass: 'copy-error',
+  };
 
   _init(element) {
     const state = super._init(element);
