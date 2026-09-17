@@ -32,6 +32,7 @@ export { default as SelectLoader } from './components/SelectLoader.js';
 export { default as Tabs } from './components/Tabs.js';
 export { default as Toast } from './components/Toast.js';
 export { default as Toggle } from './components/Toggle.js';
+export { default as Tooltip } from './components/Tooltip.js';
 export { default as Videoplay } from './components/Videoplay.js';
 
 /* Importing an element's module defines it, so markup already on the page upgrades */
