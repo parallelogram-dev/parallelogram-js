@@ -224,6 +224,11 @@
   outline-offset: 2px;
 }
 
+/* Opening a modal moves focus into it, so a pointer user would see a ring they never asked for */
+:host([data-focus-source='pointer']) :focus {
+  outline: none;
+}
+
 /* Element: Modal content */
 .modal__content {
   flex: 1 1 auto;
