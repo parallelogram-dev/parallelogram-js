@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `<p-modal>` given nothing to put in its `actions` slot no longer draws an empty footer. The footer was always in the dialog, so a modal that only tells the reader something ended in a bordered, padded strip with nothing in it; it is now left out until the page slots something into it.
+- A `<p-modal>` with no `title` no longer shows the word "Dialog" where its heading would be. That was the slot's fallback content, shown to everyone; the dialog is still named "Dialog" for assistive technology, which it already fell back to.
 - A disabled `<p-select>` looks disabled. It already stopped responding — the input is disabled and the list closes — but was drawn exactly as an enabled one, so nothing on screen said why. It now takes the shared disabled opacity through a new `--select-disabled-opacity`, which falls back to the form control's, and shows the not-allowed cursor.
 - Everything the package dims when it is disabled now takes that amount from one place rather than choosing its own: DataTable's pagination buttons, which were lighter than the rest at 0.5, `<p-uploader>`'s buttons, which were 0.35, and `<p-datetime>`'s and Lightbox's controls, which already matched it. A disabled option inside a `<p-select>` list keeps its own 0.5, since an option has to stay readable to be worth showing.
 

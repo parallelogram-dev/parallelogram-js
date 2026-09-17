@@ -188,3 +188,39 @@ describe('p-modal', () => {
     });
   });
 });
+
+describe('p-modal with a part left out', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const render = markup => {
+    const modal = document.createElement('p-modal');
+    modal.innerHTML = markup;
+    document.body.append(modal);
+    return modal;
+  };
+
+  it('leaves out the footer when nothing is slotted into actions', () => {
+    const modal = render('<h2 slot="title">Booking confirmed</h2><p>Table 12 is held.</p>');
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(true);
+  });
+
+  it('keeps the footer for slotted actions', () => {
+    const modal = render(
+      '<h2 slot="title">Release table?</h2><p>It goes to the waitlist.</p><div slot="actions"><button type="button" data-modal-close>Keep it</button></div>'
+    );
+
+    expect(modal.shadowRoot.querySelector('[data-modal-footer]').hidden).toBe(false);
+  });
+
+  it('shows no placeholder where a title was left out, but still names the dialog', () => {
+    const modal = render('<p>Table 12 is held.</p>');
+
+    expect([
+      modal.shadowRoot.querySelector('[part="title"]').textContent.trim(),
+      modal.shadowRoot.querySelector('dialog').getAttribute('aria-label'),
+    ]).toEqual(['', 'Dialog']);
+  });
+});

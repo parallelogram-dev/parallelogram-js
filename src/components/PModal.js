@@ -77,7 +77,7 @@ export default class PModal extends HTMLElement {
       `
       <dialog class="modal__panel" data-modal-panel part="panel" tabindex="-1">
         <header class="modal__header" data-modal-header part="header">
-          <div class="modal__title" part="title"><slot name="title"><h2>Dialog</h2></slot></div>
+          <div class="modal__title" part="title"><slot name="title"></slot></div>
           <div class="modal__spacer"></div>
           <button type="button" class="modal__close" data-modal-close-btn aria-label="Close" part="close">${iconMarkup(x, { size: 'sm' })}</button>
         </header>
@@ -95,6 +95,8 @@ export default class PModal extends HTMLElement {
     this._dialog = root.querySelector('dialog');
     this._closeButton = root.querySelector('[data-modal-close-btn]');
     this._titleSlot = root.querySelector('slot[name="title"]');
+    this._actionsSlot = root.querySelector('slot[name="actions"]');
+    this._footer = root.querySelector('[data-modal-footer]');
     this._returnFocus = null;
     this._lastReturnFocus = null;
     this._pendingReturnFocus = undefined;
@@ -160,7 +162,9 @@ export default class PModal extends HTMLElement {
     );
 
     this._titleSlot.addEventListener('slotchange', () => this._updateName(), { signal });
+    this._actionsSlot.addEventListener('slotchange', () => this._updateFooter(), { signal });
     this._updateName();
+    this._updateFooter();
 
     this._upgradeOpenProperty();
     if (this.hasAttribute('open')) {
@@ -373,6 +377,13 @@ export default class PModal extends HTMLElement {
       .replace(/\s+/g, ' ')
       .trim();
     this._dialog.setAttribute('aria-label', title || 'Dialog');
+  }
+
+  /**
+   * Keep the footer out of the dialog until the page slots something into it
+   */
+  _updateFooter() {
+    this._footer.hidden = this._actionsSlot.assignedNodes().length === 0;
   }
 
   /**
