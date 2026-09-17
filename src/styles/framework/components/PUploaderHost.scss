@@ -7,28 +7,28 @@
   display: block;
   position: relative;
 
-  /* Overridable via --puploader-* custom properties. Colours default to the panel surface tokens,
+  /* Overridable via --uploader-* custom properties. Colours default to the panel surface tokens,
      then the colour roles, then light values */
-  border-radius: var(--puploader-radius, var(--surface-panel-radius, #{$radius-md}));
-  border-width: var(--puploader-border-width, #{$border-width-thick});
+  border-radius: var(--uploader-radius, var(--surface-panel-radius, #{$radius-md}));
+  border-width: var(--uploader-border-width, #{$border-width-thick});
   border-style: solid;
   border-color: var(
-    --puploader-border-color,
+    --uploader-border-color,
     var(--surface-panel-border-color, var(--color-border, #{$color-border}))
   );
-  background: var(--puploader-bg, var(--surface-panel-color-bg, var(--color-surface, #ffffff)));
-  color: var(--puploader-color, var(--surface-panel-color-text, #{$neutral-900}));
+  background: var(--uploader-bg, var(--surface-panel-color-bg, var(--color-surface, #ffffff)));
+  color: var(--uploader-color, var(--surface-panel-color-text, #{$neutral-900}));
   box-shadow: var(
-    --puploader-shadow,
+    --uploader-shadow,
     var(--surface-panel-shadow, 0 4px 6px var(--color-shadow, #{$shadow-color}))
   );
-  padding: var(--puploader-padding, #{$space-sm});
+  padding: var(--uploader-padding, #{$space-sm});
 }
 
 .uploader {
   &__files {
     display: grid;
-    gap: var(--puploader-files-gap, #{$space-sm});
+    gap: var(--uploader-files-gap, #{$space-sm});
 
     & + & {
       margin-top: $space-sm;
@@ -39,15 +39,15 @@
   &__selector {
     border: var(--surface-touch-border-width, #{$border-width}) solid
       var(
-        --puploader-selector-border,
+        --uploader-selector-border,
         color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
       );
     border-radius: var(--surface-touch-radius, #{$radius-xs});
     background: var(
-      --puploader-selector-bg,
+      --uploader-selector-bg,
       color-mix(in srgb, var(--color-accent, #{$primary}) 8%, transparent)
     );
-    color: var(--puploader-selector-color, var(--color-accent-hover, #{$primary-dark}));
+    color: var(--uploader-selector-color, var(--color-accent-hover, #{$primary-dark}));
     box-shadow: var(--surface-touch-shadow, none);
 
     padding: $space-xxl;
@@ -59,14 +59,14 @@
 
     @include hover {
       background: var(
-        --puploader-selector-hover-bg,
+        --uploader-selector-hover-bg,
         color-mix(in srgb, var(--color-accent, #{$primary}) 14%, transparent)
       );
     }
 
     &.dragover {
       background: var(
-        --puploader-selector-dragover-bg,
+        --uploader-selector-dragover-bg,
         color-mix(in srgb, var(--color-accent, #{$primary}) 20%, transparent)
       );
     }
@@ -84,8 +84,8 @@
     max-width: 18rem;
     padding: $space-sm $space-lg $space-sm $space-sm;
     border-radius: 999px;
-    background: var(--puploader-chip-bg, var(--surface-card-color-bg, var(--color-surface, #fff)));
-    color: var(--puploader-chip-color, var(--surface-card-color-text, #{$neutral-900}));
+    background: var(--uploader-chip-bg, var(--surface-card-color-bg, var(--color-surface, #fff)));
+    color: var(--uploader-chip-color, var(--surface-card-color-text, #{$neutral-900}));
     box-shadow: 0 4px 12px var(--color-shadow, rgba(0, 0, 0, 0.2));
     font-size: $font-sm;
     white-space: nowrap;
@@ -124,12 +124,12 @@
     min-height: var(--button-min-height, 2.5em);
     border: var(--button-border-width, #{$border-width}) solid
       var(
-        --puploader-add-border,
+        --uploader-add-border,
         color-mix(in srgb, var(--color-accent, #{$primary}) 35%, transparent)
       );
     border-radius: var(--button-border-radius, var(--surface-button-radius, #{$radius-sm}));
-    background: var(--puploader-add-bg, var(--color-surface, #ffffff));
-    color: var(--puploader-add-color, var(--color-accent-hover, #{$primary-dark}));
+    background: var(--uploader-add-bg, var(--color-surface, #ffffff));
+    color: var(--uploader-add-color, var(--color-accent-hover, #{$primary-dark}));
     font-family: inherit;
     font-size: var(--button-font-size, #{$font-sm});
     font-weight: var(--button-font-weight, #{$font-semibold});
@@ -156,7 +156,7 @@
 
 /* The selector sits the same distance below the last file as files sit from each other */
 :host(:not([full])) ::slotted(p-uploader-file:last-of-type) {
-  margin-bottom: var(--puploader-files-gap, #{$space-sm});
+  margin-bottom: var(--uploader-files-gap, #{$space-sm});
 }
 
 ::slotted(p-uploader-fields) {
