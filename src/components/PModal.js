@@ -4,6 +4,7 @@ import { deepActiveElement, getFocusableElements } from '../utils/dom-utils.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
+import { followFocusSource } from '../utils/focus-source.js';
 
 /** Modals that are open, most recently opened last, shared by every p-modal on the page */
 const openModals = [];
@@ -104,6 +105,7 @@ export default class PModal extends HTMLElement {
   }
 
   connectedCallback() {
+    followFocusSource(this);
     /* Custom element constructors may not add attributes, so the initial state is set here */
     if (!this.hasAttribute('data-modal-state')) {
       this._setModalState('closed');
