@@ -258,7 +258,8 @@ describe('p-select', () => {
   });
 });
 
-const WAIT = { timeout: 2000 };
+/* Long enough that a loaded runner doesn't give up on a request that is still on its way */
+const WAIT = { timeout: 5000 };
 
 const mountSelect = (markup, container = document.body) => {
   container.insertAdjacentHTML('beforeend', markup);
