@@ -1,5 +1,5 @@
 import { userEvent } from 'vitest/browser';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import PDatetime from '../../../src/components/PDatetime.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
 
@@ -768,16 +768,22 @@ describe('p-datetime', () => {
         getComputedStyle(preset).backgroundColor,
         getComputedStyle(preset).color,
       ];
+      const eased = `${getComputedStyle(preset).transitionProperty} ${getComputedStyle(preset).transitionDuration}`;
 
       const resting = paint();
       await userEvent.hover(preset);
+      /* The hover eases over 0.15s, so the accent is read once the fade has landed */
+      await vi.waitFor(() =>
+        expect(paint()).toEqual([token('--color-accent'), token('--color-accent-contrast')])
+      );
       const hovered = paint();
 
       /* They were ghost buttons: transparent with muted text, and a hover that painted the
          strong accent under the panel's background colour rather than the accent's contrast */
-      expect({ resting, hovered }).toEqual({
+      expect({ resting, hovered, eased }).toEqual({
         resting: [token('--color-surface-muted'), token('--color-text')],
         hovered: [token('--color-accent'), token('--color-accent-contrast')],
+        eased: 'background-color, color 0.15s, 0.15s',
       });
     } finally {
       style.remove();
