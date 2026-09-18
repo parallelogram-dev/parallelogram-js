@@ -253,7 +253,7 @@ describe('FormEnhancer', () => {
 
     form.requestSubmit();
 
-    expect(form.querySelector('[data-error-for="email"]').className).toBe('form-enhancer__error');
+    expect(form.querySelector('[data-error-for="email"]').className).toBe('form__error');
   });
 
   it('puts the classes the form names on a message element it creates', () => {
