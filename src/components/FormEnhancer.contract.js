@@ -54,6 +54,13 @@ Each error is written to the form's \`[data-error-for]\` element for that field,
       description: 'Class added to checked fields that are valid',
     },
     {
+      name: 'data-form-enhancer-message-class',
+      type: 'string',
+      default: 'form-enhancer__error',
+      option: 'messageClass',
+      description: "Class on a message element the form didn't supply itself",
+    },
+    {
       name: 'data-form-enhancer-message',
       type: 'string',
       on: 'a field',
