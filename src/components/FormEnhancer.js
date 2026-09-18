@@ -63,7 +63,7 @@ const isValidated = field => field.willValidate === true && !BUTTON_TYPES.has(fi
  * - data-form-enhancer-error-class, data-form-enhancer-valid-class: classes added to checked fields
  *   (default is-invalid and is-valid)
  * - data-form-enhancer-message-class: class on a message element the form didn't supply itself
- *   (default form-enhancer__error)
+ *   (default form__error)
  * - data-form-enhancer-message: on a field, the message for any failure
  * - data-form-enhancer-message-value-missing, -type-mismatch, -bad-input, -pattern-mismatch,
  *   -too-short, -too-long, -range-underflow, -range-overflow, -step-mismatch: on a field, the message
@@ -86,7 +86,7 @@ export class FormEnhancer extends BaseComponent {
     debounce: 300,
     errorClass: 'is-invalid',
     validClass: 'is-valid',
-    messageClass: 'form-enhancer__error',
+    messageClass: 'form__error',
   };
 
   _init(element) {

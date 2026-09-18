@@ -56,7 +56,7 @@ Each error is written to the form's \`[data-error-for]\` element for that field,
     {
       name: 'data-form-enhancer-message-class',
       type: 'string',
-      default: 'form-enhancer__error',
+      default: 'form__error',
       option: 'messageClass',
       description: "Class on a message element the form didn't supply itself",
     },
