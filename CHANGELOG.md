@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.13] - 2026-09-18
+
 ### Added
 
 - `data-form-enhancer-message-class` names the class FormEnhancer puts on a message element it creates for a field, when the form has no `data-error-for` element of its own; several classes separated by spaces are all added. A site whose stylesheet already styles its server-side errors can name that class instead of styling the framework's.
