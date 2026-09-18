@@ -6,6 +6,5 @@ coverage/__screenshots__/
 dist/
 site/dist/
 site/*.html
-.claude/settings.local.json
 .vitest/
 coverage/
