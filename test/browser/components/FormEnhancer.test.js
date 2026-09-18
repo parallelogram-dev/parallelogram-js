@@ -244,6 +244,33 @@ describe('FormEnhancer', () => {
     expect(blocked).toEqual([[['email', 'Add your email']]]);
   });
 
+  it('creates a message element with the default class', () => {
+    const form = build(`
+      <form data-form-enhancer>
+        <input name="email" type="email" required>
+      </form>`);
+    enhancer.mount(form);
+
+    form.requestSubmit();
+
+    expect(form.querySelector('[data-error-for="email"]').className).toBe('form__error');
+  });
+
+  it('puts the classes the form names on a message element it creates', () => {
+    const form = build(`
+      <form data-form-enhancer data-form-enhancer-message-class="form__errors form__errors--live">
+        <input name="email" type="email" required>
+      </form>`);
+    enhancer.mount(form);
+
+    form.requestSubmit();
+
+    expect([...form.querySelector('[data-error-for="email"]').classList]).toEqual([
+      'form__errors',
+      'form__errors--live',
+    ]);
+  });
+
   it('gives validation back to the browser once unmounted', () => {
     const form = build(`
       <form data-form-enhancer>
