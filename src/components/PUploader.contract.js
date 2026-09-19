@@ -499,5 +499,27 @@ A failed request is read for something worth showing: JSON contributes its \`mes
         { attribute: 'stacked' },
       ],
     },
+    {
+      id: 'single',
+      title: 'One image, replaced in place',
+      description:
+        'With max-files="1" the card offers Replace, between Edit and Delete in the same pill. Choosing a file uploads it in the card\u2019s own place and deletes the old one once it has arrived, so the list never grows; if the upload fails the original comes back.',
+      markup: `<p-uploader
+  max-files="1"
+  accept-types="image/*"
+  upload-action="/api/upload"
+  update-action="/api/update"
+  delete-action="/api/delete"
+>
+  <p-uploader-fields slot="field-definitions">
+    <p-uploader-field key="title" label="Title"></p-uploader-field>
+  </p-uploader-fields>
+
+  <p-uploader-file file-id="hero" filename="terrace.jpg" preview="images/terrace-640.jpg">
+    <p-uploader-data key="title">The terrace</p-uploader-data>
+  </p-uploader-file>
+</p-uploader>`,
+      controls: [{ attribute: 'allow-edit' }],
+    },
   ],
 };
