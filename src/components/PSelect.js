@@ -137,6 +137,7 @@ export default class PSelect extends HTMLElement {
       'value',
       'multiple',
       'selection-rows',
+      'list-rows',
       'remove-label',
       'select-all',
       'select-all-label',

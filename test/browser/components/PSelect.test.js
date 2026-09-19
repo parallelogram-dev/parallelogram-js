@@ -1463,3 +1463,62 @@ describe('p-select, taking the whole list at once', () => {
     expect(select.value).toEqual(['ada']);
   });
 });
+
+describe('p-select, how tall the list and its rows are', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openList = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return select.shadowRoot.querySelector('.menu');
+  };
+
+  const MANY = Array.from(
+    { length: 40 },
+    (_, i) => `<option value="v${i}" data-secondary="Role ${i}">Person ${i}</option>`
+  ).join('');
+
+  it('keeps the secondary text on the label\u2019s line by default', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple>
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('inline');
+  });
+
+  it('puts the secondary text on its own line where two rows are asked for', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple list-rows="2">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('block');
+  });
+
+  it('caps the list and scrolls it, by default', async () => {
+    const { select } = renderForm(`<p-select name="staff" multiple>${MANY}</p-select>`);
+    await customElements.whenDefined('p-select');
+    const menu = await openList(select);
+
+    expect(menu.scrollHeight > menu.clientHeight).toBe(true);
+  });
+
+  it('lets the list fit its content when the page asks for no cap', async () => {
+    const { select } = renderForm(
+      `<p-select name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
+    );
+    await customElements.whenDefined('p-select');
+    const menu = await openList(select);
+
+    /* A menu of a handful should not scroll inside a box of a fixed height; a page that knows
+       its list is short says so, and the list grows to what is in it */
+    expect(menu.scrollHeight > menu.clientHeight).toBe(false);
+  });
+});

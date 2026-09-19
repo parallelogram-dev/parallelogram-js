@@ -272,7 +272,7 @@
   border-radius: var(--menu-border-radius);
   box-shadow: var(--menu-shadow);
 
-  max-height: 240px;
+  max-height: var(--select-menu-max-height, 240px);
   overflow: auto;
 }
 
@@ -302,6 +302,14 @@
 .secondary {
   color: var(--color-text-muted, #{$color-text-muted});
   font-weight: 400;
+}
+
+/* Two rows puts the secondary text under the label rather than after it, so a long row reads
+   as a name and a line about it rather than one run-on line */
+:host([list-rows='2']) .secondary {
+  display: block;
+  font-size: var(--select-secondary-font-size, #{$font-xs});
+  line-height: 1.3;
 }
 
 .description {

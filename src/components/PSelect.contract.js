@@ -40,6 +40,14 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: "The accessible name of a chosen value's remove button; {label} is its label",
     },
     {
+      name: 'list-rows',
+      type: 'enum',
+      options: ['1', '2'],
+      default: '1',
+      description:
+        'How many rows an option takes in the list: its label with the secondary text after it, or the secondary text on its own line beneath',
+    },
+    {
       name: 'select-all',
       type: 'flag',
       description:
@@ -225,6 +233,17 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
+    {
+      name: '--select-menu-max-height',
+      default: '240px',
+      description:
+        'How tall the list grows before it scrolls; set it to none and the list fits what is in it',
+    },
+    {
+      name: '--select-secondary-font-size',
+      default: 'var(--font-xs)',
+      description: "The size of an option's secondary text where list-rows is 2",
+    },
     {
       name: '--select-chosen-bg',
       default: 'var(--color-accent)',
