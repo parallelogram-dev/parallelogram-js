@@ -43,6 +43,10 @@ export const calendar = [
   'M12 14v4',
   'M16 14v4',
 ];
+export const refresh = [
+  'M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4',
+  'M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4',
+];
 export const selector = ['M8 9l4 -4l4 4', 'M16 15l-4 4l-4 -4'];
 
 const attributes = (size, className) => ({

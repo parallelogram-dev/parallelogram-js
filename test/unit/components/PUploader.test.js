@@ -26,8 +26,9 @@ const renderUploader = async (attributes = {}) => {
   return { uploader, file, shadow: file.shadowRoot };
 };
 
+/* The move buttons and the pill are separate groups in the card's body, in that order */
 const actions = shadow =>
-  [...shadow.querySelectorAll('.uploader__toolbar button')].map(button => button.dataset.action);
+  [...shadow.querySelectorAll('.uploader__body button')].map(button => button.dataset.action);
 
 describe('p-uploader', () => {
   afterEach(() => {
@@ -48,7 +49,8 @@ describe('p-uploader', () => {
       'sequence-action': '/api/sequence',
     });
 
-    /* Edit and Delete sit together in the pill, after the reorder arrows */
+    /* Edit and Delete sit together in the pill, after the reorder arrows; with more than one
+       file allowed there is no Replace */
     expect(actions(shadow)).toEqual(['move-up', 'move-down', 'edit', 'show-delete']);
   });
 
@@ -93,6 +95,20 @@ describe('p-uploader', () => {
       ['move-up', 'move-down'],
       ['move-up', 'move-down', 'edit', 'show-delete'],
     ]);
+  });
+
+  it('sets the filename below the fields it labels, and lists the fields without a gap', async () => {
+    const { shadow } = await renderUploader({});
+    const style = getComputedStyle(shadow.querySelector('[part="filename"]'));
+    const field = getComputedStyle(shadow.querySelector('.uploader__field'));
+
+    /* Bold monospace at the fields' own size read as louder than the values beside it, and the
+       rows carry their own height, so a gap on top of it only spread the list */
+    expect({
+      weight: style.fontWeight,
+      smallerThanFields: parseFloat(style.fontSize) < parseFloat(field.fontSize),
+      rowGap: parseFloat(getComputedStyle(shadow.querySelector('[part="fields"]')).rowGap) || 0,
+    }).toEqual({ weight: '400', smallerThanFields: true, rowGap: 0 });
   });
 
   it('keeps the moved file’s order buttons in step with its position', async () => {

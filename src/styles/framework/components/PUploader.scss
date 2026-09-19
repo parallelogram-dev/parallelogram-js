@@ -53,6 +53,11 @@ $size-icon-md: 1.25rem;
   transition: none;
 }
 
+/* The shadow root's own :host rule would otherwise beat the browser's rule for [hidden] */
+:host([hidden]) {
+  display: none;
+}
+
 :host([drag-over]) {
   border-color: var(--color-accent, #{$primary});
   background: var(--color-hover, #{$color-bg-hover});
@@ -212,10 +217,11 @@ input {
     position: relative;
   }
 
+  /* The rows carry their own height and padding, so they read as a list without a gap on top */
   &__fields {
     display: grid;
     grid-template-columns: var(--uploader-label-width, 4rem) minmax(0, 1fr);
-    row-gap: var(--uploader-field-gap, #{$space-sm});
+    row-gap: var(--uploader-field-gap, 0);
     column-gap: var(--uploader-preview-gap, 1rem);
     align-items: baseline;
     flex: 1;
@@ -238,8 +244,12 @@ input {
     align-items: center;
   }
 
+  /* The name labels the card; the fields beside it are what the reader is there to read, so it
+     is set below them rather than over them */
   &__filename {
     font-family: monospace;
+    font-size: $font-xs;
+    font-weight: $font-normal;
   }
 
   &__field {
@@ -556,13 +566,17 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+.uploader__toolbar,
+.uploader__body > .uploader__pills {
+  align-self: center;
+  flex-shrink: 0;
+  margin-left: $space-sm;
+}
+
 .uploader__toolbar {
   display: flex;
   align-items: center;
-  align-self: center;
   gap: $space-xs;
-  flex-shrink: 0;
-  margin-left: $space-sm;
 }
 
 /* Reordering is a drag for pointer users, so the arrows stay out of the way until someone reaches
@@ -584,8 +598,7 @@ textarea:focus-visible {
   clip-path: none;
 }
 
-.uploader__move,
-.uploader__replace {
+.uploader__move {
   height: $size-icon-md;
   padding: 0 $space-xs;
   font: inherit;
@@ -599,11 +612,6 @@ textarea:focus-visible {
     opacity: $opacity-disabled;
     cursor: default;
   }
-}
-
-.uploader__replace {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 /* Pointer users don't need focus rings; followFocusSource() sets the host attribute */

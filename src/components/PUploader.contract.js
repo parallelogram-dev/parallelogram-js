@@ -416,10 +416,23 @@ A failed request is read for something worth showing: JSON contributes its \`mes
         { name: 'fields', description: 'The field list' },
         { name: 'field', description: 'Each field' },
         { name: 'filename', description: 'The file name' },
-        { name: 'toolbar', description: 'The action buttons' },
-        { name: 'pills', description: 'The Edit and Delete buttons, as one segmented pill' },
+        {
+          name: 'toolbar',
+          description: 'The Move up and Move down buttons; absent when neither is allowed',
+        },
+        {
+          name: 'pills',
+          description: 'The Edit, Replace and Delete buttons, as one segmented pill',
+        },
         { name: 'actions', description: 'Button rows in panels' },
         { name: 'edit-button', description: 'The Edit button' },
+        { name: 'replace-button', description: 'The Replace button' },
+        { name: 'delete-button', description: 'The Delete button that asks for confirmation' },
+        { name: 'move-up-button', description: 'The Move up button' },
+        { name: 'move-down-button', description: 'The Move down button' },
+        { name: 'cancel-button', description: 'The button that backs out of a panel' },
+        { name: 'confirm-button', description: 'The button that confirms a delete' },
+        { name: 'save-button', description: 'The button that saves the edited fields' },
         { name: 'edit-panel', description: 'The panel holding the edit form' },
       ],
       slots: [
@@ -485,6 +498,28 @@ A failed request is read for something worth showing: JSON contributes its \`mes
         { attribute: 'allow-sort' },
         { attribute: 'stacked' },
       ],
+    },
+    {
+      id: 'single',
+      title: 'One image, replaced in place',
+      description:
+        'With max-files="1" the card offers Replace, between Edit and Delete in the same pill. Choosing a file uploads it in the card\u2019s own place and deletes the old one once it has arrived, so the list never grows; if the upload fails the original comes back.',
+      markup: `<p-uploader
+  max-files="1"
+  accept-types="image/*"
+  upload-action="/api/upload"
+  update-action="/api/update"
+  delete-action="/api/delete"
+>
+  <p-uploader-fields slot="field-definitions">
+    <p-uploader-field key="title" label="Title"></p-uploader-field>
+  </p-uploader-fields>
+
+  <p-uploader-file file-id="hero" filename="terrace.jpg" preview="images/terrace-640.jpg">
+    <p-uploader-data key="title">The terrace</p-uploader-data>
+  </p-uploader-file>
+</p-uploader>`,
+      controls: [{ attribute: 'allow-edit' }],
     },
   ],
 };
