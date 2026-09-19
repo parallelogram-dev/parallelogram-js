@@ -244,6 +244,8 @@ describe.each(contracts.map(contract => [contract.name, contract]))(
 const INTERNAL_PROPERTIES = new Set([
   /* Written by Tooltip each time it positions, so the triangle points at the control */
   '--tooltip-arrow-offset',
+  /* Set by the dropdown stylesheet from the side the menu took, for its own keyframes */
+  '--dropdown-from',
   '--modal-font-md',
   '--modal-font-sm',
   '--modal-radius-lg',

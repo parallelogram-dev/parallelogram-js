@@ -1,8 +1,8 @@
 import { BaseComponent } from '../core/BaseComponent.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
+import { placeBeside } from '../utils/position.js';
 
 const PLACEMENTS = ['top', 'bottom', 'left', 'right'];
-const OPPOSITE = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
 /** Room to leave between a tooltip and the edge of the viewport */
 const MARGIN = 8;
 
@@ -209,43 +209,17 @@ export class Tooltip extends BaseComponent {
   _position(element, state) {
     const { tip, config } = state;
     if (!tip || tip.hidden) return;
-    const anchor = element.getBoundingClientRect();
-    const width = tip.offsetWidth;
-    const height = tip.offsetHeight;
-    const { offset } = config;
-    const room = {
-      top: anchor.top - offset - height >= MARGIN,
-      bottom: anchor.bottom + offset + height <= window.innerHeight - MARGIN,
-      left: anchor.left - offset - width >= MARGIN,
-      right: anchor.right + offset + width <= window.innerWidth - MARGIN,
-    };
-    const placement =
-      room[config.placement] || !room[OPPOSITE[config.placement]]
-        ? config.placement
-        : OPPOSITE[config.placement];
-
-    let left;
-    let top;
-    if (placement === 'top' || placement === 'bottom') {
-      left = anchor.left + anchor.width / 2 - width / 2;
-      top = placement === 'top' ? anchor.top - offset - height : anchor.bottom + offset;
-    } else {
-      top = anchor.top + anchor.height / 2 - height / 2;
-      left = placement === 'left' ? anchor.left - offset - width : anchor.right + offset;
-    }
-    const clampedLeft = Math.min(Math.max(left, MARGIN), window.innerWidth - width - MARGIN);
-    const clampedTop = Math.min(Math.max(top, MARGIN), window.innerHeight - height - MARGIN);
-
-    tip.dataset.tooltipPlacement = placement;
-    tip.style.left = `${Math.round(clampedLeft)}px`;
-    tip.style.top = `${Math.round(clampedTop)}px`;
+    const { side, left, top, arrow } = placeBeside(
+      element.getBoundingClientRect(),
+      { width: tip.offsetWidth, height: tip.offsetHeight },
+      { placement: config.placement, offset: config.offset, margin: MARGIN }
+    );
+    tip.dataset.tooltipPlacement = side;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
     /* Where the triangle sits along the tooltip, so it points at the control's centre even when
        the tooltip itself was moved to stay on screen */
-    const arrow =
-      placement === 'top' || placement === 'bottom'
-        ? anchor.left + anchor.width / 2 - clampedLeft
-        : anchor.top + anchor.height / 2 - clampedTop;
-    tip.style.setProperty('--tooltip-arrow-offset', `${Math.round(arrow)}px`);
+    tip.style.setProperty('--tooltip-arrow-offset', `${arrow}px`);
   }
 
   /**
