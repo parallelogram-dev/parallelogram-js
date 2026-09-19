@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { commands } from 'vitest/browser';
+import { commands, userEvent } from 'vitest/browser';
 import Accordion from '../../../src/components/Accordion.js';
 import Tabs from '../../../src/components/Tabs.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
@@ -145,13 +145,14 @@ describe('dark theme', () => {
       getComputedStyle(returns).borderBottomColor,
     ];
 
-    /* The colours are transitioned, so reading them straight after the click catches a tab part
-       way between its two states, or still at the one it is leaving */
-    await Promise.all(
-      [shipping, returns].flatMap(tab =>
-        tab.getAnimations().map(animation => animation.finished.catch(() => {}))
-      )
-    );
+    /* A tab's hover colour is the panel's text colour, which is what an unselected tab would
+       read as if the pointer happened to rest on it: on a runner it starts at the top left,
+       over the first tab. Park it clear of them so this reads their resting state */
+    const away = document.createElement('div');
+    away.style.cssText = 'position:fixed;right:0;bottom:0;width:2rem;height:2rem';
+    document.body.append(away);
+    cleanups.push(() => away.remove());
+    await userEvent.hover(away);
 
     await vi.waitFor(
       () =>
