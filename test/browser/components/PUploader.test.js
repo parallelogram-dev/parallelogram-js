@@ -1188,6 +1188,28 @@ describe('p-uploader ordering and replacing without dragging', () => {
     await vi.waitFor(() => expect(old.getBoundingClientRect().height > 0).toBe(true));
   });
 
+  it('brings the original back when the server refuses to delete it', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('no', { status: 500 }))
+    );
+    const uploader = await renderFiles(
+      { 'max-files': '1', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['old']
+    );
+    const old = uploader.querySelector('p-uploader-file[file-id="old"]');
+    const input = uploader.shadowRoot.querySelector('input[type="file"]');
+    vi.spyOn(input, 'click').mockImplementation(() => {});
+
+    control(uploader, 'old', 'replace').click();
+    addFiles(uploader, [new File(['x'], 'new.txt', { type: 'text/plain' })]);
+
+    /* The upload arrived, so the card was hidden for the replacement; the delete that followed
+       failed, so the page still has that file and must be able to see it */
+    await vi.waitFor(() => expect(old.getAttribute('data-current-panel')).toBe('error'));
+    expect(old.getBoundingClientRect().height > 0).toBe(true);
+  });
+
   it('offers no Replace when more than one file is allowed', async () => {
     const uploader = await renderFiles(
       { 'max-files': '3', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
