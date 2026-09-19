@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
+import { chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -124,6 +124,7 @@ export default class PSelect extends HTMLElement {
   static defaults = {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
+    removeLabel: 'Remove {label}',
     searchHint: 'Type to search',
     searchMinHint: 'Type {min} or more characters to search',
     noResults: 'No results found',
@@ -133,6 +134,8 @@ export default class PSelect extends HTMLElement {
     return [
       'value',
       'multiple',
+      'selection-rows',
+      'remove-label',
       'placeholder',
       'clear-label',
       'search-hint',
@@ -166,6 +169,7 @@ export default class PSelect extends HTMLElement {
       value: '',
       multiple: false,
       values: [],
+      selectionRows: 1,
       open: false,
       highlightedIndex: -1,
       src: null,
@@ -241,6 +245,10 @@ export default class PSelect extends HTMLElement {
         this.state.multiple = newValue !== null;
         this._setValue(this.state.multiple ? this.state.values : this.state.value);
         break;
+      case 'selection-rows':
+        this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
+        this._renderSelections();
+        break;
       case 'placeholder':
         this.state.placeholder = newValue || this.constructor.defaults.placeholder;
         this._els.input.placeholder = this.state.placeholder;
@@ -268,6 +276,7 @@ export default class PSelect extends HTMLElement {
       `
       <div class="root">
         <div class="control">
+          <span class="selections" part="selections" hidden></span>
           <input
             class="input"
             part="input"
@@ -293,6 +302,7 @@ export default class PSelect extends HTMLElement {
 
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
+      selections: this.shadowRoot.querySelector('.selections'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
@@ -305,6 +315,15 @@ export default class PSelect extends HTMLElement {
   }
 
   _setupEventListeners() {
+    this._els.selections.addEventListener('mousedown', event => event.preventDefault());
+    this._els.selections.addEventListener('click', event => {
+      const button = event.target.closest('[data-value]');
+      if (!button) return;
+      event.stopPropagation();
+      const option = this.state.options.find(item => item.value === button.dataset.value);
+      this._choose(button.dataset.value, option ?? null);
+    });
+
     const { control, input, menu, clear } = this._els;
 
     /* The clear button sits inside the control, so it must not open the list as well */
@@ -700,9 +719,65 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateDisplay() {
-    this._els.input.value =
-      this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
+    if (this.state.multiple) {
+      this._els.input.value = '';
+      this._renderSelections();
+    } else {
+      this._els.input.value =
+        this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
+    }
     this._updateControls();
+  }
+
+  /**
+   * Every chosen value in the control, in the options' order, each with the way to take it back
+   * out. Nothing is counted away behind "and 2 more": what was chosen is what is shown
+   */
+  _renderSelections() {
+    const box = this._els.selections;
+    if (!box) return;
+    if (!this.state.multiple) {
+      box.hidden = true;
+      box.replaceChildren();
+      return;
+    }
+
+    const two = this.state.selectionRows === 2;
+    box.hidden = this.state.values.length === 0;
+    box.classList.toggle('selections--two', two);
+    box.replaceChildren(
+      ...this.state.values.map(value => {
+        const option = this.state.options.find(item => item.value === value);
+        const label = option?.label ?? value;
+        const chip = document.createElement('span');
+        chip.className = two ? 'selection selection--two' : 'selection';
+        chip.setAttribute('part', 'selection');
+
+        const body = document.createElement('span');
+        body.className = 'selection__body';
+        const name = document.createElement('span');
+        name.className = 'selection__name';
+        name.textContent = label;
+        body.append(name);
+        if (two && option?.secondary) {
+          const sub = document.createElement('span');
+          sub.className = 'selection__sub';
+          sub.textContent = option.secondary;
+          body.append(sub);
+        }
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'selection__remove';
+        remove.setAttribute('part', 'selection-remove');
+        remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
+        remove.dataset.value = value;
+        remove.append(iconElement(x, { size: 'xs' }));
+
+        chip.append(body, remove);
+        return chip;
+      })
+    );
   }
 
   /**

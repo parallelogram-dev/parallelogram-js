@@ -1171,3 +1171,82 @@ describe('p-select, choosing more than one', () => {
     expect(select.value).toEqual(['ada']);
   });
 });
+
+describe('p-select, what it shows once several are chosen', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const selections = select =>
+    [...select.shadowRoot.querySelectorAll('.selection')].map(
+      node => node.querySelector('.selection__name').textContent
+    );
+
+  it('shows every chosen value in the control, in the options\u2019 order', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['mary', 'ada'];
+
+    /* Nothing is counted away behind "and 2 more": what was chosen is what is shown */
+    expect(selections(select)).toEqual(['Ada Lovelace', 'Mary Somerville']);
+  });
+
+  it('takes a value back out from its own remove button', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    const changed = [];
+    select.addEventListener('change', () => changed.push([...select.value]));
+
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    expect({ left: selections(select), changed }).toEqual({
+      left: ['Grace Hopper'],
+      changed: [['grace']],
+    });
+  });
+
+  it('names every part a page can style', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada'];
+    const part = selector => select.shadowRoot.querySelector(selector)?.getAttribute('part');
+
+    expect({
+      selections: part('.selections'),
+      selection: part('.selection'),
+      remove: part('.selection [part]'),
+    }).toEqual({
+      selections: 'selections',
+      selection: 'selection',
+      remove: 'selection-remove',
+    });
+  });
+
+  it('carries a second line on each selection when asked for two rows', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada'];
+
+    /* A selection says what a row says: the same two lines, not the name alone */
+    expect([
+      select.shadowRoot.querySelector('.selection__name').textContent,
+      select.shadowRoot.querySelector('.selection__sub').textContent,
+    ]).toEqual(['Ada Lovelace', 'Duty manager']);
+  });
+
+  it('shows the placeholder while nothing is chosen, and no selections', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    expect([selections(select), select.shadowRoot.querySelector('.input').placeholder]).toEqual([
+      [],
+      'Select…',
+    ]);
+  });
+});

@@ -25,6 +25,21 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'Allows more than one value: choosing toggles rather than replaces, the field submits one entry per value under its name, and `value` reads and writes a list',
     },
     {
+      name: 'selection-rows',
+      type: 'enum',
+      options: ['1', '2'],
+      default: '1',
+      description:
+        "How many rows a chosen value takes in the control: its label, or its label over the option's secondary text",
+    },
+    {
+      name: 'remove-label',
+      type: 'string',
+      default: 'Remove {label}',
+      option: 'removeLabel',
+      description: "The accessible name of a chosen value's remove button; {label} is its label",
+    },
+    {
       name: 'placeholder',
       type: 'string',
       default: 'Select…',
@@ -179,10 +194,43 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   parts: [
     { name: 'input', description: 'The text input' },
+    { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
+    { name: 'selection', description: 'One chosen value' },
+    { name: 'selection-remove', description: 'The button that takes one chosen value back out' },
     { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
+    {
+      name: '--select-selections-max-height',
+      default: '7.2rem',
+      description: 'How tall the chosen values grow in the control before they scroll',
+    },
+    {
+      name: '--select-selection-bg',
+      default: 'var(--select-selected-bg)',
+      description: 'Background of one chosen value; the same tint a chosen option carries',
+    },
+    {
+      name: '--select-selection-radius',
+      default: '999px',
+      description: 'Corner radius of one chosen value',
+    },
+    {
+      name: '--select-selection-max-width',
+      default: '16rem',
+      description: 'How wide one chosen value grows before its label is cut short',
+    },
+    {
+      name: '--select-selection-font-size',
+      default: 'var(--font-sm)',
+      description: "The size of a chosen value's label",
+    },
+    {
+      name: '--select-selection-secondary-font-size',
+      default: 'var(--font-xs)',
+      description: "The size of a chosen value's second line, where selection-rows is 2",
+    },
     {
       name: '--select-bg',
       default: 'var(--surface-control-color-bg)',
