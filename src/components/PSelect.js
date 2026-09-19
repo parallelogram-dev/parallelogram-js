@@ -581,9 +581,12 @@ export default class PSelect extends HTMLElement {
   }
 
   _clearsValue(key) {
-    return (
-      (key === 'Backspace' || key === 'Delete') && this.state.value !== '' && !this.state.disabled
-    );
+    if (key !== 'Backspace' && key !== 'Delete') return false;
+    if (this.state.disabled) return false;
+    if (!this.state.multiple) return this.state.value !== '';
+    /* The input stays typeable while values are held, so a keypress deleting what was typed is
+       not a keypress taking a value back */
+    return this.state.values.length > 0 && this._els.input.value === '';
   }
 
   /**
@@ -595,6 +598,13 @@ export default class PSelect extends HTMLElement {
    * so a remote source is asked again rather than answering out of the last query's page.
    */
   _clearForSearch() {
+    if (this.state.multiple) {
+      /* The last one in is the one taken back, which is how a token field has always behaved */
+      const last = this.state.values.at(-1);
+      const option = this.state.options.find(item => item.value === last);
+      this._choose(last, option ?? null);
+      return;
+    }
     this._choose('');
     this._els.input.value = '';
     this._handleInput({ target: this._els.input });
@@ -794,6 +804,9 @@ export default class PSelect extends HTMLElement {
         remove.type = 'button';
         remove.className = 'selection__remove';
         remove.setAttribute('part', 'selection-remove');
+        /* Out of the tab order, as the clear button is: a field holding twenty values would
+           otherwise stop the keyboard twenty times before the input. Backspace is the way back */
+        remove.tabIndex = -1;
         remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
         remove.dataset.value = value;
         remove.append(iconElement(x, { size: 'xs' }));

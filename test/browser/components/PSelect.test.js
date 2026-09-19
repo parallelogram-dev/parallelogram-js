@@ -1569,3 +1569,50 @@ describe('p-select, where the icons sit once the field grows', () => {
     expect(arrow).toBe(first);
   });
 });
+
+describe('p-select, reaching the chosen values from the keyboard', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('keeps the remove buttons out of the tab order, as the clear button is', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'grace', 'mary'];
+
+    /* Otherwise tabbing into a field holding twenty values stops twenty times before the input */
+    expect(
+      [...select.shadowRoot.querySelectorAll('.selection__remove')].map(button =>
+        button.getAttribute('tabindex')
+      )
+    ).toEqual(['-1', '-1', '-1']);
+  });
+
+  it('takes the last value back on Backspace in an empty input', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('{Backspace}');
+
+    /* The way back out without a pointer, and the way a token field has always behaved */
+    expect(select.value).toEqual(['ada']);
+  });
+
+  it('leaves the values alone while there is something typed to delete', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('ma{Backspace}');
+
+    expect(select.value).toEqual(['ada', 'grace']);
+  });
+});
