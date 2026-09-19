@@ -264,10 +264,55 @@ describe('Dropdown', () => {
     }).toEqual({ above: true, wide: true });
   });
 
+  it('lays a disabled item out as a row like the others, and the arrows pass over it', async () => {
+    const button = mount(`
+      <button type="button" data-dropdown data-dropdown-target="#m">Actions</button>
+      <div id="m" hidden><a href="#e">Edit</a><button type="button" disabled>Cancel</button><a href="#s" aria-disabled="true">Share</a></div>`);
+    const look = item => [
+      item.getAttribute('role'),
+      getComputedStyle(item).display,
+      getComputedStyle(item).textAlign,
+    ];
+
+    const menu = await open(dropdown, button);
+    const [edit, cancel, share] = menu.children;
+    await userEvent.keyboard('{ArrowDown}');
+
+    /* A disabled button and a link marked disabled both get the menu's role and its row, and
+       the arrow keys go from Edit back round to Edit, the only item that can be chosen */
+    expect({ cancel: look(cancel), share: look(share), focused: document.activeElement }).toEqual({
+      cancel: look(edit),
+      share: look(edit),
+      focused: edit,
+    });
+  });
+
+  it('stays open when a disabled item is pressed, and chooses nothing', async () => {
+    const button = mount(`<div tabindex="-1">
+      <button type="button" data-dropdown data-dropdown-target="#m">Actions</button>
+      <div id="m" hidden><a href="#e">Edit</a><button type="button" disabled>Cancel</button><a href="#s" aria-disabled="true">Share</a></div></div>`);
+    const chosen = [];
+    button.addEventListener('dropdown:select', event => chosen.push(event.detail.item.textContent));
+    const menu = await open(dropdown, button);
+    const { hash } = location;
+
+    await userEvent.click(menu.querySelector('button'), { force: true });
+    await userEvent.click(menu.querySelector('[aria-disabled]'), { force: true });
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    /* The menu sits inside something focusable, as it does under a page's <main>: a press on a
+       disabled item must not hand focus to that, and the disabled link must not be followed */
+    expect({ state: stateOf(menu), chosen, followed: location.hash !== hash }).toEqual({
+      state: 'open',
+      chosen: [],
+      followed: false,
+    });
+  });
+
   it('draws the menu on the dropdown surface with its items as rows, and marks a checked one', async () => {
     const button = mount(`
       <button type="button" data-dropdown data-dropdown-target="#m">Filter</button>
-      <div id="m" hidden><button type="button" role="menuitemcheckbox" aria-checked="true">Confirmed</button><a href="#w">Waitlisted</a></div>`);
+      <div id="m" hidden><button type="button" role="menuitemcheckbox" aria-checked="true">Confirmed</button><a href="#w"><svg width="20" height="20" viewBox="0 0 24 24"></svg>Waitlisted</a></div>`);
 
     const menu = await open(dropdown, button);
     const [checked, link] = menu.querySelectorAll('[role^="menuitem"]');
@@ -285,7 +330,13 @@ describe('Dropdown', () => {
           Math.round(checked.getBoundingClientRect().width),
       ],
       checked: getComputedStyle(checked, '::before').width !== 'auto',
-    }).toEqual({ surface: ['1px', true], row: ['flex', 'left', 'none', true], checked: true });
+      icon: getComputedStyle(menu.querySelector('svg')).flexShrink,
+    }).toEqual({
+      surface: ['1px', true],
+      row: ['flex', 'left', 'none', true],
+      checked: true,
+      icon: '0',
+    });
   });
 
   it('mounts on every matching element without the framework', () => {

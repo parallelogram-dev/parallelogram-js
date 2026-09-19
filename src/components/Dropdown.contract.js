@@ -261,6 +261,20 @@ Inside the menu, the arrow keys move between items, Home and End go to the ends,
       ],
     },
     {
+      id: 'icons',
+      title: 'Icons beside the labels',
+      description:
+        'Each item is a row, so an icon before a label sits in line with the others and the label takes the rest. A disabled item is a dimmed row: the arrow keys pass over it and a press leaves the menu open. An <hr> draws a rule between groups.',
+      markup: `<button type="button" class="btn" data-dropdown data-dropdown-target="#file-menu">File</button>
+<div id="file-menu" class="menu" hidden>
+  <button type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /><path d="M13.5 6.5l4 4" /></svg>Rename</button>
+  <button type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>Duplicate</button>
+  <button type="button" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l14 0" /><path d="M19 12l-6 6" /><path d="M19 12l-6 -6" /></svg>Move to…</button>
+  <hr>
+  <button type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>Delete</button>
+</div>`,
+    },
+    {
       id: 'rows',
       title: 'One template for every row',
       description:

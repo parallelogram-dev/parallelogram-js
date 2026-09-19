@@ -171,7 +171,7 @@
     "components/Tabs.js": 4910,
     "components/Toast.js": 6842,
     "components/Toggle.js": 5137,
-    "components/Dropdown.js": 7071,
+    "components/Dropdown.js": 7680,
     "components/Tooltip.js": 4019,
     "components/Videoplay.js": 4766,
     "adapters/bing-uet.js": 998,
@@ -199,6 +199,6 @@
     "managers/PageManager.js": 8489,
     "managers/RouterManager.js": 3883,
     "managers/TransitionManager.js": 1016,
-    "styles/index.min.css": 5758
+    "styles/index.min.css": 6300
   }
 }

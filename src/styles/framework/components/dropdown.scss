@@ -28,6 +28,7 @@
 [data-dropdown-state] [role^='menuitem'] {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   box-sizing: border-box;
   width: 100%;
@@ -47,6 +48,12 @@
     transition: background-color var(--framework-transition-duration, 0.2s)
       var(--framework-transition-easing, ease-in-out);
   }
+}
+
+/* An icon before a label keeps its size while the label takes the rest of the row */
+[data-dropdown-state] [role^='menuitem'] > svg,
+[data-dropdown-state] [role^='menuitem'] > img {
+  flex: none;
 }
 
 [data-dropdown-state] [role^='menuitem']:hover,

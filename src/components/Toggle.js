@@ -3,7 +3,7 @@ import { deepActiveElement, rememberAttributes, restoreAttributes } from '../uti
 import { whenAnimationsFinish } from '../utils/motion.js';
 
 /** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
-const INTERACTIVE =
+export const INTERACTIVE =
   'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
 /** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
@@ -550,7 +550,12 @@ export default class Toggle extends BaseComponent {
    */
   _isNavigationLink(path) {
     const link = path.find(node => node.localName === 'a' && node.hasAttribute('href'));
-    if (!link || link.hasAttribute('download') || link.getAttribute('target') === '_blank') {
+    if (
+      !link ||
+      link.hasAttribute('download') ||
+      link.getAttribute('target') === '_blank' ||
+      link.getAttribute('aria-disabled') === 'true'
+    ) {
       return false;
     }
 

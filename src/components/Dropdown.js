@@ -1,4 +1,4 @@
-import Toggle from './Toggle.js';
+import Toggle, { INTERACTIVE } from './Toggle.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { placeBeside } from '../utils/position.js';
 
@@ -13,7 +13,8 @@ const PLACEMENTS = [
   'right',
 ];
 /** What counts as an item in a menu, in document order */
-const ITEMS = 'a[href], button:not([disabled]), [role^="menuitem"]:not([aria-disabled="true"])';
+const ITEMS = 'a[href], button, [role^="menuitem"]';
+const DISABLED = ':disabled, [aria-disabled="true"]';
 /** The attribute prefix a trigger's params are read from: data-dropdown-param-<name> */
 const PARAM = 'param-';
 /** Attributes whose presence is their value; a param fills them as true or false, not as text */
@@ -294,6 +295,7 @@ export default class Dropdown extends Toggle {
     target.addEventListener('keydown', event => this._onMenuKeydown(element, state, event), {
       signal,
     });
+    target.addEventListener('pointerdown', event => this._onMenuPress(event), { signal });
     target.addEventListener('click', event => this._onMenuClick(element, state, event), { signal });
     this._items(target)[0]?.focus({ preventScroll: true });
   }
@@ -326,15 +328,25 @@ export default class Dropdown extends Toggle {
     window.removeEventListener('resize', state.reposition);
   }
 
-  /** The menu's items, in document order */
-  _items(target) {
-    return target ? [...target.querySelectorAll(ITEMS)].filter(item => !item.hidden) : [];
+  /**
+   * The menu's items in document order: those that can be chosen, or every one that is shown
+   *
+   * @param {HTMLElement|null} target
+   * @param {Object} [options]
+   * @param {boolean} [options.all=false] - Include disabled items
+   * @returns {HTMLElement[]}
+   */
+  _items(target, { all = false } = {}) {
+    if (!target) return [];
+    return [...target.querySelectorAll(ITEMS)].filter(
+      item => !item.hidden && (all || !item.matches(DISABLED))
+    );
   }
 
-  /** The roles a menu needs, where the markup has not given them */
+  /** The roles a menu needs, where the markup has not given them; a disabled item is still a row */
   _prepareMenu(target) {
     if (!target.hasAttribute('role')) target.setAttribute('role', 'menu');
-    for (const item of this._items(target)) {
+    for (const item of this._items(target, { all: true })) {
       if (!item.hasAttribute('role')) item.setAttribute('role', 'menuitem');
     }
   }
@@ -398,11 +410,25 @@ export default class Dropdown extends Toggle {
     }
   }
 
+  /**
+   * A press on the menu itself, or on a disabled item, would hand focus to whatever holds the
+   * menu and read as leaving it; keep focus where it is so the menu stays open. Only pointerdown
+   * reaches the menu from a disabled button, and cancelling it is what keeps focus put.
+   */
+  _onMenuPress(event) {
+    const pressed = event.target.closest(INTERACTIVE);
+    if (!pressed || pressed.matches(DISABLED)) event.preventDefault();
+  }
+
   /** An item was chosen: say so, then close unless the item or the menu says to stay */
   _onMenuClick(element, state, event) {
     const { target } = state;
     const item = event.target.closest(ITEMS);
     if (!item || !target.contains(item)) return;
+    if (item.matches(DISABLED)) {
+      event.preventDefault();
+      return;
+    }
     this._dispatch(element, 'dropdown:select', {
       item,
       params: { ...state.params },
