@@ -243,9 +243,11 @@ input {
     align-items: center;
   }
 
-  /* The name labels the card; the fields beside it are what the reader is there to read */
+  /* The name labels the card; the fields beside it are what the reader is there to read, so it
+     is set below them rather than over them */
   &__filename {
     font-family: monospace;
+    font-size: $font-xs;
     font-weight: $font-normal;
   }
 

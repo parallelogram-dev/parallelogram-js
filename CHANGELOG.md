@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `p-uploader`: Replace sits in the pill beside Edit and Delete rather than as an underlined link in the toolbar next to it, so a single-file card shows one segmented control instead of a link beside an icon button. It keeps `replaceLabel` as its name and tooltip, and still uploads the new file before deleting the old one. The toolbar now holds only Move up and Move down, and is left out of the card when neither is allowed. Every button carries a `part` a page can style without forking the component: `edit-button`, `replace-button`, `delete-button`, `move-up-button`, `move-down-button`, `cancel-button`, `confirm-button` and `save-button`. Closes #68.
 - `p-uploader`: a replacement no longer stacks a second card in front of the file it replaces. The outgoing card steps out of the layout as soon as the new one takes its place, so one card stays where it was and shows the upload, instead of the list growing and then shrinking. The original comes back if the upload fails or if the server refuses to delete it.
-- `p-uploader`: the filename is set in the body weight rather than bold, so it labels the card instead of shouting over the fields beside it.
+- `p-uploader`: the filename is set a step below the fields it labels, in the body weight rather than bold, so it labels the card instead of shouting over the values beside it.
 - The documentation site's stand-in upload server no longer calls `crypto.randomUUID()`, which is undefined outside a secure context, so the examples work when the site is read over plain HTTP from another machine.
 
 ## [0.7.13] - 2026-09-18

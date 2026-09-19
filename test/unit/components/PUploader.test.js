@@ -97,11 +97,16 @@ describe('p-uploader', () => {
     ]);
   });
 
-  it('sets the filename in the body weight, so it does not shout over the fields', async () => {
+  it('sets the filename below the fields it labels, in the body weight', async () => {
     const { shadow } = await renderUploader({});
-    const filename = shadow.querySelector('[part="filename"]');
+    const style = getComputedStyle(shadow.querySelector('[part="filename"]'));
+    const field = getComputedStyle(shadow.querySelector('.uploader__field'));
 
-    expect(getComputedStyle(filename).fontWeight).toBe('400');
+    /* Bold monospace at the fields' own size read as louder than the values beside it */
+    expect({
+      weight: style.fontWeight,
+      smallerThanFields: parseFloat(style.fontSize) < parseFloat(field.fontSize),
+    }).toEqual({ weight: '400', smallerThanFields: true });
   });
 
   it('keeps the moved file’s order buttons in step with its position', async () => {
