@@ -5,6 +5,9 @@
  * when closed, and moves it a step into place while opening and closing. A page's own rules on the
  * menu win on specificity, since these are one attribute deep.
  */
+
+@use '../../design-system/mixins' as mix;
+
 /* The menu is the dropdown surface -- the one p-select's list is drawn on -- and its items are
    plain rows in it: no button chrome, the whole width, a hover, a checked state for a
    menuitemcheckbox or menuitemradio, and a rule for an <hr> between groups */
@@ -163,3 +166,5 @@
     transform: var(--dropdown-from, none);
   }
 }
+
+@include mix.pointer-focus('[data-dropdown], [data-dropdown-state]');
