@@ -1,4 +1,5 @@
 import Toggle, { INTERACTIVE } from './Toggle.js';
+import { focusSource, trackFocusSource } from '../utils/focus-source.js';
 import { whenAnimationsFinish } from '../utils/motion.js';
 import { placeBeside } from '../utils/position.js';
 
@@ -55,6 +56,11 @@ const MARGIN = 8;
  * `data-dropdown-enhanced`; choosing an item dispatches dropdown:select and closes the menu unless
  * the item or the menu carries `data-dropdown-stay`.
  *
+ * A menu opened from the keyboard puts focus on its first item, as the menu button pattern asks.
+ * One opened with a pointer leaves focus on the trigger, so nothing looks chosen before anything
+ * has been; an arrow key goes into it from there. Which it was is the page's own
+ * `data-focus-source` record.
+ *
  * @example
  * <button type="button" data-dropdown data-dropdown-target="#account-menu">Account</button>
  * <div id="account-menu" class="menu" hidden>
@@ -91,6 +97,9 @@ export default class Dropdown extends Toggle {
   _init(element) {
     const state = super._init(element);
     const { defaults } = this.constructor;
+    /* Whether the menu takes focus as it opens depends on how it was opened, so the page has to
+       be recording that even where Dropdown is mounted on its own */
+    trackFocusSource();
     const config = this._getConfigFromAttrs(element, {
       placement: 'placement',
       offset: 'offset',
@@ -122,11 +131,12 @@ export default class Dropdown extends Toggle {
       'keydown',
       event => {
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-        if (state.target && this._isTargetOpen(state.target)) return;
         event.preventDefault();
-        this.show(element);
-        if (event.key === 'ArrowUp')
-          this._items(state.target).at(-1)?.focus({ preventScroll: true });
+        if (!state.target || !this._isTargetOpen(state.target)) this.show(element);
+        /* The menu may already be open with focus still on the trigger, where a pointer opened
+           it, so an arrow key goes into the menu whether or not it had to open it */
+        const items = this._items(state.target);
+        (event.key === 'ArrowUp' ? items.at(-1) : items[0])?.focus({ preventScroll: true });
       },
       { signal: state.controller.signal }
     );
@@ -297,7 +307,10 @@ export default class Dropdown extends Toggle {
     });
     target.addEventListener('pointerdown', event => this._onMenuPress(event), { signal });
     target.addEventListener('click', event => this._onMenuClick(element, state, event), { signal });
-    this._items(target)[0]?.focus({ preventScroll: true });
+    /* The menu button pattern puts focus on the first item, which a keyboard user needs and a
+       pointer user did not ask for: a click would make the first item look chosen before
+       anything has been chosen, so there focus stays on the trigger and an arrow key goes in */
+    if (focusSource() !== 'pointer') this._items(target)[0]?.focus({ preventScroll: true });
   }
 
   hide(element, options) {

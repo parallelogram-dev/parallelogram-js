@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A dropdown menu opened with the pointer no longer takes focus to its first item, which made that item look chosen before anything had been. Focus stays on the button, and an arrow key from there goes into the menu, whether or not the key had to open it. A menu opened from the keyboard still puts focus on its first item, as the menu button pattern asks; which it was is the `data-focus-source` record the framework keeps on `<html>`, and Dropdown now starts that record itself so it is right on a page that mounts the component on its own.
+
 ## [0.7.16] - 2026-09-20
 
 ### Added

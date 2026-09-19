@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { followFocusSource, trackFocusSource } from '../../../src/utils/focus-source.js';
+import {
+  focusSource,
+  followFocusSource,
+  trackFocusSource,
+} from '../../../src/utils/focus-source.js';
 
 const press = (target, key, options = {}) =>
   target.dispatchEvent(
@@ -10,7 +14,23 @@ const recorded = element => element.getAttribute('data-focus-source');
 
 describe('focus source', () => {
   afterEach(() => {
+    document.documentElement.removeAttribute('data-focus-source');
     document.body.replaceChildren();
+  });
+
+  it('reports the last input method, and a keyboard until anything is recorded', () => {
+    const beforeAnything = focusSource();
+    trackFocusSource();
+
+    point(document.body);
+    const afterPointer = focusSource();
+    press(document.body, 'Tab');
+
+    expect([beforeAnything, afterPointer, focusSource()]).toEqual([
+      'keyboard',
+      'pointer',
+      'keyboard',
+    ]);
   });
 
   it('records pointer and keyboard input on the root element', () => {

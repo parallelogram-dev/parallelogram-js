@@ -20,12 +20,16 @@ describe('Dropdown', () => {
     style = document.createElement('style');
     style.textContent = dropdownStyles;
     document.head.append(style);
+    /* Dropdown reads the last input method, and a click in one test would otherwise still be
+       the last input method in the next */
+    document.documentElement.removeAttribute('data-focus-source');
     dropdown = new Dropdown();
   });
 
   afterEach(() => {
     dropdown.destroy();
     style.remove();
+    document.documentElement.removeAttribute('data-focus-source');
     document.body.replaceChildren();
   });
 
@@ -161,6 +165,49 @@ describe('Dropdown', () => {
       'Delete',
       true,
     ]);
+  });
+
+  it('leaves focus on the button when a click opened the menu, and takes an arrow key in', async () => {
+    const button = mount(`
+      <button type="button" data-dropdown data-dropdown-target="#m">Menu</button>
+      <div id="m" hidden><button type="button">Archive</button><button type="button">Delete</button></div>`);
+
+    await userEvent.click(button);
+    const menu = document.getElementById('m');
+    await vi.waitFor(() => expect(stateOf(menu)).toBe('open'), WAIT);
+    const insideAfterClick = menu.contains(document.activeElement);
+
+    /* Safari does not focus a button when it is clicked, so the trigger is given focus here
+       rather than assumed to have it; a visitor there reaches it with the keyboard */
+    button.focus();
+    await userEvent.keyboard('{ArrowDown}');
+
+    expect({ insideAfterClick, focused: document.activeElement?.textContent }).toEqual({
+      insideAfterClick: false,
+      focused: 'Archive',
+    });
+  });
+
+  it('focuses the first item when the keyboard opened the menu', async () => {
+    const button = mount(`
+      <button type="button" data-dropdown data-dropdown-target="#m">Menu</button>
+      <div id="m" hidden><button type="button">Archive</button><button type="button">Delete</button></div>`);
+    const menu = document.getElementById('m');
+
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(stateOf(menu)).toBe('open'), WAIT);
+    const afterEnter = document.activeElement?.textContent;
+
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(stateOf(menu)).toBe('closed'), WAIT);
+    await userEvent.keyboard('{ArrowUp}');
+    await vi.waitFor(() => expect(stateOf(menu)).toBe('open'), WAIT);
+
+    expect({ afterEnter, afterArrowUp: document.activeElement?.textContent }).toEqual({
+      afterEnter: 'Archive',
+      afterArrowUp: 'Delete',
+    });
   });
 
   it('closes the others when one opens, unless one has a group of its own and no capture', async () => {

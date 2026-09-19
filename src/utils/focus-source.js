@@ -67,6 +67,20 @@ export function trackFocusSource() {
 }
 
 /**
+ * The input method the page last recorded, which is a keyboard until anything is recorded
+ *
+ * Read from `<html>` rather than from this module's own record so that a page which sets the
+ * attribute itself, or renders it server side, is answered as it asked.
+ *
+ * @returns {'keyboard'|'pointer'}
+ */
+export function focusSource() {
+  return document.documentElement.getAttribute('data-focus-source') === 'pointer'
+    ? 'pointer'
+    : 'keyboard';
+}
+
+/**
  * Keep a host's `data-focus-source` in step with the last input method while focus is inside it
  *
  * @param {HTMLElement} host
