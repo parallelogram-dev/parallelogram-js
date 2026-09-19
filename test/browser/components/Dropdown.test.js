@@ -2,6 +2,7 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Dropdown from '../../../src/components/Dropdown.js';
 import dropdownStyles from '../../../src/styles/framework/components/dropdown.scss';
+import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const WAIT = { timeout: 2000 };
 const stateOf = menu => menu?.getAttribute('data-dropdown-state');
@@ -336,6 +337,39 @@ describe('Dropdown', () => {
       row: ['flex', 'left', 'none', true],
       checked: true,
       icon: '0',
+    });
+  });
+
+  it('shows no focus ring on an item when the pointer opened the menu', async () => {
+    const framework = document.createElement('style');
+    framework.textContent = frameworkStyles;
+    document.head.append(framework);
+    document.documentElement.dataset.focusSource = 'pointer';
+    const button = mount(`
+      <button type="button" data-dropdown data-dropdown-target="#m">Account</button>
+      <div id="m" hidden><a href="#p">Profile</a><button type="button">Sign out</button></div>`);
+
+    const menu = await open(dropdown, button);
+    const ringOnFocused = () => getComputedStyle(menu.querySelector(':focus')).outlineStyle;
+    const byPointer = [...menu.children].map(item => {
+      item.focus();
+      return getComputedStyle(item).outlineStyle;
+    });
+
+    /* A real key press, rather than a programmatic focus, because whether that counts as
+       :focus-visible is the browser's own judgement and differs between them */
+    document.documentElement.dataset.focusSource = 'keyboard';
+    await userEvent.keyboard('{ArrowDown}');
+    const byKeyboard = ringOnFocused();
+    document.documentElement.removeAttribute('data-focus-source');
+    framework.remove();
+
+    /* trackFocusSource() marks the page when the last input was a pointer; the menu is not
+       inside its trigger, so the rule that hides rings has to name the menu too. A keyboard
+       user still has to see where they are */
+    expect({ byPointer, byKeyboard }).toEqual({
+      byPointer: ['none', 'none'],
+      byKeyboard: 'solid',
     });
   });
 

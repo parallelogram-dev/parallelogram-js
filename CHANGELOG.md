@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A dropdown menu's items no longer keep a focus ring when the pointer opened the menu. The rule that hides rings from pointer users named the trigger, and a menu is not inside it; it now names the menu too. Keyboard users still see where they are.
+
 ## [0.7.14] - 2026-09-19
 
 ### Added
