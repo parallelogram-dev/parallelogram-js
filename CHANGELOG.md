@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Dropdown, an enhancement: a menu that opens beside its button. It is Toggle with a place to sit and a menu to keep -- every Toggle attribute applies under the `data-dropdown-` prefix, with a menu's defaults: outside clicks close it, and every dropdown on the page shares one group unless given its own, so opening one closes the rest. The menu is on the page, named by `data-dropdown-target`, or built the first time the trigger opens from a `<template>` named by `data-dropdown-template`, with every `{name}` in its text and attribute values filled from the trigger's `data-dropdown-param-<name>` attributes -- as text, never parsed as markup -- and removed when it closes unless `data-dropdown-keep`; a page with a menu per row keeps one template and a few attributes per row. `data-dropdown-placement` picks a side and an alignment, the menu flips when there is no room, stays inside the viewport and follows the trigger while the page scrolls; `data-dropdown-match-width` and `data-dropdown-portal` do what they say. The arrow keys move between items, a letter jumps, Escape closes back to the button, and choosing an item dispatches `dropdown:select` with the item and the trigger's params, then closes unless the item or the menu carries `data-dropdown-stay`. `Dropdown.enhanceAll()` mounts it without the framework.
+
+### Changed
+
+- Toggle is built to be extended: it resolves its target through three seams a subclass can take over -- `_resolveTarget`, `_attachTarget` and `_detachTarget` -- and calls `_ensureTarget` before opening, so a subclass that sets `defersTarget` can build a target on first show. Its event names and the attributes it remembers come from the class rather than literals, and `data-toggle-enhanced`, written on every trigger, is in its contract.
+
 ## [0.7.13] - 2026-09-18
 
 ### Added
