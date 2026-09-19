@@ -1146,6 +1146,48 @@ describe('p-uploader ordering and replacing without dragging', () => {
     });
   });
 
+  it('shows one card in the old one’s place while a replacement uploads', async () => {
+    const uploader = await renderFiles(
+      { 'max-files': '1', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['old']
+    );
+    const old = uploader.querySelector('p-uploader-file[file-id="old"]');
+    const input = uploader.shadowRoot.querySelector('input[type="file"]');
+    vi.spyOn(input, 'click').mockImplementation(() => {});
+    RecordingUpload.hold = true;
+
+    control(uploader, 'old', 'replace').click();
+    addFiles(uploader, [new File(['x'], 'new.txt', { type: 'text/plain' })]);
+    await vi.waitFor(() => expect(uploader.querySelectorAll('p-uploader-file').length).toBe(2));
+
+    /* Both cards exist while the upload runs, but the outgoing one is out of the layout, so the
+       card the reader is watching stays where it was instead of being pushed down by a new one */
+    const shown = [...uploader.querySelectorAll('p-uploader-file')].filter(
+      file => file.getBoundingClientRect().height > 0
+    );
+    expect({
+      shown: shown.map(file => file.getAttribute('filename')),
+      oldIsShown: old.getBoundingClientRect().height > 0,
+    }).toEqual({ shown: ['new.txt'], oldIsShown: false });
+  });
+
+  it('brings the original back when the replacement fails to upload', async () => {
+    const uploader = await renderFiles(
+      { 'max-files': '1', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['old']
+    );
+    const old = uploader.querySelector('p-uploader-file[file-id="old"]');
+    const input = uploader.shadowRoot.querySelector('input[type="file"]');
+    vi.spyOn(input, 'click').mockImplementation(() => {});
+    RecordingUpload.status = 500;
+
+    control(uploader, 'old', 'replace').click();
+    addFiles(uploader, [new File(['x'], 'new.txt', { type: 'text/plain' })]);
+
+    /* The replacement never arrived, so the file the page still has must be visible again */
+    await vi.waitFor(() => expect(old.getBoundingClientRect().height > 0).toBe(true));
+  });
+
   it('offers no Replace when more than one file is allowed', async () => {
     const uploader = await renderFiles(
       { 'max-files': '3', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
