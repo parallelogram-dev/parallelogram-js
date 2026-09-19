@@ -466,6 +466,41 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       controls: [{ attribute: 'placeholder' }, { attribute: 'data-select-open-on-focus' }],
     },
     {
+      id: 'many',
+      title: 'Choosing several',
+      description:
+        'With `multiple` the list toggles rather than replaces and stays open, a chosen row is filled with a tick at its trailing edge, and every chosen value sits in the control with the button that takes it back out. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="shift">Staff on shift</label>
+    <div class="form__control">
+      <p-select
+        id="shift"
+        name="staff"
+        multiple
+        select-all
+        selection-rows="2"
+        list-rows="2"
+        placeholder="Nobody chosen yet"
+      >
+        <option value="amelia" data-secondary="Duty manager, front of house">Amelia Nguyen</option>
+        <option value="hudson" data-secondary="Head chef, kitchen">Hudson Ferraro</option>
+        <option value="priya" data-secondary="Coordinator, events">Priya Rahman</option>
+        <option value="marcus" data-secondary="Supervisor, kitchen">Marcus Bell</option>
+        <option value="ines" data-secondary="Technician, maintenance">Ines Duarte</option>
+        <option value="rosa" data-secondary="Sommelier, front of house">Rosa Iglesias</option>
+      </p-select>
+    </div>
+  </div>
+</div>`,
+      controls: [
+        { attribute: 'selection-rows' },
+        { attribute: 'list-rows' },
+        { attribute: 'select-all' },
+        { attribute: 'placeholder' },
+      ],
+    },
+    {
       id: 'long-list',
       title: 'A long list',
       description:
