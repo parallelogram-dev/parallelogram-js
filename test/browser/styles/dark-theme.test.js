@@ -145,14 +145,24 @@ describe('dark theme', () => {
       getComputedStyle(returns).borderBottomColor,
     ];
 
-    await vi.waitFor(() =>
-      expect(colours()).toEqual([
-        'rgba(255, 255, 255, 0.14)',
-        'rgba(255, 255, 255, 0.14)',
-        'rgba(255, 255, 255, 0.6)',
-        'rgb(147, 197, 253)',
-        'rgb(147, 197, 253)',
-      ])
+    /* The colours are transitioned, so reading them straight after the click catches a tab part
+       way between its two states, or still at the one it is leaving */
+    await Promise.all(
+      [shipping, returns].flatMap(tab =>
+        tab.getAnimations().map(animation => animation.finished.catch(() => {}))
+      )
+    );
+
+    await vi.waitFor(
+      () =>
+        expect(colours()).toEqual([
+          'rgba(255, 255, 255, 0.14)',
+          'rgba(255, 255, 255, 0.14)',
+          'rgba(255, 255, 255, 0.6)',
+          'rgb(147, 197, 253)',
+          'rgb(147, 197, 253)',
+        ]),
+      { timeout: 5000 }
     );
   });
 });
