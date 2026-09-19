@@ -1522,3 +1522,50 @@ describe('p-select, how tall the list and its rows are', () => {
     expect(menu.scrollHeight > menu.clientHeight).toBe(false);
   });
 });
+
+describe('p-select, where the icons sit once the field grows', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const middles = select => {
+    const root = select.shadowRoot;
+    const box = node => {
+      const rect = node.getBoundingClientRect();
+      return Math.round(rect.top + rect.height / 2);
+    };
+    return {
+      arrow: box(root.querySelector('.arrow')),
+      first: box(root.querySelector('.selection')),
+    };
+  };
+
+  it('keeps the arrow on the first row as the field grows', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.style.width = '14rem';
+
+    select.value = ['ada', 'grace', 'mary'];
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.selection').length).toBe(3));
+
+    /* Three rows of selections, and the arrow is still level with the first, not floating in
+       the middle of a field that has grown under it */
+    const { arrow, first } = middles(select);
+    expect(arrow).toBe(first);
+  });
+
+  it('follows the taller row when a selection carries two lines', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2" style="width: 14rem">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+        <option value="grace" data-secondary="Rear admiral">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'grace'];
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.selection').length).toBe(2));
+
+    const { arrow, first } = middles(select);
+    expect(arrow).toBe(first);
+  });
+});

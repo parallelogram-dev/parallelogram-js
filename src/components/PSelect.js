@@ -743,6 +743,8 @@ export default class PSelect extends HTMLElement {
   _updateDisplay() {
     if (this.state.multiple) {
       this._els.input.value = '';
+      /* The placeholder speaks for an empty field; once something is chosen the selections do */
+      this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
       this._renderSelections();
     } else {
       this._els.input.value =
@@ -800,6 +802,11 @@ export default class PSelect extends HTMLElement {
         return chip;
       })
     );
+
+    /* The icons beside the selections hold their place on the first row rather than drifting to
+       the middle of a field that has grown under them, so they are told how tall a row is */
+    const row = box.firstElementChild?.getBoundingClientRect().height;
+    if (row) this.style.setProperty('--selection-row', `${row}px`);
   }
 
   /**

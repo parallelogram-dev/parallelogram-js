@@ -15,6 +15,38 @@
   color: var(--select-text);
 }
 
+/* Holding several values the field is as tall as what is in it, so the root and the control
+   take part in the flow rather than being stretched over a box of a fixed height */
+:host([multiple]) .root,
+:host([multiple]) .control {
+  position: static;
+  height: auto;
+}
+
+:host([multiple]) .control {
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+/* The row's height comes from what is in it, so the icons beside the selections hold their
+   place on the first row as the field grows under them rather than drifting to its middle */
+/* The height of one row of selections. The element measures a real one and writes it here, so
+   it tracks whatever type and padding the page has set; this is the value before any exist */
+:host([multiple]) {
+  --selection-row: 2rem;
+}
+
+:host([multiple]) .search,
+:host([multiple]) .clear,
+:host([multiple]) .arrow {
+  align-self: flex-start;
+  height: var(--selection-row);
+}
+
+:host([multiple]) .menu {
+  position: absolute;
+}
+
 /* A disabled select reads as disabled, not merely unresponsive */
 :host([disabled]) {
   opacity: var(--select-disabled-opacity);
@@ -163,8 +195,6 @@
 /* Every chosen value, in the control. The row's height comes from what is in it, so the arrow
    beside them holds its place as the field grows */
 .selections {
-  --selection-row: 2rem;
-
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -173,10 +203,6 @@
   min-width: 0;
   max-height: var(--select-selections-max-height, 7.2rem);
   overflow-y: auto;
-}
-
-.selections--two {
-  --selection-row: 2.8rem;
 }
 
 .selections[hidden] {

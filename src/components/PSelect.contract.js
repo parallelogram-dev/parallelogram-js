@@ -234,6 +234,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   cssProperties: [
     {
+      name: '--selection-row',
+      default: '2rem',
+      description:
+        'How tall one row of chosen values is, which is what keeps the icons level with the first row as the field grows. The element measures a real row and writes it here, so a page rarely sets it',
+    },
+    {
       name: '--select-menu-max-height',
       default: '240px',
       description:
