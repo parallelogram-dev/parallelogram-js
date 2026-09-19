@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
+import { check, chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -334,7 +334,8 @@ export default class PSelect extends HTMLElement {
 
     clear.addEventListener('click', event => {
       event.stopPropagation();
-      this._choose('');
+      if (this.state.multiple) this._clearAll();
+      else this._choose('');
       input.focus();
     });
 
@@ -786,15 +787,24 @@ export default class PSelect extends HTMLElement {
    * that is when the input is a search box; the two are never shown at once
    */
   _updateControls() {
-    const { open, value, disabled } = this.state;
+    const { open, value, values, multiple, disabled } = this.state;
+    const empty = multiple ? values.length === 0 : value === '';
     /* The slot before the chevron fills only while the list is open: the clear button when
        something is chosen, the search icon when nothing is. A required select can be cleared as
        well: it won't validate until something is chosen again, which is better than leaving no way
        back to the search. */
-    this._els.clear.hidden = !open || value === '' || disabled;
-    this._els.search.hidden = !open || value !== '';
-    /* A chosen value is not something to type over: clear it first, or choose another option */
-    this._els.input.readOnly = value !== '';
+    this._els.clear.hidden = !open || empty || disabled;
+    this._els.search.hidden = !open || !empty;
+    /* One chosen value is not something to type over: clear it first, or choose another option.
+       Holding several, the input stays typeable, because typing is how the list is narrowed */
+    this._els.input.readOnly = !multiple && value !== '';
+  }
+
+  /** Take every value back out at once, saying so as one change */
+  _clearAll() {
+    if (!this.state.values.length) return;
+    this._setValue([]);
+    this._announceChange({ value: '', label: '' }, null);
   }
 
   /**
@@ -1157,7 +1167,7 @@ export default class PSelect extends HTMLElement {
       element.id = `option-${index}`;
       element.dataset.index = String(index);
       element.setAttribute('role', 'option');
-      element.setAttribute('aria-selected', String(option.value === this.state.value));
+      element.setAttribute('aria-selected', String(this._holds(option.value)));
       if (option.disabled) {
         element.setAttribute('aria-disabled', 'true');
       }
@@ -1165,6 +1175,15 @@ export default class PSelect extends HTMLElement {
         element.append(...richOptionContent(option));
       } else {
         element.textContent = option.label;
+      }
+      if (this.state.multiple) {
+        /* The tick rides at the trailing edge of a filled row, rather than a box at the leading
+           one, and holds its space so nothing shifts as rows are chosen */
+        const tick = document.createElement('span');
+        tick.className = 'option__tick';
+        tick.setAttribute('aria-hidden', 'true');
+        tick.append(iconElement(check, { size: 'sm' }));
+        element.append(tick);
       }
       (groupElement ?? menu).append(element);
     });

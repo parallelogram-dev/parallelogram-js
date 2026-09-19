@@ -326,6 +326,29 @@
   outline-offset: -2px;
 }
 
+/* Where several may be chosen a row is filled rather than tinted, with the tick at its trailing
+   edge. A single select keeps the tint it has always had */
+:host([multiple]) .option[aria-selected='true'] {
+  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
+  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
+}
+
+:host([multiple]) .option[aria-selected='true']:hover,
+:host([multiple]) .option[aria-selected='true'][data-active] {
+  background: var(--select-chosen-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+}
+
+.option__tick {
+  display: inline-flex;
+  margin-left: auto;
+  flex: none;
+  opacity: 0;
+}
+
+.option[aria-selected='true'] .option__tick {
+  opacity: 1;
+}
+
 .option[aria-selected='true'] {
   background: var(--select-selected-bg);
   font-weight: 500;

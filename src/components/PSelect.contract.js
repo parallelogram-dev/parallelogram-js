@@ -202,6 +202,21 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   cssProperties: [
     {
+      name: '--select-chosen-bg',
+      default: 'var(--color-accent)',
+      description: 'Background of a chosen row where multiple is set; it is filled, not tinted',
+    },
+    {
+      name: '--select-chosen-color',
+      default: 'var(--color-accent-contrast)',
+      description: 'Text and tick colour of a chosen row where multiple is set',
+    },
+    {
+      name: '--select-chosen-hover-bg',
+      default: 'var(--color-accent-hover)',
+      description: 'Background of a chosen row under the pointer or the keyboard',
+    },
+    {
       name: '--select-selections-max-height',
       default: '7.2rem',
       description: 'How tall the chosen values grow in the control before they scroll',

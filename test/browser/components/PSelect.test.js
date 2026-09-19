@@ -1250,3 +1250,124 @@ describe('p-select, what it shows once several are chosen', () => {
     ]);
   });
 });
+
+describe('p-select, the list when several may be chosen', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const open = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return select.shadowRoot;
+  };
+
+  it('stays open as values are chosen, and marks each chosen row', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+
+    clickShadow(select, '.option[data-index="0"]');
+    clickShadow(select, '.option[data-index="2"]');
+
+    /* Picking five people is five clicks and no reopening */
+    expect({
+      open: !root.querySelector('.menu').hidden,
+      marked: [...root.querySelectorAll('.option')].map(o => o.getAttribute('aria-selected')),
+      value: select.value,
+    }).toEqual({
+      open: true,
+      marked: ['true', 'false', 'true'],
+      value: ['ada', 'mary'],
+    });
+  });
+
+  it('takes a chosen row back out when it is chosen again', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    await open(select);
+    clickShadow(select, '.option[data-index="0"]');
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    expect(select.value).toEqual([]);
+  });
+
+  it('toggles the highlighted row on Enter and leaves the list open', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+    root.querySelector('.input').focus();
+
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+
+    expect({ value: select.value, open: !root.querySelector('.menu').hidden }).toEqual({
+      value: ['ada'],
+      open: true,
+    });
+  });
+
+  it('keeps the input a search box while values are chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    /* With one value a single select goes read-only and offers a clear button; holding several
+       the input has to stay typeable, because typing is how the list is narrowed */
+    expect({
+      readOnly: root.querySelector('.input').readOnly,
+      clearHidden: root.querySelector('.clear').hidden,
+    }).toEqual({ readOnly: false, clearHidden: false });
+  });
+
+  it('clears every value from the clear button', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    await open(select);
+    select.value = ['ada', 'grace'];
+
+    clickShadow(select, '.clear');
+
+    expect(select.value).toEqual([]);
+  });
+});
+
+describe('p-select, how a chosen row looks', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openAndRead = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    const chosen =
+      select.shadowRoot.querySelector('.option[aria-selected="true"]:not([data-active])') ??
+      select.shadowRoot.querySelector('.option[aria-selected="true"]');
+    return {
+      background: getComputedStyle(chosen).backgroundColor,
+      tick: Boolean(chosen.querySelector('.option__tick')),
+    };
+  };
+
+  it('paints a chosen row and ticks it where several may be chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'mary'];
+
+    /* A filled row with a tick at its trailing edge, rather than a box at the leading one. Read
+       from a row the keyboard is not on, since that one carries the hover shade */
+    expect(await openAndRead(select)).toEqual({ background: 'rgb(37, 99, 235)', tick: true });
+  });
+
+  it('leaves a single select\u2019s chosen row as the tint it has always been', async () => {
+    const { select } = renderForm(COUNTRIES);
+    await customElements.whenDefined('p-select');
+
+    expect(await openAndRead(select)).toEqual({
+      background: 'rgba(59, 130, 246, 0.1)',
+      tick: false,
+    });
+  });
+});
