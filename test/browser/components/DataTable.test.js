@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import DataTable from '../../../src/components/DataTable.js';
 import { EventManager } from '../../../src/managers/EventManager.js';
 import datatableStyles from '../../../src/styles/framework/components/datatable.scss';
+import { parkPointer } from '../support/pointer.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const WAIT = { timeout: 2000 };
@@ -251,7 +252,7 @@ describe('DataTable', () => {
     expect([previous.disabled, opacity]).toEqual([true, '0.3']);
   });
 
-  it('draws the search box, pagination, sort icons and status with the dark roles when data-theme is dark', () => {
+  it('draws the search box, pagination, sort icons and status with the dark roles when data-theme is dark', async () => {
     const style = document.createElement('style');
     style.textContent = frameworkStyles;
     document.head.append(style);
@@ -263,6 +264,9 @@ describe('DataTable', () => {
       const search = holder.querySelector('.datatable-search');
       const current = holder.querySelector('nav button[aria-current="page"]');
       const page = holder.querySelector('nav button[aria-label="Page 2"]');
+      /* The pagination buttons have a hover background, which one under the pointer would read;
+         parking first means the fade back is among the animations finished below */
+      await parkPointer();
       [search, current, page].forEach(node =>
         node.getAnimations().forEach(animation => animation.finish())
       );

@@ -2,6 +2,7 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PDatetime from '../../../src/components/PDatetime.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
+import { parkPointer } from '../support/pointer.js';
 
 const renderPicker = (attributes = {}) => {
   const picker = document.createElement('p-datetime');
@@ -770,6 +771,12 @@ describe('p-datetime', () => {
       ];
       const eased = `${getComputedStyle(preset).transitionProperty} ${getComputedStyle(preset).transitionDuration}`;
 
+      await parkPointer();
+      /* Parking eases the pill back if the pointer had been resting on it, as it does on a
+         runner, so the resting pair is read once that fade has landed too */
+      await vi.waitFor(() =>
+        expect(paint()).toEqual([token('--color-surface-muted'), token('--color-text')])
+      );
       const resting = paint();
       await userEvent.hover(preset);
       /* The hover eases over 0.15s, so the accent is read once the fade has landed */
