@@ -61,7 +61,11 @@ describe('Tooltip', () => {
   it('shows at once on keyboard focus and goes on Escape', async () => {
     const button = mount({ 'data-tooltip-delay': '5000' });
 
-    button.focus();
+    /* A runner's window often has no focus of its own, and Firefox then moves focus without
+       dispatching the event, so the tooltip would never hear it. The event is sent on its own
+       rather than through focus(), which would also raise focusin and let a listener on the
+       wrong event pass this */
+    button.dispatchEvent(new FocusEvent('focus'));
     await vi.waitFor(() => expect(shown(button)).toBe(true), { timeout: 500 });
     await userEvent.keyboard('{Escape}');
 
