@@ -24,6 +24,8 @@ export default {
 
 The menu is either on the page already, named by \`data-dropdown-target\`, or built the first time the trigger opens from a \`<template>\` named by \`data-dropdown-template\`, with every \`{name}\` in its text and attribute values filled from the trigger's \`data-dropdown-param-<name>\` attributes and put back to nothing when it closes. A page with a menu per row keeps one template and a few attributes per row rather than a menu per row in the DOM. Values are substituted as text, never parsed as markup.
 
+A menu opened from the keyboard puts focus on its first item, as the menu button pattern asks; one opened with a pointer leaves focus on the trigger, so that nothing looks chosen before anything has been, and an arrow key goes into it from there. Which it was is the \`data-focus-source\` record the framework keeps on \`<html>\`, the same one the focus rings follow.
+
 Inside the menu, the arrow keys move between items, Home and End go to the ends, a letter jumps to the next item starting with it, Escape closes and returns focus to the trigger, and choosing an item dispatches \`dropdown:select\` with the item and the trigger's params, then closes -- unless the item or the menu carries \`data-dropdown-stay\`. The menu gets \`role="menu"\` and its items \`role="menuitem"\` when the markup has not said otherwise.`,
   attributes: [
     {
