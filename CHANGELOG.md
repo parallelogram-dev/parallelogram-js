@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Each component's stylesheet now carries the rule that hides focus rings from pointer users for its own selectors, rather than only the combined `index.css` carrying it for every element at once. A page loading stylesheets per component, `@use '@parallelogram-js/core/dist/styles/components/dropdown'`, never saw that rule, so a menu opened with the pointer drew a ring around the first item Dropdown focuses. Dropdown, Toggle, Tooltip, Lightbox, Tabs, Accordion, DataTable, Lazysrc and `<p-toasts>` all carry it now, and Toggle's covers its target as well as its trigger.
+
 ## [0.7.15] - 2026-09-19
 
 ### Fixed

@@ -1,3 +1,5 @@
+@use '../../design-system/mixins' as mix;
+
 /* ============================================
    LIGHTBOX COMPONENT
    BEM-compliant styles for the lightbox gallery viewer, a native <dialog>
@@ -275,3 +277,5 @@
     transform: none;
   }
 }
+
+@include mix.pointer-focus('[data-lightbox], [data-lightbox-action], [data-lightbox-state]');

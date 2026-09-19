@@ -187,3 +187,5 @@
     color: HighlightText;
   }
 }
+
+@include pointer-focus('[data-datatable]');

@@ -1,3 +1,5 @@
+@use '../../design-system/mixins' as mix;
+
 /* Toast theme tokens, read by the p-toasts web component through its shadow styles. Info toasts use
    the inverse surface and status toasts the status colour itself, in both themes; the inset ring gives
    them an edge against a dark page. Text defaults to the inverse text or the status's contrast */
@@ -17,3 +19,5 @@
   --toast-font: 14px/1.4 system-ui, -apple-system, sans-serif;
   --toast-animation-duration: 0.18s;
 }
+
+@include mix.pointer-focus('p-toasts');

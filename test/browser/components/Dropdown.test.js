@@ -2,7 +2,6 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Dropdown from '../../../src/components/Dropdown.js';
 import dropdownStyles from '../../../src/styles/framework/components/dropdown.scss';
-import frameworkStyles from '../../../src/styles/framework/index.scss';
 
 const WAIT = { timeout: 2000 };
 const stateOf = menu => menu?.getAttribute('data-dropdown-state');
@@ -341,9 +340,8 @@ describe('Dropdown', () => {
   });
 
   it('shows no focus ring on an item when the pointer opened the menu', async () => {
-    const framework = document.createElement('style');
-    framework.textContent = frameworkStyles;
-    document.head.append(framework);
+    /* Only this component's own stylesheet, as a page loading stylesheets per component has.
+       The rule lived in the combined stylesheet alone, so such a page never got it */
     document.documentElement.dataset.focusSource = 'pointer';
     const button = mount(`
       <button type="button" data-dropdown data-dropdown-target="#m">Account</button>
@@ -362,7 +360,6 @@ describe('Dropdown', () => {
     await userEvent.keyboard('{ArrowDown}');
     const byKeyboard = ringOnFocused();
     document.documentElement.removeAttribute('data-focus-source');
-    framework.remove();
 
     /* trackFocusSource() marks the page when the last input was a pointer; the menu is not
        inside its trigger, so the rule that hides rings has to name the menu too. A keyboard

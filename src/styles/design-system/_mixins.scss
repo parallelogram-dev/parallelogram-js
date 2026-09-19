@@ -129,3 +129,19 @@
     box-shadow: $shadow-lg;
   }
 }
+
+/**
+ * Hide focus rings from pointer users for one component's own selectors
+ *
+ * trackFocusSource() records the last input on <html>. The combined stylesheet carries this for
+ * every element at once, but a page that loads stylesheets per component never sees that rule,
+ * so each component carries it for what it owns as well.
+ */
+@mixin pointer-focus($selectors) {
+  :root[data-focus-source='pointer'] {
+    :is(#{$selectors}):focus,
+    :is(#{$selectors}) :focus {
+      outline: none;
+    }
+  }
+}

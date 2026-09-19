@@ -8,6 +8,8 @@
  * values, so they follow the dark theme and still render without the package stylesheet.
  */
 
+@use '../../design-system/mixins' as mix;
+
 :root {
   --tabs-border-color: var(--surface-panel-border-color, var(--color-border, #e2e8f0));
   --tabs-color: var(--color-text-muted, #6b7280);
@@ -99,3 +101,5 @@
     border-bottom-color: Highlight;
   }
 }
+
+@include mix.pointer-focus('[data-tabs]');
