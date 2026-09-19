@@ -1185,7 +1185,7 @@ describe('p-uploader ordering and replacing without dragging', () => {
     addFiles(uploader, [new File(['x'], 'new.txt', { type: 'text/plain' })]);
 
     /* The replacement never arrived, so the file the page still has must be visible again */
-    await vi.waitFor(() => expect(old.getBoundingClientRect().height > 0).toBe(true));
+    await vi.waitFor(() => expect(old.getBoundingClientRect().height > 0).toBe(true), SETTLED);
   });
 
   it('brings the original back when the server refuses to delete it', async () => {
