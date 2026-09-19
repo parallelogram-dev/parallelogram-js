@@ -309,4 +309,45 @@ describe('Toggle', () => {
 
     expect($('#account-menu').classList.contains('open')).toBe(true);
   });
+  it('lets a subclass supply the target on first show, and speaks in its own prefix', async () => {
+    /* Dropdown builds a per-row menu from a template the first time it opens; until then there is
+       no target to resolve, and Toggle used to give up on a trigger without one */
+    class Lazy extends Toggle {
+      static selector = 'data-lazy';
+      static events = { show: 'lazy:show', hide: 'lazy:hide', mount: 'lazy:mount' };
+      static defersTarget = true;
+      _ensureTarget(element, state) {
+        const target = document.createElement('div');
+        target.textContent = 'Built on demand';
+        element.after(target);
+        this._attachTarget(element, state, target);
+      }
+    }
+    document.body.innerHTML = `<button type="button" data-lazy>Open</button>`;
+    const button = document.body.firstElementChild;
+    const lazy = new Lazy();
+    const events = [];
+    button.addEventListener('lazy:show', () => events.push('lazy:show'));
+    lazy.mount(button);
+    const beforeShow = [button.nextElementSibling, button.getAttribute('data-lazy-enhanced')];
+
+    lazy.show(button);
+    const target = button.nextElementSibling;
+    await vi.waitFor(() => expect(target.getAttribute('data-lazy-state')).toBe('open'), WAIT);
+
+    expect({
+      beforeShow,
+      built: target.textContent,
+      controls: button.getAttribute('aria-controls') === target.id && target.id !== '',
+      expanded: button.getAttribute('aria-expanded'),
+      events,
+    }).toEqual({
+      beforeShow: [null, 'true'],
+      built: 'Built on demand',
+      controls: true,
+      expanded: 'true',
+      events: ['lazy:show'],
+    });
+    lazy.destroy();
+  });
 });

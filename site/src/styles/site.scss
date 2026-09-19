@@ -514,7 +514,8 @@ pre {
   }
 
   /* No display value here: the Toggle stylesheet shows and hides the menu */
-  .menu {
+  /* Toggle's example menu; a Dropdown's menu is drawn by the package stylesheet */
+  .menu:not([data-dropdown-state]) {
     width: max-content;
     margin-top: 0.5rem;
     padding: 0.5rem;

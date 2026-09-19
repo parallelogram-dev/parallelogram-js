@@ -1,0 +1,165 @@
+/**
+ * Dropdown Component Styles
+ * State-based styling using data-dropdown-state, as Toggle's, for a menu Dropdown positions beside
+ * its trigger. It gives the menu a place, the dropdown surface and its items a row each, hides it
+ * when closed, and moves it a step into place while opening and closing. A page's own rules on the
+ * menu win on specificity, since these are one attribute deep.
+ */
+/* The menu is the dropdown surface -- the one p-select's list is drawn on -- and its items are
+   plain rows in it: no button chrome, the whole width, a hover, a checked state for a
+   menuitemcheckbox or menuitemradio, and a rule for an <hr> between groups */
+[data-dropdown-state] {
+  position: fixed;
+  z-index: var(--dropdown-z-index, 1000);
+  box-sizing: border-box;
+  min-width: var(--dropdown-min-width, 10rem);
+  max-height: var(--dropdown-max-height, 60vh);
+  margin: 0;
+  padding: var(--dropdown-padding, 0.25rem);
+  overflow: auto;
+  border: var(--surface-dropdown-border-width, 1px) solid
+    var(--surface-dropdown-border-color, #e2e8f0);
+  border-radius: var(--surface-dropdown-radius, 0.25em);
+  background: var(--surface-dropdown-color-bg, #ffffff);
+  color: var(--surface-panel-color-text, inherit);
+  box-shadow: var(--surface-dropdown-shadow, 0 8px 24px rgba(0, 0, 0, 0.15));
+}
+
+[data-dropdown-state] [role^='menuitem'] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: var(--dropdown-item-padding, 0.45rem 0.6rem);
+  border: 0;
+  border-radius: var(--dropdown-item-radius, 0.2em);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color var(--framework-transition-duration, 0.2s)
+      var(--framework-transition-easing, ease-in-out);
+  }
+}
+
+/* An icon before a label keeps its size while the label takes the rest of the row */
+[data-dropdown-state] [role^='menuitem'] > svg,
+[data-dropdown-state] [role^='menuitem'] > img {
+  flex: none;
+}
+
+[data-dropdown-state] [role^='menuitem']:hover,
+[data-dropdown-state] [role^='menuitem']:focus-visible {
+  background: var(--surface-dropdown-item-hover-bg, #f1f5f9);
+}
+
+[data-dropdown-state] [role^='menuitem']:focus-visible {
+  outline: 2px solid var(--framework-focus-color, var(--color-accent, #2563eb));
+  outline-offset: -2px;
+}
+
+[data-dropdown-state] [role='menuitemcheckbox']::before,
+[data-dropdown-state] [role='menuitemradio']::before {
+  content: '';
+  flex: none;
+  width: 0.85em;
+  height: 0.85em;
+  border: 1px solid currentColor;
+  border-radius: 0.2em;
+  opacity: 0.5;
+}
+
+[data-dropdown-state] [role='menuitemradio']::before {
+  border-radius: 50%;
+}
+
+[data-dropdown-state] [role^='menuitem'][aria-checked='true'] {
+  background: var(--surface-dropdown-item-selected-bg, #e0e7ff);
+}
+
+[data-dropdown-state] [role^='menuitem'][aria-checked='true']::before {
+  background: currentColor;
+  opacity: 1;
+}
+
+[data-dropdown-state] [role^='menuitem']:disabled,
+[data-dropdown-state] [role^='menuitem'][aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-dropdown-state] hr {
+  margin: 0.25rem 0;
+  border: 0;
+  border-top: 1px solid var(--surface-dropdown-border-color, #e2e8f0);
+}
+
+/* Closed menus stay hidden whatever display page styles give them, including when the framework is
+   imported into a cascade layer. */
+[data-dropdown-state][hidden] {
+  display: none !important;
+}
+
+/* Markup can start a menu closed with data-dropdown-state="closed", which hides it before Dropdown
+   loads, unless the page's Dropdown failed to mount, when the menu stays reachable */
+@media (scripting: enabled) {
+  :root:not(:has([data-dropdown].component-error)) [data-dropdown-state='closed'] {
+    display: none !important;
+  }
+}
+
+[data-dropdown-state='closing'] {
+  pointer-events: none;
+}
+
+/* The step a menu takes into place: from the trigger's side towards it */
+[data-dropdown-side='bottom'] {
+  --dropdown-from: translateY(calc(-1 * var(--dropdown-shift, 4px)));
+}
+
+[data-dropdown-side='top'] {
+  --dropdown-from: translateY(var(--dropdown-shift, 4px));
+}
+
+[data-dropdown-side='right'] {
+  --dropdown-from: translateX(calc(-1 * var(--dropdown-shift, 4px)));
+}
+
+[data-dropdown-side='left'] {
+  --dropdown-from: translateX(var(--dropdown-shift, 4px));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-dropdown-state='opening'] {
+    animation: dropdown-in
+      var(--dropdown-transition-duration, var(--framework-transition-duration, 0.2s)) ease-out;
+  }
+
+  [data-dropdown-state='closing'] {
+    animation: dropdown-out
+      var(--dropdown-transition-duration, var(--framework-transition-duration, 0.2s)) ease-in
+      forwards;
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: var(--dropdown-from, none);
+  }
+}
+
+@keyframes dropdown-out {
+  to {
+    opacity: 0;
+    transform: var(--dropdown-from, none);
+  }
+}
