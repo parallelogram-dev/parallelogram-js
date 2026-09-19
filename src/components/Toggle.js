@@ -128,6 +128,8 @@ export default class Toggle extends BaseComponent {
     state.closeOnEscape = this.getBoolAttr(element, 'close-escape', defaults.closeOnEscape);
     state.isOpen = false;
     state.original = rememberAttributes(element, TRIGGER_ATTRIBUTES);
+    /* A trigger has a popup to expand from the start, whether or not its target exists yet */
+    element.setAttribute('aria-expanded', 'false');
     this.setAttr(element, 'enhanced', 'true');
 
     element.addEventListener(
@@ -385,12 +387,11 @@ export default class Toggle extends BaseComponent {
    */
   toggle(element) {
     const state = this.getState(element);
-    if (!state?.target) return;
-
-    if (this._isTargetOpen(state.target)) {
-      this.hide(element);
-    } else {
+    if (!state) return;
+    if (!state.target || !this._isTargetOpen(state.target)) {
       this.show(element);
+    } else {
+      this.hide(element);
     }
   }
 

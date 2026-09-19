@@ -106,6 +106,21 @@ describe('Dropdown', () => {
     });
   });
 
+  it('opens a templated menu from a click on the button, which is how a visitor opens one', async () => {
+    const button = mount(`
+      <template id="t"><div class="menu"><button type="button">One</button></div></template>
+      <button type="button" data-dropdown data-dropdown-template="#t">Actions</button>`);
+    const beforeClick = button.getAttribute('aria-expanded');
+
+    /* The tests above open through show(); a click goes through toggle(), which once gave up on a
+       trigger with no target yet */
+    await userEvent.click(button);
+    const menu = document.getElementById(button.getAttribute('aria-controls'));
+    await vi.waitFor(() => expect(stateOf(menu)).toBe('open'), WAIT);
+
+    expect([beforeClick, button.getAttribute('aria-expanded')]).toEqual(['false', 'true']);
+  });
+
   it('keeps a templated menu after it closes when asked to', async () => {
     const button = mount(`
       <template id="t"><div class="menu"><button type="button">One</button></div></template>
