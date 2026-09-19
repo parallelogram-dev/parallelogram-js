@@ -1616,3 +1616,31 @@ describe('p-select, reaching the chosen values from the keyboard', () => {
     expect(select.value).toEqual(['ada', 'grace']);
   });
 });
+
+describe('p-select, a label that is markup', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    delete window.__pselectInjected;
+  });
+
+  it('shows a chosen value whose label is markup as text', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2">
+        <option value="ada" data-secondary="&lt;img src=x onerror=&quot;window.__pselectInjected = true&quot;&gt;">
+          &lt;img src=x onerror="window.__pselectInjected = true"&gt;
+        </option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada'];
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    /* A label and its second line are somebody's data: they are read, never run */
+    const root = select.shadowRoot;
+    expect({
+      injected: Boolean(window.__pselectInjected),
+      images: root.querySelectorAll('.selection img').length,
+      text: root.querySelector('.selection__name').textContent.includes('<img'),
+    }).toEqual({ injected: false, images: 0, text: true });
+  });
+});
