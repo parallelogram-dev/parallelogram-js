@@ -22,6 +22,14 @@ const COUNTRIES = `
   </p-select>
 `;
 
+const STAFF = `
+  <p-select name="staff" multiple>
+    <option value="ada">Ada Lovelace</option>
+    <option value="grace">Grace Hopper</option>
+    <option value="mary">Mary Somerville</option>
+  </p-select>
+`;
+
 const PRIORITY = `
   <p-select name="priority" required>
     <option value="">-- Select priority --</option>
@@ -1077,5 +1085,89 @@ describe('p-select from the keyboard alone', () => {
     } finally {
       PSelect.defaults.noResults = 'No results found';
     }
+  });
+});
+
+describe('p-select, choosing more than one', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('submits one entry per chosen value under the one name', async () => {
+    const { form, select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'mary'];
+
+    /* A set of values is not a joined string: the form carries the name once per value, which is
+       what a server reads as a list */
+    expect(new FormData(form).getAll('staff')).toEqual(['ada', 'mary']);
+  });
+
+  it('reads its value as a list, and takes one from the attribute', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple value="grace,mary">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+        <option value="mary">Mary Somerville</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    expect(select.value).toEqual(['grace', 'mary']);
+  });
+
+  it('adds a value that is chosen and takes back one chosen again', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const changes = [];
+    select.addEventListener('change', () => changes.push([...select.value]));
+
+    select.select('ada');
+    select.select('grace');
+    select.select('ada');
+
+    /* Choosing is a toggle when more than one is allowed, so the same gesture puts a value in
+       and takes it back out */
+    expect({ value: select.value, changes }).toEqual({
+      value: ['grace'],
+      changes: [['ada'], ['ada', 'grace'], ['grace']],
+    });
+  });
+
+  it('keeps the values in the options\u2019 order, not the order they were chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.select('mary');
+    select.select('ada');
+
+    expect(select.value).toEqual(['ada', 'mary']);
+  });
+
+  it('is satisfied by one value when it is required', async () => {
+    const { form, select } = renderForm(`
+      <p-select name="staff" multiple required>
+        <option value="ada">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const empty = form.checkValidity();
+
+    select.select('ada');
+
+    expect({ empty, filled: form.checkValidity() }).toEqual({ empty: false, filled: true });
+  });
+
+  it('puts the values back as they were when the form is reset', async () => {
+    const { form, select } = renderForm(`
+      <p-select name="staff" multiple value="ada">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    select.select('grace');
+
+    form.reset();
+
+    expect(select.value).toEqual(['ada']);
   });
 });

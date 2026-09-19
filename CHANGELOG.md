@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `<p-select multiple>` holds more than one value. Choosing toggles rather than replaces, so the same gesture puts a value in and takes it back out, and the list stays open. The values are kept in the options' own order rather than the order they were chosen, so the field reads as a filtered copy of the list and does not reshuffle while someone works. The field submits one entry per value under its name, which is what a server reads as a list; `value` reads and writes an array, and the `value` attribute takes a comma separated list. `required` is satisfied by one value, and a form reset puts back what the markup asked for.
+
 ## [0.7.15] - 2026-09-19
 
 ### Fixed

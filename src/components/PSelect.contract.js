@@ -19,6 +19,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'The initial value, restored when the form resets; takes precedence over a selected option',
     },
     {
+      name: 'multiple',
+      type: 'flag',
+      description:
+        'Allows more than one value: choosing toggles rather than replaces, the field submits one entry per value under its name, and `value` reads and writes a list',
+    },
+    {
       name: 'placeholder',
       type: 'string',
       default: 'Select…',

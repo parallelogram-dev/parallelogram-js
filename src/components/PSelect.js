@@ -132,6 +132,7 @@ export default class PSelect extends HTMLElement {
   static get observedAttributes() {
     return [
       'value',
+      'multiple',
       'placeholder',
       'clear-label',
       'search-hint',
@@ -163,6 +164,8 @@ export default class PSelect extends HTMLElement {
       options: [],
       filtered: [],
       value: '',
+      multiple: false,
+      values: [],
       open: false,
       highlightedIndex: -1,
       src: null,
@@ -233,6 +236,10 @@ export default class PSelect extends HTMLElement {
     switch (name) {
       case 'value':
         this._updateValue(newValue);
+        break;
+      case 'multiple':
+        this.state.multiple = newValue !== null;
+        this._setValue(this.state.multiple ? this.state.values : this.state.value);
         break;
       case 'placeholder':
         this.state.placeholder = newValue || this.constructor.defaults.placeholder;
@@ -410,13 +417,25 @@ export default class PSelect extends HTMLElement {
 
     /* The value attribute is the default when it names an option, as it does for a native input */
     const attribute = this.getAttribute('value');
-    const defaultValue = options.some(option => option.value === attribute)
-      ? attribute
-      : selectedValue;
-    this._defaultValue = defaultValue ?? '';
-    const keep = options.some(option => option.value === this.state.value);
-    if (!keep || (!this._selectedOption && defaultValue !== null)) {
-      this.state.value = defaultValue ?? '';
+    if (this.state.multiple) {
+      const named = this._asList(attribute).filter(item =>
+        options.some(option => option.value === item)
+      );
+      const selected = [...this.querySelectorAll('option[selected]')].map(option => option.value);
+      this._defaultValue = named.length ? named : selected;
+      const keepAll = this.state.values.every(item =>
+        options.some(option => option.value === item)
+      );
+      if (!keepAll || !this.state.values.length) this.state.values = [...this._defaultValue];
+    } else {
+      const defaultValue = options.some(option => option.value === attribute)
+        ? attribute
+        : selectedValue;
+      this._defaultValue = defaultValue ?? '';
+      const keep = options.some(option => option.value === this.state.value);
+      if (!keep || (!this._selectedOption && defaultValue !== null)) {
+        this.state.value = defaultValue ?? '';
+      }
     }
 
     this.setOptions(options);
@@ -706,19 +725,51 @@ export default class PSelect extends HTMLElement {
   /**
    * Record a new value, submit it with the form and show its label, without dispatching events
    */
+  /**
+   * A value, or several where `multiple` is set. A list is held in the options' own order rather
+   * than the order it was chosen, so the field reads as a filtered copy of the list and does not
+   * reshuffle while someone works
+   *
+   * @param {string|string[]|null} value
+   */
   _setValue(value) {
-    this.state.value = value ?? '';
+    if (this.state.multiple) {
+      const wanted = new Set(this._asList(value));
+      const known = this.state.options.filter(option => wanted.has(option.value));
+      const rest = [...wanted].filter(item => !known.some(option => option.value === item));
+      this.state.values = [...known.map(option => option.value), ...rest];
+      this.state.value = this.state.values[0] ?? '';
+    } else {
+      this.state.value = value ?? '';
+      this.state.values = this.state.value === '' ? [] : [this.state.value];
+    }
+
     this._selectedOption =
       this.state.options.find(option => option.value === this.state.value) ??
       (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
 
     for (const element of this._els.menu.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
-      element.setAttribute('aria-selected', String(option?.value === this.state.value));
+      element.setAttribute('aria-selected', String(this._holds(option?.value)));
     }
 
     this._syncFormState();
     this._updateDisplay();
+  }
+
+  /** Whether a value is among those chosen */
+  _holds(value) {
+    return value !== undefined && this.state.values.includes(value);
+  }
+
+  /** A value attribute, a property or an array read as a list of values */
+  _asList(value) {
+    if (Array.isArray(value)) return value.map(String).filter(item => item !== '');
+    if (value === null || value === undefined || value === '') return [];
+    return String(value)
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
   }
 
   _updateValue(newValue) {
@@ -788,7 +839,7 @@ export default class PSelect extends HTMLElement {
     if (!option || option.disabled) return;
 
     this._choose(option.value, option);
-    this.close();
+    if (!this.state.multiple) this.close();
   }
 
   /**
@@ -798,6 +849,15 @@ export default class PSelect extends HTMLElement {
    * @param {{ label: string, secondary?: string, description?: string, image?: string }} [option] - the option chosen, whose label and rich fields go in the detail
    */
   _choose(value, option = null) {
+    if (this.state.multiple) {
+      /* The same gesture puts a value in and takes it back out */
+      const held = this._holds(value);
+      this._setValue(
+        held ? this.state.values.filter(item => item !== value) : [...this.state.values, value]
+      );
+      this._announceChange({ value, label: option?.label ?? '', chosen: !held }, option);
+      return;
+    }
     if (value === this.state.value) return;
     this._setValue(value);
 
@@ -805,6 +865,16 @@ export default class PSelect extends HTMLElement {
     for (const field of RICH_FIELDS) {
       if (option?.[field]) detail[field] = option[field];
     }
+
+    this._announceChange(detail, option);
+  }
+
+  /** Say a value changed, the way a form control does, and then in this element's own words */
+  _announceChange(detail, option) {
+    for (const field of RICH_FIELDS) {
+      if (option?.[field] && !(field in detail)) detail[field] = option[field];
+    }
+    if (this.state.multiple) detail.values = [...this.state.values];
 
     this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
@@ -820,19 +890,20 @@ export default class PSelect extends HTMLElement {
     this.state.options = Array.isArray(options) ? options.slice() : [];
     this.state.filtered = this.state.options.slice();
     this._renderOptions();
-    this._setValue(this.state.value);
+    this._setValue(this.state.multiple ? this.state.values : this.state.value);
   }
 
   getValue() {
-    return this.state.value;
+    return this.value;
   }
 
   clear() {
-    this._setValue('');
+    this._setValue(this.state.multiple ? [] : '');
   }
 
+  /** A string, or the list of values where `multiple` is set */
   get value() {
-    return this.state.value;
+    return this.state.multiple ? [...this.state.values] : this.state.value;
   }
 
   set value(value) {
@@ -858,10 +929,18 @@ export default class PSelect extends HTMLElement {
    * The host element's name attribute provides the field name.
    */
   _syncFormState() {
-    const { value, required } = this.state;
-    this._internals.setFormValue(value);
+    const { value, values, multiple, required } = this.state;
+    if (multiple) {
+      /* One entry per value under the one name, which is what a server reads as a list */
+      const data = new FormData();
+      for (const item of values) data.append(this.name || '', item);
+      this._internals.setFormValue(values.length ? data : null);
+    } else {
+      this._internals.setFormValue(value);
+    }
 
-    if (required && value === '') {
+    const empty = multiple ? values.length === 0 : value === '';
+    if (required && empty) {
       this._internals.setValidity(
         { valueMissing: true },
         'Please select an item in the list.',
