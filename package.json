@@ -1,6 +1,6 @@
 {
   "name": "@parallelogram-js/core",
-  "version": "0.7.14",
+  "version": "0.7.15",
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
   "main": "./dist/index.js",
