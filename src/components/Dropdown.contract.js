@@ -41,7 +41,31 @@ Inside the menu, the arrow keys move between items, Home and End go to the ends,
       name: 'data-dropdown-param-<name>',
       type: 'string',
       description:
-        "Fills every {name} in the template's text and attribute values, as text, so a value cannot inject markup; passed along with dropdown:select",
+        "Fills every {name} in the template's text and attribute values, as text, so a value cannot inject markup; passed along with dropdown:select. In a boolean attribute such as disabled or hidden, an empty, false or unfilled value takes the attribute away and anything else keeps it",
+    },
+    {
+      name: 'data-dropdown-params',
+      type: 'string',
+      description:
+        'All the params in one attribute: JSON, or key:value pairs separated by commas as in {id: 12, name: Ada}, braces and quotes optional; a data-dropdown-param-<name> attribute wins for its name',
+    },
+    {
+      name: 'data-dropdown-disabled',
+      type: 'string',
+      description:
+        'The data-dropdown-item names of the items to disable for this trigger, separated by commas or spaces',
+    },
+    {
+      name: 'data-dropdown-hidden',
+      type: 'string',
+      description:
+        'The data-dropdown-item names of the items to leave out for this trigger: left out of a menu built from a template, hidden in a menu on the page',
+    },
+    {
+      name: 'data-dropdown-item',
+      type: 'string',
+      on: 'an item',
+      description: 'The name data-dropdown-disabled and data-dropdown-hidden refer to an item by',
     },
     {
       name: 'data-dropdown-keep',
@@ -186,6 +210,27 @@ Inside the menu, the arrow keys move between items, Home and End go to the ends,
   ],
   cssProperties: [
     { name: '--dropdown-z-index', default: '1000', description: 'Stacking of an open menu' },
+    { name: '--dropdown-min-width', default: '10rem', description: 'Narrowest a menu is drawn' },
+    {
+      name: '--dropdown-max-height',
+      default: '60vh',
+      description: 'Tallest a menu grows before it scrolls',
+    },
+    {
+      name: '--dropdown-padding',
+      default: '0.25rem',
+      description: 'Space between the menu edge and its items',
+    },
+    {
+      name: '--dropdown-item-padding',
+      default: '0.45rem 0.6rem',
+      description: 'Padding of an item',
+    },
+    {
+      name: '--dropdown-item-radius',
+      default: '0.2em',
+      description: 'Corner radius of an item’s hover',
+    },
     {
       name: '--dropdown-transition-duration',
       default: 'var(--framework-transition-duration)',
@@ -219,17 +264,17 @@ Inside the menu, the arrow keys move between items, Home and End go to the ends,
       id: 'rows',
       title: 'One template for every row',
       description:
-        'Each row carries only its params; the menu is built when the button opens and removed when it closes. Choose an action to see dropdown:select carry the row’s params.',
+        'Each row carries only its params, as separate attributes or as one; the menu is built when the button opens and removed when it closes. Grace’s row disables Cancel and Mary’s leaves Edit out, by the items’ names. Choose an action to see dropdown:select carry the row’s params.',
       markup: `<template id="booking-actions">
   <div class="menu">
-    <a href="/bookings/{id}/edit">Edit {name}</a>
-    <button type="button" data-action="cancel">Cancel booking</button>
+    <a href="/bookings/{id}/edit" data-dropdown-item="edit">Edit {name}</a>
+    <button type="button" data-action="cancel" data-dropdown-item="cancel">Cancel booking</button>
   </div>
 </template>
 <table class="table">
   <tr><td>Ada Lovelace</td><td>Tue 24 Sep</td><td><button type="button" class="btn btn--sm" data-dropdown data-dropdown-template="#booking-actions" data-dropdown-param-id="12" data-dropdown-param-name="Ada">Actions</button></td></tr>
-  <tr><td>Grace Hopper</td><td>Wed 25 Sep</td><td><button type="button" class="btn btn--sm" data-dropdown data-dropdown-template="#booking-actions" data-dropdown-param-id="13" data-dropdown-param-name="Grace">Actions</button></td></tr>
-  <tr><td>Mary Somerville</td><td>Thu 26 Sep</td><td><button type="button" class="btn btn--sm" data-dropdown data-dropdown-template="#booking-actions" data-dropdown-param-id="14" data-dropdown-param-name="Mary">Actions</button></td></tr>
+  <tr><td>Grace Hopper</td><td>Wed 25 Sep</td><td><button type="button" class="btn btn--sm" data-dropdown data-dropdown-template="#booking-actions" data-dropdown-params="{id: 13, name: Grace}" data-dropdown-disabled="cancel">Actions</button></td></tr>
+  <tr><td>Mary Somerville</td><td>Thu 26 Sep</td><td><button type="button" class="btn btn--sm" data-dropdown data-dropdown-template="#booking-actions" data-dropdown-param-id="14" data-dropdown-param-name="Mary" data-dropdown-hidden="edit">Actions</button></td></tr>
 </table>`,
     },
     {

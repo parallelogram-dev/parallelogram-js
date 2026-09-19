@@ -1,13 +1,98 @@
 /**
  * Dropdown Component Styles
  * State-based styling using data-dropdown-state, as Toggle's, for a menu Dropdown positions beside
- * its trigger. The menu's own look -- border, background, padding -- is the page's; this gives it
- * a place, hides it when closed, and moves it a step into place while opening and closing.
+ * its trigger. It gives the menu a place, the dropdown surface and its items a row each, hides it
+ * when closed, and moves it a step into place while opening and closing. A page's own rules on the
+ * menu win on specificity, since these are one attribute deep.
  */
+/* The menu is the dropdown surface -- the one p-select's list is drawn on -- and its items are
+   plain rows in it: no button chrome, the whole width, a hover, a checked state for a
+   menuitemcheckbox or menuitemradio, and a rule for an <hr> between groups */
 [data-dropdown-state] {
   position: fixed;
   z-index: var(--dropdown-z-index, 1000);
+  box-sizing: border-box;
+  min-width: var(--dropdown-min-width, 10rem);
+  max-height: var(--dropdown-max-height, 60vh);
   margin: 0;
+  padding: var(--dropdown-padding, 0.25rem);
+  overflow: auto;
+  border: var(--surface-dropdown-border-width, 1px) solid
+    var(--surface-dropdown-border-color, #e2e8f0);
+  border-radius: var(--surface-dropdown-radius, 0.25em);
+  background: var(--surface-dropdown-color-bg, #ffffff);
+  color: var(--surface-panel-color-text, inherit);
+  box-shadow: var(--surface-dropdown-shadow, 0 8px 24px rgba(0, 0, 0, 0.15));
+}
+
+[data-dropdown-state] [role^='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: var(--dropdown-item-padding, 0.45rem 0.6rem);
+  border: 0;
+  border-radius: var(--dropdown-item-radius, 0.2em);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color var(--framework-transition-duration, 0.2s)
+      var(--framework-transition-easing, ease-in-out);
+  }
+}
+
+[data-dropdown-state] [role^='menuitem']:hover,
+[data-dropdown-state] [role^='menuitem']:focus-visible {
+  background: var(--surface-dropdown-item-hover-bg, #f1f5f9);
+}
+
+[data-dropdown-state] [role^='menuitem']:focus-visible {
+  outline: 2px solid var(--framework-focus-color, var(--color-accent, #2563eb));
+  outline-offset: -2px;
+}
+
+[data-dropdown-state] [role='menuitemcheckbox']::before,
+[data-dropdown-state] [role='menuitemradio']::before {
+  content: '';
+  flex: none;
+  width: 0.85em;
+  height: 0.85em;
+  border: 1px solid currentColor;
+  border-radius: 0.2em;
+  opacity: 0.5;
+}
+
+[data-dropdown-state] [role='menuitemradio']::before {
+  border-radius: 50%;
+}
+
+[data-dropdown-state] [role^='menuitem'][aria-checked='true'] {
+  background: var(--surface-dropdown-item-selected-bg, #e0e7ff);
+}
+
+[data-dropdown-state] [role^='menuitem'][aria-checked='true']::before {
+  background: currentColor;
+  opacity: 1;
+}
+
+[data-dropdown-state] [role^='menuitem']:disabled,
+[data-dropdown-state] [role^='menuitem'][aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-dropdown-state] hr {
+  margin: 0.25rem 0;
+  border: 0;
+  border-top: 1px solid var(--surface-dropdown-border-color, #e2e8f0);
 }
 
 /* Closed menus stay hidden whatever display page styles give them, including when the framework is

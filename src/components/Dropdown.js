@@ -13,9 +13,23 @@ const PLACEMENTS = [
   'right',
 ];
 /** What counts as an item in a menu, in document order */
-const ITEMS = 'a[href], button:not([disabled]), [role^="menuitem"]';
+const ITEMS = 'a[href], button:not([disabled]), [role^="menuitem"]:not([aria-disabled="true"])';
 /** The attribute prefix a trigger's params are read from: data-dropdown-param-<name> */
 const PARAM = 'param-';
+/** Attributes whose presence is their value; a param fills them as true or false, not as text */
+const BOOLEAN = new Set([
+  'disabled',
+  'hidden',
+  'checked',
+  'selected',
+  'readonly',
+  'required',
+  'inert',
+  'open',
+]);
+const FALSE = new Set(['', 'false', '0', 'null', 'undefined']);
+/** A name list on the trigger: comma or space separated */
+const names = text => (text ?? '').split(/[\s,]+/).filter(Boolean);
 /** Room to leave between a menu and the edge of the viewport */
 const MARGIN = 8;
 
@@ -149,6 +163,7 @@ export default class Dropdown extends Toggle {
       this.logger?.warn('Dropdown: the template has no element to be the menu', { element });
       return;
     }
+    this._restrict(element, menu, { remove: true });
     menu.hidden = true;
     if (state.config.portal) document.body.append(menu);
     else element.after(menu);
@@ -157,15 +172,74 @@ export default class Dropdown extends Toggle {
   }
 
   /**
+   * Disable or drop the items the trigger names in data-dropdown-disabled and data-dropdown-hidden,
+   * by their data-dropdown-item: left out of a menu built from a template, hidden in one on the page
+   */
+  _restrict(element, menu, { remove }) {
+    const disabled = names(this.getAttr(element, 'disabled'));
+    const hidden = names(this.getAttr(element, 'hidden'));
+    for (const item of menu.querySelectorAll(`[${this._getSelector()}-item]`)) {
+      const name = this.getAttr(item, 'item');
+      if (hidden.includes(name)) {
+        if (remove) item.remove();
+        else item.hidden = true;
+      } else if (!remove) {
+        item.hidden = false;
+      }
+      if (disabled.includes(name)) {
+        if ('disabled' in item) item.disabled = true;
+        else item.setAttribute('aria-disabled', 'true');
+      }
+    }
+  }
+
+  /**
    * The trigger's data-dropdown-param-<name> attributes, by name
    *
    * @returns {Record<string, string>}
    */
   _params(element) {
+    const params = this._parseParams(this.getAttr(element, 'params'));
     const prefix = `${this._getSelector()}-${PARAM}`;
-    const params = {};
     for (const { name, value } of element.attributes) {
       if (name.startsWith(prefix)) params[name.slice(prefix.length)] = value;
+    }
+    return params;
+  }
+
+  /**
+   * The params in one attribute: JSON, or the looser `{id: 1, name: Ada}` -- key:value pairs
+   * separated by commas, braces and quotes optional -- every value a string
+   *
+   * @param {string|null} text
+   * @returns {Record<string, string>}
+   */
+  _parseParams(text) {
+    const trimmed = (text ?? '').trim();
+    if (!trimmed) return {};
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return Object.fromEntries(
+          Object.entries(parsed).map(([key, value]) => [key, String(value)])
+        );
+      } catch {
+        /* Not JSON: read as pairs */
+      }
+    }
+    const params = {};
+    for (const pair of trimmed.replace(/^\{|\}$/g, '').split(',')) {
+      const at = pair.indexOf(':');
+      if (at === -1) continue;
+      const key = pair
+        .slice(0, at)
+        .trim()
+        .replace(/^["']|["']$/g, '');
+      const value = pair
+        .slice(at + 1)
+        .trim()
+        .replace(/^["']|["']$/g, '');
+      if (key) params[key] = value;
     }
     return params;
   }
@@ -182,8 +256,17 @@ export default class Dropdown extends Toggle {
       if (node.nodeType === Node.TEXT_NODE) {
         if (node.data.includes('{')) node.data = fill(node.data);
       } else {
-        for (const attribute of node.attributes) {
-          if (attribute.value.includes('{')) attribute.value = fill(attribute.value);
+        for (const attribute of [...node.attributes]) {
+          if (!attribute.value.includes('{')) continue;
+          const filled = fill(attribute.value);
+          if (!BOOLEAN.has(attribute.name)) {
+            attribute.value = filled;
+          } else if (FALSE.has(filled.trim().toLowerCase()) || /\{[\w-]+\}/.test(filled)) {
+            /* A boolean attribute is its presence: an empty, false or unfilled value takes it away */
+            node.removeAttribute(attribute.name);
+          } else {
+            attribute.value = '';
+          }
         }
       }
     }
@@ -195,6 +278,7 @@ export default class Dropdown extends Toggle {
     const target = state?.target;
     if (!target || this._open.get(target) !== element) return;
 
+    if (!state.built) this._restrict(element, target, { remove: false });
     this._prepareMenu(target);
     if (state.config.portal && !state.built && target.parentNode !== document.body) {
       state.home = { parent: target.parentNode, next: target.nextSibling };

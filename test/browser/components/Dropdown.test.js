@@ -207,6 +207,50 @@ describe('Dropdown', () => {
     });
   });
 
+  it('lets a row disable or drop items: a boolean attribute from a param, or names on the button', async () => {
+    const button = mount(`
+      <template id="t"><div class="menu">
+        <a href="/x" data-dropdown-item="edit">Edit</a>
+        <button type="button" data-dropdown-item="cancel" disabled="{locked}">Cancel</button>
+        <button type="button" data-dropdown-item="export">Export</button>
+        <button type="button" data-dropdown-item="archive" hidden="{done}">Archive</button>
+      </div></template>
+      <button id="a" type="button" data-dropdown data-dropdown-template="#t" data-dropdown-param-locked="true">A</button>
+      <button id="b" type="button" data-dropdown data-dropdown-template="#t" data-dropdown-param-done="false" data-dropdown-disabled="export" data-dropdown-hidden="edit, archive">B</button>`);
+    const describe = menu =>
+      [...menu.querySelectorAll('[data-dropdown-item]')].map(
+        item => `${item.dataset.dropdownItem}${item.disabled ? ':disabled' : ''}`
+      );
+
+    const a = await open(dropdown, button);
+    const rowA = describe(a);
+    dropdown.hide(button);
+    const b = await open(dropdown, document.getElementById('b'));
+
+    /* A: locked=true keeps disabled, done unset drops hidden. B: done=false drops hidden;
+       the button names export to disable and edit and archive to drop */
+    expect({ rowA, rowB: describe(b) }).toEqual({
+      rowA: ['edit', 'cancel:disabled', 'export', 'archive'],
+      rowB: ['cancel', 'export:disabled'],
+    });
+  });
+
+  it('takes params from one attribute too, as JSON or as key:value pairs, with a named param winning', async () => {
+    const button = mount(`
+      <template id="t"><div class="menu"><a href="/b/{id}">{name} ({kind})</a></div></template>
+      <button id="j" type="button" data-dropdown data-dropdown-template="#t" data-dropdown-params='{"id": 7, "name": "Ada", "kind": "json"}'>J</button>
+      <button id="l" type="button" data-dropdown data-dropdown-template="#t" data-dropdown-params="{id: 8, name: Grace, kind: loose}" data-dropdown-param-name="Grace H.">L</button>`);
+    const line = menu =>
+      `${menu.querySelector('a').getAttribute('href')} ${menu.querySelector('a').textContent}`;
+
+    const j = await open(dropdown, button);
+    const fromJson = line(j);
+    dropdown.hide(button);
+    const l = await open(dropdown, document.getElementById('l'));
+
+    expect([fromJson, line(l)]).toEqual(['/b/7 Ada (json)', '/b/8 Grace H. (loose)']);
+  });
+
   it('opens above when there is no room below, and matches the button’s width when asked', async () => {
     const button = mount(`
       <button type="button" data-dropdown data-dropdown-target="#m" data-dropdown-match-width style="position:fixed;bottom:4px;left:100px;width:240px">Filter bookings by status</button>
@@ -218,6 +262,30 @@ describe('Dropdown', () => {
       above: menu.getBoundingClientRect().bottom <= button.getBoundingClientRect().top,
       wide: menu.getBoundingClientRect().width >= 240,
     }).toEqual({ above: true, wide: true });
+  });
+
+  it('draws the menu on the dropdown surface with its items as rows, and marks a checked one', async () => {
+    const button = mount(`
+      <button type="button" data-dropdown data-dropdown-target="#m">Filter</button>
+      <div id="m" hidden><button type="button" role="menuitemcheckbox" aria-checked="true">Confirmed</button><a href="#w">Waitlisted</a></div>`);
+
+    const menu = await open(dropdown, button);
+    const [checked, link] = menu.querySelectorAll('[role^="menuitem"]');
+    const style = getComputedStyle(link);
+
+    /* The page's markup is a plain button and a plain link; the stylesheet makes them rows of
+       one menu rather than a button beside a link */
+    expect({
+      surface: [getComputedStyle(menu).borderTopWidth, getComputedStyle(menu).boxShadow !== 'none'],
+      row: [
+        style.display,
+        style.textAlign,
+        style.textDecorationLine,
+        Math.round(link.getBoundingClientRect().width) ===
+          Math.round(checked.getBoundingClientRect().width),
+      ],
+      checked: getComputedStyle(checked, '::before').width !== 'auto',
+    }).toEqual({ surface: ['1px', true], row: ['flex', 'left', 'none', true], checked: true });
   });
 
   it('mounts on every matching element without the framework', () => {
