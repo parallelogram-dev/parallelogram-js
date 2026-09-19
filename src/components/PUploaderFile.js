@@ -5,7 +5,16 @@ import { dispatchComponentEvent } from '../utils/events.js';
 import { boolAttr, errorMessage, uploaderText } from '../utils/uploader.js';
 import { text } from '../utils/text.js';
 import { followFocusSource } from '../utils/focus-source.js';
-import { arrowDown, arrowUp, check, iconElement, pencil, trash, x } from '../utils/icons.js';
+import {
+  arrowDown,
+  arrowUp,
+  check,
+  iconElement,
+  pencil,
+  refresh,
+  trash,
+  x,
+} from '../utils/icons.js';
 
 /**
  * Create an element whose attributes and text are set through DOM APIs, so
@@ -69,8 +78,8 @@ const getFileTemplate = () => {
             <div class="uploader__alert">
               <h2 class="uploader__heading">Delete this file?</h2>
               <div class="uploader__actions uploader__pills" part="actions pills">
-                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel delete"></button>
-                <button type="button" class="uploader__pill uploader__pill--danger" data-action="confirm-delete" title="Delete" aria-label="Confirm delete"></button>
+                <button type="button" class="uploader__pill" part="cancel-button" data-action="cancel" title="Cancel" aria-label="Cancel delete"></button>
+                <button type="button" class="uploader__pill uploader__pill--danger" part="confirm-button" data-action="confirm-delete" title="Delete" aria-label="Confirm delete"></button>
               </div>
             </div>
           </div>
@@ -81,8 +90,8 @@ const getFileTemplate = () => {
                 <p class="uploader__edit-message" role="alert"></p>
               </div>
               <div class="uploader__actions uploader__pills" part="actions pills">
-                <button type="button" class="uploader__pill" data-action="cancel" title="Cancel" aria-label="Cancel editing"></button>
-                <button type="submit" class="uploader__pill uploader__pill--save" data-action="save" title="Save" aria-label="Save details"></button>
+                <button type="button" class="uploader__pill" part="cancel-button" data-action="cancel" title="Cancel" aria-label="Cancel editing"></button>
+                <button type="submit" class="uploader__pill uploader__pill--save" part="save-button" data-action="save" title="Save" aria-label="Save details"></button>
               </div>
             </form>
           </div>
@@ -150,7 +159,7 @@ export class PUploaderFile extends HTMLElement {
     label(this._toolbarButtons.edit, 'edit-label');
     label(this._toolbarButtons['move-up'], 'move-up-label');
     label(this._toolbarButtons['move-down'], 'move-down-label');
-    this._toolbarButtons.replace.textContent = this._text('replace-label');
+    label(this._toolbarButtons.replace, 'replace-label');
     label(this._toolbarButtons['show-delete'], 'delete-label');
   }
 
@@ -208,9 +217,10 @@ export class PUploaderFile extends HTMLElement {
     }
 
     this._toolbar = el('div', { class: 'uploader__toolbar', part: 'toolbar' });
-    /* Edit and delete sit together as one pill, the way a segmented control does */
+    /* Edit, replace and delete sit together as one pill, the way a segmented control does; it is
+       the toolbar's sibling rather than its child, so a toolbar with no move buttons can go */
     this._pills = el('div', { class: 'uploader__pills', part: 'pills' });
-    root.querySelector('[data-panel="info"] .uploader__body').append(this._toolbar);
+    this._body = root.querySelector('[data-panel="info"] .uploader__body');
 
     this.shadowRoot.replaceChildren(root);
     adoptStyles(this.shadowRoot, fileStyles);
@@ -222,6 +232,7 @@ export class PUploaderFile extends HTMLElement {
         {
           type: 'button',
           class: 'uploader__btn uploader__btn--delete',
+          part: 'confirm-button',
           'data-action': 'confirm-delete',
           'aria-label': this._text('remove-label'),
         },
@@ -232,6 +243,7 @@ export class PUploaderFile extends HTMLElement {
         {
           type: 'button',
           class: 'uploader__btn uploader__btn--secondary',
+          part: 'cancel-button',
           'data-action': 'cancel',
           'aria-label': this._text('cancel-upload-label'),
         },
@@ -252,11 +264,34 @@ export class PUploaderFile extends HTMLElement {
         }),
         pencil
       ),
+      replace: withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill',
+          'data-action': 'replace',
+          part: 'replace-button',
+          title: this._text('replace-label'),
+          'aria-label': this._text('replace-label'),
+        }),
+        refresh
+      ),
+      'show-delete': withIcon(
+        el('button', {
+          type: 'button',
+          class: 'uploader__pill uploader__pill--delete',
+          'data-action': 'show-delete',
+          part: 'delete-button',
+          title: this._text('delete-label'),
+          'aria-label': this._text('delete-label'),
+        }),
+        trash
+      ),
       'move-up': withIcon(
         el('button', {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-up',
+          part: 'move-up-button',
           title: this._text('move-up-label'),
           'aria-label': this._text('move-up-label'),
         }),
@@ -267,25 +302,11 @@ export class PUploaderFile extends HTMLElement {
           type: 'button',
           class: 'uploader__move',
           'data-action': 'move-down',
+          part: 'move-down-button',
           title: this._text('move-down-label'),
           'aria-label': this._text('move-down-label'),
         }),
         arrowDown
-      ),
-      replace: el(
-        'button',
-        { type: 'button', class: 'uploader__replace', 'data-action': 'replace' },
-        this._text('replace-label')
-      ),
-      'show-delete': withIcon(
-        el('button', {
-          type: 'button',
-          class: 'uploader__pill uploader__pill--delete',
-          'data-action': 'show-delete',
-          title: this._text('delete-label'),
-          'aria-label': this._text('delete-label'),
-        }),
-        trash
       ),
     };
 
@@ -421,7 +442,7 @@ export class PUploaderFile extends HTMLElement {
     };
 
     const parentOf = action =>
-      action === 'edit' || action === 'show-delete' ? this._pills : this._toolbar;
+      action === 'move-up' || action === 'move-down' ? this._toolbar : this._pills;
     const previous = new Map();
     for (const [action, button] of Object.entries(this._toolbarButtons)) {
       if (!shown[action]) {
@@ -440,11 +461,10 @@ export class PUploaderFile extends HTMLElement {
       previous.set(parent, button);
     }
 
-    /* The pill sits last in the toolbar, and goes away when neither button is allowed */
-    if (this._pills.children.length === 0) {
-      this._pills.remove();
-    } else if (this._pills.parentNode !== this._toolbar) {
-      this._toolbar.append(this._pills);
+    /* Each group is in the card only while it holds something, so neither leaves a gap behind */
+    for (const group of [this._toolbar, this._pills]) {
+      if (group.children.length === 0) group.remove();
+      else if (group.parentNode !== this._body) this._body.append(group);
     }
   }
 

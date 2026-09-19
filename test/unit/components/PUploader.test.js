@@ -26,8 +26,9 @@ const renderUploader = async (attributes = {}) => {
   return { uploader, file, shadow: file.shadowRoot };
 };
 
+/* The move buttons and the pill are separate groups in the card's body, in that order */
 const actions = shadow =>
-  [...shadow.querySelectorAll('.uploader__toolbar button')].map(button => button.dataset.action);
+  [...shadow.querySelectorAll('.uploader__body button')].map(button => button.dataset.action);
 
 describe('p-uploader', () => {
   afterEach(() => {
@@ -48,7 +49,8 @@ describe('p-uploader', () => {
       'sequence-action': '/api/sequence',
     });
 
-    /* Edit and Delete sit together in the pill, after the reorder arrows */
+    /* Edit and Delete sit together in the pill, after the reorder arrows; with more than one
+       file allowed there is no Replace */
     expect(actions(shadow)).toEqual(['move-up', 'move-down', 'edit', 'show-delete']);
   });
 
