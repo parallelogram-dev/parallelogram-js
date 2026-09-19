@@ -217,10 +217,11 @@ input {
     position: relative;
   }
 
+  /* The rows carry their own height and padding, so they read as a list without a gap on top */
   &__fields {
     display: grid;
     grid-template-columns: var(--uploader-label-width, 4rem) minmax(0, 1fr);
-    row-gap: var(--uploader-field-gap, #{$space-sm});
+    row-gap: var(--uploader-field-gap, 0);
     column-gap: var(--uploader-preview-gap, 1rem);
     align-items: baseline;
     flex: 1;

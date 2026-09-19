@@ -97,16 +97,18 @@ describe('p-uploader', () => {
     ]);
   });
 
-  it('sets the filename below the fields it labels, in the body weight', async () => {
+  it('sets the filename below the fields it labels, and lists the fields without a gap', async () => {
     const { shadow } = await renderUploader({});
     const style = getComputedStyle(shadow.querySelector('[part="filename"]'));
     const field = getComputedStyle(shadow.querySelector('.uploader__field'));
 
-    /* Bold monospace at the fields' own size read as louder than the values beside it */
+    /* Bold monospace at the fields' own size read as louder than the values beside it, and the
+       rows carry their own height, so a gap on top of it only spread the list */
     expect({
       weight: style.fontWeight,
       smallerThanFields: parseFloat(style.fontSize) < parseFloat(field.fontSize),
-    }).toEqual({ weight: '400', smallerThanFields: true });
+      rowGap: parseFloat(getComputedStyle(shadow.querySelector('[part="fields"]')).rowGap) || 0,
+    }).toEqual({ weight: '400', smallerThanFields: true, rowGap: 0 });
   });
 
   it('keeps the moved file’s order buttons in step with its position', async () => {
