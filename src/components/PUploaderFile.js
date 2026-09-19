@@ -844,6 +844,8 @@ export class PUploaderFile extends HTMLElement {
         if (uploader.logger) {
           uploader.logger.error('Failed to delete file:', errorText);
         }
+        /* The file is still there, so a card hidden for a replacement has to be seen again */
+        this.hidden = false;
         this.setAttribute(
           'error',
           this._text('delete-error', { error: errorMessage(errorText, this._text('server-error')) })
@@ -857,6 +859,7 @@ export class PUploaderFile extends HTMLElement {
       if (uploader.logger) {
         uploader.logger.error('Failed to delete file:', error);
       }
+      this.hidden = false;
       this.setAttribute('error', `Delete failed: ${error.message || 'Network error'}`);
       this.setAttribute('data-current-panel', 'error');
     }

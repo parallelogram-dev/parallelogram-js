@@ -154,6 +154,12 @@
   display: block;
 }
 
+/* A card hidden while its replacement uploads; this tree's rule above would otherwise beat both
+   the browser's rule for [hidden] and the card's own :host rule */
+::slotted(p-uploader-file[hidden]) {
+  display: none;
+}
+
 /* The selector sits the same distance below the last file as files sit from each other */
 :host(:not([full])) ::slotted(p-uploader-file:last-of-type) {
   margin-bottom: var(--uploader-files-gap, #{$space-sm});

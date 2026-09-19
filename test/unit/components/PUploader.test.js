@@ -97,6 +97,13 @@ describe('p-uploader', () => {
     ]);
   });
 
+  it('sets the filename in the body weight, so it does not shout over the fields', async () => {
+    const { shadow } = await renderUploader({});
+    const filename = shadow.querySelector('[part="filename"]');
+
+    expect(getComputedStyle(filename).fontWeight).toBe('400');
+  });
+
   it('keeps the moved file’s order buttons in step with its position', async () => {
     const { uploader, file, shadow } = await renderUploader({ 'sequence-action': '/api/sequence' });
 

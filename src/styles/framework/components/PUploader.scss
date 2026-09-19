@@ -53,6 +53,11 @@ $size-icon-md: 1.25rem;
   transition: none;
 }
 
+/* The shadow root's own :host rule would otherwise beat the browser's rule for [hidden] */
+:host([hidden]) {
+  display: none;
+}
+
 :host([drag-over]) {
   border-color: var(--color-accent, #{$primary});
   background: var(--color-hover, #{$color-bg-hover});
@@ -238,8 +243,10 @@ input {
     align-items: center;
   }
 
+  /* The name labels the card; the fields beside it are what the reader is there to read */
   &__filename {
     font-family: monospace;
+    font-weight: $font-normal;
   }
 
   &__field {
