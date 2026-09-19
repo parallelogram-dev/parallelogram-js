@@ -1059,6 +1059,102 @@ describe('p-uploader ordering and replacing without dragging', () => {
     expect(control(uploader, 'first', 'move-down')).toBeFalsy();
   });
 
+  const shadowOf = (uploader, id) =>
+    uploader.querySelector(`p-uploader-file[file-id="${id}"]`).shadowRoot;
+
+  it('puts Replace in the pill between Edit and Delete, and drops the empty toolbar', async () => {
+    const uploader = element('p-uploader', {
+      'max-files': '1',
+      'upload-action': '/api/upload',
+      'update-action': '/api/update',
+      'delete-action': '/api/delete',
+    });
+    const fields = element('p-uploader-fields', { slot: 'field-definitions' });
+    fields.append(element('p-uploader-field', { key: 'caption', label: 'Caption' }));
+    uploader.append(fields, element('p-uploader-file', { 'file-id': 'one', filename: 'one.jpg' }));
+    document.body.append(uploader);
+    await nextTask();
+    const root = shadowOf(uploader, 'one');
+
+    /* One pill in the corner holds every action, so Replace is no longer a link in a toolbar
+       beside it; with no move buttons the toolbar has nothing to show and is not rendered */
+    expect({
+      pill: [...root.querySelector('[part="pills"]').children].map(b => b.dataset.action),
+      toolbar: root.querySelector('.uploader__toolbar')?.isConnected ?? false,
+      labels: [
+        root.querySelector('[data-action="replace"]').getAttribute('aria-label'),
+        root.querySelector('[data-action="show-delete"]').getAttribute('aria-label'),
+      ],
+    }).toEqual({
+      pill: ['edit', 'replace', 'show-delete'],
+      toolbar: false,
+      labels: ['Replace', 'Delete file'],
+    });
+  });
+
+  it('draws Replace as a pill the size of its neighbours, not as an underlined link', async () => {
+    const uploader = await renderFiles(
+      { 'max-files': '1', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['one']
+    );
+    const root = shadowOf(uploader, 'one');
+    const box = button => {
+      const rect = button.getBoundingClientRect();
+      return [Math.round(rect.height), getComputedStyle(button).textDecorationLine];
+    };
+
+    expect(box(root.querySelector('[data-action="replace"]'))).toEqual(
+      box(root.querySelector('[data-action="show-delete"]'))
+    );
+  });
+
+  it('names every button with a part a page can style', async () => {
+    const uploader = await renderFiles(
+      {
+        'max-files': '1',
+        'upload-action': '/api/upload',
+        'update-action': '/api/update',
+        'delete-action': '/api/delete',
+        'sequence-action': '/api/sequence',
+      },
+      ['one']
+    );
+    const root = shadowOf(uploader, 'one');
+    const partOf = action =>
+      root.querySelector(`button[data-action="${action}"]`)?.getAttribute('part') ?? null;
+
+    /* A page can reach one button without forking the component; cancel appears in both the
+       delete and the edit panel, and both carry the same name */
+    expect({
+      replace: partOf('replace'),
+      delete: partOf('show-delete'),
+      moveUp: partOf('move-up'),
+      moveDown: partOf('move-down'),
+      cancel: [...root.querySelectorAll('button[data-action="cancel"]')].every(
+        b => b.getAttribute('part') === 'cancel-button'
+      ),
+      confirm: partOf('confirm-delete'),
+      save: root.querySelector('button[data-action="save"]')?.getAttribute('part'),
+    }).toEqual({
+      replace: 'replace-button',
+      delete: 'delete-button',
+      moveUp: 'move-up-button',
+      moveDown: 'move-down-button',
+      cancel: true,
+      confirm: 'confirm-button',
+      save: 'save-button',
+    });
+  });
+
+  it('offers no Replace when more than one file is allowed', async () => {
+    const uploader = await renderFiles(
+      { 'max-files': '3', 'upload-action': '/api/upload', 'delete-action': '/api/delete' },
+      ['one']
+    );
+
+    expect(control(uploader, 'one', 'replace')).toBeFalsy();
+  });
+
   it('replaces the file in a single-file uploader', async () => {
     const remove = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', remove);
