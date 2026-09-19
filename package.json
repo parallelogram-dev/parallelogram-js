@@ -149,7 +149,7 @@
     "@parcel/watcher@2.5.1": true
   },
   "sizeBudget": {
-    "parallelogram.js": 78000,
+    "parallelogram.js": 83510,
     "index.js": 16662,
     "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3944,
@@ -171,6 +171,7 @@
     "components/Tabs.js": 4910,
     "components/Toast.js": 6842,
     "components/Toggle.js": 5137,
+    "components/Dropdown.js": 7071,
     "components/Tooltip.js": 4019,
     "components/Videoplay.js": 4766,
     "adapters/bing-uet.js": 998,

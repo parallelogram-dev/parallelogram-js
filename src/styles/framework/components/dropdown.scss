@@ -1,0 +1,73 @@
+/**
+ * Dropdown Component Styles
+ * State-based styling using data-dropdown-state, as Toggle's, for a menu Dropdown positions beside
+ * its trigger. The menu's own look -- border, background, padding -- is the page's; this gives it
+ * a place, hides it when closed, and moves it a step into place while opening and closing.
+ */
+[data-dropdown-state] {
+  position: fixed;
+  z-index: var(--dropdown-z-index, 1000);
+  margin: 0;
+}
+
+/* Closed menus stay hidden whatever display page styles give them, including when the framework is
+   imported into a cascade layer. */
+[data-dropdown-state][hidden] {
+  display: none !important;
+}
+
+/* Markup can start a menu closed with data-dropdown-state="closed", which hides it before Dropdown
+   loads, unless the page's Dropdown failed to mount, when the menu stays reachable */
+@media (scripting: enabled) {
+  :root:not(:has([data-dropdown].component-error)) [data-dropdown-state='closed'] {
+    display: none !important;
+  }
+}
+
+[data-dropdown-state='closing'] {
+  pointer-events: none;
+}
+
+/* The step a menu takes into place: from the trigger's side towards it */
+[data-dropdown-side='bottom'] {
+  --dropdown-from: translateY(calc(-1 * var(--dropdown-shift, 4px)));
+}
+
+[data-dropdown-side='top'] {
+  --dropdown-from: translateY(var(--dropdown-shift, 4px));
+}
+
+[data-dropdown-side='right'] {
+  --dropdown-from: translateX(calc(-1 * var(--dropdown-shift, 4px)));
+}
+
+[data-dropdown-side='left'] {
+  --dropdown-from: translateX(var(--dropdown-shift, 4px));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-dropdown-state='opening'] {
+    animation: dropdown-in
+      var(--dropdown-transition-duration, var(--framework-transition-duration, 0.2s)) ease-out;
+  }
+
+  [data-dropdown-state='closing'] {
+    animation: dropdown-out
+      var(--dropdown-transition-duration, var(--framework-transition-duration, 0.2s)) ease-in
+      forwards;
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: var(--dropdown-from, none);
+  }
+}
+
+@keyframes dropdown-out {
+  to {
+    opacity: 0;
+    transform: var(--dropdown-from, none);
+  }
+}

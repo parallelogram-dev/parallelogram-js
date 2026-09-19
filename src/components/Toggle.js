@@ -142,7 +142,7 @@ export default class Toggle extends BaseComponent {
 
     const baseCleanup = state.cleanup;
     state.cleanup = () => {
-      if (state.target) this._detachTarget(element, state);
+      if (state.target) this._detachTarget(element, state, { trigger: false });
       this.removeAttr(element, 'enhanced');
       restoreAttributes(element, state.original);
       if (this.trackedElements().every(trigger => trigger === element)) {
@@ -234,14 +234,19 @@ export default class Toggle extends BaseComponent {
   }
 
   /**
-   * Take a trigger's target away; the last trigger to go restores the target's attributes
+   * Take a trigger's target away; the last trigger to go restores the target's attributes. The
+   * trigger's own aria attributes are undone too, except on unmount, when cleanup restores what
+   * the markup had -- in the order it had them.
    *
    * @protected
    * @param {HTMLElement} element
    * @param {object} state
+   * @param {{ trigger?: boolean }} [options]
    */
-  _detachTarget(element, state) {
+  _detachTarget(element, state, { trigger = true } = {}) {
     const { target } = state;
+    /* Read before the target's attributes are restored, which can take a generated id with them */
+    const { id } = target;
     if (this._open.get(target) === element) {
       const other = this._triggersFor(target).find(trigger => trigger !== element);
       if (other) {
@@ -257,7 +262,8 @@ export default class Toggle extends BaseComponent {
       restoreAttributes(target, this._originals.get(target));
       this._originals.delete(target);
     }
-    if (element.getAttribute('aria-controls') === target.id) {
+    if (!trigger) return;
+    if (element.getAttribute('aria-controls') === id) {
       element.removeAttribute('aria-controls');
     }
     element.setAttribute('aria-expanded', 'false');
