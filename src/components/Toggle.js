@@ -3,12 +3,12 @@ import { deepActiveElement, rememberAttributes, restoreAttributes } from '../uti
 import { whenAnimationsFinish } from '../utils/motion.js';
 
 /** Elements that may use Escape themselves, so a toggle outside them leaves it alone */
-const INTERACTIVE =
+export const INTERACTIVE =
   'a[href], button, input, select, textarea, summary, dialog, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
 /** Attributes Toggle adds or changes on triggers and targets, put back when they are unmounted */
 const TRIGGER_ATTRIBUTES = ['aria-controls', 'aria-expanded'];
-const TARGET_ATTRIBUTES = ['id', 'hidden', 'inert', 'data-toggle-state'];
+const TARGET_ATTRIBUTES = ['id', 'hidden', 'inert'];
 
 /** Whether a node sits inside a container, following shadow roots out to their hosts */
 const containsComposed = (container, node) => {
@@ -79,6 +79,12 @@ const containsComposed = (container, node) => {
 export default class Toggle extends BaseComponent {
   static selector = 'data-toggle';
 
+  /** The events dispatched, named here so a subclass speaks in its own: dropdown:show */
+  static events = { show: 'toggle:show', hide: 'toggle:hide', mount: 'toggle:mount' };
+
+  /** Whether a trigger may mount with no target yet, for a subclass that builds one on first show */
+  static defersTarget = false;
+
   static defaults = {
     openClass: 'open',
     capture: false,
@@ -106,31 +112,13 @@ export default class Toggle extends BaseComponent {
   _init(element) {
     const state = super._init(element);
     const { defaults } = this.constructor;
+    const target = this._resolveTarget(element);
+    if (!target && !this.constructor.defersTarget) return state;
 
-    const targetSelector = this.getAttr(element, 'target');
-    if (!targetSelector) {
-      this.logger?.warn('Toggle: No data-toggle-target attribute found', element);
-      return state;
-    }
-
-    let target = null;
-    try {
-      target = document.querySelector(targetSelector);
-    } catch {
-      target = null;
-    }
-    if (!target) {
-      this.logger?.warn('Toggle: Target element not found', { selector: targetSelector, element });
-      return state;
-    }
-
-    state.target = target;
-    state.targetSelector = targetSelector;
+    state.target = null;
     state.group = this.getAttr(element, 'group');
     state.capture = this.getBoolAttr(element, 'capture', defaults.capture);
-    state.manual =
-      this.getBoolAttr(target, 'manual', false) ||
-      this.getBoolAttr(element, 'manual', defaults.manual);
+    state.manual = this.getBoolAttr(element, 'manual', defaults.manual);
     state.animateToggle = this.getBoolAttr(element, 'animate', defaults.animateToggle);
     state.closeOnNavigation = this.getBoolAttr(
       element,
@@ -138,28 +126,11 @@ export default class Toggle extends BaseComponent {
       defaults.closeOnNavigation
     );
     state.closeOnEscape = this.getBoolAttr(element, 'close-escape', defaults.closeOnEscape);
-
-    const isOpen = this._open.has(target) || target.classList.contains(defaults.openClass);
-    if (isOpen && !this._open.has(target)) {
-      this._open.set(target, element);
-    }
-    state.isOpen = isOpen;
-
+    state.isOpen = false;
     state.original = rememberAttributes(element, TRIGGER_ATTRIBUTES);
-    const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
-    if (firstTrigger) {
-      this._originals.set(target, rememberAttributes(target, TARGET_ATTRIBUTES));
-      this._setTargetState(target, isOpen ? 'open' : 'closed');
-    }
-
-    if (!target.id) {
-      target.id = this._generateId('toggle-target');
-    }
-    if (!element.getAttribute('aria-controls')) {
-      element.setAttribute('aria-controls', target.id);
-    }
-    element.setAttribute('aria-expanded', String(isOpen));
-    element.setAttribute('data-toggle-enhanced', 'true');
+    /* A trigger has a popup to expand from the start, whether or not its target exists yet */
+    element.setAttribute('aria-expanded', 'false');
+    this.setAttr(element, 'enhanced', 'true');
 
     element.addEventListener(
       'click',
@@ -169,27 +140,13 @@ export default class Toggle extends BaseComponent {
       },
       { signal: state.controller.signal }
     );
-
     this._listenToDocument();
 
     const baseCleanup = state.cleanup;
     state.cleanup = () => {
-      if (this._open.get(target) === element) {
-        const other = this._triggersFor(target).find(trigger => trigger !== element);
-        if (other) {
-          this._open.set(target, other);
-        } else {
-          this._open.delete(target);
-        }
-      }
-      element.removeAttribute('data-toggle-enhanced');
+      if (state.target) this._detachTarget(element, state, { trigger: false });
+      this.removeAttr(element, 'enhanced');
       restoreAttributes(element, state.original);
-
-      if (!this._triggersFor(target).some(trigger => trigger !== element)) {
-        this._transitions.delete(target);
-        restoreAttributes(target, this._originals.get(target));
-        this._originals.delete(target);
-      }
       if (this.trackedElements().every(trigger => trigger === element)) {
         this._documentListeners?.abort();
         this._documentListeners = null;
@@ -197,15 +154,132 @@ export default class Toggle extends BaseComponent {
       baseCleanup();
     };
 
-    this.eventBus?.emit('toggle:mount', {
+    if (target) this._attachTarget(element, state, target);
+    this.eventBus?.emit(this.constructor.events.mount, {
       element,
-      target,
-      isOpen,
+      target: state.target,
+      isOpen: state.isOpen,
       timestamp: performance.now(),
     });
-
     return state;
   }
+
+  /**
+   * The element the target attribute names, or null, with a warning unless the subclass builds
+   * targets on demand
+   *
+   * @protected
+   * @param {HTMLElement} element
+   * @returns {HTMLElement|null}
+   */
+  _resolveTarget(element) {
+    const selector = this.getAttr(element, 'target');
+    if (!selector) {
+      if (!this.constructor.defersTarget) {
+        this.logger?.warn(
+          `${this.constructor.name}: No ${this._getSelector()}-target attribute found`,
+          element
+        );
+      }
+      return null;
+    }
+    let target;
+    try {
+      target = document.querySelector(selector);
+    } catch {
+      target = null;
+    }
+    if (!target) {
+      this.logger?.warn(`${this.constructor.name}: Target element not found`, {
+        selector,
+        element,
+      });
+    }
+    return target;
+  }
+
+  /**
+   * Give a trigger its target: the target's state and remembered attributes when this is its
+   * first trigger, and the trigger's aria wiring. A subclass that builds targets on demand calls
+   * this from _ensureTarget.
+   *
+   * @protected
+   * @param {HTMLElement} element
+   * @param {object} state
+   * @param {HTMLElement} target
+   */
+  _attachTarget(element, state, target) {
+    const { defaults } = this.constructor;
+    state.target = target;
+    state.manual = state.manual || this.getBoolAttr(target, 'manual', false);
+    const isOpen = this._open.has(target) || target.classList.contains(defaults.openClass);
+    if (isOpen && !this._open.has(target)) {
+      this._open.set(target, element);
+    }
+    state.isOpen = isOpen;
+
+    const firstTrigger = !this._triggersFor(target).some(trigger => trigger !== element);
+    if (firstTrigger) {
+      this._originals.set(
+        target,
+        rememberAttributes(target, [...TARGET_ATTRIBUTES, `${this._getSelector()}-state`])
+      );
+      this._setTargetState(target, isOpen ? 'open' : 'closed');
+    }
+    if (!target.id) {
+      target.id = this._generateId(`${this._getSelector().replace(/^data-/, '')}-target`);
+    }
+    if (!element.getAttribute('aria-controls')) {
+      element.setAttribute('aria-controls', target.id);
+    }
+    element.setAttribute('aria-expanded', String(isOpen));
+  }
+
+  /**
+   * Take a trigger's target away; the last trigger to go restores the target's attributes. The
+   * trigger's own aria attributes are undone too, except on unmount, when cleanup restores what
+   * the markup had -- in the order it had them.
+   *
+   * @protected
+   * @param {HTMLElement} element
+   * @param {object} state
+   * @param {{ trigger?: boolean }} [options]
+   */
+  _detachTarget(element, state, { trigger = true } = {}) {
+    const { target } = state;
+    /* Read before the target's attributes are restored, which can take a generated id with them */
+    const { id } = target;
+    if (this._open.get(target) === element) {
+      const other = this._triggersFor(target).find(trigger => trigger !== element);
+      if (other) {
+        this._open.set(target, other);
+      } else {
+        this._open.delete(target);
+      }
+    }
+    state.target = null;
+    state.isOpen = false;
+    if (this._triggersFor(target).length === 0) {
+      this._transitions.delete(target);
+      restoreAttributes(target, this._originals.get(target));
+      this._originals.delete(target);
+    }
+    if (!trigger) return;
+    if (element.getAttribute('aria-controls') === id) {
+      element.removeAttribute('aria-controls');
+    }
+    element.setAttribute('aria-expanded', 'false');
+  }
+
+  /**
+   * Make a target for a trigger that has none yet, before it opens. Toggle has nothing to make; a
+   * subclass that builds targets on demand overrides this and calls _attachTarget.
+   *
+   * @protected
+   * @param {HTMLElement} _element
+   * @param {object} _state
+   */
+  _ensureTarget(_element, _state) {}
 
   /**
    * Listen once, at the document, for the clicks, keys and focus changes that close toggles
@@ -313,12 +387,11 @@ export default class Toggle extends BaseComponent {
    */
   toggle(element) {
     const state = this.getState(element);
-    if (!state?.target) return;
-
-    if (this._isTargetOpen(state.target)) {
-      this.hide(element);
-    } else {
+    if (!state) return;
+    if (!state.target || !this._isTargetOpen(state.target)) {
       this.show(element);
+    } else {
+      this.hide(element);
     }
   }
 
@@ -328,7 +401,9 @@ export default class Toggle extends BaseComponent {
    */
   show(element) {
     const state = this.getState(element);
-    if (!state?.target || this._isTargetOpen(state.target)) return;
+    if (!state) return;
+    if (!state.target) this._ensureTarget(element, state);
+    if (!state.target || this._isTargetOpen(state.target)) return;
 
     const { target } = state;
     if (state.group) {
@@ -341,7 +416,7 @@ export default class Toggle extends BaseComponent {
     target.classList.add(this.constructor.defaults.openClass);
     this._transition(target, state, 'opening', 'open');
 
-    this._dispatch(element, 'toggle:show', {
+    this._dispatch(element, this.constructor.events.show, {
       target,
       trigger: element,
       timestamp: performance.now(),
@@ -374,7 +449,7 @@ export default class Toggle extends BaseComponent {
     target.classList.remove(this.constructor.defaults.openClass);
     this._transition(target, state, 'closing', 'closed');
 
-    this._dispatch(element, 'toggle:hide', {
+    this._dispatch(element, this.constructor.events.hide, {
       target,
       trigger: element,
       timestamp: performance.now(),
@@ -475,7 +550,12 @@ export default class Toggle extends BaseComponent {
    */
   _isNavigationLink(path) {
     const link = path.find(node => node.localName === 'a' && node.hasAttribute('href'));
-    if (!link || link.hasAttribute('download') || link.getAttribute('target') === '_blank') {
+    if (
+      !link ||
+      link.hasAttribute('download') ||
+      link.getAttribute('target') === '_blank' ||
+      link.getAttribute('aria-disabled') === 'true'
+    ) {
       return false;
     }
 
