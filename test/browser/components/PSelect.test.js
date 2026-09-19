@@ -22,6 +22,14 @@ const COUNTRIES = `
   </p-select>
 `;
 
+const STAFF = `
+  <p-select name="staff" multiple>
+    <option value="ada">Ada Lovelace</option>
+    <option value="grace">Grace Hopper</option>
+    <option value="mary">Mary Somerville</option>
+  </p-select>
+`;
+
 const PRIORITY = `
   <p-select name="priority" required>
     <option value="">-- Select priority --</option>
@@ -1077,5 +1085,562 @@ describe('p-select from the keyboard alone', () => {
     } finally {
       PSelect.defaults.noResults = 'No results found';
     }
+  });
+});
+
+describe('p-select, choosing more than one', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('submits one entry per chosen value under the one name', async () => {
+    const { form, select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'mary'];
+
+    /* A set of values is not a joined string: the form carries the name once per value, which is
+       what a server reads as a list */
+    expect(new FormData(form).getAll('staff')).toEqual(['ada', 'mary']);
+  });
+
+  it('reads its value as a list, and takes one from the attribute', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple value="grace,mary">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+        <option value="mary">Mary Somerville</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    expect(select.value).toEqual(['grace', 'mary']);
+  });
+
+  it('adds a value that is chosen and takes back one chosen again', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const changes = [];
+    select.addEventListener('change', () => changes.push([...select.value]));
+
+    select.select('ada');
+    select.select('grace');
+    select.select('ada');
+
+    /* Choosing is a toggle when more than one is allowed, so the same gesture puts a value in
+       and takes it back out */
+    expect({ value: select.value, changes }).toEqual({
+      value: ['grace'],
+      changes: [['ada'], ['ada', 'grace'], ['grace']],
+    });
+  });
+
+  it('keeps the values in the options\u2019 order, not the order they were chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.select('mary');
+    select.select('ada');
+
+    expect(select.value).toEqual(['ada', 'mary']);
+  });
+
+  it('is satisfied by one value when it is required', async () => {
+    const { form, select } = renderForm(`
+      <p-select name="staff" multiple required>
+        <option value="ada">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const empty = form.checkValidity();
+
+    select.select('ada');
+
+    expect({ empty, filled: form.checkValidity() }).toEqual({ empty: false, filled: true });
+  });
+
+  it('puts the values back as they were when the form is reset', async () => {
+    const { form, select } = renderForm(`
+      <p-select name="staff" multiple value="ada">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    select.select('grace');
+
+    form.reset();
+
+    expect(select.value).toEqual(['ada']);
+  });
+});
+
+describe('p-select, what it shows once several are chosen', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const selections = select =>
+    [...select.shadowRoot.querySelectorAll('.selection')].map(
+      node => node.querySelector('.selection__name').textContent
+    );
+
+  it('shows every chosen value in the control, in the options\u2019 order', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['mary', 'ada'];
+
+    /* Nothing is counted away behind "and 2 more": what was chosen is what is shown */
+    expect(selections(select)).toEqual(['Ada Lovelace', 'Mary Somerville']);
+  });
+
+  it('takes a value back out from its own remove button', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    const changed = [];
+    select.addEventListener('change', () => changed.push([...select.value]));
+
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    expect({ left: selections(select), changed }).toEqual({
+      left: ['Grace Hopper'],
+      changed: [['grace']],
+    });
+  });
+
+  it('names every part a page can style', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada'];
+    const part = selector => select.shadowRoot.querySelector(selector)?.getAttribute('part');
+
+    expect({
+      selections: part('.selections'),
+      selection: part('.selection'),
+      remove: part('.selection [part]'),
+    }).toEqual({
+      selections: 'selections',
+      selection: 'selection',
+      remove: 'selection-remove',
+    });
+  });
+
+  it('carries a second line on each selection when asked for two rows', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada'];
+
+    /* A selection says what a row says: the same two lines, not the name alone */
+    expect([
+      select.shadowRoot.querySelector('.selection__name').textContent,
+      select.shadowRoot.querySelector('.selection__sub').textContent,
+    ]).toEqual(['Ada Lovelace', 'Duty manager']);
+  });
+
+  it('shows the placeholder while nothing is chosen, and no selections', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    expect([selections(select), select.shadowRoot.querySelector('.input').placeholder]).toEqual([
+      [],
+      'Select…',
+    ]);
+  });
+});
+
+describe('p-select, the list when several may be chosen', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const open = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return select.shadowRoot;
+  };
+
+  it('stays open as values are chosen, and marks each chosen row', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+
+    clickShadow(select, '.option[data-index="0"]');
+    clickShadow(select, '.option[data-index="2"]');
+
+    /* Picking five people is five clicks and no reopening */
+    expect({
+      open: !root.querySelector('.menu').hidden,
+      marked: [...root.querySelectorAll('.option')].map(o => o.getAttribute('aria-selected')),
+      value: select.value,
+    }).toEqual({
+      open: true,
+      marked: ['true', 'false', 'true'],
+      value: ['ada', 'mary'],
+    });
+  });
+
+  it('takes a chosen row back out when it is chosen again', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    await open(select);
+    clickShadow(select, '.option[data-index="0"]');
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    expect(select.value).toEqual([]);
+  });
+
+  it('toggles the highlighted row on Enter and leaves the list open', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+    root.querySelector('.input').focus();
+
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+
+    expect({ value: select.value, open: !root.querySelector('.menu').hidden }).toEqual({
+      value: ['ada'],
+      open: true,
+    });
+  });
+
+  it('keeps the input a search box while values are chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    const root = await open(select);
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    /* With one value a single select goes read-only and offers a clear button; holding several
+       the input has to stay typeable, because typing is how the list is narrowed */
+    expect({
+      readOnly: root.querySelector('.input').readOnly,
+      clearHidden: root.querySelector('.clear').hidden,
+    }).toEqual({ readOnly: false, clearHidden: false });
+  });
+
+  it('clears every value from the clear button', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    await open(select);
+    select.value = ['ada', 'grace'];
+
+    clickShadow(select, '.clear');
+
+    expect(select.value).toEqual([]);
+  });
+});
+
+describe('p-select, how a chosen row looks', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openAndRead = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    const chosen =
+      select.shadowRoot.querySelector('.option[aria-selected="true"]:not([data-active])') ??
+      select.shadowRoot.querySelector('.option[aria-selected="true"]');
+    return {
+      background: getComputedStyle(chosen).backgroundColor,
+      tick: Boolean(chosen.querySelector('.option__tick')),
+    };
+  };
+
+  it('paints a chosen row and ticks it where several may be chosen', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'mary'];
+
+    /* A filled row with a tick at its trailing edge, rather than a box at the leading one. Read
+       from a row the keyboard is not on, since that one carries the hover shade */
+    expect(await openAndRead(select)).toEqual({ background: 'rgb(37, 99, 235)', tick: true });
+  });
+
+  it('leaves a single select\u2019s chosen row as the tint it has always been', async () => {
+    const { select } = renderForm(COUNTRIES);
+    await customElements.whenDefined('p-select');
+
+    expect(await openAndRead(select)).toEqual({
+      background: 'rgba(59, 130, 246, 0.1)',
+      tick: false,
+    });
+  });
+});
+
+describe('p-select, taking the whole list at once', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openBulk = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return {
+      all: select.shadowRoot.querySelector('[data-bulk="all"]'),
+      none: select.shadowRoot.querySelector('[data-bulk="none"]'),
+    };
+  };
+
+  const BULK = `
+    <p-select name="staff" multiple select-all>
+      <option value="ada">Ada Lovelace</option>
+      <option value="grace">Grace Hopper</option>
+      <option value="mary">Mary Somerville</option>
+    </p-select>
+  `;
+
+  it('offers the bar only where it is asked for and several may be chosen', async () => {
+    const { select: plain } = renderForm(STAFF);
+    document.body.append(document.createElement('div'));
+    const { select: asked } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+
+    const without = await openBulk(plain);
+    const with_ = await openBulk(asked);
+
+    expect([Boolean(without.all), Boolean(with_.all)]).toEqual([false, true]);
+  });
+
+  it('takes every option, and gives them all back', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    const { all, none } = await openBulk(select);
+
+    all.click();
+    const taken = select.value;
+    none.click();
+
+    expect({ taken, left: select.value }).toEqual({
+      taken: ['ada', 'grace', 'mary'],
+      left: [],
+    });
+  });
+
+  it('acts on what the search narrowed to, not the whole list', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    await openBulk(select);
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('gr');
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.option').length).toBe(1));
+    select.shadowRoot.querySelector('[data-bulk="all"]').click();
+
+    /* The bar says what it will do, and does only that */
+    expect(select.value).toEqual(['grace']);
+  });
+
+  it('counts what it would take, and what is held', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    const { all } = await openBulk(select);
+    const before = all.textContent;
+
+    select.value = ['ada'];
+
+    expect({
+      before,
+      after: select.shadowRoot.querySelector('[data-bulk="all"]').textContent,
+    }).toEqual({ before: 'Select all (3)', after: 'Select all (3)' });
+  });
+
+  it('leaves a disabled option alone', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple select-all>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace" disabled>Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const { all } = await openBulk(select);
+
+    all.click();
+
+    expect(select.value).toEqual(['ada']);
+  });
+});
+
+describe('p-select, how tall the list and its rows are', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openList = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return select.shadowRoot.querySelector('.menu');
+  };
+
+  const MANY = Array.from(
+    { length: 40 },
+    (_, i) => `<option value="v${i}" data-secondary="Role ${i}">Person ${i}</option>`
+  ).join('');
+
+  it('keeps the secondary text on the label\u2019s line by default', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple>
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('inline');
+  });
+
+  it('puts the secondary text on its own line where two rows are asked for', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple list-rows="2">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('block');
+  });
+
+  it('caps the list and scrolls it, by default', async () => {
+    const { select } = renderForm(`<p-select name="staff" multiple>${MANY}</p-select>`);
+    await customElements.whenDefined('p-select');
+    const menu = await openList(select);
+
+    expect(menu.scrollHeight > menu.clientHeight).toBe(true);
+  });
+
+  it('lets the list fit its content when the page asks for no cap', async () => {
+    const { select } = renderForm(
+      `<p-select name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
+    );
+    await customElements.whenDefined('p-select');
+    const menu = await openList(select);
+
+    /* A menu of a handful should not scroll inside a box of a fixed height; a page that knows
+       its list is short says so, and the list grows to what is in it */
+    expect(menu.scrollHeight > menu.clientHeight).toBe(false);
+  });
+});
+
+describe('p-select, where the icons sit once the field grows', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const middles = select => {
+    const root = select.shadowRoot;
+    const box = node => {
+      const rect = node.getBoundingClientRect();
+      return Math.round(rect.top + rect.height / 2);
+    };
+    return {
+      arrow: box(root.querySelector('.arrow')),
+      first: box(root.querySelector('.selection')),
+    };
+  };
+
+  it('keeps the arrow on the first row as the field grows', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.style.width = '14rem';
+
+    select.value = ['ada', 'grace', 'mary'];
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.selection').length).toBe(3));
+
+    /* Three rows of selections, and the arrow is still level with the first, not floating in
+       the middle of a field that has grown under it */
+    const { arrow, first } = middles(select);
+    expect(arrow).toBe(first);
+  });
+
+  it('follows the taller row when a selection carries two lines', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2" style="width: 14rem">
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+        <option value="grace" data-secondary="Rear admiral">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'grace'];
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.selection').length).toBe(2));
+
+    const { arrow, first } = middles(select);
+    expect(arrow).toBe(first);
+  });
+});
+
+describe('p-select, reaching the chosen values from the keyboard', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('keeps the remove buttons out of the tab order, as the clear button is', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada', 'grace', 'mary'];
+
+    /* Otherwise tabbing into a field holding twenty values stops twenty times before the input */
+    expect(
+      [...select.shadowRoot.querySelectorAll('.selection__remove')].map(button =>
+        button.getAttribute('tabindex')
+      )
+    ).toEqual(['-1', '-1', '-1']);
+  });
+
+  it('takes the last value back on Backspace in an empty input', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('{Backspace}');
+
+    /* The way back out without a pointer, and the way a token field has always behaved */
+    expect(select.value).toEqual(['ada']);
+  });
+
+  it('leaves the values alone while there is something typed to delete', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('ma{Backspace}');
+
+    expect(select.value).toEqual(['ada', 'grace']);
+  });
+});
+
+describe('p-select, a label that is markup', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    delete window.__pselectInjected;
+  });
+
+  it('shows a chosen value whose label is markup as text', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple selection-rows="2">
+        <option value="ada" data-secondary="&lt;img src=x onerror=&quot;window.__pselectInjected = true&quot;&gt;">
+          &lt;img src=x onerror="window.__pselectInjected = true"&gt;
+        </option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+
+    select.value = ['ada'];
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    /* A label and its second line are somebody's data: they are read, never run */
+    const root = select.shadowRoot;
+    expect({
+      injected: Boolean(window.__pselectInjected),
+      images: root.querySelectorAll('.selection img').length,
+      text: root.querySelector('.selection__name').textContent.includes('<img'),
+    }).toEqual({ injected: false, images: 0, text: true });
   });
 });

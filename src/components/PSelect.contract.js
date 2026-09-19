@@ -19,6 +19,56 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'The initial value, restored when the form resets; takes precedence over a selected option',
     },
     {
+      name: 'multiple',
+      type: 'flag',
+      description:
+        'Allows more than one value: choosing toggles rather than replaces, the field submits one entry per value under its name, and `value` reads and writes a list',
+    },
+    {
+      name: 'selection-rows',
+      type: 'enum',
+      options: ['1', '2'],
+      default: '1',
+      description:
+        "How many rows a chosen value takes in the control: its label, or its label over the option's secondary text",
+    },
+    {
+      name: 'remove-label',
+      type: 'string',
+      default: 'Remove {label}',
+      option: 'removeLabel',
+      description: "The accessible name of a chosen value's remove button; {label} is its label",
+    },
+    {
+      name: 'list-rows',
+      type: 'enum',
+      options: ['1', '2'],
+      default: '1',
+      description:
+        'How many rows an option takes in the list: its label with the secondary text after it, or the secondary text on its own line beneath',
+    },
+    {
+      name: 'select-all',
+      type: 'flag',
+      description:
+        'Offers a bar above the list that takes or gives back everything the search has narrowed to; only where multiple is set',
+    },
+    {
+      name: 'select-all-label',
+      type: 'string',
+      default: 'Select all ({count})',
+      option: 'selectAllLabel',
+      description:
+        'The words on the button that takes every option the search left; {count} is how many',
+    },
+    {
+      name: 'select-none-label',
+      type: 'string',
+      default: 'None',
+      option: 'selectNoneLabel',
+      description: 'The words on the button that gives every option the search left back',
+    },
+    {
       name: 'placeholder',
       type: 'string',
       default: 'Select…',
@@ -173,10 +223,78 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   parts: [
     { name: 'input', description: 'The text input' },
+    { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
+    { name: 'selection', description: 'One chosen value' },
+    { name: 'selection-remove', description: 'The button that takes one chosen value back out' },
+    { name: 'bulk', description: 'The bar above the list, where select-all is set' },
+    { name: 'bulk-all', description: 'The button that takes every option the search left' },
+    { name: 'bulk-none', description: 'The button that gives those options back' },
     { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
+    {
+      name: '--selection-row',
+      default: '2rem',
+      description:
+        'How tall one row of chosen values is, which is what keeps the icons level with the first row as the field grows. The element measures a real row and writes it here, so a page rarely sets it',
+    },
+    {
+      name: '--select-menu-max-height',
+      default: '240px',
+      description:
+        'How tall the list grows before it scrolls; set it to none and the list fits what is in it',
+    },
+    {
+      name: '--select-secondary-font-size',
+      default: 'var(--font-xs)',
+      description: "The size of an option's secondary text where list-rows is 2",
+    },
+    {
+      name: '--select-chosen-bg',
+      default: 'var(--color-accent)',
+      description: 'Background of a chosen row where multiple is set; it is filled, not tinted',
+    },
+    {
+      name: '--select-chosen-color',
+      default: 'var(--color-accent-contrast)',
+      description: 'Text and tick colour of a chosen row where multiple is set',
+    },
+    {
+      name: '--select-chosen-hover-bg',
+      default: 'var(--color-accent-hover)',
+      description: 'Background of a chosen row under the pointer or the keyboard',
+    },
+    {
+      name: '--select-selections-max-height',
+      default: '7.2rem',
+      description: 'How tall the chosen values grow in the control before they scroll',
+    },
+    {
+      name: '--select-selection-bg',
+      default: 'var(--select-selected-bg)',
+      description: 'Background of one chosen value; the same tint a chosen option carries',
+    },
+    {
+      name: '--select-selection-radius',
+      default: '999px',
+      description: 'Corner radius of one chosen value',
+    },
+    {
+      name: '--select-selection-max-width',
+      default: '16rem',
+      description: 'How wide one chosen value grows before its label is cut short',
+    },
+    {
+      name: '--select-selection-font-size',
+      default: 'var(--font-sm)',
+      description: "The size of a chosen value's label",
+    },
+    {
+      name: '--select-selection-secondary-font-size',
+      default: 'var(--font-xs)',
+      description: "The size of a chosen value's second line, where selection-rows is 2",
+    },
     {
       name: '--select-bg',
       default: 'var(--surface-control-color-bg)',
@@ -346,6 +464,41 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   </div>
 </div>`,
       controls: [{ attribute: 'placeholder' }, { attribute: 'data-select-open-on-focus' }],
+    },
+    {
+      id: 'many',
+      title: 'Choosing several',
+      description:
+        'With `multiple` the list toggles rather than replaces and stays open, a chosen row is filled with a tick at its trailing edge, and every chosen value sits in the control with the button that takes it back out. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
+      markup: `<div class="form">
+  <div class="form__group">
+    <label class="form__label" for="shift">Staff on shift</label>
+    <div class="form__control">
+      <p-select
+        id="shift"
+        name="staff"
+        multiple
+        select-all
+        selection-rows="2"
+        list-rows="2"
+        placeholder="Nobody chosen yet"
+      >
+        <option value="amelia" data-secondary="Duty manager, front of house">Amelia Nguyen</option>
+        <option value="hudson" data-secondary="Head chef, kitchen">Hudson Ferraro</option>
+        <option value="priya" data-secondary="Coordinator, events">Priya Rahman</option>
+        <option value="marcus" data-secondary="Supervisor, kitchen">Marcus Bell</option>
+        <option value="ines" data-secondary="Technician, maintenance">Ines Duarte</option>
+        <option value="rosa" data-secondary="Sommelier, front of house">Rosa Iglesias</option>
+      </p-select>
+    </div>
+  </div>
+</div>`,
+      controls: [
+        { attribute: 'selection-rows' },
+        { attribute: 'list-rows' },
+        { attribute: 'select-all' },
+        { attribute: 'placeholder' },
+      ],
     },
     {
       id: 'long-list',

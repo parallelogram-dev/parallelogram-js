@@ -15,6 +15,38 @@
   color: var(--select-text);
 }
 
+/* Holding several values the field is as tall as what is in it, so the root and the control
+   take part in the flow rather than being stretched over a box of a fixed height */
+:host([multiple]) .root,
+:host([multiple]) .control {
+  position: static;
+  height: auto;
+}
+
+:host([multiple]) .control {
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+/* The row's height comes from what is in it, so the icons beside the selections hold their
+   place on the first row as the field grows under them rather than drifting to its middle */
+/* The height of one row of selections. The element measures a real one and writes it here, so
+   it tracks whatever type and padding the page has set; this is the value before any exist */
+:host([multiple]) {
+  --selection-row: 2rem;
+}
+
+:host([multiple]) .search,
+:host([multiple]) .clear,
+:host([multiple]) .arrow {
+  align-self: flex-start;
+  height: var(--selection-row);
+}
+
+:host([multiple]) .menu {
+  position: absolute;
+}
+
 /* A disabled select reads as disabled, not merely unresponsive */
 :host([disabled]) {
   opacity: var(--select-disabled-opacity);
@@ -160,6 +192,80 @@
    below it rather than in the middle. The chevron is drawn inside a quarter of the 20px icon on
    either side, so the negative margin pulls that 5px back out and leaves the gap the control's own
    padding asks for */
+/* Every chosen value, in the control. The row's height comes from what is in it, so the arrow
+   beside them holds its place as the field grows */
+.selections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: #{$space-md};
+  flex: 1;
+  min-width: 0;
+  max-height: var(--select-selections-max-height, 7.2rem);
+  overflow-y: auto;
+}
+
+.selections[hidden] {
+  display: none;
+}
+
+.selection {
+  display: inline-flex;
+  align-items: center;
+  gap: #{$space-md};
+  max-width: var(--select-selection-max-width, 16rem);
+  padding: 0.25rem 0.32rem 0.25rem 0.5rem;
+  border-radius: var(--select-selection-radius, 999px);
+  background: var(--select-selection-bg, var(--select-selected-bg));
+  font-size: var(--select-selection-font-size, #{$font-sm});
+}
+
+.selection__body {
+  display: grid;
+  min-width: 0;
+}
+
+.selection__name,
+.selection__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection--two .selection__name {
+  line-height: 1.25;
+}
+
+.selection--two .selection__sub {
+  font-size: var(--select-selection-secondary-font-size, #{$font-xs});
+  line-height: 1.3;
+  opacity: 0.78;
+}
+
+.selection__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.selection__remove:hover {
+  background: var(--select-hover-bg);
+}
+
+.selection__remove:focus-visible {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 1px;
+}
+
 .arrow {
   display: inline-flex;
   align-items: center;
@@ -192,7 +298,7 @@
   border-radius: var(--menu-border-radius);
   box-shadow: var(--menu-shadow);
 
-  max-height: 240px;
+  max-height: var(--select-menu-max-height, 240px);
   overflow: auto;
 }
 
@@ -224,6 +330,14 @@
   font-weight: 400;
 }
 
+/* Two rows puts the secondary text under the label rather than after it, so a long row reads
+   as a name and a line about it rather than one run-on line */
+:host([list-rows='2']) .secondary {
+  display: block;
+  font-size: var(--select-secondary-font-size, #{$font-xs});
+  line-height: 1.3;
+}
+
 .description {
   display: block;
   color: var(--select-description-color);
@@ -244,6 +358,64 @@
 :host([data-focus-source='keyboard']) .option[data-active] {
   outline: 2px solid var(--select-active-outline, var(--color-accent-hover, #1d4ed8));
   outline-offset: -2px;
+}
+
+/* Where several may be chosen a row is filled rather than tinted, with the tick at its trailing
+   edge. A single select keeps the tint it has always had */
+:host([multiple]) .option[aria-selected='true'] {
+  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
+  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
+}
+
+:host([multiple]) .option[aria-selected='true']:hover,
+:host([multiple]) .option[aria-selected='true'][data-active] {
+  background: var(--select-chosen-hover-bg, var(--color-accent-hover, #{$primary-dark}));
+}
+
+/* Chrome, not content: it holds still while the options scroll under it, so Select all is
+   reachable however far down the list you are */
+.bulk {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: #{$space-md};
+  padding: #{$space-sm} #{$space-md};
+  border-bottom: var(--select-border-width, #{$border-width}) solid var(--select-border-color);
+  background: var(--select-bg);
+}
+
+.bulk__action {
+  padding: 0.14rem 0.4rem;
+  border: 0;
+  border-radius: var(--select-border-radius);
+  background: none;
+  color: var(--color-accent, #{$primary});
+  font: inherit;
+  font-size: #{$font-xs};
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bulk__action:hover {
+  background: var(--select-hover-bg);
+}
+
+.bulk__action:focus-visible {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 1px;
+}
+
+.option__tick {
+  display: inline-flex;
+  margin-left: auto;
+  flex: none;
+  opacity: 0;
+}
+
+.option[aria-selected='true'] .option__tick {
+  opacity: 1;
 }
 
 .option[aria-selected='true'] {

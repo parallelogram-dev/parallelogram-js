@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
+import { check, chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -124,6 +124,9 @@ export default class PSelect extends HTMLElement {
   static defaults = {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
+    removeLabel: 'Remove {label}',
+    selectAllLabel: 'Select all ({count})',
+    selectNoneLabel: 'None',
     searchHint: 'Type to search',
     searchMinHint: 'Type {min} or more characters to search',
     noResults: 'No results found',
@@ -132,6 +135,13 @@ export default class PSelect extends HTMLElement {
   static get observedAttributes() {
     return [
       'value',
+      'multiple',
+      'selection-rows',
+      'list-rows',
+      'remove-label',
+      'select-all',
+      'select-all-label',
+      'select-none-label',
       'placeholder',
       'clear-label',
       'search-hint',
@@ -163,6 +173,10 @@ export default class PSelect extends HTMLElement {
       options: [],
       filtered: [],
       value: '',
+      multiple: false,
+      values: [],
+      selectionRows: 1,
+      selectAll: false,
       open: false,
       highlightedIndex: -1,
       src: null,
@@ -234,6 +248,18 @@ export default class PSelect extends HTMLElement {
       case 'value':
         this._updateValue(newValue);
         break;
+      case 'multiple':
+        this.state.multiple = newValue !== null;
+        this._setValue(this.state.multiple ? this.state.values : this.state.value);
+        break;
+      case 'selection-rows':
+        this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
+        this._renderSelections();
+        break;
+      case 'select-all':
+        this.state.selectAll = newValue !== null;
+        this._renderOptions();
+        break;
       case 'placeholder':
         this.state.placeholder = newValue || this.constructor.defaults.placeholder;
         this._els.input.placeholder = this.state.placeholder;
@@ -261,6 +287,7 @@ export default class PSelect extends HTMLElement {
       `
       <div class="root">
         <div class="control">
+          <span class="selections" part="selections" hidden></span>
           <input
             class="input"
             part="input"
@@ -286,6 +313,7 @@ export default class PSelect extends HTMLElement {
 
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
+      selections: this.shadowRoot.querySelector('.selections'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
@@ -298,6 +326,25 @@ export default class PSelect extends HTMLElement {
   }
 
   _setupEventListeners() {
+    this._els.menu.addEventListener('mousedown', event => {
+      if (event.target.closest('[data-bulk]')) event.preventDefault();
+    });
+    this._els.menu.addEventListener('click', event => {
+      const button = event.target.closest('[data-bulk]');
+      if (!button) return;
+      event.stopPropagation();
+      this._bulkChoose(button.dataset.bulk === 'all');
+    });
+
+    this._els.selections.addEventListener('mousedown', event => event.preventDefault());
+    this._els.selections.addEventListener('click', event => {
+      const button = event.target.closest('[data-value]');
+      if (!button) return;
+      event.stopPropagation();
+      const option = this.state.options.find(item => item.value === button.dataset.value);
+      this._choose(button.dataset.value, option ?? null);
+    });
+
     const { control, input, menu, clear } = this._els;
 
     /* The clear button sits inside the control, so it must not open the list as well */
@@ -308,7 +355,8 @@ export default class PSelect extends HTMLElement {
 
     clear.addEventListener('click', event => {
       event.stopPropagation();
-      this._choose('');
+      if (this.state.multiple) this._clearAll();
+      else this._choose('');
       input.focus();
     });
 
@@ -410,13 +458,25 @@ export default class PSelect extends HTMLElement {
 
     /* The value attribute is the default when it names an option, as it does for a native input */
     const attribute = this.getAttribute('value');
-    const defaultValue = options.some(option => option.value === attribute)
-      ? attribute
-      : selectedValue;
-    this._defaultValue = defaultValue ?? '';
-    const keep = options.some(option => option.value === this.state.value);
-    if (!keep || (!this._selectedOption && defaultValue !== null)) {
-      this.state.value = defaultValue ?? '';
+    if (this.state.multiple) {
+      const named = this._asList(attribute).filter(item =>
+        options.some(option => option.value === item)
+      );
+      const selected = [...this.querySelectorAll('option[selected]')].map(option => option.value);
+      this._defaultValue = named.length ? named : selected;
+      const keepAll = this.state.values.every(item =>
+        options.some(option => option.value === item)
+      );
+      if (!keepAll || !this.state.values.length) this.state.values = [...this._defaultValue];
+    } else {
+      const defaultValue = options.some(option => option.value === attribute)
+        ? attribute
+        : selectedValue;
+      this._defaultValue = defaultValue ?? '';
+      const keep = options.some(option => option.value === this.state.value);
+      if (!keep || (!this._selectedOption && defaultValue !== null)) {
+        this.state.value = defaultValue ?? '';
+      }
     }
 
     this.setOptions(options);
@@ -521,9 +581,12 @@ export default class PSelect extends HTMLElement {
   }
 
   _clearsValue(key) {
-    return (
-      (key === 'Backspace' || key === 'Delete') && this.state.value !== '' && !this.state.disabled
-    );
+    if (key !== 'Backspace' && key !== 'Delete') return false;
+    if (this.state.disabled) return false;
+    if (!this.state.multiple) return this.state.value !== '';
+    /* The input stays typeable while values are held, so a keypress deleting what was typed is
+       not a keypress taking a value back */
+    return this.state.values.length > 0 && this._els.input.value === '';
   }
 
   /**
@@ -535,6 +598,13 @@ export default class PSelect extends HTMLElement {
    * so a remote source is asked again rather than answering out of the last query's page.
    */
   _clearForSearch() {
+    if (this.state.multiple) {
+      /* The last one in is the one taken back, which is how a token field has always behaved */
+      const last = this.state.values.at(-1);
+      const option = this.state.options.find(item => item.value === last);
+      this._choose(last, option ?? null);
+      return;
+    }
     this._choose('');
     this._els.input.value = '';
     this._handleInput({ target: this._els.input });
@@ -681,9 +751,75 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateDisplay() {
-    this._els.input.value =
-      this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
+    if (this.state.multiple) {
+      this._els.input.value = '';
+      /* The placeholder speaks for an empty field; once something is chosen the selections do */
+      this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
+      this._renderSelections();
+    } else {
+      this._els.input.value =
+        this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
+    }
     this._updateControls();
+  }
+
+  /**
+   * Every chosen value in the control, in the options' order, each with the way to take it back
+   * out. Nothing is counted away behind "and 2 more": what was chosen is what is shown
+   */
+  _renderSelections() {
+    const box = this._els.selections;
+    if (!box) return;
+    if (!this.state.multiple) {
+      box.hidden = true;
+      box.replaceChildren();
+      return;
+    }
+
+    const two = this.state.selectionRows === 2;
+    box.hidden = this.state.values.length === 0;
+    box.classList.toggle('selections--two', two);
+    box.replaceChildren(
+      ...this.state.values.map(value => {
+        const option = this.state.options.find(item => item.value === value);
+        const label = option?.label ?? value;
+        const chip = document.createElement('span');
+        chip.className = two ? 'selection selection--two' : 'selection';
+        chip.setAttribute('part', 'selection');
+
+        const body = document.createElement('span');
+        body.className = 'selection__body';
+        const name = document.createElement('span');
+        name.className = 'selection__name';
+        name.textContent = label;
+        body.append(name);
+        if (two && option?.secondary) {
+          const sub = document.createElement('span');
+          sub.className = 'selection__sub';
+          sub.textContent = option.secondary;
+          body.append(sub);
+        }
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'selection__remove';
+        remove.setAttribute('part', 'selection-remove');
+        /* Out of the tab order, as the clear button is: a field holding twenty values would
+           otherwise stop the keyboard twenty times before the input. Backspace is the way back */
+        remove.tabIndex = -1;
+        remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
+        remove.dataset.value = value;
+        remove.append(iconElement(x, { size: 'xs' }));
+
+        chip.append(body, remove);
+        return chip;
+      })
+    );
+
+    /* The icons beside the selections hold their place on the first row rather than drifting to
+       the middle of a field that has grown under them, so they are told how tall a row is */
+    const row = box.firstElementChild?.getBoundingClientRect().height;
+    if (row) this.style.setProperty('--selection-row', `${row}px`);
   }
 
   /**
@@ -692,33 +828,119 @@ export default class PSelect extends HTMLElement {
    * that is when the input is a search box; the two are never shown at once
    */
   _updateControls() {
-    const { open, value, disabled } = this.state;
+    const { open, value, values, multiple, disabled } = this.state;
+    const empty = multiple ? values.length === 0 : value === '';
     /* The slot before the chevron fills only while the list is open: the clear button when
        something is chosen, the search icon when nothing is. A required select can be cleared as
        well: it won't validate until something is chosen again, which is better than leaving no way
        back to the search. */
-    this._els.clear.hidden = !open || value === '' || disabled;
-    this._els.search.hidden = !open || value !== '';
-    /* A chosen value is not something to type over: clear it first, or choose another option */
-    this._els.input.readOnly = value !== '';
+    this._els.clear.hidden = !open || empty || disabled;
+    this._els.search.hidden = !open || !empty;
+    /* One chosen value is not something to type over: clear it first, or choose another option.
+       Holding several, the input stays typeable, because typing is how the list is narrowed */
+    this._els.input.readOnly = !multiple && value !== '';
+  }
+
+  /**
+   * A thin bar above the options, holding still while they scroll, that takes or gives back
+   * everything the search has narrowed to rather than the whole list
+   */
+  _renderBulk() {
+    if (!this.state.multiple || !this.state.selectAll) return;
+    const bar = document.createElement('div');
+    bar.className = 'bulk';
+    bar.setAttribute('part', 'bulk');
+    const all = document.createElement('button');
+    all.type = 'button';
+    all.className = 'bulk__action';
+    all.setAttribute('part', 'bulk-all');
+    all.dataset.bulk = 'all';
+    all.textContent = text(this, 'select-all-label', { count: this._bulkOptions().length });
+
+    const none = document.createElement('button');
+    none.type = 'button';
+    none.className = 'bulk__action';
+    none.setAttribute('part', 'bulk-none');
+    none.dataset.bulk = 'none';
+    none.textContent = text(this, 'select-none-label');
+
+    bar.append(all, none);
+    this._els.menu.append(bar);
+  }
+
+  /** The options the bar would act on: what the search left, minus any that cannot be chosen */
+  _bulkOptions() {
+    return this.state.filtered.filter(option => !option.disabled);
+  }
+
+  /** Take or give back everything the search narrowed to, saying so as one change */
+  _bulkChoose(take) {
+    const touched = this._bulkOptions().map(option => option.value);
+    if (!touched.length) return;
+    const held = new Set(this.state.values);
+    for (const value of touched) {
+      if (take) held.add(value);
+      else held.delete(value);
+    }
+    this._setValue([...held]);
+    this._announceChange({ value: '', label: '' }, null);
+  }
+
+  /** Take every value back out at once, saying so as one change */
+  _clearAll() {
+    if (!this.state.values.length) return;
+    this._setValue([]);
+    this._announceChange({ value: '', label: '' }, null);
   }
 
   /**
    * Record a new value, submit it with the form and show its label, without dispatching events
    */
+  /**
+   * A value, or several where `multiple` is set. A list is held in the options' own order rather
+   * than the order it was chosen, so the field reads as a filtered copy of the list and does not
+   * reshuffle while someone works
+   *
+   * @param {string|string[]|null} value
+   */
   _setValue(value) {
-    this.state.value = value ?? '';
+    if (this.state.multiple) {
+      const wanted = new Set(this._asList(value));
+      const known = this.state.options.filter(option => wanted.has(option.value));
+      const rest = [...wanted].filter(item => !known.some(option => option.value === item));
+      this.state.values = [...known.map(option => option.value), ...rest];
+      this.state.value = this.state.values[0] ?? '';
+    } else {
+      this.state.value = value ?? '';
+      this.state.values = this.state.value === '' ? [] : [this.state.value];
+    }
+
     this._selectedOption =
       this.state.options.find(option => option.value === this.state.value) ??
       (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
 
     for (const element of this._els.menu.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
-      element.setAttribute('aria-selected', String(option?.value === this.state.value));
+      element.setAttribute('aria-selected', String(this._holds(option?.value)));
     }
 
     this._syncFormState();
     this._updateDisplay();
+  }
+
+  /** Whether a value is among those chosen */
+  _holds(value) {
+    return value !== undefined && this.state.values.includes(value);
+  }
+
+  /** A value attribute, a property or an array read as a list of values */
+  _asList(value) {
+    if (Array.isArray(value)) return value.map(String).filter(item => item !== '');
+    if (value === null || value === undefined || value === '') return [];
+    return String(value)
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
   }
 
   _updateValue(newValue) {
@@ -788,7 +1010,7 @@ export default class PSelect extends HTMLElement {
     if (!option || option.disabled) return;
 
     this._choose(option.value, option);
-    this.close();
+    if (!this.state.multiple) this.close();
   }
 
   /**
@@ -798,6 +1020,15 @@ export default class PSelect extends HTMLElement {
    * @param {{ label: string, secondary?: string, description?: string, image?: string }} [option] - the option chosen, whose label and rich fields go in the detail
    */
   _choose(value, option = null) {
+    if (this.state.multiple) {
+      /* The same gesture puts a value in and takes it back out */
+      const held = this._holds(value);
+      this._setValue(
+        held ? this.state.values.filter(item => item !== value) : [...this.state.values, value]
+      );
+      this._announceChange({ value, label: option?.label ?? '', chosen: !held }, option);
+      return;
+    }
     if (value === this.state.value) return;
     this._setValue(value);
 
@@ -805,6 +1036,16 @@ export default class PSelect extends HTMLElement {
     for (const field of RICH_FIELDS) {
       if (option?.[field]) detail[field] = option[field];
     }
+
+    this._announceChange(detail, option);
+  }
+
+  /** Say a value changed, the way a form control does, and then in this element's own words */
+  _announceChange(detail, option) {
+    for (const field of RICH_FIELDS) {
+      if (option?.[field] && !(field in detail)) detail[field] = option[field];
+    }
+    if (this.state.multiple) detail.values = [...this.state.values];
 
     this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
     this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
@@ -820,19 +1061,20 @@ export default class PSelect extends HTMLElement {
     this.state.options = Array.isArray(options) ? options.slice() : [];
     this.state.filtered = this.state.options.slice();
     this._renderOptions();
-    this._setValue(this.state.value);
+    this._setValue(this.state.multiple ? this.state.values : this.state.value);
   }
 
   getValue() {
-    return this.state.value;
+    return this.value;
   }
 
   clear() {
-    this._setValue('');
+    this._setValue(this.state.multiple ? [] : '');
   }
 
+  /** A string, or the list of values where `multiple` is set */
   get value() {
-    return this.state.value;
+    return this.state.multiple ? [...this.state.values] : this.state.value;
   }
 
   set value(value) {
@@ -858,10 +1100,18 @@ export default class PSelect extends HTMLElement {
    * The host element's name attribute provides the field name.
    */
   _syncFormState() {
-    const { value, required } = this.state;
-    this._internals.setFormValue(value);
+    const { value, values, multiple, required } = this.state;
+    if (multiple) {
+      /* One entry per value under the one name, which is what a server reads as a list */
+      const data = new FormData();
+      for (const item of values) data.append(this.name || '', item);
+      this._internals.setFormValue(values.length ? data : null);
+    } else {
+      this._internals.setFormValue(value);
+    }
 
-    if (required && value === '') {
+    const empty = multiple ? values.length === 0 : value === '';
+    if (required && empty) {
       this._internals.setValidity(
         { valueMissing: true },
         'Please select an item in the list.',
@@ -962,6 +1212,7 @@ export default class PSelect extends HTMLElement {
   _renderOptions({ keepScroll = false } = {}) {
     const { menu } = this._els;
     menu.replaceChildren();
+    this._renderBulk();
     if (!keepScroll) menu.scrollTop = 0;
     this.state.highlightedIndex = -1;
     this._els.input.removeAttribute('aria-activedescendant');
@@ -1003,7 +1254,7 @@ export default class PSelect extends HTMLElement {
       element.id = `option-${index}`;
       element.dataset.index = String(index);
       element.setAttribute('role', 'option');
-      element.setAttribute('aria-selected', String(option.value === this.state.value));
+      element.setAttribute('aria-selected', String(this._holds(option.value)));
       if (option.disabled) {
         element.setAttribute('aria-disabled', 'true');
       }
@@ -1011,6 +1262,15 @@ export default class PSelect extends HTMLElement {
         element.append(...richOptionContent(option));
       } else {
         element.textContent = option.label;
+      }
+      if (this.state.multiple) {
+        /* The tick rides at the trailing edge of a filled row, rather than a box at the leading
+           one, and holds its space so nothing shifts as rows are chosen */
+        const tick = document.createElement('span');
+        tick.className = 'option__tick';
+        tick.setAttribute('aria-hidden', 'true');
+        tick.append(iconElement(check, { size: 'sm' }));
+        element.append(tick);
       }
       (groupElement ?? menu).append(element);
     });
