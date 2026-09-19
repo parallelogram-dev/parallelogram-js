@@ -16,6 +16,8 @@
  * The plus icon is from Tabler Icons (MIT licence, https://tabler.io/icons).
  */
 
+@use '../../design-system/mixins' as mix;
+
 :root {
   --accordion-duration: 0.3s;
   --accordion-easing: ease;
@@ -112,3 +114,5 @@
     background-color: CanvasText;
   }
 }
+
+@include mix.pointer-focus('[data-accordion]');

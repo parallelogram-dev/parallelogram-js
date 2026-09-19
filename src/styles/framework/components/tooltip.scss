@@ -5,6 +5,9 @@
  * --tooltip-arrow-offset along the edge facing the control, which the component sets so it keeps
  * pointing at the control when the tooltip itself was moved to stay on screen.
  */
+
+@use '../../design-system/mixins' as mix;
+
 .tooltip {
   --tooltip-bg: var(--color-inverse-surface, #111827);
   --tooltip-color: var(--color-inverse-text, #ffffff);
@@ -102,3 +105,5 @@
     border: 1px solid CanvasText;
   }
 }
+
+@include mix.pointer-focus('[data-tooltip]');

@@ -7,6 +7,8 @@
  * length is set here only.
  */
 
+@use '../../design-system/mixins' as mix;
+
 :root {
   --toggle-transition-duration: 0.75s;
   --toggle-transition-easing: ease-in-out;
@@ -62,3 +64,5 @@
     transform: translateY(-10px);
   }
 }
+
+@include mix.pointer-focus('[data-toggle], [data-toggle-state]');
