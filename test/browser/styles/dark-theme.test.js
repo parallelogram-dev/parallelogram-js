@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { commands, userEvent } from 'vitest/browser';
+import { commands } from 'vitest/browser';
+import { parkPointer } from '../support/pointer.js';
 import Accordion from '../../../src/components/Accordion.js';
 import Tabs from '../../../src/components/Tabs.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
@@ -145,14 +146,9 @@ describe('dark theme', () => {
       getComputedStyle(returns).borderBottomColor,
     ];
 
-    /* A tab's hover colour is the panel's text colour, which is what an unselected tab would
-       read as if the pointer happened to rest on it: on a runner it starts at the top left,
-       over the first tab. Park it clear of them so this reads their resting state */
-    const away = document.createElement('div');
-    away.style.cssText = 'position:fixed;right:0;bottom:0;width:2rem;height:2rem';
-    document.body.append(away);
-    cleanups.push(() => away.remove());
-    await userEvent.hover(away);
+    /* A tab's hover colour is the panel's text colour, so a tab under the pointer reads as an
+       unselected one would not */
+    await parkPointer();
 
     await vi.waitFor(
       () =>
