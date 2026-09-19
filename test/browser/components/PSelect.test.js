@@ -1371,3 +1371,95 @@ describe('p-select, how a chosen row looks', () => {
     });
   });
 });
+
+describe('p-select, taking the whole list at once', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const openBulk = async select => {
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+    return {
+      all: select.shadowRoot.querySelector('[data-bulk="all"]'),
+      none: select.shadowRoot.querySelector('[data-bulk="none"]'),
+    };
+  };
+
+  const BULK = `
+    <p-select name="staff" multiple select-all>
+      <option value="ada">Ada Lovelace</option>
+      <option value="grace">Grace Hopper</option>
+      <option value="mary">Mary Somerville</option>
+    </p-select>
+  `;
+
+  it('offers the bar only where it is asked for and several may be chosen', async () => {
+    const { select: plain } = renderForm(STAFF);
+    document.body.append(document.createElement('div'));
+    const { select: asked } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+
+    const without = await openBulk(plain);
+    const with_ = await openBulk(asked);
+
+    expect([Boolean(without.all), Boolean(with_.all)]).toEqual([false, true]);
+  });
+
+  it('takes every option, and gives them all back', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    const { all, none } = await openBulk(select);
+
+    all.click();
+    const taken = select.value;
+    none.click();
+
+    expect({ taken, left: select.value }).toEqual({
+      taken: ['ada', 'grace', 'mary'],
+      left: [],
+    });
+  });
+
+  it('acts on what the search narrowed to, not the whole list', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    await openBulk(select);
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('gr');
+    await vi.waitFor(() => expect(select.shadowRoot.querySelectorAll('.option').length).toBe(1));
+    select.shadowRoot.querySelector('[data-bulk="all"]').click();
+
+    /* The bar says what it will do, and does only that */
+    expect(select.value).toEqual(['grace']);
+  });
+
+  it('counts what it would take, and what is held', async () => {
+    const { select } = renderForm(BULK);
+    await customElements.whenDefined('p-select');
+    const { all } = await openBulk(select);
+    const before = all.textContent;
+
+    select.value = ['ada'];
+
+    expect({
+      before,
+      after: select.shadowRoot.querySelector('[data-bulk="all"]').textContent,
+    }).toEqual({ before: 'Select all (3)', after: 'Select all (3)' });
+  });
+
+  it('leaves a disabled option alone', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple select-all>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace" disabled>Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const { all } = await openBulk(select);
+
+    all.click();
+
+    expect(select.value).toEqual(['ada']);
+  });
+});

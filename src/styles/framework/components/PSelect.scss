@@ -338,6 +338,41 @@
   background: var(--select-chosen-hover-bg, var(--color-accent-hover, #{$primary-dark}));
 }
 
+/* Chrome, not content: it holds still while the options scroll under it, so Select all is
+   reachable however far down the list you are */
+.bulk {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: #{$space-md};
+  padding: #{$space-sm} #{$space-md};
+  border-bottom: var(--select-border-width, #{$border-width}) solid var(--select-border-color);
+  background: var(--select-bg);
+}
+
+.bulk__action {
+  padding: 0.14rem 0.4rem;
+  border: 0;
+  border-radius: var(--select-border-radius);
+  background: none;
+  color: var(--color-accent, #{$primary});
+  font: inherit;
+  font-size: #{$font-xs};
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bulk__action:hover {
+  background: var(--select-hover-bg);
+}
+
+.bulk__action:focus-visible {
+  outline: 2px solid var(--select-focus-color);
+  outline-offset: 1px;
+}
+
 .option__tick {
   display: inline-flex;
   margin-left: auto;

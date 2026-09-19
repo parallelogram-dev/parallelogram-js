@@ -125,6 +125,8 @@ export default class PSelect extends HTMLElement {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
     removeLabel: 'Remove {label}',
+    selectAllLabel: 'Select all ({count})',
+    selectNoneLabel: 'None',
     searchHint: 'Type to search',
     searchMinHint: 'Type {min} or more characters to search',
     noResults: 'No results found',
@@ -136,6 +138,9 @@ export default class PSelect extends HTMLElement {
       'multiple',
       'selection-rows',
       'remove-label',
+      'select-all',
+      'select-all-label',
+      'select-none-label',
       'placeholder',
       'clear-label',
       'search-hint',
@@ -170,6 +175,7 @@ export default class PSelect extends HTMLElement {
       multiple: false,
       values: [],
       selectionRows: 1,
+      selectAll: false,
       open: false,
       highlightedIndex: -1,
       src: null,
@@ -249,6 +255,10 @@ export default class PSelect extends HTMLElement {
         this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
         this._renderSelections();
         break;
+      case 'select-all':
+        this.state.selectAll = newValue !== null;
+        this._renderOptions();
+        break;
       case 'placeholder':
         this.state.placeholder = newValue || this.constructor.defaults.placeholder;
         this._els.input.placeholder = this.state.placeholder;
@@ -315,6 +325,16 @@ export default class PSelect extends HTMLElement {
   }
 
   _setupEventListeners() {
+    this._els.menu.addEventListener('mousedown', event => {
+      if (event.target.closest('[data-bulk]')) event.preventDefault();
+    });
+    this._els.menu.addEventListener('click', event => {
+      const button = event.target.closest('[data-bulk]');
+      if (!button) return;
+      event.stopPropagation();
+      this._bulkChoose(button.dataset.bulk === 'all');
+    });
+
     this._els.selections.addEventListener('mousedown', event => event.preventDefault());
     this._els.selections.addEventListener('click', event => {
       const button = event.target.closest('[data-value]');
@@ -800,6 +820,51 @@ export default class PSelect extends HTMLElement {
     this._els.input.readOnly = !multiple && value !== '';
   }
 
+  /**
+   * A thin bar above the options, holding still while they scroll, that takes or gives back
+   * everything the search has narrowed to rather than the whole list
+   */
+  _renderBulk() {
+    if (!this.state.multiple || !this.state.selectAll) return;
+    const bar = document.createElement('div');
+    bar.className = 'bulk';
+    bar.setAttribute('part', 'bulk');
+    const all = document.createElement('button');
+    all.type = 'button';
+    all.className = 'bulk__action';
+    all.setAttribute('part', 'bulk-all');
+    all.dataset.bulk = 'all';
+    all.textContent = text(this, 'select-all-label', { count: this._bulkOptions().length });
+
+    const none = document.createElement('button');
+    none.type = 'button';
+    none.className = 'bulk__action';
+    none.setAttribute('part', 'bulk-none');
+    none.dataset.bulk = 'none';
+    none.textContent = text(this, 'select-none-label');
+
+    bar.append(all, none);
+    this._els.menu.append(bar);
+  }
+
+  /** The options the bar would act on: what the search left, minus any that cannot be chosen */
+  _bulkOptions() {
+    return this.state.filtered.filter(option => !option.disabled);
+  }
+
+  /** Take or give back everything the search narrowed to, saying so as one change */
+  _bulkChoose(take) {
+    const touched = this._bulkOptions().map(option => option.value);
+    if (!touched.length) return;
+    const held = new Set(this.state.values);
+    for (const value of touched) {
+      if (take) held.add(value);
+      else held.delete(value);
+    }
+    this._setValue([...held]);
+    this._announceChange({ value: '', label: '' }, null);
+  }
+
   /** Take every value back out at once, saying so as one change */
   _clearAll() {
     if (!this.state.values.length) return;
@@ -1126,6 +1191,7 @@ export default class PSelect extends HTMLElement {
   _renderOptions({ keepScroll = false } = {}) {
     const { menu } = this._els;
     menu.replaceChildren();
+    this._renderBulk();
     if (!keepScroll) menu.scrollTop = 0;
     this.state.highlightedIndex = -1;
     this._els.input.removeAttribute('aria-activedescendant');

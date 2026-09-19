@@ -40,6 +40,27 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: "The accessible name of a chosen value's remove button; {label} is its label",
     },
     {
+      name: 'select-all',
+      type: 'flag',
+      description:
+        'Offers a bar above the list that takes or gives back everything the search has narrowed to; only where multiple is set',
+    },
+    {
+      name: 'select-all-label',
+      type: 'string',
+      default: 'Select all ({count})',
+      option: 'selectAllLabel',
+      description:
+        'The words on the button that takes every option the search left; {count} is how many',
+    },
+    {
+      name: 'select-none-label',
+      type: 'string',
+      default: 'None',
+      option: 'selectNoneLabel',
+      description: 'The words on the button that gives every option the search left back',
+    },
+    {
       name: 'placeholder',
       type: 'string',
       default: 'Select…',
@@ -197,6 +218,9 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
     { name: 'selection', description: 'One chosen value' },
     { name: 'selection-remove', description: 'The button that takes one chosen value back out' },
+    { name: 'bulk', description: 'The bar above the list, where select-all is set' },
+    { name: 'bulk-all', description: 'The button that takes every option the search left' },
+    { name: 'bulk-none', description: 'The button that gives those options back' },
     { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
