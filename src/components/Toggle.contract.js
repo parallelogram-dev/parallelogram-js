@@ -67,6 +67,12 @@ For new dropdowns consider \`<button popovertarget>\` with \`popover\`, and for 
       description: "Wait for the stylesheet's animations before changing state",
     },
     {
+      name: 'data-toggle-enhanced',
+      type: 'flag',
+      readonly: true,
+      description: 'Present on a trigger while Toggle is mounted on it',
+    },
+    {
       name: 'data-toggle-state',
       type: 'enum',
       options: STATES,
