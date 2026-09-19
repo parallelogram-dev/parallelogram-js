@@ -4,6 +4,11 @@
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+/* crypto.randomUUID() exists only in a secure context, so it is undefined when this site is read
+   over plain HTTP from anything but localhost; the ids only have to be unique within the page */
+let uploaded = 0;
+const uploadId = () => `upload-${Date.now().toString(36)}-${++uploaded}`;
+
 const json = body =>
   new Response(JSON.stringify(body), {
     status: 200,
@@ -296,7 +301,7 @@ export class MockUpload {
     } else {
       this.status = 200;
       this.responseText = JSON.stringify({
-        id: `upload-${crypto.randomUUID()}`,
+        id: uploadId(),
         preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
       });
     }

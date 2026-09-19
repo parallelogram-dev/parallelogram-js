@@ -748,7 +748,10 @@ export default class PUploader extends HTMLElement {
     fileData.element = fileElement;
 
     if (replacing) {
+      /* The replacement takes the outgoing file's place while it uploads, rather than stacking
+         in front of it, so the card the reader is watching does not move */
       replacing.before(fileElement);
+      replacing.hidden = true;
     } else {
       this.appendChild(fileElement);
     }
@@ -838,6 +841,9 @@ export default class PUploader extends HTMLElement {
   _handleUploadError(fileData, error) {
     fileData.state = 'error';
     fileData.error = error;
+
+    /* Nothing replaced the file the page still has, so it comes back */
+    if (fileData.replaces) fileData.replaces.hidden = false;
 
     fileData.element.setAttribute('state', 'error');
     fileData.element.setAttribute('error', error);
