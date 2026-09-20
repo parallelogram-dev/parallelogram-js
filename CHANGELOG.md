@@ -17,15 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The control's padding is applied once rather than twice. Carried on the host and again on the box inside it, a field holding several values sat inset from its own border on every side and drew its focus ring inside a border that stayed visible outside it. A page no longer has to halve `--select-padding` to compensate, and the chevron's ink lands where the padding asks rather than four pixels outside the border.
 - A field no longer grows to fit what is chosen. Choosing a long value widened the control itself; its width comes from the page, as it always should have.
+- A `<p-select multiple>` no longer opens its list with one row already marked. It marked whichever chosen value came first, which is an arbitrary pick among several, and that row was then drawn in the deeper accent the list uses for a row under the pointer — so it read as somewhere the pointer had already landed before anything had been done. Nothing is marked on open now, and an arrow key enters the list at its first row. A select where only one value may be chosen still opens onto that value, which is the row the arrow keys should carry on from.
 
 ### Removed
 
 - `--select-padding` and `--selection-row`, replaced by `--select-padding-block`, `--select-padding-inline` and `--select-row`. The two padding properties are read directly by the strip the icons sit in, so setting them keeps the icons with the text; the old single property could not.
 - The `selection-remove` part and the `remove-label` text, with the buttons they named.
-
-### Fixed
-
-- Taking a value back out of a `<p-select multiple>` from its own remove button no longer opens the list as well. The control opens on `mousedown` and the remove buttons sit inside it, so the guard the clear button already had is now on them too. A press on the chip itself, rather than its button, still opens the list, as any other part of the control does.
 
 ## [0.7.17] - 2026-09-20
 
