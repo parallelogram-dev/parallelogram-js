@@ -16,14 +16,14 @@ const renderForm = markup => {
 };
 
 const COUNTRIES = `
-  <p-select name="country">
+  <p-select searchable name="country">
     <option value="us">United States</option>
     <option value="uk" selected>United Kingdom</option>
   </p-select>
 `;
 
 const STAFF = `
-  <p-select name="staff" multiple>
+  <p-select searchable name="staff" multiple>
     <option value="ada">Ada Lovelace</option>
     <option value="grace">Grace Hopper</option>
     <option value="mary">Mary Somerville</option>
@@ -31,7 +31,7 @@ const STAFF = `
 `;
 
 const PRIORITY = `
-  <p-select name="priority" required>
+  <p-select searchable name="priority" required>
     <option value="">-- Select priority --</option>
     <option value="high">High</option>
   </p-select>
@@ -153,7 +153,7 @@ describe('p-select', () => {
 
   it('asks for a search before saying nothing was found', async () => {
     const { select } = renderForm(`
-      <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
+      <p-select searchable name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
     `);
     const message = () => select.shadowRoot.querySelector('.noresults')?.textContent;
 
@@ -233,7 +233,7 @@ describe('p-select', () => {
 
   it('restores its value attribute when the form is reset', () => {
     const { form, select } = renderForm(`
-      <p-select name="country" value="us">
+      <p-select searchable name="country" value="us">
         <option value="us">United States</option>
         <option value="uk">United Kingdom</option>
       </p-select>
@@ -345,10 +345,10 @@ describe('p-select combobox', () => {
   it('names its input from a label for the element or its own aria-label', () => {
     document.body.insertAdjacentHTML('beforeend', '<label for="country">Country</label>');
     const labelled = mountSelect(
-      `<p-select id="country" name="country">${'<option value="uk">UK</option>'}</p-select>`
+      `<p-select searchable id="country" name="country">${'<option value="uk">UK</option>'}</p-select>`
     );
     const named = mountSelect(
-      '<p-select aria-label="Seat class"><option value="economy">Economy</option></p-select>'
+      '<p-select searchable aria-label="Seat class"><option value="economy">Economy</option></p-select>'
     );
 
     expect([
@@ -360,7 +360,7 @@ describe('p-select combobox', () => {
   it('leaves the trailing colon of a label out of the input name', () => {
     document.body.insertAdjacentHTML('beforeend', '<label for="seat">Seat class:</label>');
     const select = mountSelect(
-      '<p-select id="seat"><option value="economy">Economy</option></p-select>'
+      '<p-select searchable id="seat"><option value="economy">Economy</option></p-select>'
     );
 
     expect(inputOf(select).getAttribute('aria-label')).toBe('Seat class');
@@ -383,7 +383,7 @@ describe('p-select combobox', () => {
       { length: 30 },
       (_, index) => `<option value="${index}">Seat ${index}</option>`
     ).join('');
-    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    const select = mountSelect(`<p-select searchable name="seat">${many}</p-select>`);
     press(select, 'ArrowDown');
     const active = () => inputOf(select).getAttribute('aria-activedescendant');
 
@@ -417,7 +417,7 @@ describe('p-select combobox', () => {
       { length: 30 },
       (_, index) => `<option value="${index}">Seat ${index}</option>`
     ).join('');
-    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    const select = mountSelect(`<p-select searchable name="seat">${many}</p-select>`);
     press(select, 'ArrowDown');
 
     press(select, 'End');
@@ -510,7 +510,7 @@ describe('p-select combobox', () => {
 
   it('shows option groups with their labels', () => {
     const select = mountSelect(`
-      <p-select name="food">
+      <p-select searchable name="food">
         <optgroup label="Fruits"><option value="apple">Apple</option></optgroup>
         <optgroup label="Vegetables"><option value="carrot">Carrot</option></optgroup>
       </p-select>`);
@@ -630,6 +630,7 @@ describe('p-select combobox', () => {
       .mockImplementation(async () => Response.json([{ value: 'ada', label: 'Ada Lovelace' }]));
     const select = document.createElement('p-select');
     select.setAttribute('name', 'user');
+    select.setAttribute('searchable', '');
     document.body.append(select);
     select.setAttribute('data-select-src', '/api/users?q={q}');
     select.setAttribute('data-select-min', '2');
@@ -654,7 +655,7 @@ describe('p-select combobox', () => {
 });
 
 const PEOPLE = `
-  <p-select name="owner" aria-label="Owner">
+  <p-select searchable name="owner" aria-label="Owner">
     <option
       value="ada"
       data-secondary="ada@example.com"
@@ -709,7 +710,7 @@ describe('p-select rich options', () => {
       ])
     );
     const select = mountSelect(
-      '<p-select name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
+      '<p-select searchable name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
     );
 
     await vi.waitFor(
@@ -860,7 +861,7 @@ const pagedSource = (total = 30) => {
 
 const pagedSelect = (src = '/api/rows?q={q}&page={page}&limit={limit}', limit = '10') =>
   mountSelect(
-    `<p-select name="row" aria-label="Row" data-select-src="${src}" data-select-min="0" data-select-debounce="0" data-select-limit="${limit}"></p-select>`
+    `<p-select searchable name="row" aria-label="Row" data-select-src="${src}" data-select-min="0" data-select-debounce="0" data-select-limit="${limit}"></p-select>`
   );
 
 const scrollToEnd = select => {
@@ -936,7 +937,7 @@ describe('p-select paging', () => {
   it('shows the label for a value chosen before its options arrive', async () => {
     pagedSource();
     const select = mountSelect(
-      '<p-select name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"></p-select>'
+      '<p-select searchable name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"></p-select>'
     );
 
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
@@ -1012,7 +1013,7 @@ describe('p-select disabled', () => {
 
   it('looks disabled, not only unusable', () => {
     const select = mountSelect(
-      '<p-select aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
+      '<p-select searchable aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
     );
 
     expect(Number(getComputedStyle(select).opacity)).toBeLessThan(1);
@@ -1026,7 +1027,7 @@ describe('p-select from the keyboard alone', () => {
 
   it('clears a chosen value and searches again without a pointer', async () => {
     const select = mountSelect(
-      `<p-select name="fruit" aria-label="Fruit"><option value="a">Apple</option><option value="b">Banana</option></p-select>`
+      `<p-select searchable name="fruit" aria-label="Fruit"><option value="a">Apple</option><option value="b">Banana</option></p-select>`
     );
     const input = inputOf(select);
 
@@ -1079,8 +1080,8 @@ describe('p-select from the keyboard alone', () => {
     PSelect.defaults.noResults = 'Aucun résultat';
     try {
       renderForm(`
-        <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
-        <p-select name="country"><option value="fr">France</option></p-select>
+        <p-select searchable name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
+        <p-select searchable name="country"><option value="fr">France</option></p-select>
       `);
       const [remote, local] = document.querySelectorAll('p-select');
       const message = select => select.shadowRoot.querySelector('.noresults')?.textContent;
@@ -1115,7 +1116,7 @@ describe('p-select, choosing more than one', () => {
 
   it('reads its value as a list, and takes one from the attribute', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple value="grace,mary">
+      <p-select searchable name="staff" multiple value="grace,mary">
         <option value="ada">Ada Lovelace</option>
         <option value="grace">Grace Hopper</option>
         <option value="mary">Mary Somerville</option>
@@ -1155,7 +1156,7 @@ describe('p-select, choosing more than one', () => {
 
   it('is satisfied by one value when it is required', async () => {
     const { form, select } = renderForm(`
-      <p-select name="staff" multiple required>
+      <p-select searchable name="staff" multiple required>
         <option value="ada">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1168,7 +1169,7 @@ describe('p-select, choosing more than one', () => {
 
   it('puts the values back as they were when the form is reset', async () => {
     const { form, select } = renderForm(`
-      <p-select name="staff" multiple value="ada">
+      <p-select searchable name="staff" multiple value="ada">
         <option value="ada">Ada Lovelace</option>
         <option value="grace">Grace Hopper</option>
       </p-select>`);
@@ -1272,7 +1273,7 @@ describe('p-select, what it shows once several are chosen', () => {
 
   it('carries a second line on each selection when asked for two rows', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2">
+      <p-select searchable name="staff" multiple selection-rows="2">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1451,7 +1452,7 @@ describe('p-select, taking the whole list at once', () => {
   };
 
   const BULK = `
-    <p-select name="staff" multiple select-all>
+    <p-select searchable name="staff" multiple select-all>
       <option value="ada">Ada Lovelace</option>
       <option value="grace">Grace Hopper</option>
       <option value="mary">Mary Somerville</option>
@@ -1515,7 +1516,7 @@ describe('p-select, taking the whole list at once', () => {
 
   it('leaves a disabled option alone', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple select-all>
+      <p-select searchable name="staff" multiple select-all>
         <option value="ada">Ada Lovelace</option>
         <option value="grace" disabled>Grace Hopper</option>
       </p-select>`);
@@ -1544,9 +1545,59 @@ describe('p-select, how tall the list and its rows are', () => {
     (_, i) => `<option value="v${i}" data-secondary="Role ${i}">Person ${i}</option>`
   ).join('');
 
-  it('keeps the secondary text on the label\u2019s line by default', async () => {
+  it('offers no search box, and narrows nothing, without searchable', async () => {
     const { select } = renderForm(`
       <p-select name="staff" multiple>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    const input = select.shadowRoot.querySelector('.input');
+
+    typeInto(select, 'ada');
+
+    /* The input still carries the combobox role and takes focus, so it stays in the tree; it is
+       out of the layout, and nothing it is given narrows the list */
+    expect({
+      rows: root.querySelectorAll('.option').length,
+      typed: input.value,
+      searchIcon: select.shadowRoot.querySelector('.search').hidden,
+      width: Math.round(input.getBoundingClientRect().width),
+    }).toEqual({ rows: 2, typed: '', searchIcon: true, width: 1 });
+  });
+
+  it('keeps a field the same height whether one value is held or several', async () => {
+    const { form } = renderForm(`
+      <p-select name="a"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select name="b" multiple><option value="ada">Ada Lovelace</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const [single, multiple] = [...form.querySelectorAll('p-select')];
+    multiple.value = ['ada'];
+    await vi.waitFor(() => expect(multiple.shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* One layout, one row: a single used to run to two rows, its selection taking the line and
+       the search box dropping beneath it */
+    expect(Math.round(single.getBoundingClientRect().height)).toBe(
+      Math.round(multiple.getBoundingClientRect().height)
+    );
+  });
+
+  it('puts the secondary text under the label by default', async () => {
+    const { select } = renderForm(`
+      <p-select searchable name="staff" multiple>
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    /* A row reads as a name with a line about it beneath, rather than one run-on line */
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('block');
+  });
+
+  it('puts the secondary text back on the label\u2019s line where one row is asked for', async () => {
+    const { select } = renderForm(`
+      <p-select searchable name="staff" multiple list-rows="1">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1557,7 +1608,7 @@ describe('p-select, how tall the list and its rows are', () => {
 
   it('puts the secondary text on its own line where two rows are asked for', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple list-rows="2">
+      <p-select searchable name="staff" multiple list-rows="2">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1567,7 +1618,7 @@ describe('p-select, how tall the list and its rows are', () => {
   });
 
   it('caps the list and scrolls it, by default', async () => {
-    const { select } = renderForm(`<p-select name="staff" multiple>${MANY}</p-select>`);
+    const { select } = renderForm(`<p-select searchable name="staff" multiple>${MANY}</p-select>`);
     await customElements.whenDefined('p-select');
     const menu = await openList(select);
 
@@ -1576,7 +1627,7 @@ describe('p-select, how tall the list and its rows are', () => {
 
   it('lets the list fit its content when the page asks for no cap', async () => {
     const { select } = renderForm(
-      `<p-select name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
+      `<p-select searchable name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
     );
     await customElements.whenDefined('p-select');
     const menu = await openList(select);
@@ -1620,7 +1671,7 @@ describe('p-select, where the icons sit once the field grows', () => {
 
   it('follows the taller row when a selection carries two lines', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2" style="width: 14rem">
+      <p-select searchable name="staff" multiple selection-rows="2" style="width: 14rem">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
         <option value="grace" data-secondary="Rear admiral">Grace Hopper</option>
       </p-select>`);
@@ -1675,7 +1726,7 @@ describe('p-select, a label that is markup', () => {
 
   it('shows a chosen value whose label is markup as text', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2">
+      <p-select searchable name="staff" multiple selection-rows="2">
         <option value="ada" data-secondary="&lt;img src=x onerror=&quot;window.__pselectInjected = true&quot;&gt;">
           &lt;img src=x onerror="window.__pselectInjected = true"&gt;
         </option>

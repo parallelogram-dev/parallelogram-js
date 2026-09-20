@@ -124,6 +124,7 @@ export default class PSelect extends HTMLElement {
   static defaults = {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
+    searchLabel: 'Search',
     selectAllLabel: 'Select all ({count})',
     selectNoneLabel: 'None',
     searchHint: 'Type to search',
@@ -137,6 +138,8 @@ export default class PSelect extends HTMLElement {
       'multiple',
       'selection-rows',
       'list-rows',
+      'searchable',
+      'search-label',
       'select-all',
       'select-all-label',
       'select-none-label',
@@ -174,6 +177,7 @@ export default class PSelect extends HTMLElement {
       multiple: false,
       values: [],
       selectionRows: 1,
+      searchable: false,
       selectAll: false,
       open: false,
       highlightedIndex: -1,
@@ -253,6 +257,10 @@ export default class PSelect extends HTMLElement {
       case 'selection-rows':
         this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
         this._renderSelections();
+        break;
+      case 'searchable':
+        this.state.searchable = newValue !== null;
+        this._updateControls();
         break;
       case 'select-all':
         this.state.selectAll = newValue !== null;
@@ -485,6 +493,12 @@ export default class PSelect extends HTMLElement {
   }
 
   _handleInput(event) {
+    /* Without a search box there is nothing to type into, so nothing narrows the list */
+    if (!this.state.searchable) {
+      this._els.input.value = '';
+      return;
+    }
+
     const query = event.target.value;
     this.state.query = query;
     this.open();
@@ -758,7 +772,13 @@ export default class PSelect extends HTMLElement {
   _updateDisplay() {
     this._els.input.value = '';
     /* The placeholder speaks for an empty field; once something is chosen the selections do */
-    this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
+    /* The placeholder speaks for an empty field; once something is chosen the selections do, and
+       a search box says what it is for instead of sitting there blank */
+    this._els.input.placeholder = this.state.values.length
+      ? this.state.searchable
+        ? text(this, 'search-label')
+        : ''
+      : this.state.placeholder;
     this._renderSelections();
     this._updateControls();
   }
@@ -802,8 +822,8 @@ export default class PSelect extends HTMLElement {
     );
 
     /* The icons in the gutter are told how tall a row came out, so they sit level with the first
-       one whatever type, padding or second line the page has asked for. Read here, with the rows
-       just built: taken after the icons beside them are shown or hidden it comes back stale */
+       one whatever type or second line the page has asked for. Read here, with the rows just
+       built: taken after the icons beside them are shown or hidden it comes back stale */
     const row = box.firstElementChild?.getBoundingClientRect().height;
     if (row) this.style.setProperty('--select-row', `${row}px`);
   }
@@ -824,7 +844,9 @@ export default class PSelect extends HTMLElement {
        the list or with Backspace, and a button that emptied the field in one press sat a stray
        click away from undoing a long selection */
     this._els.clear.hidden = !open || empty || disabled || multiple;
-    this._els.search.hidden = !open || !empty;
+    /* The search icon speaks for a box that can be typed in; without one there is nothing for it
+       to label */
+    this._els.search.hidden = !open || !empty || !this.state.searchable;
   }
 
   /**

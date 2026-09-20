@@ -41,6 +41,20 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'How many rows an option takes in the list: its label with the secondary text after it, or the secondary text on its own line beneath',
     },
     {
+      name: 'searchable',
+      type: 'flag',
+      description:
+        'Offers a box to type in that narrows the list. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help',
+    },
+    {
+      name: 'search-label',
+      type: 'string',
+      default: 'Search',
+      option: 'searchLabel',
+      description:
+        'The placeholder in the search box once something is chosen, when the field\u2019s own placeholder has given way to the selections',
+    },
+    {
       name: 'select-all',
       type: 'flag',
       description:

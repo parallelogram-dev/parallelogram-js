@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `searchable` offers a box to type in that narrows the list. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help. `search-label` is the placeholder it carries once something is chosen and the field's own placeholder has given way to the selections.
+
 ### Changed
 
 - A chosen row in the list is filled the same way whether one value may be chosen or several. A single select's chosen row was a ten percent tint while a multiple's was filled in the accent, which made one mode's list look like a weaker copy of the other's. The tick that rode at a filled row's trailing edge is gone with it: the fill is the whole mark, and the tick was carrying nothing the colour did not.
+- An option's secondary text sits under its label rather than after it. `list-rows="1"` puts it back on the label's line for a list with room for it.
+- A chosen value reads at the field's own size rather than a size of its own, so a field is the same height whether it holds one value or several. `--select-selection-font-size` still sets it where a page wants them smaller.
+- The chosen values no longer scroll inside a capped box. `--select-selections-max-height` still caps them where a page wants it; it no longer does so on its own, which cut the last row in half.
 - Rows in the list are separated by a hairline, so two chosen ones next to each other read as two filled rows rather than one block of colour.
 - An option's text is cut with an ellipsis rather than wrapped. `list-rows="1"` says an option takes one row, but nothing held it to that, so a long label and its secondary text spilled into a second line the row had no height for — a ragged copy of `list-rows="2"` rather than a deliberate one. The control's chosen values were already cut this way; the list now matches.
 - `<p-select>` draws what is chosen the same way whether one value is held or several. Both modes now render a selection through one path, and the input has one job in both: it is the search box, never the display, and never read-only. A single select therefore no longer shows its label in a read-only input that had to be cleared before it could be searched — the label sits in a selection beside a search box that is always typeable. Both modes are laid out in flow rather than one being stretched over a box of a fixed height, so a field is as tall as what is in it in either mode.
