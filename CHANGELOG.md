@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.18] - 2026-09-21
+
 ### Added
 
 - The search box carries the way back from a search: once something is typed, the icon at its trailing edge becomes a button that takes it back and brings the whole list with it, in the same slot so neither swap moves the other. A search field's own button is drawn by WebKit and Blink but not by Firefox, so this one is drawn rather than borrowed and behaves the same everywhere. `search-clear` is the part, `search-clear-label` its name.
