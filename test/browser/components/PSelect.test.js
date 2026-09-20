@@ -1239,6 +1239,58 @@ describe('p-select, what it shows once several are chosen', () => {
     expect([...select.value]).toEqual(['grace']);
   });
 
+  it('marks no row as the arrow keys\u2019 place when the list opens holding several', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+
+    select.open();
+
+    /* Holding several there is no one current value to mark, and marking the first of them drew
+       that row in the deeper accent, which read as a row the pointer had already landed on */
+    expect(select.shadowRoot.querySelectorAll('.option[data-active]').length).toBe(0);
+  });
+
+  it('still opens onto the chosen row when only one may be chosen', async () => {
+    const { select } = renderForm(COUNTRIES);
+    await customElements.whenDefined('p-select');
+
+    select.open();
+
+    /* One chosen value is the current one, which is where the arrow keys should carry on from */
+    expect(select.shadowRoot.querySelector('.option[data-active]')?.textContent.trim()).toBe(
+      'United Kingdom'
+    );
+  });
+
+  it('enters the list at the first row from the keyboard while several are held', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.shadowRoot.querySelector('.input').focus();
+
+    await userEvent.keyboard('{ArrowDown}');
+
+    expect(select.shadowRoot.querySelector('.option[data-active]')?.textContent.trim()).toBe(
+      'Ada Lovelace'
+    );
+  });
+
+  it('leaves the list closed when a value is taken back out', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    const root = select.shadowRoot;
+
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    /* The remove button sits inside a control that opens the list on mousedown */
+    expect({ left: selections(select), open: !root.querySelector('.menu').hidden }).toEqual({
+      left: ['Grace Hopper'],
+      open: false,
+    });
+  });
+
   it('names every part a page can style', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');

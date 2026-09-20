@@ -336,7 +336,11 @@ export default class PSelect extends HTMLElement {
       this._bulkChoose(button.dataset.bulk === 'all');
     });
 
-    this._els.selections.addEventListener('mousedown', event => event.preventDefault());
+    this._els.selections.addEventListener('mousedown', event => {
+      event.preventDefault();
+      /* The remove buttons sit inside the control, so they must not open the list as well */
+      if (event.target.closest('[data-value]')) event.stopPropagation();
+    });
     this._els.selections.addEventListener('click', event => {
       const button = event.target.closest('[data-value]');
       if (!button) return;
@@ -737,7 +741,10 @@ export default class PSelect extends HTMLElement {
     if (searchTerm) {
       this._setHighlight(this.state.filtered.length > 0 ? 0 : -1);
     } else {
-      this._setHighlight(selectedIndex);
+      /* Holding several values there is no one current value to open onto: the first of them is an
+         arbitrary pick, and marking it drew that row in the deeper accent, which reads as a row the
+         pointer has already landed on. The arrow keys enter at the first row from nothing marked */
+      this._setHighlight(this.state.multiple ? -1 : selectedIndex);
     }
 
     if (announce) {
