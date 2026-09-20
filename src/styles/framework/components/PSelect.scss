@@ -108,6 +108,9 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease;
   box-sizing: border-box;
+  /* A row's worth, whether anything is in it or not: an empty field sat shorter than one holding
+     a value, which is the same field drawn two heights */
+  min-height: calc(var(--select-row) + 2 * var(--select-padding-block));
   padding: var(--select-padding-block) var(--select-gutter) var(--select-padding-block)
     var(--select-padding-inline);
 }
@@ -229,6 +232,9 @@
      its padding was added on top and the row grew past the icons pinned beside it */
   box-sizing: border-box;
   min-height: var(--select-row);
+  /* Its own line height, so a row comes out the height the token says whatever the page sets
+     around it, and every state of the field is drawn to the same one */
+  line-height: 1.25;
   gap: #{$space-md};
   max-width: var(--select-selection-max-width, 16rem);
   padding: 0.25rem 0.32rem 0.25rem 0.5rem;

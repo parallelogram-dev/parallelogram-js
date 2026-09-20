@@ -599,6 +599,12 @@ export default class PSelect extends HTMLElement {
         break;
       case 'Escape':
         event.preventDefault();
+        /* Escape abandons the search: it is the key that takes back what was typed, since nothing
+           else does that on its own any more */
+        if (this._els.input.value !== '') {
+          this._els.input.value = '';
+          this._filterLocal('');
+        }
         this.close();
         break;
     }
@@ -785,8 +791,9 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateDisplay() {
-    this._els.input.value = '';
-    /* The placeholder speaks for an empty field; once something is chosen the selections do */
+    /* What was typed stays until it is cleared. Blanked on every redraw, the box emptied itself as
+       a value was chosen while the list stayed narrowed to what had been typed, so the rows the
+       search had put aside never came back and nothing on screen said why */
     /* The placeholder speaks for an empty field; once something is chosen the selections do, and
        a search box says what it is for instead of sitting there blank */
     this._els.input.placeholder = this.state.values.length
@@ -835,12 +842,6 @@ export default class PSelect extends HTMLElement {
         return chip;
       })
     );
-
-    /* The icons in the gutter are told how tall a row came out, so they sit level with the first
-       one whatever type or second line the page has asked for. Read here, with the rows just
-       built: taken after the icons beside them are shown or hidden it comes back stale */
-    const row = box.firstElementChild?.getBoundingClientRect().height;
-    if (row) this.style.setProperty('--select-row', `${row}px`);
   }
 
   /**

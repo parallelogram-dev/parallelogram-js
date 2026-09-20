@@ -1567,6 +1567,43 @@ describe('p-select, how tall the list and its rows are', () => {
     }).toEqual({ rows: 2, typed: '', searchBar: true });
   });
 
+  it('draws a field to one height, empty or holding a value, either mode', async () => {
+    const { form } = renderForm(`
+      <p-select searchable name="a"><option value="uk">United Kingdom</option></p-select>
+      <p-select searchable name="b"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select searchable multiple name="c"><option value="ada">Ada Lovelace</option></p-select>
+      <p-select searchable multiple name="d"><option value="ada">Ada Lovelace</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const fields = [...form.querySelectorAll('p-select')];
+    fields[3].value = ['ada'];
+    await vi.waitFor(() => expect(fields[3].shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* Four states of the same control, drawn to the same row */
+    const heights = fields.map(field => Math.round(field.getBoundingClientRect().height));
+    expect(new Set(heights).size).toBe(1);
+  });
+
+  it('leaves what was typed in the search box once a value is chosen', async () => {
+    const { select } = renderForm(`
+      <p-select searchable multiple name="staff">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    typeInto(select, 'ada');
+    await vi.waitFor(() => expect(root.querySelectorAll('.option').length).toBe(1));
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    /* Blanked on choosing, the box emptied itself while the list stayed narrowed to what had been
+       typed: the rows the search put aside never came back and nothing said why */
+    expect({
+      typed: select.shadowRoot.querySelector('.input').value,
+      rows: root.querySelectorAll('.option').length,
+    }).toEqual({ typed: 'ada', rows: 1 });
+  });
+
   it('keeps a field the same height whether one value is held or several', async () => {
     const { form } = renderForm(`
       <p-select name="a"><option value="uk" selected>United Kingdom</option></p-select>
