@@ -28,14 +28,31 @@ describe('focus indicators', () => {
     document.body.replaceChildren();
   });
 
-  it('outlines a p-select while its input has focus', () => {
+  it('outlines a p-select while it has focus', () => {
     const select = document.createElement('p-select');
     select.append(new Option('Canada', 'ca'));
     document.body.append(select);
 
-    select.shadowRoot.querySelector('.input').focus();
+    select.shadowRoot.querySelector('.control').focus();
 
     expect(visible(outlineOf(select.shadowRoot.querySelector('.control')))).toBe(true);
+  });
+
+  it('keeps a p-select outlined while its search box has focus', () => {
+    const select = document.createElement('p-select');
+    select.setAttribute('searchable', '');
+    select.append(new Option('Canada', 'ca'));
+    document.body.append(select);
+
+    select.shadowRoot.querySelector('.control').focus();
+    select.open();
+
+    /* The search box is in the list rather than in the control, so a field that watched only
+       itself went unlit at the moment it was being typed into */
+    expect([
+      select.shadowRoot.activeElement?.className,
+      visible(outlineOf(select.shadowRoot.querySelector('.control'))),
+    ]).toEqual(['input', true]);
   });
 
   it('outlines the p-datetime time selects on focus', () => {

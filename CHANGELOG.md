@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A field stays outlined while its search box has focus. The box sits in the list rather than in the control, so a control that watched only itself went unlit at the moment it was being typed into.
 - What is typed into the search box stays there once a value is chosen. It was blanked on every redraw while the list stayed narrowed to what had been typed, so the rows the search had put aside never came back and nothing on screen said why. Escape takes it back and brings the whole list with it.
 - A field is drawn to one height whether it is empty or holds a value, and whether one value may be chosen or several. An empty one had no row in it to give it height, so it sat shorter than the same field with something in it.
 

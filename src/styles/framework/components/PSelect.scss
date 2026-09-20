@@ -119,8 +119,10 @@
     max(0px, calc(var(--select-padding-inline) - var(--select-selection-padding-inline)));
 }
 
-/* The input hides its own outline, so the whole control shows focus instead */
-.control:focus-within {
+/* The field shows the focus, wherever in the component it sits: the search box is in the list
+   rather than in the control, so a control that watched only itself went unlit while it was
+   being typed into */
+:host(:focus-within) .control {
   outline: 2px solid var(--select-focus-color);
   outline-offset: 2px;
 }
@@ -524,7 +526,7 @@
 
 /* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
 :host([data-focus-source='pointer']) :focus,
-:host([data-focus-source='pointer']) .control:focus-within {
+:host([data-focus-source='pointer']:focus-within) .control {
   outline: none;
 }
 
