@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Taking a value back out of a `<p-select multiple>` from its own remove button no longer opens the list as well. The control opens on `mousedown` and the remove buttons sit inside it, so the guard the clear button already had is now on them too. A press on the chip itself, rather than its button, still opens the list, as any other part of the control does.
+
 ## [0.7.17] - 2026-09-20
 
 ### Fixed

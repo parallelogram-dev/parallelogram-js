@@ -1207,6 +1207,21 @@ describe('p-select, what it shows once several are chosen', () => {
     });
   });
 
+  it('leaves the list closed when a value is taken back out', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    const root = select.shadowRoot;
+
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    /* The remove button sits inside a control that opens the list on mousedown */
+    expect({ left: selections(select), open: !root.querySelector('.menu').hidden }).toEqual({
+      left: ['Grace Hopper'],
+      open: false,
+    });
+  });
+
   it('names every part a page can style', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
