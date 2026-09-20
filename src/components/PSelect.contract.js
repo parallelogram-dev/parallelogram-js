@@ -337,13 +337,13 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
     {
       name: '--select-padding-inline',
-      default: '0.7rem',
+      default: '0.8rem',
       description:
         'Padding at the leading and trailing edges of the control, which the chevron sits in from',
     },
     {
       name: '--select-selection-padding-inline',
-      default: '0.5rem',
+      default: '0.6rem',
       description:
         "A chosen value's own inset. The control gives back exactly this much of its leading padding, so a value's text starts in the same place whether it is drawn on a ground of its own or not",
     },
