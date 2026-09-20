@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.19] - 2026-09-21
+
 ### Added
 
 - Typing moves a `<p-select>` without a search box to the option a letter names, as a native `<select>` does. Making `searchable` a choice left a field with nowhere to type, so a list of fifty could only be walked a row at a time — less than the control it stands in for. The buffer clears after a second of quiet, a prefix carries past the first letter, and a run of one letter walks the options beginning with it. With the list shut it chooses, as a native select does; with the list open it marks where the keys have reached and Enter chooses, which is what the arrow keys already do.
