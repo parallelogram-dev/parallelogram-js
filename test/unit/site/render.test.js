@@ -257,9 +257,9 @@ describe('documentation site rendering', () => {
   it('says how a site changes an attribute for every instance, next to the attribute', () => {
     const page = parse(componentPage(PSelect));
     const row = [...page.querySelectorAll('tr')].find(
-      tr => tr.querySelector('th')?.textContent === 'clear-label'
+      tr => tr.querySelector('th')?.textContent === 'search-label'
     );
 
-    expect(row.textContent).toContain('PSelect.defaults.clearLabel');
+    expect(row.textContent).toContain('PSelect.defaults.searchLabel');
   });
 });

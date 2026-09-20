@@ -62,7 +62,11 @@
   /* The trailing strip the control keeps for the chevron and the slot beside it, whether or not
      anything is drawn there. Reserved rather than taken from the flex line as they appear, so
      opening the list cannot push the selections onto another row or grow the field */
-  --select-gutter: calc(var(--select-padding-inline) + 2.85rem);
+  --select-gutter: calc(var(--select-padding-inline) + 1.25rem);
+
+  /* A selection's own inset. The control gives back exactly this much of its leading padding, so
+     a value's text starts in the same place whether it is drawn on a ground of its own or not */
+  --select-selection-padding-inline: 0.5rem;
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
   --select-border-width: var(--surface-control-border-width, #{$border-width});
   --select-border: var(--select-border-width) solid var(--select-border-color);
@@ -112,7 +116,7 @@
      a value, which is the same field drawn two heights */
   min-height: calc(var(--select-row) + 2 * var(--select-padding-block));
   padding: var(--select-padding-block) var(--select-gutter) var(--select-padding-block)
-    var(--select-padding-inline);
+    max(0px, calc(var(--select-padding-inline) - var(--select-selection-padding-inline)));
 }
 
 /* The input hides its own outline, so the whole control shows focus instead */
@@ -145,26 +149,6 @@
 .input::placeholder {
   color: var(--select-placeholder);
   opacity: 1;
-}
-
-.clear {
-  all: unset;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1.25rem;
-  color: var(--select-placeholder);
-}
-
-/* The display above is more specific than the browser's own rule for the hidden attribute */
-.clear[hidden] {
-  display: none;
 }
 
 /* The first thing in the list, above the bulk bar, ruled off from the rows the way that bar is */
@@ -231,16 +215,6 @@
   display: none;
 }
 
-.clear:hover {
-  background: var(--select-hover-bg);
-  color: var(--select-text);
-}
-
-.clear:focus-visible {
-  outline: 2px solid var(--select-focus-color);
-  outline-offset: 1px;
-}
-
 /* Laid out as a flex box, since an inline icon sits on the text baseline with the descender space
    below it rather than in the middle. The chevron is drawn inside a quarter of the 20px icon on
    either side, so the negative margin pulls that 5px back out and leaves the gap the control's own
@@ -276,7 +250,8 @@
   line-height: 1.25;
   gap: #{$space-md};
   max-width: var(--select-selection-max-width, 16rem);
-  padding: 0.25rem 0.32rem 0.25rem 0.5rem;
+  /* Symmetric now that nothing rides at the trailing edge */
+  padding: 0.25rem var(--select-selection-padding-inline);
   border-radius: var(--select-selection-radius, 999px);
   background: var(--select-selection-bg, var(--select-selected-bg));
   font-size: var(--select-selection-font-size, inherit);
@@ -284,12 +259,11 @@
 
 /* Where one value is held there is nothing to tell apart from its neighbours, so it is drawn as
    the field's own text rather than as a chip on a ground of its own */
-/* Where one value is held there is nothing to tell apart from its neighbours, so it is drawn as
-   the field's own text rather than as a chip on a ground of its own. The block padding stays: it
-   is what makes a row a row, and a field is the same height either way */
+/* Where one value is held there is nothing to tell apart from its neighbours, so it loses the
+   ground it is drawn on. It keeps its padding: that is what puts its text in the same place as a
+   chip's, which is the whole point of the two being one structure */
 :host(:not([multiple])) .selection {
   max-width: none;
-  padding-inline: 0;
   border-radius: 0;
   background: none;
 }
@@ -329,16 +303,11 @@
 /* Out of the flex line and into the reserved gutter, so what the open state shows or hides never
    reaches the selections. Held to a row's height at the top of the control, so they stay level
    with the first row rather than drifting to the middle of a field that has grown under them */
-.clear,
 .arrow {
   position: absolute;
   top: var(--select-padding-block);
   height: var(--select-row);
   margin: 0;
-}
-
-.clear {
-  right: calc(var(--select-padding-inline) + 1.6rem);
 }
 
 .arrow {

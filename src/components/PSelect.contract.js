@@ -91,13 +91,6 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: 'Shown when nothing is chosen',
     },
     {
-      name: 'clear-label',
-      type: 'string',
-      default: 'Clear the selection',
-      option: 'clearLabel',
-      description: 'The accessible name of the clear button',
-    },
-    {
       name: 'search-hint',
       type: 'string',
       default: 'Type to search',
@@ -250,7 +243,6 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },
     { name: 'bulk-all', description: 'The button that takes every option the search left' },
     { name: 'bulk-none', description: 'The button that gives those options back' },
-    { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
@@ -348,6 +340,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       default: '0.6rem',
       description:
         'Padding at the leading and trailing edges of the control, which the chevron sits in from',
+    },
+    {
+      name: '--select-selection-padding-inline',
+      default: '0.5rem',
+      description:
+        "A chosen value's own inset. The control gives back exactly this much of its leading padding, so a value's text starts in the same place whether it is drawn on a ground of its own or not",
     },
     {
       name: '--select-gutter',

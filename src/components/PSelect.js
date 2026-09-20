@@ -114,7 +114,6 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * - p-select:open, p-select:close: when the list opens or closes
  *
  * @csspart input - the text input
- * @csspart clear - the button that clears the selection
  * @csspart listbox - the list of options
  */
 export default class PSelect extends HTMLElement {
@@ -123,7 +122,6 @@ export default class PSelect extends HTMLElement {
   /** The text the select shows: a site changes it here once, a page changes one with the attribute */
   static defaults = {
     placeholder: 'Select…',
-    clearLabel: 'Clear the selection',
     searchLabel: 'Search',
     searchClearLabel: 'Clear the search',
     selectAllLabel: 'Select all ({count})',
@@ -146,7 +144,6 @@ export default class PSelect extends HTMLElement {
       'select-all-label',
       'select-none-label',
       'placeholder',
-      'clear-label',
       'search-hint',
       'search-min-hint',
       'no-results',
@@ -211,7 +208,6 @@ export default class PSelect extends HTMLElement {
   }
 
   connectedCallback() {
-    this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
     followFocusSource(this);
     this._readConfig();
     this._parseOptionsFromDOM();
@@ -281,9 +277,6 @@ export default class PSelect extends HTMLElement {
       case 'aria-label':
         this._updateName();
         break;
-      case 'clear-label':
-        this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
-        break;
       default:
         this._readConfig();
     }
@@ -305,7 +298,6 @@ export default class PSelect extends HTMLElement {
           aria-controls="listbox"
         >
           <span class="selections" part="selections" hidden></span>
-          <button type="button" class="clear" part="clear" tabindex="-1" aria-label="Clear the selection" hidden>${iconMarkup(x, { size: 'xs' })}</button>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
@@ -341,7 +333,6 @@ export default class PSelect extends HTMLElement {
       search: this.shadowRoot.querySelector('.search'),
       searchClear: this.shadowRoot.querySelector('.search__clear'),
       searchIcon: this.shadowRoot.querySelector('.search__icon'),
-      clear: this.shadowRoot.querySelector('.clear'),
       live: this.shadowRoot.querySelector('.live'),
     };
     this._els.input.placeholder = this.state.placeholder;
@@ -372,24 +363,10 @@ export default class PSelect extends HTMLElement {
       this._choose(button.dataset.value, option ?? null);
     });
 
-    const { control, input, menu, clear } = this._els;
-
-    /* The clear button sits inside the control, so it must not open the list as well */
-    clear.addEventListener('mousedown', event => {
-      event.preventDefault();
-      event.stopPropagation();
-    });
-
-    clear.addEventListener('click', event => {
-      event.stopPropagation();
-      if (this.state.multiple) this._clearAll();
-      else this._choose('');
-      control.focus();
-    });
+    const { control, input, menu } = this._els;
 
     /* Mousedown rather than click, so the list doesn't open and close again as focus moves */
     control.addEventListener('mousedown', event => {
-      if (clear.contains(event.target)) return;
       event.preventDefault();
       control.focus();
       this.toggle();
@@ -874,23 +851,10 @@ export default class PSelect extends HTMLElement {
   }
 
   /**
-   * Fill the slot before the chevron with the clear button when there is a value the user may
-   * remove. The search icon takes that slot only while the list is open with nothing chosen, since
-   * that is when the input is a search box; the two are never shown at once
+   * Show the search bar only where the page asked to be able to search. Nothing else in the control
+   * comes and goes: a value is taken back out by choosing its row again, or with Backspace
    */
   _updateControls() {
-    const { open, value, values, multiple, disabled } = this.state;
-    const empty = multiple ? values.length === 0 : value === '';
-    /* The slot before the chevron fills only while the list is open: the clear button when
-       something is chosen, the search icon when nothing is. A required select can be cleared as
-       well: it won't validate until something is chosen again, which is better than leaving no way
-       back to the search. */
-    /* Only where one value is held. Holding several, a row is taken back out by toggling it in
-       the list or with Backspace, and a button that emptied the field in one press sat a stray
-       click away from undoing a long selection */
-    this._els.clear.hidden = !open || empty || disabled || multiple;
-    /* The search icon speaks for a box that can be typed in; without one there is nothing for it
-       to label */
     this._els.search.hidden = !this.state.searchable;
   }
 

@@ -42,39 +42,15 @@ describe('p-select', () => {
     document.body.replaceChildren();
   });
 
-  it('offers a clear button while it is open over a value, required or not', () => {
-    const { select } = renderForm(COUNTRIES);
-    const { select: required } = renderForm(PRIORITY);
-    required.value = 'high';
-    const clearOf = element => element.shadowRoot.querySelector('.clear').hidden;
-    const closedOverAValue = clearOf(select);
-    select.open();
-    /* Read before the other one opens: opening puts the keyboard in the search bar, which takes
-       focus out of this field and closes it */
-    const openOverAValue = clearOf(select);
-    required.open();
-    select.value = '';
-
-    expect([closedOverAValue, openOverAValue, clearOf(select), clearOf(required)]).toEqual([
-      true,
-      false,
-      true,
-      false,
-    ]);
-  });
-
-  it('clears the value from the clear button, and reports the change', async () => {
+  it('reports the change when the field is emptied', () => {
     const { select } = renderForm(COUNTRIES);
     const changes = [];
     select.addEventListener('change', () => changes.push(select.value));
 
-    clickShadow(select, '.clear');
+    select.open();
+    press(select, 'Backspace');
 
-    expect([select.value, changes, select.shadowRoot.querySelector('.input').value]).toEqual([
-      '',
-      [''],
-      '',
-    ]);
+    expect([select.value, changes]).toEqual(['', ['']]);
   });
 
   it('offers the search bar only where the page asked to be able to search', () => {
@@ -117,9 +93,11 @@ describe('p-select', () => {
     const icon = control.querySelector('.arrow svg').getBoundingClientRect();
     /* The chevron itself is drawn inside a quarter of the icon's box */
     const drawn = icon.right - icon.width / 4;
-    /* Measured against the padding the page asked for, not the control's padding-right, which is
-       now the reserved gutter the chevron and the slot beside it sit in */
-    const padding = parseFloat(getComputedStyle(control).paddingLeft);
+    /* Measured against the padding the page asked for: the control's own padding is the reserved
+       gutter on one side and gives back a selection's inset on the other, so neither reads it */
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const padding =
+      parseFloat(getComputedStyle(select).getPropertyValue('--select-padding-inline')) * rem;
 
     expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
   });
@@ -557,30 +535,25 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
-  it('clears the chosen value from the clear button', async () => {
+  it('takes the chosen value back out on Backspace', () => {
     const { select } = renderForm(COUNTRIES);
-    const input = select.shadowRoot.querySelector('input');
 
-    clickShadow(select, '.clear');
+    select.open();
+    press(select, 'Backspace');
 
-    /* The input was never the display, so there is nothing to make typeable again — only the
-       value to take back out */
-    expect([input.readOnly, select.value]).toEqual([false, '']);
+    expect(select.value).toBe('');
   });
 
-  it('searches again once a required select has been cleared', () => {
+  it('lets a required select be emptied and searched again', () => {
     const { select } = renderForm(PRIORITY);
     select.value = 'high';
     select.open();
-    const offeredOnRequired = !select.shadowRoot.querySelector('.clear').hidden;
 
-    clickShadow(select, '.clear');
+    press(select, 'Backspace');
 
-    expect([
-      offeredOnRequired,
-      select.shadowRoot.querySelector('input').readOnly,
-      select.shadowRoot.querySelector('.search').hidden,
-    ]).toEqual([true, false, false]);
+    /* It will not validate until something is chosen again, which is better than leaving no way
+       back to the search */
+    expect([select.value, select.shadowRoot.querySelector('input').readOnly]).toEqual(['', false]);
   });
 
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
@@ -1044,28 +1017,6 @@ describe('p-select from the keyboard alone', () => {
     expect([select.value, input.readOnly, input.value]).toEqual(['', false, '']);
   });
 
-  it('names its clear button, and lets a page or a site rename it', () => {
-    const label = select => select.shadowRoot.querySelector('.clear').getAttribute('aria-label');
-    const plain = document.createElement('p-select');
-    const page = document.createElement('p-select');
-    page.setAttribute('clear-label', 'Effacer');
-    document.body.append(plain, page);
-    page.setAttribute('clear-label', 'Borrar');
-
-    PSelect.defaults.clearLabel = 'Auswahl löschen';
-    const site = document.createElement('p-select');
-    document.body.append(site);
-    try {
-      expect([label(plain), label(page), label(site)]).toEqual([
-        'Clear the selection',
-        'Borrar',
-        'Auswahl löschen',
-      ]);
-    } finally {
-      PSelect.defaults.clearLabel = 'Clear the selection';
-    }
-  });
-
   it("shows the site's placeholder when the page set none", () => {
     PSelect.defaults.placeholder = 'Choisir…';
     const select = document.createElement('p-select');
@@ -1365,19 +1316,18 @@ describe('p-select, the list when several may be chosen', () => {
     /* Typing is how the list is narrowed, so the input stays a search box in either mode. The
        clear button is not offered where several are held: a row goes back out by being chosen
        again, and one press emptying the lot sat a stray click away from undoing a long selection */
-    expect({
-      readOnly: root.querySelector('.input').readOnly,
-      clearHidden: root.querySelector('.clear').hidden,
-    }).toEqual({ readOnly: false, clearHidden: true });
+    expect(root.querySelector('.input').readOnly).toBe(false);
   });
 
-  it('clears every value from the clear button', async () => {
+  it('empties the field from clear()', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     await open(select);
     select.value = ['ada', 'grace'];
 
-    clickShadow(select, '.clear');
+    /* Nothing in the control empties it in one press any more: a row goes back out by being
+       chosen again, or with Backspace. The page can still empty it outright */
+    select.clear();
 
     expect(select.value).toEqual([]);
   });
@@ -1565,6 +1515,25 @@ describe('p-select, how tall the list and its rows are', () => {
       typed: input.value,
       searchBar: select.shadowRoot.querySelector('.search').hidden,
     }).toEqual({ rows: 2, typed: '', searchBar: true });
+  });
+
+  it('starts a value\u2019s text in the same place in either mode', async () => {
+    const { form } = renderForm(`
+      <p-select searchable name="a"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select searchable multiple name="b"><option value="uk">United Kingdom</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const [single, multiple] = [...form.querySelectorAll('p-select')];
+    multiple.value = ['uk'];
+    await vi.waitFor(() => expect(multiple.shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* The ground a chip is drawn on is the only difference between the two: the text it holds
+       starts in the same place, which is what the one structure is for */
+    const inset = field =>
+      Math.round(
+        field.shadowRoot.querySelector('.selection__name').getBoundingClientRect().left -
+          field.getBoundingClientRect().left
+      );
+    expect(inset(single)).toBe(inset(multiple));
   });
 
   it('draws a field to one height, empty or holding a value, either mode', async () => {
