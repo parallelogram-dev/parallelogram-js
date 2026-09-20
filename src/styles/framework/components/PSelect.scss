@@ -135,27 +135,8 @@
 
 /* Typing filters the options once the list is open, so the input becomes a search box. It is
    never the display in either mode, so it is never read-only either */
-.control[data-open] .input {
+.input {
   cursor: text;
-}
-
-/* Without `searchable` there is no search box. The input still carries the combobox role and is
-   what takes focus, so it stays in the tree, out of the layout rather than out of the tree */
-:host(:not([searchable])) .input {
-  position: absolute;
-  width: 1px;
-  min-width: 0;
-  height: 1px;
-  min-height: 0;
-  padding: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* A search box takes the whole line under whatever is chosen rather than squeezing in beside it,
-   so it reads as a bar to type in and the chosen values keep their own room */
-:host([searchable]) .input {
-  flex: 1 0 100%;
 }
 
 .input::placeholder {
@@ -169,13 +150,6 @@
   cursor: pointer;
 }
 
-.search {
-  pointer-events: none;
-}
-
-/* One slot before the chevron, holding whichever of the two applies, so neither swap moves
-   anything: the clear button when there is a value to remove, the search icon otherwise */
-.search,
 .clear {
   display: inline-flex;
   align-items: center;
@@ -186,9 +160,33 @@
 }
 
 /* The display above is more specific than the browser's own rule for the hidden attribute */
-.search[hidden],
 .clear[hidden] {
   display: none;
+}
+
+/* The first thing in the list, above the bulk bar, ruled off from the rows the way that bar is */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: var(--select-padding-block) var(--select-padding-inline);
+  border-bottom: var(--select-border-width, #{$border-width}) solid var(--select-border-color);
+}
+
+.search[hidden] {
+  display: none;
+}
+
+/* At the trailing edge, where the chevron sits on the control above it, so the two line up */
+.search__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.25rem;
+  margin-right: -5px;
+  color: var(--select-placeholder);
+  pointer-events: none;
 }
 
 .clear:hover {
@@ -286,7 +284,6 @@
 /* Out of the flex line and into the reserved gutter, so what the open state shows or hides never
    reaches the selections. Held to a row's height at the top of the control, so they stay level
    with the first row rather than drifting to the middle of a field that has grown under them */
-.search,
 .clear,
 .arrow {
   position: absolute;
@@ -295,7 +292,6 @@
   margin: 0;
 }
 
-.search,
 .clear {
   right: calc(var(--select-padding-inline) + 1.6rem);
 }
@@ -323,7 +319,10 @@
   border: var(--surface-dropdown-border-width, 1px) solid var(--menu-border-color);
   border-radius: var(--menu-border-radius);
   box-shadow: var(--menu-shadow);
+}
 
+/* The rows scroll; the search bar above them holds still */
+.options {
   max-height: var(--select-menu-max-height, 240px);
   overflow: auto;
 }

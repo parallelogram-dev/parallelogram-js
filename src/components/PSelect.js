@@ -292,25 +292,36 @@ export default class PSelect extends HTMLElement {
       this.shadowRoot,
       `
       <div class="root">
-        <div class="control">
+        <div
+          class="control"
+          part="control"
+          role="combobox"
+          tabindex="0"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="listbox"
+        >
           <span class="selections" part="selections" hidden></span>
-          <input
-            class="input"
-            part="input"
-            type="text"
-            role="combobox"
-            autocomplete="off"
-            aria-autocomplete="list"
-            aria-haspopup="listbox"
-            aria-expanded="false"
-            aria-controls="listbox"
-          />
-          <span class="search" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
           <button type="button" class="clear" part="clear" tabindex="-1" aria-label="Clear the selection" hidden>${iconMarkup(x, { size: 'xs' })}</button>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
-        <div class="menu" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1" hidden></div>
+        <div class="menu" part="menu" hidden>
+          <div class="search" part="search" hidden>
+            <input
+              class="input"
+              part="input"
+              type="text"
+              tabindex="-1"
+              autocomplete="off"
+              aria-autocomplete="list"
+              aria-controls="listbox"
+            />
+            <span class="search__icon" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
+          </div>
+          <div class="options" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1"></div>
+        </div>
         <div class="live" role="status" aria-live="polite"></div>
       </div>
     `
@@ -320,6 +331,7 @@ export default class PSelect extends HTMLElement {
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
       selections: this.shadowRoot.querySelector('.selections'),
+      options: this.shadowRoot.querySelector('.options'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
@@ -367,29 +379,32 @@ export default class PSelect extends HTMLElement {
       event.stopPropagation();
       if (this.state.multiple) this._clearAll();
       else this._choose('');
-      input.focus();
+      control.focus();
     });
 
     /* Mousedown rather than click, so the list doesn't open and close again as focus moves */
     control.addEventListener('mousedown', event => {
-      if (event.target !== input && !clear.contains(event.target)) {
-        event.preventDefault();
-        input.focus();
-        this.toggle();
-      }
+      if (clear.contains(event.target)) return;
+      event.preventDefault();
+      control.focus();
+      this.toggle();
     });
 
-    input.addEventListener('click', () => this.open());
-    input.addEventListener('focus', () => {
+    control.addEventListener('keydown', event => this._handleKeydown(event));
+    control.addEventListener('focus', () => {
       if (this.state.openOnFocus) this.open();
     });
     input.addEventListener('input', event => this._handleInput(event));
     input.addEventListener('keydown', event => this._handleKeydown(event));
 
-    /* Keep focus on the input while an option is pressed */
-    menu.addEventListener('mousedown', event => event.preventDefault());
-    menu.addEventListener('scroll', () => {
-      if (menu.scrollTop + menu.clientHeight >= menu.scrollHeight - LOAD_MORE_MARGIN) {
+    /* Keep focus where it is while an option is pressed, but let the search box take it */
+    menu.addEventListener('mousedown', event => {
+      if (this._els.search.contains(event.target)) return;
+      event.preventDefault();
+    });
+    this._els.options.addEventListener('scroll', () => {
+      const list = this._els.options;
+      if (list.scrollTop + list.clientHeight >= list.scrollHeight - LOAD_MORE_MARGIN) {
         this._loadMore();
       }
     });
@@ -430,9 +445,9 @@ export default class PSelect extends HTMLElement {
     const name = this.getAttribute('aria-label') || labelText;
 
     if (name) {
-      this._els.input.setAttribute('aria-label', name);
+      this._els.control.setAttribute('aria-label', name);
     } else {
-      this._els.input.removeAttribute('aria-label');
+      this._els.control.removeAttribute('aria-label');
     }
   }
 
@@ -715,7 +730,7 @@ export default class PSelect extends HTMLElement {
 
   _setBusy(busy) {
     this.state.loading = busy;
-    this._els.menu.setAttribute('aria-busy', String(busy));
+    this._els.options.setAttribute('aria-busy', String(busy));
   }
 
   _handleFetchError(error) {
@@ -846,7 +861,7 @@ export default class PSelect extends HTMLElement {
     this._els.clear.hidden = !open || empty || disabled || multiple;
     /* The search icon speaks for a box that can be typed in; without one there is nothing for it
        to label */
-    this._els.search.hidden = !open || !empty || !this.state.searchable;
+    this._els.search.hidden = !this.state.searchable;
   }
 
   /**
@@ -873,7 +888,7 @@ export default class PSelect extends HTMLElement {
     none.textContent = text(this, 'select-none-label');
 
     bar.append(all, none);
-    this._els.menu.append(bar);
+    this._els.options.append(bar);
   }
 
   /** The options the bar would act on: what the search left, minus any that cannot be chosen */
@@ -927,7 +942,7 @@ export default class PSelect extends HTMLElement {
       this.state.options.find(option => option.value === this.state.value) ??
       (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
 
-    for (const element of this._els.menu.querySelectorAll('[role="option"]')) {
+    for (const element of this._els.options.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
       element.setAttribute('aria-selected', String(this._holds(option?.value)));
     }
@@ -958,6 +973,7 @@ export default class PSelect extends HTMLElement {
   _updateDisabledState(disabled) {
     this.state.disabled = disabled;
     this._els.input.disabled = disabled;
+    this._els.control.tabIndex = disabled ? -1 : 0;
     if (disabled) this.close();
     this._updateControls();
   }
@@ -972,24 +988,31 @@ export default class PSelect extends HTMLElement {
     if (this.state.open || this.state.disabled) return;
 
     this.state.open = true;
-    this._els.input.setAttribute('aria-expanded', 'true');
+    this._els.control.setAttribute('aria-expanded', 'true');
     this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
     this._updateControls();
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);
+    /* The search box is in the list, so opening is what puts the keyboard in it */
+    if (this.state.searchable) this._els.input.focus();
     dispatchComponentEvent(this, 'p-select:open');
   }
 
   close() {
     if (!this.state.open) return;
 
+    /* Read before anything is redrawn: the list is where the search box lives, and by the time it
+       has been taken down the keyboard has nowhere to go back to */
+    const keyboardWasInTheList = this._els.menu.contains(this.shadowRoot.activeElement);
     this.state.open = false;
-    this._els.input.setAttribute('aria-expanded', 'false');
+    this._els.control.setAttribute('aria-expanded', 'false');
+    this._els.control.removeAttribute('aria-activedescendant');
     this._els.input.removeAttribute('aria-activedescendant');
     this._els.control.toggleAttribute('data-open', false);
     this._updateDisplay();
+    if (keyboardWasInTheList) this._els.control.focus();
 
     this.tm.exit(this._els.menu).then(() => {
       if (!this.state.open) {
@@ -1215,11 +1238,12 @@ export default class PSelect extends HTMLElement {
    * the scroll handler would read that as a call for the next page of a search that just started.
    */
   _renderOptions({ keepScroll = false } = {}) {
-    const { menu } = this._els;
+    const menu = this._els.options;
     menu.replaceChildren();
     this._renderBulk();
     if (!keepScroll) menu.scrollTop = 0;
     this.state.highlightedIndex = -1;
+    this._els.control.removeAttribute('aria-activedescendant');
     this._els.input.removeAttribute('aria-activedescendant');
 
     if (this.state.filtered.length === 0) {
@@ -1285,19 +1309,22 @@ export default class PSelect extends HTMLElement {
 
     if (!element) {
       input.removeAttribute('aria-activedescendant');
+      this._els.control.removeAttribute('aria-activedescendant');
       return;
     }
 
     element.setAttribute('data-active', '');
     input.setAttribute('aria-activedescendant', element.id);
+    this._els.control.setAttribute('aria-activedescendant', element.id);
     if (index === this.state.filtered.length - 1) this._loadMore();
 
+    const list = this._els.options;
     const top = element.offsetTop;
     const bottom = top + element.offsetHeight;
-    if (top < menu.scrollTop) {
-      menu.scrollTop = top;
-    } else if (bottom > menu.scrollTop + menu.clientHeight) {
-      menu.scrollTop = bottom - menu.clientHeight;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (bottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = bottom - list.clientHeight;
     }
   }
 }

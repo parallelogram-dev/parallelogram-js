@@ -229,8 +229,14 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'p-select:close', description: 'The list closed' },
   ],
   parts: [
-    { name: 'input', description: 'The text input' },
-    { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
+    { name: 'control', description: 'The field itself, which carries the combobox role and focus' },
+    { name: 'menu', description: 'The popup, holding the search bar, the bulk bar and the list' },
+    {
+      name: 'search',
+      description: 'The search bar at the top of the popup, where searchable is set',
+    },
+    { name: 'input', description: 'The search box inside that bar' },
+    { name: 'selections', description: 'The chosen values in the control' },
     { name: 'selection', description: 'One chosen value' },
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },
     { name: 'bulk-all', description: 'The button that takes every option the search left' },

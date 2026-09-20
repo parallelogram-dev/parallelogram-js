@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `searchable` offers a box to type in that narrows the list. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help. `search-label` is the placeholder it carries once something is chosen and the field's own placeholder has given way to the selections.
+- `searchable` offers a search bar at the top of the list, ruled off from the rows the way the bulk bar is, with its icon at the trailing edge under the chevron. It narrows the list as it is typed in. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help. `search-label` is the placeholder it carries once something is chosen and the field's own placeholder has given way to the selections.
 
 ### Changed
 
+- The field itself is now the combobox: it carries the role, the state and the focus, and is the one stop the Tab key makes. The search box lives in the list, which is hidden while the list is closed, so it can no longer hold that role. Opening puts the keyboard in the search box and closing hands it back to the field. `control`, `menu` and `search` are parts a page can style.
 - A chosen row in the list is filled the same way whether one value may be chosen or several. A single select's chosen row was a ten percent tint while a multiple's was filled in the accent, which made one mode's list look like a weaker copy of the other's. The tick that rode at a filled row's trailing edge is gone with it: the fill is the whole mark, and the tick was carrying nothing the colour did not.
 - An option's secondary text sits under its label rather than after it. `list-rows="1"` puts it back on the label's line for a list with room for it.
 - A chosen value reads at the field's own size rather than a size of its own, so a field is the same height whether it holds one value or several. `--select-selection-font-size` still sets it where a page wants them smaller.
