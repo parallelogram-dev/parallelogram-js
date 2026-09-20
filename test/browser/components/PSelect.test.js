@@ -105,14 +105,14 @@ describe('p-select', () => {
     expect([search.left - clear.left, search.right - clear.right]).toEqual([0, 0]);
   });
 
-  it('centres the chevron on the middle of the control', () => {
+  it('keeps the chevron level with the control\u2019s first row', () => {
     const { select } = renderForm(COUNTRIES);
-    const control = select.shadowRoot.querySelector('.control').getBoundingClientRect();
+    const row = select.shadowRoot.querySelector('.selection').getBoundingClientRect();
     const icon = select.shadowRoot.querySelector('.arrow svg').getBoundingClientRect();
 
-    expect(Math.abs(icon.top + icon.height / 2 - (control.top + control.height / 2))).toBeLessThan(
-      0.5
-    );
+    /* The first row, not the middle of the box: a field holding several rows grows downwards and
+       the chevron stays where it was rather than drifting to the middle of what grew */
+    expect(Math.abs(icon.top + icon.height / 2 - (row.top + row.height / 2))).toBeLessThan(1.5);
   });
 
   it('leaves the chevron a padding width in from the trailing edge', () => {
@@ -121,7 +121,9 @@ describe('p-select', () => {
     const icon = control.querySelector('.arrow svg').getBoundingClientRect();
     /* The chevron itself is drawn inside a quarter of the icon's box */
     const drawn = icon.right - icon.width / 4;
-    const padding = parseFloat(getComputedStyle(control).paddingRight);
+    /* Measured against the padding the page asked for, not the control's padding-right, which is
+       now the reserved gutter the chevron and the slot beside it sit in */
+    const padding = parseFloat(getComputedStyle(control).paddingLeft);
 
     expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
   });
@@ -135,7 +137,8 @@ describe('p-select', () => {
     const openOverAValue = cursor();
     select.value = '';
 
-    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'pointer', 'text']);
+    /* The input is a search box whenever the list is open, whether or not a value is held */
+    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'text', 'text']);
   });
 
   it('lines the list up with the outside of the control', () => {
@@ -275,6 +278,8 @@ const mountSelect = (markup, container = document.body) => {
 };
 
 const inputOf = select => select.shadowRoot.querySelector('input');
+const labelOf = select =>
+  [...select.shadowRoot.querySelectorAll('.selection__name')].map(node => node.textContent);
 const listboxOf = select => select.shadowRoot.querySelector('[role="listbox"]');
 const optionsOf = select => [...select.shadowRoot.querySelectorAll('[role="option"]')];
 const press = (select, key, options = {}) => {
@@ -470,10 +475,12 @@ describe('p-select combobox', () => {
 
     press(select, 'Escape');
 
-    expect([inputOf(select).value, inputOf(select).getAttribute('aria-expanded')]).toEqual([
-      'United Kingdom',
-      'false',
-    ]);
+    /* The search text goes; the chosen value was never in the input to be put back */
+    expect([
+      labelOf(select),
+      inputOf(select).value,
+      inputOf(select).getAttribute('aria-expanded'),
+    ]).toEqual([['United Kingdom'], '', 'false']);
   });
 
   it('closes when focus moves somewhere else', async () => {
@@ -549,14 +556,15 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
-  it('will not let a chosen value be typed over until it is cleared', async () => {
+  it('clears the chosen value from the clear button', async () => {
     const { select } = renderForm(COUNTRIES);
     const input = select.shadowRoot.querySelector('input');
-    const readOnlyWithValue = input.readOnly;
 
     clickShadow(select, '.clear');
 
-    expect([readOnlyWithValue, input.readOnly, select.value]).toEqual([true, false, '']);
+    /* The input was never the display, so there is nothing to make typeable again — only the
+       value to take back out */
+    expect([input.readOnly, select.value]).toEqual([false, '']);
   });
 
   it('searches again once a required select has been cleared', () => {
@@ -755,12 +763,13 @@ describe('p-select rich options', () => {
     expect([byEmail, labels()]).toEqual([['Grace Hopper'], []]);
   });
 
-  it('shows the label alone in the input once a rich option is chosen', () => {
+  it('shows the label alone in the selection once a rich option is chosen', () => {
     const select = mountSelect(PEOPLE);
 
     select.select('ada');
 
-    expect(inputOf(select).value).toBe('Ada Lovelace');
+    /* The selection is the display in either mode; the input is only ever the search box */
+    expect([labelOf(select), inputOf(select).value]).toEqual([['Ada Lovelace'], '']);
   });
 
   it('adds the fields an option has to the p-select:change detail, and no others', () => {
@@ -932,7 +941,7 @@ describe('p-select paging', () => {
 
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
 
-    expect(inputOf(select).value).toBe('Row 5');
+    expect(labelOf(select)).toEqual(['Row 5']);
   });
 
   it('takes a new search back to the top of the list', async () => {
@@ -1026,7 +1035,7 @@ describe('p-select from the keyboard alone', () => {
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(2), WAIT);
     press(select, 'Enter');
 
-    expect([select.value, input.readOnly]).toEqual(['a', true]);
+    expect(select.value).toBe('a');
 
     press(select, 'Backspace');
 
@@ -1192,33 +1201,20 @@ describe('p-select, what it shows once several are chosen', () => {
     expect(selections(select)).toEqual(['Ada Lovelace', 'Mary Somerville']);
   });
 
-  it('takes a value back out from its own remove button', async () => {
+  it('takes a value back out by choosing its row again', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     select.value = ['ada', 'grace'];
     const changed = [];
     select.addEventListener('change', () => changed.push([...select.value]));
+    select.open();
 
-    clickShadow(select, '.selection [part="selection-remove"]');
+    clickShadow(select, '.option[data-index="0"]');
 
+    /* The selections carry no button of their own: the row that put a value in takes it out */
     expect({ left: selections(select), changed }).toEqual({
       left: ['Grace Hopper'],
       changed: [['grace']],
-    });
-  });
-
-  it('leaves the list closed when a value is taken back out', async () => {
-    const { select } = renderForm(STAFF);
-    await customElements.whenDefined('p-select');
-    select.value = ['ada', 'grace'];
-    const root = select.shadowRoot;
-
-    clickShadow(select, '.selection [part="selection-remove"]');
-
-    /* The remove button sits inside a control that opens the list on mousedown */
-    expect({ left: selections(select), open: !root.querySelector('.menu').hidden }).toEqual({
-      left: ['Grace Hopper'],
-      open: false,
     });
   });
 
@@ -1231,11 +1227,9 @@ describe('p-select, what it shows once several are chosen', () => {
     expect({
       selections: part('.selections'),
       selection: part('.selection'),
-      remove: part('.selection [part]'),
     }).toEqual({
       selections: 'selections',
       selection: 'selection',
-      remove: 'selection-remove',
     });
   });
 
@@ -1329,12 +1323,13 @@ describe('p-select, the list when several may be chosen', () => {
 
     clickShadow(select, '.option[data-index="0"]');
 
-    /* With one value a single select goes read-only and offers a clear button; holding several
-       the input has to stay typeable, because typing is how the list is narrowed */
+    /* Typing is how the list is narrowed, so the input stays a search box in either mode. The
+       clear button is not offered where several are held: a row goes back out by being chosen
+       again, and one press emptying the lot sat a stray click away from undoing a long selection */
     expect({
       readOnly: root.querySelector('.input').readOnly,
       clearHidden: root.querySelector('.clear').hidden,
-    }).toEqual({ readOnly: false, clearHidden: false });
+    }).toEqual({ readOnly: false, clearHidden: true });
   });
 
   it('clears every value from the clear button', async () => {
@@ -1588,20 +1583,6 @@ describe('p-select, where the icons sit once the field grows', () => {
 describe('p-select, reaching the chosen values from the keyboard', () => {
   afterEach(() => {
     document.body.replaceChildren();
-  });
-
-  it('keeps the remove buttons out of the tab order, as the clear button is', async () => {
-    const { select } = renderForm(STAFF);
-    await customElements.whenDefined('p-select');
-
-    select.value = ['ada', 'grace', 'mary'];
-
-    /* Otherwise tabbing into a field holding twenty values stops twenty times before the input */
-    expect(
-      [...select.shadowRoot.querySelectorAll('.selection__remove')].map(button =>
-        button.getAttribute('tabindex')
-      )
-    ).toEqual(['-1', '-1', '-1']);
   });
 
   it('takes the last value back on Backspace in an empty input', async () => {

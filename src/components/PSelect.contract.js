@@ -33,13 +33,6 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         "How many rows a chosen value takes in the control: its label, or its label over the option's secondary text",
     },
     {
-      name: 'remove-label',
-      type: 'string',
-      default: 'Remove {label}',
-      option: 'removeLabel',
-      description: "The accessible name of a chosen value's remove button; {label} is its label",
-    },
-    {
       name: 'list-rows',
       type: 'enum',
       options: ['1', '2'],
@@ -225,7 +218,6 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'input', description: 'The text input' },
     { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
     { name: 'selection', description: 'One chosen value' },
-    { name: 'selection-remove', description: 'The button that takes one chosen value back out' },
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },
     { name: 'bulk-all', description: 'The button that takes every option the search left' },
     { name: 'bulk-none', description: 'The button that gives those options back' },
@@ -234,10 +226,10 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
   ],
   cssProperties: [
     {
-      name: '--selection-row',
-      default: '2rem',
+      name: '--select-row',
+      default: '1.75rem',
       description:
-        'How tall one row of chosen values is, which is what keeps the icons level with the first row as the field grows. The element measures a real row and writes it here, so a page rarely sets it',
+        'How tall one row of the control is, which is what keeps the icons in the gutter level with the first row as the field grows. The element measures a real row and writes it here once anything is chosen, so a page rarely sets it',
     },
     {
       name: '--select-menu-max-height',
@@ -316,9 +308,22 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: 'Corner radius of the control; follows the control surface',
     },
     {
-      name: '--select-padding',
-      default: '0.45rem 0.6rem',
-      description: 'Padding inside the control',
+      name: '--select-padding-block',
+      default: '0.45rem',
+      description:
+        'Padding above and below the control\u2019s rows, which the icons in the gutter start from',
+    },
+    {
+      name: '--select-padding-inline',
+      default: '0.6rem',
+      description:
+        'Padding at the leading and trailing edges of the control, which the chevron sits in from',
+    },
+    {
+      name: '--select-gutter',
+      default: 'calc(var(--select-padding-inline) + 2.85rem)',
+      description:
+        'The trailing strip the control keeps for the chevron and the slot beside it, whether or not anything is drawn there, so opening the list never moves what is already in the field',
     },
     {
       name: '--select-placeholder',

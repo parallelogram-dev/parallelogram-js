@@ -124,7 +124,6 @@ export default class PSelect extends HTMLElement {
   static defaults = {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
-    removeLabel: 'Remove {label}',
     selectAllLabel: 'Select all ({count})',
     selectNoneLabel: 'None',
     searchHint: 'Type to search',
@@ -138,7 +137,6 @@ export default class PSelect extends HTMLElement {
       'multiple',
       'selection-rows',
       'list-rows',
-      'remove-label',
       'select-all',
       'select-all-label',
       'select-none-label',
@@ -755,30 +753,21 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateDisplay() {
-    if (this.state.multiple) {
-      this._els.input.value = '';
-      /* The placeholder speaks for an empty field; once something is chosen the selections do */
-      this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
-      this._renderSelections();
-    } else {
-      this._els.input.value =
-        this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
-    }
+    this._els.input.value = '';
+    /* The placeholder speaks for an empty field; once something is chosen the selections do */
+    this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
+    this._renderSelections();
     this._updateControls();
   }
 
   /**
-   * Every chosen value in the control, in the options' order, each with the way to take it back
-   * out. Nothing is counted away behind "and 2 more": what was chosen is what is shown
+   * Every chosen value in the control, in the options' order. One value or twenty are drawn the
+   * same way through this one path: the difference between the modes is what the stylesheet makes
+   * of a lone selection, not what is built. Nothing is counted away behind "and 2 more"
    */
   _renderSelections() {
     const box = this._els.selections;
     if (!box) return;
-    if (!this.state.multiple) {
-      box.hidden = true;
-      box.replaceChildren();
-      return;
-    }
 
     const two = this.state.selectionRows === 2;
     box.hidden = this.state.values.length === 0;
@@ -804,26 +793,16 @@ export default class PSelect extends HTMLElement {
           body.append(sub);
         }
 
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'selection__remove';
-        remove.setAttribute('part', 'selection-remove');
-        /* Out of the tab order, as the clear button is: a field holding twenty values would
-           otherwise stop the keyboard twenty times before the input. Backspace is the way back */
-        remove.tabIndex = -1;
-        remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
-        remove.dataset.value = value;
-        remove.append(iconElement(x, { size: 'xs' }));
-
-        chip.append(body, remove);
+        chip.append(body);
         return chip;
       })
     );
 
-    /* The icons beside the selections hold their place on the first row rather than drifting to
-       the middle of a field that has grown under them, so they are told how tall a row is */
+    /* The icons in the gutter are told how tall a row came out, so they sit level with the first
+       one whatever type, padding or second line the page has asked for. Read here, with the rows
+       just built: taken after the icons beside them are shown or hidden it comes back stale */
     const row = box.firstElementChild?.getBoundingClientRect().height;
-    if (row) this.style.setProperty('--selection-row', `${row}px`);
+    if (row) this.style.setProperty('--select-row', `${row}px`);
   }
 
   /**
@@ -838,11 +817,11 @@ export default class PSelect extends HTMLElement {
        something is chosen, the search icon when nothing is. A required select can be cleared as
        well: it won't validate until something is chosen again, which is better than leaving no way
        back to the search. */
-    this._els.clear.hidden = !open || empty || disabled;
+    /* Only where one value is held. Holding several, a row is taken back out by toggling it in
+       the list or with Backspace, and a button that emptied the field in one press sat a stray
+       click away from undoing a long selection */
+    this._els.clear.hidden = !open || empty || disabled || multiple;
     this._els.search.hidden = !open || !empty;
-    /* One chosen value is not something to type over: clear it first, or choose another option.
-       Holding several, the input stays typeable, because typing is how the list is narrowed */
-    this._els.input.readOnly = !multiple && value !== '';
   }
 
   /**
@@ -985,9 +964,6 @@ export default class PSelect extends HTMLElement {
     this._els.input.setAttribute('aria-expanded', 'false');
     this._els.input.removeAttribute('aria-activedescendant');
     this._els.control.toggleAttribute('data-open', false);
-    if (this._els.input.value.trim() === '' && this.state.value !== '' && !this.state.required) {
-      this._choose('');
-    }
     this._updateDisplay();
 
     this.tm.exit(this._els.menu).then(() => {

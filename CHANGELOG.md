@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `<p-select>` draws what is chosen the same way whether one value is held or several. Both modes now render a selection through one path, and the input has one job in both: it is the search box, never the display, and never read-only. A single select therefore no longer shows its label in a read-only input that had to be cleared before it could be searched — the label sits in a selection beside a search box that is always typeable. Both modes are laid out in flow rather than one being stretched over a box of a fixed height, so a field is as tall as what is in it in either mode.
+- The chevron and the slot beside it sit in a strip the control always reserves, rather than joining the row and pushing the chosen values about as the open state shows or hides them. Opening the list no longer grows the field by a row or moves the chevron. `--select-gutter` is how wide that strip is.
+- A chosen value no longer carries a button of its own to take it back out, and a field holding several no longer offers the clear button. A value goes back out by choosing its row again, which is the same gesture that put it in, or with Backspace from the empty input. A field holding one value keeps its clear button.
+
+### Fixed
+
+- The control's padding is applied once rather than twice. Carried on the host and again on the box inside it, a field holding several values sat inset from its own border on every side and drew its focus ring inside a border that stayed visible outside it. A page no longer has to halve `--select-padding` to compensate, and the chevron's ink lands where the padding asks rather than four pixels outside the border.
+- A field no longer grows to fit what is chosen. Choosing a long value widened the control itself; its width comes from the page, as it always should have.
+
+### Removed
+
+- `--select-padding` and `--selection-row`, replaced by `--select-padding-block`, `--select-padding-inline` and `--select-row`. The two padding properties are read directly by the strip the icons sit in, so setting them keeps the icons with the text; the old single property could not.
+- The `selection-remove` part and the `remove-label` text, with the buttons they named.
+
 ### Fixed
 
 - Taking a value back out of a `<p-select multiple>` from its own remove button no longer opens the list as well. The control opens on `mousedown` and the remove buttons sit inside it, so the guard the clear button already had is now on them too. A press on the chip itself, rather than its button, still opens the list, as any other part of the control does.
