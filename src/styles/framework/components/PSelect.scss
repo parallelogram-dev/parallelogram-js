@@ -3,48 +3,30 @@
 
 /* Looks like a form control until page styles size and border the element */
 :host {
-  display: inline-block;
+  display: inline-flex;
   position: relative;
   box-sizing: border-box;
   min-width: 12rem;
   min-height: 2.5rem;
-  padding: var(--select-padding);
   border: var(--select-border);
   border-radius: var(--select-border-radius);
   background: var(--select-bg);
   color: var(--select-text);
 }
 
-/* Holding several values the field is as tall as what is in it, so the root and the control
-   take part in the flow rather than being stretched over a box of a fixed height */
-:host([multiple]) .root,
-:host([multiple]) .control {
-  position: static;
-  height: auto;
-}
-
-:host([multiple]) .control {
-  flex-wrap: wrap;
-  padding: 0;
-}
-
 /* The row's height comes from what is in it, so the icons beside the selections hold their
    place on the first row as the field grows under them rather than drifting to its middle */
 /* The height of one row of selections. The element measures a real one and writes it here, so
    it tracks whatever type and padding the page has set; this is the value before any exist */
-:host([multiple]) {
-  --selection-row: 2rem;
+/* The height of one row in the control. The selections and the icons pinned beside them both take
+   it, so they line up by construction rather than by measuring one and telling the other, and a
+   field is the same height whether it holds one value or several */
+:host {
+  --select-row: 1.75rem;
 }
 
-:host([multiple]) .search,
-:host([multiple]) .clear,
-:host([multiple]) .arrow {
-  align-self: flex-start;
-  height: var(--selection-row);
-}
-
-:host([multiple]) .menu {
-  position: absolute;
+:host([selection-rows='2']) {
+  --select-row: 2.75rem;
 }
 
 /* A disabled select reads as disabled, not merely unresponsive */
@@ -74,7 +56,17 @@
     var(--color-surface-muted, #{$neutral-100})
   );
 
-  --select-padding: 0.45rem 0.6rem;
+  --select-padding-block: 0.45rem;
+  --select-padding-inline: 0.8rem;
+
+  /* The trailing strip the control keeps for the chevron and the slot beside it, whether or not
+     anything is drawn there. Reserved rather than taken from the flex line as they appear, so
+     opening the list cannot push the selections onto another row or grow the field */
+  --select-gutter: calc(var(--select-padding-inline) + 1.25rem);
+
+  /* A selection's own inset. The control gives back exactly this much of its leading padding, so
+     a value's text starts in the same place whether it is drawn on a ground of its own or not */
+  --select-selection-padding-inline: 0.6rem;
   --select-border-radius: var(--surface-control-radius, #{$radius-sm});
   --select-border-width: var(--surface-control-border-width, #{$border-width});
   --select-border: var(--select-border-width) solid var(--select-border-color);
@@ -85,40 +77,52 @@
   --menu-shadow: var(--surface-dropdown-shadow, 0 4px 6px var(--color-shadow, #{$color-shadow}));
 }
 
+/* In flow, so the field is as tall as what is in it in either mode. The host's padding is
+   applied here, once, on the one box that draws the focus ring: carried on the host as well it
+   landed twice and drew the ring inside a border that stayed visible outside it */
 .root {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  /* The field's width comes from the page, never from what is in it. Without this the host is
+     sized by its content, so choosing a long value made the control itself grow */
+  contain: inline-size;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   background: inherit;
   color: inherit;
   font-family: inherit;
   font-size: inherit;
   border-radius: inherit;
-  padding: inherit;
 }
 
 .control {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  flex: 1 1 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  /* Rows sit from the top rather than sharing out any height the field has over them, so the
+     first one stays level with the icons pinned beside it */
+  align-content: flex-start;
   gap: 0.4rem;
   cursor: pointer;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
   box-sizing: border-box;
-  padding: inherit;
+  /* A row's worth, whether anything is in it or not: an empty field sat shorter than one holding
+     a value, which is the same field drawn two heights */
+  min-height: calc(var(--select-row) + 2 * var(--select-padding-block));
+  padding: var(--select-padding-block) var(--select-gutter) var(--select-padding-block)
+    max(0px, calc(var(--select-padding-inline) - var(--select-selection-padding-inline)));
 }
 
-/* The input hides its own outline, so the whole control shows focus instead */
-.control:focus-within {
+/* The field shows the focus, wherever in the component it sits: the search box is in the list
+   rather than in the control, so a control that watched only itself went unlit while it was
+   being typed into */
+:host(:focus-within) .control {
   outline: 2px solid var(--select-focus-color);
   outline-offset: 2px;
 }
@@ -126,8 +130,9 @@
 .input {
   border: 0;
   outline: 0;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 2ch;
+  min-height: var(--select-row);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -137,9 +142,9 @@
   cursor: inherit;
 }
 
-/* Typing filters the options once the list is open, so the input becomes a search box */
-/* Only a search box takes a text cursor; a chosen value is read-only until it is cleared */
-.control[data-open] .input:not(:read-only) {
+/* Typing filters the options once the list is open, so the input becomes a search box. It is
+   never the display in either mode, so it is never read-only either */
+.input {
   cursor: text;
 }
 
@@ -148,44 +153,68 @@
   opacity: 1;
 }
 
-.clear {
-  all: unset;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
+/* The first thing in the list, above the bulk bar, ruled off from the rows the way that bar is */
 .search {
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: var(--select-padding-block) var(--select-padding-inline);
+  border-bottom: var(--select-border-width, #{$border-width}) solid var(--select-border-color);
 }
 
-/* One slot before the chevron, holding whichever of the two applies, so neither swap moves
-   anything: the clear button when there is a value to remove, the search icon otherwise */
-.search,
-.clear {
+.search[hidden] {
+  display: none;
+}
+
+/* One slot at the trailing edge, where the chevron sits on the control above it, so the two line
+   up and neither swap moves the other: the way back from a search when there is something typed,
+   the search icon when there is not */
+.search__icon,
+.search__clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex: none;
   width: 1.25rem;
   height: 1.25rem;
-  margin-left: auto;
+  margin-right: -5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
   color: var(--select-placeholder);
 }
 
 /* The display above is more specific than the browser's own rule for the hidden attribute */
-.search[hidden],
-.clear[hidden] {
+.search__icon[hidden],
+.search__clear[hidden] {
   display: none;
 }
 
-.clear:hover {
+.search__icon {
+  pointer-events: none;
+}
+
+.search__clear {
+  cursor: pointer;
+}
+
+.search__clear:hover {
   background: var(--select-hover-bg);
   color: var(--select-text);
 }
 
-.clear:focus-visible {
+.search__clear:focus-visible {
   outline: 2px solid var(--select-focus-color);
   outline-offset: 1px;
+}
+
+/* WebKit and Blink draw their own button inside a search field and Firefox draws none, so the
+   field would carry a way back from a search in two browsers of three. Ours is drawn above */
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
 }
 
 /* Laid out as a flex box, since an inline icon sits on the text baseline with the descender space
@@ -199,9 +228,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: #{$space-md};
-  flex: 1;
+  /* What the selections need, no more: the input takes the rest of the line. Both sharing the
+     line equally gave the chips half a field they had to wrap inside */
+  flex: 0 1 auto;
   min-width: 0;
-  max-height: var(--select-selections-max-height, 7.2rem);
+  max-height: var(--select-selections-max-height, none);
   overflow-y: auto;
 }
 
@@ -212,12 +243,31 @@
 .selection {
   display: inline-flex;
   align-items: center;
+  /* Border box, so the row height it is given is the height it comes out: measured content box,
+     its padding was added on top and the row grew past the icons pinned beside it */
+  box-sizing: border-box;
+  min-height: var(--select-row);
+  /* Its own line height, so a row comes out the height the token says whatever the page sets
+     around it, and every state of the field is drawn to the same one */
+  line-height: 1.25;
   gap: #{$space-md};
   max-width: var(--select-selection-max-width, 16rem);
-  padding: 0.25rem 0.32rem 0.25rem 0.5rem;
+  /* Symmetric now that nothing rides at the trailing edge */
+  padding: 0.25rem var(--select-selection-padding-inline);
   border-radius: var(--select-selection-radius, 999px);
   background: var(--select-selection-bg, var(--select-selected-bg));
-  font-size: var(--select-selection-font-size, #{$font-sm});
+  font-size: var(--select-selection-font-size, inherit);
+}
+
+/* Where one value is held there is nothing to tell apart from its neighbours, so it is drawn as
+   the field's own text rather than as a chip on a ground of its own */
+/* Where one value is held there is nothing to tell apart from its neighbours, so it loses the
+   ground it is drawn on. It keeps its padding: that is what puts its text in the same place as a
+   chip's, which is the whole point of the two being one structure */
+:host(:not([multiple])) .selection {
+  max-width: none;
+  border-radius: 0;
+  background: none;
 }
 
 .selection__body {
@@ -242,30 +292,6 @@
   opacity: 0.78;
 }
 
-.selection__remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 1.4rem;
-  height: 1.4rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-}
-
-.selection__remove:hover {
-  background: var(--select-hover-bg);
-}
-
-.selection__remove:focus-visible {
-  outline: 2px solid var(--select-focus-color);
-  outline-offset: 1px;
-}
-
 .arrow {
   display: inline-flex;
   align-items: center;
@@ -274,8 +300,20 @@
   transition: transform 0.15s ease;
   user-select: none;
   flex-shrink: 0;
-  margin-left: auto;
-  margin-right: -5px;
+}
+
+/* Out of the flex line and into the reserved gutter, so what the open state shows or hides never
+   reaches the selections. Held to a row's height at the top of the control, so they stay level
+   with the first row rather than drifting to the middle of a field that has grown under them */
+.arrow {
+  position: absolute;
+  top: var(--select-padding-block);
+  height: var(--select-row);
+  margin: 0;
+}
+
+.arrow {
+  right: calc(var(--select-padding-inline) - 5px);
 }
 
 .control[data-open] .arrow {
@@ -297,7 +335,10 @@
   border: var(--surface-dropdown-border-width, 1px) solid var(--menu-border-color);
   border-radius: var(--menu-border-radius);
   box-shadow: var(--menu-shadow);
+}
 
+/* The rows scroll; the search bar above them holds still */
+.options {
   max-height: var(--select-menu-max-height, 240px);
   overflow: auto;
 }
@@ -309,6 +350,12 @@
   padding: 0.45rem 0.6rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+}
+
+/* A hairline between rows, so two chosen ones next to each other read as two filled rows rather
+   than one block of colour */
+.option + .option {
+  margin-top: 1px;
 }
 
 /* A thumbnail has its size before it loads, so the list doesn't reflow as images arrive; it is
@@ -325,17 +372,37 @@
   min-width: 0;
 }
 
+/* Each line is cut with an ellipsis rather than wrapping into a row that was never given the
+   height for it: the chosen values in the control are cut the same way */
+.label,
+.secondary,
+:host([list-rows='1']) .text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label {
+  display: block;
+}
+
 .secondary {
   color: var(--color-text-muted, #{$color-text-muted});
   font-weight: 400;
 }
 
-/* Two rows puts the secondary text under the label rather than after it, so a long row reads
-   as a name and a line about it rather than one run-on line */
-:host([list-rows='2']) .secondary {
+/* A row reads as a name with a line about it beneath, rather than one run-on line. list-rows="1"
+   puts the secondary text back after the label for a list that has room for it */
+.secondary {
   display: block;
   font-size: var(--select-secondary-font-size, #{$font-xs});
   line-height: 1.3;
+}
+
+:host([list-rows='1']) .secondary {
+  display: inline;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .description {
@@ -360,15 +427,10 @@
   outline-offset: -2px;
 }
 
-/* Where several may be chosen a row is filled rather than tinted, with the tick at its trailing
-   edge. A single select keeps the tint it has always had */
-:host([multiple]) .option[aria-selected='true'] {
-  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
-  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
-}
-
-:host([multiple]) .option[aria-selected='true']:hover,
-:host([multiple]) .option[aria-selected='true'][data-active] {
+/* A chosen row is filled, whether one may be chosen or several: the fill is the whole mark, and
+   a tint that faint carried too little on its own */
+.option[aria-selected='true']:hover,
+.option[aria-selected='true'][data-active] {
   background: var(--select-chosen-hover-bg, var(--color-accent-hover, #{$primary-dark}));
 }
 
@@ -407,19 +469,9 @@
   outline-offset: 1px;
 }
 
-.option__tick {
-  display: inline-flex;
-  margin-left: auto;
-  flex: none;
-  opacity: 0;
-}
-
-.option[aria-selected='true'] .option__tick {
-  opacity: 1;
-}
-
 .option[aria-selected='true'] {
-  background: var(--select-selected-bg);
+  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
+  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
   font-weight: 500;
 }
 
@@ -474,7 +526,7 @@
 
 /* Pointer users don't need focus rings; followFocusSource() sets the host attribute */
 :host([data-focus-source='pointer']) :focus,
-:host([data-focus-source='pointer']) .control:focus-within {
+:host([data-focus-source='pointer']:focus-within) .control {
   outline: none;
 }
 

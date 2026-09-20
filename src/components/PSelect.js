@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { check, chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
+import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -114,7 +114,6 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * - p-select:open, p-select:close: when the list opens or closes
  *
  * @csspart input - the text input
- * @csspart clear - the button that clears the selection
  * @csspart listbox - the list of options
  */
 export default class PSelect extends HTMLElement {
@@ -123,8 +122,8 @@ export default class PSelect extends HTMLElement {
   /** The text the select shows: a site changes it here once, a page changes one with the attribute */
   static defaults = {
     placeholder: 'Select…',
-    clearLabel: 'Clear the selection',
-    removeLabel: 'Remove {label}',
+    searchLabel: 'Search',
+    searchClearLabel: 'Clear the search',
     selectAllLabel: 'Select all ({count})',
     selectNoneLabel: 'None',
     searchHint: 'Type to search',
@@ -138,12 +137,13 @@ export default class PSelect extends HTMLElement {
       'multiple',
       'selection-rows',
       'list-rows',
-      'remove-label',
+      'searchable',
+      'search-label',
+      'search-clear-label',
       'select-all',
       'select-all-label',
       'select-none-label',
       'placeholder',
-      'clear-label',
       'search-hint',
       'search-min-hint',
       'no-results',
@@ -176,6 +176,7 @@ export default class PSelect extends HTMLElement {
       multiple: false,
       values: [],
       selectionRows: 1,
+      searchable: false,
       selectAll: false,
       open: false,
       highlightedIndex: -1,
@@ -207,7 +208,6 @@ export default class PSelect extends HTMLElement {
   }
 
   connectedCallback() {
-    this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
     followFocusSource(this);
     this._readConfig();
     this._parseOptionsFromDOM();
@@ -256,6 +256,10 @@ export default class PSelect extends HTMLElement {
         this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
         this._renderSelections();
         break;
+      case 'searchable':
+        this.state.searchable = newValue !== null;
+        this._updateControls();
+        break;
       case 'select-all':
         this.state.selectAll = newValue !== null;
         this._renderOptions();
@@ -273,9 +277,6 @@ export default class PSelect extends HTMLElement {
       case 'aria-label':
         this._updateName();
         break;
-      case 'clear-label':
-        this._els.clear.setAttribute('aria-label', text(this, 'clear-label'));
-        break;
       default:
         this._readConfig();
     }
@@ -286,25 +287,36 @@ export default class PSelect extends HTMLElement {
       this.shadowRoot,
       `
       <div class="root">
-        <div class="control">
+        <div
+          class="control"
+          part="control"
+          role="combobox"
+          tabindex="0"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="listbox"
+        >
           <span class="selections" part="selections" hidden></span>
-          <input
-            class="input"
-            part="input"
-            type="text"
-            role="combobox"
-            autocomplete="off"
-            aria-autocomplete="list"
-            aria-haspopup="listbox"
-            aria-expanded="false"
-            aria-controls="listbox"
-          />
-          <span class="search" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
-          <button type="button" class="clear" part="clear" tabindex="-1" aria-label="Clear the selection" hidden>${iconMarkup(x, { size: 'xs' })}</button>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
-        <div class="menu" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1" hidden></div>
+        <div class="menu" part="menu" hidden>
+          <div class="search" part="search" hidden>
+            <input
+              class="input"
+              part="input"
+              type="search"
+              tabindex="-1"
+              autocomplete="off"
+              aria-autocomplete="list"
+              aria-controls="listbox"
+            />
+            <button type="button" class="search__clear" part="search-clear" tabindex="-1" hidden>${iconMarkup(x, { size: 'xs' })}</button>
+            <span class="search__icon" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
+          </div>
+          <div class="options" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1"></div>
+        </div>
         <div class="live" role="status" aria-live="polite"></div>
       </div>
     `
@@ -314,11 +326,13 @@ export default class PSelect extends HTMLElement {
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
       selections: this.shadowRoot.querySelector('.selections'),
+      options: this.shadowRoot.querySelector('.options'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
       search: this.shadowRoot.querySelector('.search'),
-      clear: this.shadowRoot.querySelector('.clear'),
+      searchClear: this.shadowRoot.querySelector('.search__clear'),
+      searchIcon: this.shadowRoot.querySelector('.search__icon'),
       live: this.shadowRoot.querySelector('.live'),
     };
     this._els.input.placeholder = this.state.placeholder;
@@ -349,41 +363,34 @@ export default class PSelect extends HTMLElement {
       this._choose(button.dataset.value, option ?? null);
     });
 
-    const { control, input, menu, clear } = this._els;
-
-    /* The clear button sits inside the control, so it must not open the list as well */
-    clear.addEventListener('mousedown', event => {
-      event.preventDefault();
-      event.stopPropagation();
-    });
-
-    clear.addEventListener('click', event => {
-      event.stopPropagation();
-      if (this.state.multiple) this._clearAll();
-      else this._choose('');
-      input.focus();
-    });
+    const { control, input, menu } = this._els;
 
     /* Mousedown rather than click, so the list doesn't open and close again as focus moves */
     control.addEventListener('mousedown', event => {
-      if (event.target !== input && !clear.contains(event.target)) {
-        event.preventDefault();
-        input.focus();
-        this.toggle();
-      }
+      event.preventDefault();
+      control.focus();
+      this.toggle();
     });
 
-    input.addEventListener('click', () => this.open());
-    input.addEventListener('focus', () => {
+    this._els.searchClear.addEventListener('mousedown', event => event.preventDefault());
+    this._els.searchClear.addEventListener('click', () => this._clearSearch());
+    this._els.searchClear.setAttribute('aria-label', text(this, 'search-clear-label'));
+
+    control.addEventListener('keydown', event => this._handleKeydown(event));
+    control.addEventListener('focus', () => {
       if (this.state.openOnFocus) this.open();
     });
     input.addEventListener('input', event => this._handleInput(event));
     input.addEventListener('keydown', event => this._handleKeydown(event));
 
-    /* Keep focus on the input while an option is pressed */
-    menu.addEventListener('mousedown', event => event.preventDefault());
-    menu.addEventListener('scroll', () => {
-      if (menu.scrollTop + menu.clientHeight >= menu.scrollHeight - LOAD_MORE_MARGIN) {
+    /* Keep focus where it is while an option is pressed, but let the search box take it */
+    menu.addEventListener('mousedown', event => {
+      if (this._els.search.contains(event.target)) return;
+      event.preventDefault();
+    });
+    this._els.options.addEventListener('scroll', () => {
+      const list = this._els.options;
+      if (list.scrollTop + list.clientHeight >= list.scrollHeight - LOAD_MORE_MARGIN) {
         this._loadMore();
       }
     });
@@ -424,9 +431,9 @@ export default class PSelect extends HTMLElement {
     const name = this.getAttribute('aria-label') || labelText;
 
     if (name) {
-      this._els.input.setAttribute('aria-label', name);
+      this._els.control.setAttribute('aria-label', name);
     } else {
-      this._els.input.removeAttribute('aria-label');
+      this._els.control.removeAttribute('aria-label');
     }
   }
 
@@ -486,7 +493,32 @@ export default class PSelect extends HTMLElement {
     this.setOptions(options);
   }
 
+  /**
+   * The slot at the trailing edge of the search bar holds the way to take back what was typed when
+   * there is something to take back, and the search icon when there is not, so neither swap moves
+   * the other and both stay in the chevron's column
+   */
+  _syncSearchSlot() {
+    const typed = this._els.input.value !== '';
+    this._els.searchClear.hidden = !typed;
+    this._els.searchIcon.hidden = typed;
+  }
+
+  _clearSearch() {
+    this._els.input.value = '';
+    this._filterLocal('');
+    this._syncSearchSlot();
+    this._els.input.focus();
+  }
+
   _handleInput(event) {
+    /* Without a search box there is nothing to type into, so nothing narrows the list */
+    if (!this.state.searchable) {
+      this._els.input.value = '';
+      return;
+    }
+
+    this._syncSearchSlot();
     const query = event.target.value;
     this.state.query = query;
     this.open();
@@ -572,6 +604,13 @@ export default class PSelect extends HTMLElement {
         break;
       case 'Escape':
         event.preventDefault();
+        /* Escape abandons the search: it is the key that takes back what was typed, since nothing
+           else does that on its own any more */
+        if (this._els.input.value !== '') {
+          this._els.input.value = '';
+          this._filterLocal('');
+          this._syncSearchSlot();
+        }
         this.close();
         break;
     }
@@ -703,7 +742,7 @@ export default class PSelect extends HTMLElement {
 
   _setBusy(busy) {
     this.state.loading = busy;
-    this._els.menu.setAttribute('aria-busy', String(busy));
+    this._els.options.setAttribute('aria-busy', String(busy));
   }
 
   _handleFetchError(error) {
@@ -758,30 +797,28 @@ export default class PSelect extends HTMLElement {
   }
 
   _updateDisplay() {
-    if (this.state.multiple) {
-      this._els.input.value = '';
-      /* The placeholder speaks for an empty field; once something is chosen the selections do */
-      this._els.input.placeholder = this.state.values.length ? '' : this.state.placeholder;
-      this._renderSelections();
-    } else {
-      this._els.input.value =
-        this.state.value === '' ? '' : (this._selectedOption?.label ?? this.state.value);
-    }
+    /* What was typed stays until it is cleared. Blanked on every redraw, the box emptied itself as
+       a value was chosen while the list stayed narrowed to what had been typed, so the rows the
+       search had put aside never came back and nothing on screen said why */
+    /* The placeholder speaks for an empty field; once something is chosen the selections do, and
+       a search box says what it is for instead of sitting there blank */
+    this._els.input.placeholder = this.state.values.length
+      ? this.state.searchable
+        ? text(this, 'search-label')
+        : ''
+      : this.state.placeholder;
+    this._renderSelections();
     this._updateControls();
   }
 
   /**
-   * Every chosen value in the control, in the options' order, each with the way to take it back
-   * out. Nothing is counted away behind "and 2 more": what was chosen is what is shown
+   * Every chosen value in the control, in the options' order. One value or twenty are drawn the
+   * same way through this one path: the difference between the modes is what the stylesheet makes
+   * of a lone selection, not what is built. Nothing is counted away behind "and 2 more"
    */
   _renderSelections() {
     const box = this._els.selections;
     if (!box) return;
-    if (!this.state.multiple) {
-      box.hidden = true;
-      box.replaceChildren();
-      return;
-    }
 
     const two = this.state.selectionRows === 2;
     box.hidden = this.state.values.length === 0;
@@ -807,48 +844,18 @@ export default class PSelect extends HTMLElement {
           body.append(sub);
         }
 
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'selection__remove';
-        remove.setAttribute('part', 'selection-remove');
-        /* Out of the tab order, as the clear button is: a field holding twenty values would
-           otherwise stop the keyboard twenty times before the input. Backspace is the way back */
-        remove.tabIndex = -1;
-        /* A disabled field turns Backspace away as well; without this the remove buttons were the
-           one way left to change a value it should not be possible to change */
-        remove.disabled = this.state.disabled;
-        remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
-        remove.dataset.value = value;
-        remove.append(iconElement(x, { size: 'xs' }));
-
-        chip.append(body, remove);
+        chip.append(body);
         return chip;
       })
     );
-
-    /* The icons beside the selections hold their place on the first row rather than drifting to
-       the middle of a field that has grown under them, so they are told how tall a row is */
-    const row = box.firstElementChild?.getBoundingClientRect().height;
-    if (row) this.style.setProperty('--selection-row', `${row}px`);
   }
 
   /**
-   * Fill the slot before the chevron with the clear button when there is a value the user may
-   * remove. The search icon takes that slot only while the list is open with nothing chosen, since
-   * that is when the input is a search box; the two are never shown at once
+   * Show the search bar only where the page asked to be able to search. Nothing else in the control
+   * comes and goes: a value is taken back out by choosing its row again, or with Backspace
    */
   _updateControls() {
-    const { open, value, values, multiple, disabled } = this.state;
-    const empty = multiple ? values.length === 0 : value === '';
-    /* The slot before the chevron fills only while the list is open: the clear button when
-       something is chosen, the search icon when nothing is. A required select can be cleared as
-       well: it won't validate until something is chosen again, which is better than leaving no way
-       back to the search. */
-    this._els.clear.hidden = !open || empty || disabled;
-    this._els.search.hidden = !open || !empty;
-    /* One chosen value is not something to type over: clear it first, or choose another option.
-       Holding several, the input stays typeable, because typing is how the list is narrowed */
-    this._els.input.readOnly = !multiple && value !== '';
+    this._els.search.hidden = !this.state.searchable;
   }
 
   /**
@@ -875,7 +882,7 @@ export default class PSelect extends HTMLElement {
     none.textContent = text(this, 'select-none-label');
 
     bar.append(all, none);
-    this._els.menu.append(bar);
+    this._els.options.append(bar);
   }
 
   /** The options the bar would act on: what the search left, minus any that cannot be chosen */
@@ -929,7 +936,7 @@ export default class PSelect extends HTMLElement {
       this.state.options.find(option => option.value === this.state.value) ??
       (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
 
-    for (const element of this._els.menu.querySelectorAll('[role="option"]')) {
+    for (const element of this._els.options.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
       element.setAttribute('aria-selected', String(this._holds(option?.value)));
     }
@@ -960,8 +967,8 @@ export default class PSelect extends HTMLElement {
   _updateDisabledState(disabled) {
     this.state.disabled = disabled;
     this._els.input.disabled = disabled;
+    this._els.control.tabIndex = disabled ? -1 : 0;
     if (disabled) this.close();
-    this._renderSelections();
     this._updateControls();
   }
 
@@ -975,27 +982,31 @@ export default class PSelect extends HTMLElement {
     if (this.state.open || this.state.disabled) return;
 
     this.state.open = true;
-    this._els.input.setAttribute('aria-expanded', 'true');
+    this._els.control.setAttribute('aria-expanded', 'true');
     this._els.control.toggleAttribute('data-open', true);
     this._els.menu.hidden = false;
     this._updateControls();
     this._filterLocal('');
 
     this.tm.enter(this._els.menu);
+    /* The search box is in the list, so opening is what puts the keyboard in it */
+    if (this.state.searchable) this._els.input.focus();
     dispatchComponentEvent(this, 'p-select:open');
   }
 
   close() {
     if (!this.state.open) return;
 
+    /* Read before anything is redrawn: the list is where the search box lives, and by the time it
+       has been taken down the keyboard has nowhere to go back to */
+    const keyboardWasInTheList = this._els.menu.contains(this.shadowRoot.activeElement);
     this.state.open = false;
-    this._els.input.setAttribute('aria-expanded', 'false');
+    this._els.control.setAttribute('aria-expanded', 'false');
+    this._els.control.removeAttribute('aria-activedescendant');
     this._els.input.removeAttribute('aria-activedescendant');
     this._els.control.toggleAttribute('data-open', false);
-    if (this._els.input.value.trim() === '' && this.state.value !== '' && !this.state.required) {
-      this._choose('');
-    }
     this._updateDisplay();
+    if (keyboardWasInTheList) this._els.control.focus();
 
     this.tm.exit(this._els.menu).then(() => {
       if (!this.state.open) {
@@ -1221,11 +1232,12 @@ export default class PSelect extends HTMLElement {
    * the scroll handler would read that as a call for the next page of a search that just started.
    */
   _renderOptions({ keepScroll = false } = {}) {
-    const { menu } = this._els;
+    const menu = this._els.options;
     menu.replaceChildren();
     this._renderBulk();
     if (!keepScroll) menu.scrollTop = 0;
     this.state.highlightedIndex = -1;
+    this._els.control.removeAttribute('aria-activedescendant');
     this._els.input.removeAttribute('aria-activedescendant');
 
     if (this.state.filtered.length === 0) {
@@ -1274,15 +1286,6 @@ export default class PSelect extends HTMLElement {
       } else {
         element.textContent = option.label;
       }
-      if (this.state.multiple) {
-        /* The tick rides at the trailing edge of a filled row, rather than a box at the leading
-           one, and holds its space so nothing shifts as rows are chosen */
-        const tick = document.createElement('span');
-        tick.className = 'option__tick';
-        tick.setAttribute('aria-hidden', 'true');
-        tick.append(iconElement(check, { size: 'sm' }));
-        element.append(tick);
-      }
       (groupElement ?? menu).append(element);
     });
   }
@@ -1300,19 +1303,22 @@ export default class PSelect extends HTMLElement {
 
     if (!element) {
       input.removeAttribute('aria-activedescendant');
+      this._els.control.removeAttribute('aria-activedescendant');
       return;
     }
 
     element.setAttribute('data-active', '');
     input.setAttribute('aria-activedescendant', element.id);
+    this._els.control.setAttribute('aria-activedescendant', element.id);
     if (index === this.state.filtered.length - 1) this._loadMore();
 
+    const list = this._els.options;
     const top = element.offsetTop;
     const bottom = top + element.offsetHeight;
-    if (top < menu.scrollTop) {
-      menu.scrollTop = top;
-    } else if (bottom > menu.scrollTop + menu.clientHeight) {
-      menu.scrollTop = bottom - menu.clientHeight;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (bottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = bottom - list.clientHeight;
     }
   }
 }

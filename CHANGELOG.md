@@ -7,11 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The search box carries the way back from a search: once something is typed, the icon at its trailing edge becomes a button that takes it back and brings the whole list with it, in the same slot so neither swap moves the other. A search field's own button is drawn by WebKit and Blink but not by Firefox, so this one is drawn rather than borrowed and behaves the same everywhere. `search-clear` is the part, `search-clear-label` its name.
+- `searchable` offers a search bar at the top of the list, ruled off from the rows the way the bulk bar is, with its icon at the trailing edge under the chevron. It narrows the list as it is typed in. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help. `search-label` is the placeholder it carries once something is chosen and the field's own placeholder has given way to the selections.
+
+### Changed
+
+- The field itself is now the combobox: it carries the role, the state and the focus, and is the one stop the Tab key makes. The search box lives in the list, which is hidden while the list is closed, so it can no longer hold that role. Opening puts the keyboard in the search box and closing hands it back to the field. `control`, `menu` and `search` are parts a page can style.
+- A chosen row in the list is filled the same way whether one value may be chosen or several. A single select's chosen row was a ten percent tint while a multiple's was filled in the accent, which made one mode's list look like a weaker copy of the other's. The tick that rode at a filled row's trailing edge is gone with it: the fill is the whole mark, and the tick was carrying nothing the colour did not.
+- An option's secondary text sits under its label rather than after it. `list-rows="1"` puts it back on the label's line for a list with room for it.
+- A chosen value reads at the field's own size rather than a size of its own, so a field is the same height whether it holds one value or several. `--select-selection-font-size` still sets it where a page wants them smaller.
+- The chosen values no longer scroll inside a capped box. `--select-selections-max-height` still caps them where a page wants it; it no longer does so on its own, which cut the last row in half.
+- Rows in the list are separated by a hairline, so two chosen ones next to each other read as two filled rows rather than one block of colour.
+- An option's text is cut with an ellipsis rather than wrapped. `list-rows="1"` says an option takes one row, but nothing held it to that, so a long label and its secondary text spilled into a second line the row had no height for — a ragged copy of `list-rows="2"` rather than a deliberate one. The control's chosen values were already cut this way; the list now matches.
+- `<p-select>` draws what is chosen the same way whether one value is held or several. Both modes now render a selection through one path, and the input has one job in both: it is the search box, never the display, and never read-only. A single select therefore no longer shows its label in a read-only input that had to be cleared before it could be searched — the label sits in a selection beside a search box that is always typeable. Both modes are laid out in flow rather than one being stretched over a box of a fixed height, so a field is as tall as what is in it in either mode.
+- The chevron and the slot beside it sit in a strip the control always reserves, rather than joining the row and pushing the chosen values about as the open state shows or hides them. Opening the list no longer grows the field by a row or moves the chevron. `--select-gutter` is how wide that strip is.
+- Nothing in the control comes and goes as values are chosen. A chosen value carries no button of its own and the field carries no clear button, in either mode: a value goes back out by choosing its row again, which is the same gesture that put it in, or with Backspace. `clear()` still empties a field outright for a page that wants that.
+- A value’s text starts in the same place whether one value may be chosen or several. A chip's own inset pushed its text right of where a single select's sat, so two fields side by side did not line up. The control gives back exactly that inset from its leading padding, and `--select-selection-padding-inline` is the one number both read.
+
 ### Fixed
 
-- Taking a value back out of a `<p-select multiple>` from its own remove button no longer opens the list as well. The control opens on `mousedown` and the remove buttons sit inside it, so the guard the clear button already had is now on them too. A press on the chip itself, rather than its button, still opens the list, as any other part of the control does.
+- A field stays outlined while its search box has focus. The box sits in the list rather than in the control, so a control that watched only itself went unlit at the moment it was being typed into.
+- What is typed into the search box stays there once a value is chosen. It was blanked on every redraw while the list stayed narrowed to what had been typed, so the rows the search had put aside never came back and nothing on screen said why. Escape takes it back and brings the whole list with it.
+- A field is drawn to one height whether it is empty or holds a value, and whether one value may be chosen or several. An empty one had no row in it to give it height, so it sat shorter than the same field with something in it.
+
+- The control's padding is applied once rather than twice. Carried on the host and again on the box inside it, a field holding several values sat inset from its own border on every side and drew its focus ring inside a border that stayed visible outside it. A page no longer has to halve `--select-padding` to compensate, and the chevron's ink lands where the padding asks rather than four pixels outside the border.
+- A field no longer grows to fit what is chosen. Choosing a long value widened the control itself; its width comes from the page, as it always should have.
 - A `<p-select multiple>` no longer opens its list with one row already marked. It marked whichever chosen value came first, which is an arbitrary pick among several, and that row was then drawn in the deeper accent the list uses for a row under the pointer — so it read as somewhere the pointer had already landed before anything had been done. Nothing is marked on open now, and an arrow key enters the list at its first row. A select where only one value may be chosen still opens onto that value, which is the row the arrow keys should carry on from.
-- A disabled `<p-select multiple>` can no longer have its values taken back out. The buttons on each chosen value stayed live while the field was disabled, so a value could still be removed and a `change` event still went out, from a field that should not have been changeable at all. Backspace was already turned away; the buttons now are too, and they come back the moment the field is enabled again.
+
+### Removed
+
+- The clear button, with the `clear` part and the `clear-label` text that named it.
+- The tick on a chosen row in the list, with the `check` icon it drew.
+- `--select-padding` and `--selection-row`, replaced by `--select-padding-block`, `--select-padding-inline` and `--select-row`. The two padding properties are read directly by the strip the icons sit in, so setting them keeps the icons with the text; the old single property could not.
+- The `selection-remove` part and the `remove-label` text, with the buttons they named.
 
 ## [0.7.17] - 2026-09-20
 

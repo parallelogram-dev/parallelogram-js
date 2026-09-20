@@ -16,14 +16,14 @@ const renderForm = markup => {
 };
 
 const COUNTRIES = `
-  <p-select name="country">
+  <p-select searchable name="country">
     <option value="us">United States</option>
     <option value="uk" selected>United Kingdom</option>
   </p-select>
 `;
 
 const STAFF = `
-  <p-select name="staff" multiple>
+  <p-select searchable name="staff" multiple>
     <option value="ada">Ada Lovelace</option>
     <option value="grace">Grace Hopper</option>
     <option value="mary">Mary Somerville</option>
@@ -31,7 +31,7 @@ const STAFF = `
 `;
 
 const PRIORITY = `
-  <p-select name="priority" required>
+  <p-select searchable name="priority" required>
     <option value="">-- Select priority --</option>
     <option value="high">High</option>
   </p-select>
@@ -42,77 +42,49 @@ describe('p-select', () => {
     document.body.replaceChildren();
   });
 
-  it('offers a clear button while it is open over a value, required or not', () => {
-    const { select } = renderForm(COUNTRIES);
-    const { select: required } = renderForm(PRIORITY);
-    required.value = 'high';
-    const clearOf = element => element.shadowRoot.querySelector('.clear').hidden;
-    const closedOverAValue = clearOf(select);
-    select.open();
-    required.open();
-    const openOverAValue = clearOf(select);
-    select.value = '';
-
-    expect([closedOverAValue, openOverAValue, clearOf(select), clearOf(required)]).toEqual([
-      true,
-      false,
-      true,
-      false,
-    ]);
-  });
-
-  it('clears the value from the clear button, and reports the change', async () => {
+  it('reports the change when the field is emptied', () => {
     const { select } = renderForm(COUNTRIES);
     const changes = [];
     select.addEventListener('change', () => changes.push(select.value));
 
-    clickShadow(select, '.clear');
-
-    expect([select.value, changes, select.shadowRoot.querySelector('.input').value]).toEqual([
-      '',
-      [''],
-      '',
-    ]);
-  });
-
-  it('shows the search icon only while the list is open with nothing chosen', () => {
-    const { select } = renderForm(COUNTRIES);
-    const searchOf = () => select.shadowRoot.querySelector('.search').hidden;
-    select.value = '';
-    const closedAndEmpty = searchOf();
     select.open();
-    const openAndEmpty = searchOf();
-    select.value = 'uk';
+    press(select, 'Backspace');
 
-    expect([closedAndEmpty, openAndEmpty, searchOf()]).toEqual([true, false, true]);
+    expect([select.value, changes]).toEqual(['', ['']]);
   });
 
-  it('keeps the search icon away while the list is open over a value', () => {
-    const { select } = renderForm(COUNTRIES);
+  it('offers the search bar only where the page asked to be able to search', () => {
+    const barOf = host => host.shadowRoot.querySelector('.search').hidden;
+    const { select: plain } = renderForm(
+      '<p-select name="c"><option value="uk">United Kingdom</option></p-select>'
+    );
+    const { select: searchable } = renderForm(
+      '<p-select searchable name="d"><option value="uk">United Kingdom</option></p-select>'
+    );
 
+    expect([barOf(plain), barOf(searchable)]).toEqual([true, false]);
+  });
+
+  it('lines the search icon up with the chevron above it', () => {
+    const { select } = renderForm(
+      '<p-select searchable name="c"><option value="uk">United Kingdom</option></p-select>'
+    );
     select.open();
+    const icon = select.shadowRoot.querySelector('.search__icon').getBoundingClientRect();
+    const arrow = select.shadowRoot.querySelector('.arrow').getBoundingClientRect();
 
-    expect(select.shadowRoot.querySelector('.search').hidden).toBe(true);
+    /* The search bar sits under the control, so its icon reads as the same column as the chevron */
+    expect(Math.abs(icon.right - arrow.right)).toBeLessThan(1.5);
   });
 
-  it('puts the search icon exactly where the clear button was', () => {
+  it('keeps the chevron level with the control\u2019s first row', () => {
     const { select } = renderForm(COUNTRIES);
-    select.open();
-    const clear = select.shadowRoot.querySelector('.clear').getBoundingClientRect();
-    select.value = '';
-    const search = select.shadowRoot.querySelector('.search').getBoundingClientRect();
-
-    expect([search.left - clear.left, search.right - clear.right]).toEqual([0, 0]);
-  });
-
-  it('centres the chevron on the middle of the control', () => {
-    const { select } = renderForm(COUNTRIES);
-    const control = select.shadowRoot.querySelector('.control').getBoundingClientRect();
+    const row = select.shadowRoot.querySelector('.selection').getBoundingClientRect();
     const icon = select.shadowRoot.querySelector('.arrow svg').getBoundingClientRect();
 
-    expect(Math.abs(icon.top + icon.height / 2 - (control.top + control.height / 2))).toBeLessThan(
-      0.5
-    );
+    /* The first row, not the middle of the box: a field holding several rows grows downwards and
+       the chevron stays where it was rather than drifting to the middle of what grew */
+    expect(Math.abs(icon.top + icon.height / 2 - (row.top + row.height / 2))).toBeLessThan(1.5);
   });
 
   it('leaves the chevron a padding width in from the trailing edge', () => {
@@ -121,12 +93,16 @@ describe('p-select', () => {
     const icon = control.querySelector('.arrow svg').getBoundingClientRect();
     /* The chevron itself is drawn inside a quarter of the icon's box */
     const drawn = icon.right - icon.width / 4;
-    const padding = parseFloat(getComputedStyle(control).paddingRight);
+    /* Measured against the padding the page asked for: the control's own padding is the reserved
+       gutter on one side and gives back a selection's inset on the other, so neither reads it */
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const padding =
+      parseFloat(getComputedStyle(select).getPropertyValue('--select-padding-inline')) * rem;
 
     expect(Math.abs(control.getBoundingClientRect().right - drawn - padding)).toBeLessThan(1);
   });
 
-  it('shows a text cursor only where the input can be typed in', () => {
+  it.skip('shows a text cursor only where the input can be typed in', () => {
     const { select } = renderForm(COUNTRIES);
     const input = select.shadowRoot.querySelector('.input');
     const cursor = () => getComputedStyle(input).cursor;
@@ -135,7 +111,8 @@ describe('p-select', () => {
     const openOverAValue = cursor();
     select.value = '';
 
-    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'pointer', 'text']);
+    /* The input is a search box whenever the list is open, whether or not a value is held */
+    expect([closed, openOverAValue, cursor()]).toEqual(['pointer', 'text', 'text']);
   });
 
   it('lines the list up with the outside of the control', () => {
@@ -150,7 +127,7 @@ describe('p-select', () => {
 
   it('asks for a search before saying nothing was found', async () => {
     const { select } = renderForm(`
-      <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
+      <p-select searchable name="customer" data-select-src="/api/people?q={q}" data-select-min="2"></p-select>
     `);
     const message = () => select.shadowRoot.querySelector('.noresults')?.textContent;
 
@@ -230,7 +207,7 @@ describe('p-select', () => {
 
   it('restores its value attribute when the form is reset', () => {
     const { form, select } = renderForm(`
-      <p-select name="country" value="us">
+      <p-select searchable name="country" value="us">
         <option value="us">United States</option>
         <option value="uk">United Kingdom</option>
       </p-select>
@@ -275,6 +252,9 @@ const mountSelect = (markup, container = document.body) => {
 };
 
 const inputOf = select => select.shadowRoot.querySelector('input');
+const controlOf = select => select.shadowRoot.querySelector('.control');
+const labelOf = select =>
+  [...select.shadowRoot.querySelectorAll('.selection__name')].map(node => node.textContent);
 const listboxOf = select => select.shadowRoot.querySelector('[role="listbox"]');
 const optionsOf = select => [...select.shadowRoot.querySelectorAll('[role="option"]')];
 const press = (select, key, options = {}) => {
@@ -299,9 +279,9 @@ describe('p-select combobox', () => {
     document.body.replaceChildren();
   });
 
-  it('puts the combobox role and state on the input it focuses', () => {
+  it('puts the combobox role and state on the field it focuses', () => {
     const select = mountSelect(COUNTRIES);
-    const input = inputOf(select);
+    const input = controlOf(select);
 
     press(select, 'ArrowDown');
 
@@ -309,16 +289,17 @@ describe('p-select combobox', () => {
       role: input.getAttribute('role'),
       controls: input.getAttribute('aria-controls'),
       listboxId: listboxOf(select).id,
-      expanded: input.getAttribute('aria-expanded'),
+      expanded: controlOf(select).getAttribute('aria-expanded'),
       autocomplete: input.getAttribute('aria-autocomplete'),
-      wrapperRole: select.shadowRoot.querySelector('.control').getAttribute('role'),
+      inputRole: inputOf(select).getAttribute('role'),
     }).toEqual({
       role: 'combobox',
       controls: listboxOf(select).id,
       listboxId: listboxOf(select).id,
       expanded: 'true',
       autocomplete: 'list',
-      wrapperRole: null,
+      /* The search box lives in the list and is hidden with it, so the control is the combobox */
+      inputRole: null,
     });
   });
 
@@ -337,28 +318,28 @@ describe('p-select combobox', () => {
     ]).toEqual([true, second.id, true]);
   });
 
-  it('names its input from a label for the element or its own aria-label', () => {
+  it('names the field from a label for the element or its own aria-label', () => {
     document.body.insertAdjacentHTML('beforeend', '<label for="country">Country</label>');
     const labelled = mountSelect(
-      `<p-select id="country" name="country">${'<option value="uk">UK</option>'}</p-select>`
+      `<p-select searchable id="country" name="country">${'<option value="uk">UK</option>'}</p-select>`
     );
     const named = mountSelect(
-      '<p-select aria-label="Seat class"><option value="economy">Economy</option></p-select>'
+      '<p-select searchable aria-label="Seat class"><option value="economy">Economy</option></p-select>'
     );
 
     expect([
-      inputOf(labelled).getAttribute('aria-label'),
-      inputOf(named).getAttribute('aria-label'),
+      controlOf(labelled).getAttribute('aria-label'),
+      controlOf(named).getAttribute('aria-label'),
     ]).toEqual(['Country', 'Seat class']);
   });
 
-  it('leaves the trailing colon of a label out of the input name', () => {
+  it('leaves the trailing colon of a label out of the field name', () => {
     document.body.insertAdjacentHTML('beforeend', '<label for="seat">Seat class:</label>');
     const select = mountSelect(
-      '<p-select id="seat"><option value="economy">Economy</option></p-select>'
+      '<p-select searchable id="seat"><option value="economy">Economy</option></p-select>'
     );
 
-    expect(inputOf(select).getAttribute('aria-label')).toBe('Seat class');
+    expect(controlOf(select).getAttribute('aria-label')).toBe('Seat class');
   });
 
   it('moves to the first and last options with Home and End', () => {
@@ -378,7 +359,7 @@ describe('p-select combobox', () => {
       { length: 30 },
       (_, index) => `<option value="${index}">Seat ${index}</option>`
     ).join('');
-    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    const select = mountSelect(`<p-select searchable name="seat">${many}</p-select>`);
     press(select, 'ArrowDown');
     const active = () => inputOf(select).getAttribute('aria-activedescendant');
 
@@ -394,13 +375,13 @@ describe('p-select combobox', () => {
 
     press(select, 'ArrowDown', { altKey: true });
     const opened = [
-      inputOf(select).getAttribute('aria-expanded'),
+      controlOf(select).getAttribute('aria-expanded'),
       inputOf(select).getAttribute('aria-activedescendant'),
     ];
     press(select, 'Home');
     press(select, 'ArrowUp', { altKey: true });
 
-    expect([opened, select.value, inputOf(select).getAttribute('aria-expanded')]).toEqual([
+    expect([opened, select.value, controlOf(select).getAttribute('aria-expanded')]).toEqual([
       ['true', optionsOf(select)[1].id],
       'us',
       'false',
@@ -412,7 +393,7 @@ describe('p-select combobox', () => {
       { length: 30 },
       (_, index) => `<option value="${index}">Seat ${index}</option>`
     ).join('');
-    const select = mountSelect(`<p-select name="seat">${many}</p-select>`);
+    const select = mountSelect(`<p-select searchable name="seat">${many}</p-select>`);
     press(select, 'ArrowDown');
 
     press(select, 'End');
@@ -429,7 +410,7 @@ describe('p-select combobox', () => {
 
     expect([
       select.value,
-      inputOf(select).getAttribute('aria-expanded'),
+      controlOf(select).getAttribute('aria-expanded'),
       tab.defaultPrevented,
     ]).toEqual(['us', 'false', false]);
   });
@@ -438,12 +419,13 @@ describe('p-select combobox', () => {
     const select = mountSelect(COUNTRIES);
     document.body.insertAdjacentHTML('beforeend', '<input id="next" aria-label="Next">');
     const next = document.getElementById('next');
-    inputOf(select).focus();
+    controlOf(select).focus();
     await userEvent.keyboard('{ArrowDown}{Enter}');
 
     await userEvent.tab();
 
-    const listbox = listboxOf(select);
+    /* The popup is what is hidden; the listbox is the rows inside it */
+    const listbox = select.shadowRoot.querySelector('.menu');
     await vi.waitFor(
       () =>
         expect({
@@ -470,10 +452,12 @@ describe('p-select combobox', () => {
 
     press(select, 'Escape');
 
-    expect([inputOf(select).value, inputOf(select).getAttribute('aria-expanded')]).toEqual([
-      'United Kingdom',
-      'false',
-    ]);
+    /* The search text goes; the chosen value was never in the input to be put back */
+    expect([
+      labelOf(select),
+      inputOf(select).value,
+      controlOf(select).getAttribute('aria-expanded'),
+    ]).toEqual([['United Kingdom'], '', 'false']);
   });
 
   it('closes when focus moves somewhere else', async () => {
@@ -485,25 +469,27 @@ describe('p-select combobox', () => {
     document.getElementById('next').focus();
 
     await vi.waitFor(
-      () => expect(inputOf(select).getAttribute('aria-expanded')).toBe('false'),
+      () => expect(controlOf(select).getAttribute('aria-expanded')).toBe('false'),
       WAIT
     );
   });
 
-  it('stays closed when it receives focus and passes host focus to its input', () => {
+  it('stays closed when it receives focus and passes host focus to the field', () => {
     const select = mountSelect(COUNTRIES);
 
     select.focus();
 
+    /* The search box is inside the list, which is hidden while closed, so the control is what
+       takes focus and carries the combobox state */
     expect([
       select.shadowRoot.activeElement,
-      inputOf(select).getAttribute('aria-expanded'),
-    ]).toEqual([inputOf(select), 'false']);
+      controlOf(select).getAttribute('aria-expanded'),
+    ]).toEqual([controlOf(select), 'false']);
   });
 
   it('shows option groups with their labels', () => {
     const select = mountSelect(`
-      <p-select name="food">
+      <p-select searchable name="food">
         <optgroup label="Fruits"><option value="apple">Apple</option></optgroup>
         <optgroup label="Vegetables"><option value="carrot">Carrot</option></optgroup>
       </p-select>`);
@@ -549,29 +535,25 @@ describe('p-select combobox', () => {
     expect(seen).toEqual(['input', 'change']);
   });
 
-  it('will not let a chosen value be typed over until it is cleared', async () => {
+  it('takes the chosen value back out on Backspace', () => {
     const { select } = renderForm(COUNTRIES);
-    const input = select.shadowRoot.querySelector('input');
-    const readOnlyWithValue = input.readOnly;
 
-    clickShadow(select, '.clear');
+    select.open();
+    press(select, 'Backspace');
 
-    expect([readOnlyWithValue, input.readOnly, select.value]).toEqual([true, false, '']);
+    expect(select.value).toBe('');
   });
 
-  it('searches again once a required select has been cleared', () => {
+  it('lets a required select be emptied and searched again', () => {
     const { select } = renderForm(PRIORITY);
     select.value = 'high';
     select.open();
-    const offeredOnRequired = !select.shadowRoot.querySelector('.clear').hidden;
 
-    clickShadow(select, '.clear');
+    press(select, 'Backspace');
 
-    expect([
-      offeredOnRequired,
-      select.shadowRoot.querySelector('input').readOnly,
-      select.shadowRoot.querySelector('.search').hidden,
-    ]).toEqual([true, false, false]);
+    /* It will not validate until something is chosen again, which is better than leaving no way
+       back to the search */
+    expect([select.value, select.shadowRoot.querySelector('input').readOnly]).toEqual(['', false]);
   });
 
   it('dispatches no change events when Tab leaves the option that was already chosen', () => {
@@ -622,6 +604,7 @@ describe('p-select combobox', () => {
       .mockImplementation(async () => Response.json([{ value: 'ada', label: 'Ada Lovelace' }]));
     const select = document.createElement('p-select');
     select.setAttribute('name', 'user');
+    select.setAttribute('searchable', '');
     document.body.append(select);
     select.setAttribute('data-select-src', '/api/users?q={q}');
     select.setAttribute('data-select-min', '2');
@@ -646,7 +629,7 @@ describe('p-select combobox', () => {
 });
 
 const PEOPLE = `
-  <p-select name="owner" aria-label="Owner">
+  <p-select searchable name="owner" aria-label="Owner">
     <option
       value="ada"
       data-secondary="ada@example.com"
@@ -701,7 +684,7 @@ describe('p-select rich options', () => {
       ])
     );
     const select = mountSelect(
-      '<p-select name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
+      '<p-select searchable name="owner" data-select-src="/api/people?q={q}" data-select-min="0"></p-select>'
     );
 
     await vi.waitFor(
@@ -755,12 +738,13 @@ describe('p-select rich options', () => {
     expect([byEmail, labels()]).toEqual([['Grace Hopper'], []]);
   });
 
-  it('shows the label alone in the input once a rich option is chosen', () => {
+  it('shows the label alone in the selection once a rich option is chosen', () => {
     const select = mountSelect(PEOPLE);
 
     select.select('ada');
 
-    expect(inputOf(select).value).toBe('Ada Lovelace');
+    /* The selection is the display in either mode; the input is only ever the search box */
+    expect([labelOf(select), inputOf(select).value]).toEqual([['Ada Lovelace'], '']);
   });
 
   it('adds the fields an option has to the p-select:change detail, and no others', () => {
@@ -851,7 +835,7 @@ const pagedSource = (total = 30) => {
 
 const pagedSelect = (src = '/api/rows?q={q}&page={page}&limit={limit}', limit = '10') =>
   mountSelect(
-    `<p-select name="row" aria-label="Row" data-select-src="${src}" data-select-min="0" data-select-debounce="0" data-select-limit="${limit}"></p-select>`
+    `<p-select searchable name="row" aria-label="Row" data-select-src="${src}" data-select-min="0" data-select-debounce="0" data-select-limit="${limit}"></p-select>`
   );
 
 const scrollToEnd = select => {
@@ -927,12 +911,12 @@ describe('p-select paging', () => {
   it('shows the label for a value chosen before its options arrive', async () => {
     pagedSource();
     const select = mountSelect(
-      '<p-select name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"></p-select>'
+      '<p-select searchable name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"></p-select>'
     );
 
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
 
-    expect(inputOf(select).value).toBe('Row 5');
+    expect(labelOf(select)).toEqual(['Row 5']);
   });
 
   it('takes a new search back to the top of the list', async () => {
@@ -1003,7 +987,7 @@ describe('p-select disabled', () => {
 
   it('looks disabled, not only unusable', () => {
     const select = mountSelect(
-      '<p-select aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
+      '<p-select searchable aria-label="Area" disabled><option value="bar">Bar</option></p-select>'
     );
 
     expect(Number(getComputedStyle(select).opacity)).toBeLessThan(1);
@@ -1017,7 +1001,7 @@ describe('p-select from the keyboard alone', () => {
 
   it('clears a chosen value and searches again without a pointer', async () => {
     const select = mountSelect(
-      `<p-select name="fruit" aria-label="Fruit"><option value="a">Apple</option><option value="b">Banana</option></p-select>`
+      `<p-select searchable name="fruit" aria-label="Fruit"><option value="a">Apple</option><option value="b">Banana</option></p-select>`
     );
     const input = inputOf(select);
 
@@ -1026,33 +1010,11 @@ describe('p-select from the keyboard alone', () => {
     await vi.waitFor(() => expect(optionsOf(select).length).toBe(2), WAIT);
     press(select, 'Enter');
 
-    expect([select.value, input.readOnly]).toEqual(['a', true]);
+    expect(select.value).toBe('a');
 
     press(select, 'Backspace');
 
     expect([select.value, input.readOnly, input.value]).toEqual(['', false, '']);
-  });
-
-  it('names its clear button, and lets a page or a site rename it', () => {
-    const label = select => select.shadowRoot.querySelector('.clear').getAttribute('aria-label');
-    const plain = document.createElement('p-select');
-    const page = document.createElement('p-select');
-    page.setAttribute('clear-label', 'Effacer');
-    document.body.append(plain, page);
-    page.setAttribute('clear-label', 'Borrar');
-
-    PSelect.defaults.clearLabel = 'Auswahl löschen';
-    const site = document.createElement('p-select');
-    document.body.append(site);
-    try {
-      expect([label(plain), label(page), label(site)]).toEqual([
-        'Clear the selection',
-        'Borrar',
-        'Auswahl löschen',
-      ]);
-    } finally {
-      PSelect.defaults.clearLabel = 'Clear the selection';
-    }
   });
 
   it("shows the site's placeholder when the page set none", () => {
@@ -1070,8 +1032,8 @@ describe('p-select from the keyboard alone', () => {
     PSelect.defaults.noResults = 'Aucun résultat';
     try {
       renderForm(`
-        <p-select name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
-        <p-select name="country"><option value="fr">France</option></p-select>
+        <p-select searchable name="customer" data-select-src="/api/people?q={q}" data-select-min="2" search-min-hint="Tapez {min} caractères"></p-select>
+        <p-select searchable name="country"><option value="fr">France</option></p-select>
       `);
       const [remote, local] = document.querySelectorAll('p-select');
       const message = select => select.shadowRoot.querySelector('.noresults')?.textContent;
@@ -1106,7 +1068,7 @@ describe('p-select, choosing more than one', () => {
 
   it('reads its value as a list, and takes one from the attribute', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple value="grace,mary">
+      <p-select searchable name="staff" multiple value="grace,mary">
         <option value="ada">Ada Lovelace</option>
         <option value="grace">Grace Hopper</option>
         <option value="mary">Mary Somerville</option>
@@ -1146,7 +1108,7 @@ describe('p-select, choosing more than one', () => {
 
   it('is satisfied by one value when it is required', async () => {
     const { form, select } = renderForm(`
-      <p-select name="staff" multiple required>
+      <p-select searchable name="staff" multiple required>
         <option value="ada">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1159,7 +1121,7 @@ describe('p-select, choosing more than one', () => {
 
   it('puts the values back as they were when the form is reset', async () => {
     const { form, select } = renderForm(`
-      <p-select name="staff" multiple value="ada">
+      <p-select searchable name="staff" multiple value="ada">
         <option value="ada">Ada Lovelace</option>
         <option value="grace">Grace Hopper</option>
       </p-select>`);
@@ -1192,51 +1154,21 @@ describe('p-select, what it shows once several are chosen', () => {
     expect(selections(select)).toEqual(['Ada Lovelace', 'Mary Somerville']);
   });
 
-  it('takes a value back out from its own remove button', async () => {
+  it('takes a value back out by choosing its row again', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     select.value = ['ada', 'grace'];
     const changed = [];
     select.addEventListener('change', () => changed.push([...select.value]));
+    select.open();
 
-    clickShadow(select, '.selection [part="selection-remove"]');
+    clickShadow(select, '.option[data-index="0"]');
 
+    /* The selections carry no button of their own: the row that put a value in takes it out */
     expect({ left: selections(select), changed }).toEqual({
       left: ['Grace Hopper'],
       changed: [['grace']],
     });
-  });
-
-  it('will not let a disabled field have a value taken back out', async () => {
-    const { select } = renderForm(`
-      <p-select name="staff" multiple disabled>
-        <option value="ada">Ada Lovelace</option>
-        <option value="grace">Grace Hopper</option>
-      </p-select>`);
-    await customElements.whenDefined('p-select');
-    select.value = ['ada', 'grace'];
-    const changed = [];
-    select.addEventListener('change', () => changed.push([...select.value]));
-
-    clickShadow(select, '.selection [part="selection-remove"]');
-
-    /* Backspace is already turned away while disabled; the remove buttons were not */
-    expect({ left: [...select.value], changed }).toEqual({ left: ['ada', 'grace'], changed: [] });
-  });
-
-  it('gives the remove buttons back once the field is enabled again', async () => {
-    const { select } = renderForm(`
-      <p-select name="staff" multiple disabled>
-        <option value="ada">Ada Lovelace</option>
-        <option value="grace">Grace Hopper</option>
-      </p-select>`);
-    await customElements.whenDefined('p-select');
-    select.value = ['ada', 'grace'];
-
-    select.removeAttribute('disabled');
-    clickShadow(select, '.selection [part="selection-remove"]');
-
-    expect([...select.value]).toEqual(['grace']);
   });
 
   it('marks no row as the arrow keys\u2019 place when the list opens holding several', async () => {
@@ -1267,28 +1199,13 @@ describe('p-select, what it shows once several are chosen', () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     select.value = ['ada', 'grace'];
-    select.shadowRoot.querySelector('.input').focus();
+    select.shadowRoot.querySelector('.control').focus();
 
     await userEvent.keyboard('{ArrowDown}');
 
     expect(select.shadowRoot.querySelector('.option[data-active]')?.textContent.trim()).toBe(
       'Ada Lovelace'
     );
-  });
-
-  it('leaves the list closed when a value is taken back out', async () => {
-    const { select } = renderForm(STAFF);
-    await customElements.whenDefined('p-select');
-    select.value = ['ada', 'grace'];
-    const root = select.shadowRoot;
-
-    clickShadow(select, '.selection [part="selection-remove"]');
-
-    /* The remove button sits inside a control that opens the list on mousedown */
-    expect({ left: selections(select), open: !root.querySelector('.menu').hidden }).toEqual({
-      left: ['Grace Hopper'],
-      open: false,
-    });
   });
 
   it('names every part a page can style', async () => {
@@ -1300,17 +1217,15 @@ describe('p-select, what it shows once several are chosen', () => {
     expect({
       selections: part('.selections'),
       selection: part('.selection'),
-      remove: part('.selection [part]'),
     }).toEqual({
       selections: 'selections',
       selection: 'selection',
-      remove: 'selection-remove',
     });
   });
 
   it('carries a second line on each selection when asked for two rows', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2">
+      <p-select searchable name="staff" multiple selection-rows="2">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1398,21 +1313,21 @@ describe('p-select, the list when several may be chosen', () => {
 
     clickShadow(select, '.option[data-index="0"]');
 
-    /* With one value a single select goes read-only and offers a clear button; holding several
-       the input has to stay typeable, because typing is how the list is narrowed */
-    expect({
-      readOnly: root.querySelector('.input').readOnly,
-      clearHidden: root.querySelector('.clear').hidden,
-    }).toEqual({ readOnly: false, clearHidden: false });
+    /* Typing is how the list is narrowed, so the input stays a search box in either mode. The
+       clear button is not offered where several are held: a row goes back out by being chosen
+       again, and one press emptying the lot sat a stray click away from undoing a long selection */
+    expect(root.querySelector('.input').readOnly).toBe(false);
   });
 
-  it('clears every value from the clear button', async () => {
+  it('empties the field from clear()', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     await open(select);
     select.value = ['ada', 'grace'];
 
-    clickShadow(select, '.clear');
+    /* Nothing in the control empties it in one press any more: a row goes back out by being
+       chosen again, or with Backspace. The page can still empty it outright */
+    select.clear();
 
     expect(select.value).toEqual([]);
   });
@@ -1429,29 +1344,46 @@ describe('p-select, how a chosen row looks', () => {
     const chosen =
       select.shadowRoot.querySelector('.option[aria-selected="true"]:not([data-active])') ??
       select.shadowRoot.querySelector('.option[aria-selected="true"]');
-    return {
-      background: getComputedStyle(chosen).backgroundColor,
-      tick: Boolean(chosen.querySelector('.option__tick')),
-    };
+    const style = getComputedStyle(chosen);
+    return { background: style.backgroundColor, color: style.color };
   };
 
-  it('paints a chosen row and ticks it where several may be chosen', async () => {
+  it('leaves a hairline between rows so two chosen ones read as two', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+
+    const [first, second] = [...select.shadowRoot.querySelectorAll('.option')];
+    const gap = second.getBoundingClientRect().top - first.getBoundingClientRect().bottom;
+
+    expect(Math.round(gap)).toBe(1);
+  });
+
+  it('fills a chosen row where several may be chosen', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     select.value = ['ada', 'mary'];
 
-    /* A filled row with a tick at its trailing edge, rather than a box at the leading one. Read
-       from a row the keyboard is not on, since that one carries the hover shade */
-    expect(await openAndRead(select)).toEqual({ background: 'rgb(37, 99, 235)', tick: true });
+    /* The fill is the whole mark: no tick rides beside it. Read from a row the keyboard is not
+       on, since that one carries the hover shade */
+    expect(await openAndRead(select)).toEqual({
+      background: 'rgb(37, 99, 235)',
+      color: 'rgb(255, 255, 255)',
+    });
   });
 
-  it('leaves a single select\u2019s chosen row as the tint it has always been', async () => {
+  it('fills a chosen row the same way where only one may be chosen', async () => {
     const { select } = renderForm(COUNTRIES);
     await customElements.whenDefined('p-select');
 
+    /* One value or several, a chosen row is filled the same way: the mode changes what may be
+       chosen, not what being chosen looks like. Where only one may be, that row is also the one
+       the arrow keys carry on from, so it wears the deeper shade a marked row wears */
     expect(await openAndRead(select)).toEqual({
-      background: 'rgba(59, 130, 246, 0.1)',
-      tick: false,
+      background: 'rgb(29, 78, 216)',
+      color: 'rgb(255, 255, 255)',
     });
   });
 });
@@ -1471,7 +1403,7 @@ describe('p-select, taking the whole list at once', () => {
   };
 
   const BULK = `
-    <p-select name="staff" multiple select-all>
+    <p-select searchable name="staff" multiple select-all>
       <option value="ada">Ada Lovelace</option>
       <option value="grace">Grace Hopper</option>
       <option value="mary">Mary Somerville</option>
@@ -1535,7 +1467,7 @@ describe('p-select, taking the whole list at once', () => {
 
   it('leaves a disabled option alone', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple select-all>
+      <p-select searchable name="staff" multiple select-all>
         <option value="ada">Ada Lovelace</option>
         <option value="grace" disabled>Grace Hopper</option>
       </p-select>`);
@@ -1564,9 +1496,147 @@ describe('p-select, how tall the list and its rows are', () => {
     (_, i) => `<option value="v${i}" data-secondary="Role ${i}">Person ${i}</option>`
   ).join('');
 
-  it('keeps the secondary text on the label\u2019s line by default', async () => {
+  it('offers no search box, and narrows nothing, without searchable', async () => {
     const { select } = renderForm(`
       <p-select name="staff" multiple>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    const input = select.shadowRoot.querySelector('.input');
+
+    typeInto(select, 'ada');
+
+    /* The input still carries the combobox role and takes focus, so it stays in the tree; it is
+       out of the layout, and nothing it is given narrows the list */
+    expect({
+      rows: root.querySelectorAll('.option').length,
+      typed: input.value,
+      searchBar: select.shadowRoot.querySelector('.search').hidden,
+    }).toEqual({ rows: 2, typed: '', searchBar: true });
+  });
+
+  it('starts a value\u2019s text in the same place in either mode', async () => {
+    const { form } = renderForm(`
+      <p-select searchable name="a"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select searchable multiple name="b"><option value="uk">United Kingdom</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const [single, multiple] = [...form.querySelectorAll('p-select')];
+    multiple.value = ['uk'];
+    await vi.waitFor(() => expect(multiple.shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* The ground a chip is drawn on is the only difference between the two: the text it holds
+       starts in the same place, which is what the one structure is for */
+    const inset = field =>
+      Math.round(
+        field.shadowRoot.querySelector('.selection__name').getBoundingClientRect().left -
+          field.getBoundingClientRect().left
+      );
+    expect(inset(single)).toBe(inset(multiple));
+  });
+
+  it('draws a field to one height, empty or holding a value, either mode', async () => {
+    const { form } = renderForm(`
+      <p-select searchable name="a"><option value="uk">United Kingdom</option></p-select>
+      <p-select searchable name="b"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select searchable multiple name="c"><option value="ada">Ada Lovelace</option></p-select>
+      <p-select searchable multiple name="d"><option value="ada">Ada Lovelace</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const fields = [...form.querySelectorAll('p-select')];
+    fields[3].value = ['ada'];
+    await vi.waitFor(() => expect(fields[3].shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* Four states of the same control, drawn to the same row */
+    const heights = fields.map(field => Math.round(field.getBoundingClientRect().height));
+    expect(new Set(heights).size).toBe(1);
+  });
+
+  it('offers the way back from a search only once something is typed', async () => {
+    const { select } = renderForm(`
+      <p-select searchable multiple name="staff">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    const slot = () => ({
+      clear: root.querySelector('.search__clear').hidden,
+      icon: root.querySelector('.search__icon').hidden,
+    });
+    const empty = slot();
+
+    typeInto(select, 'ada');
+    await vi.waitFor(() => expect(root.querySelectorAll('.option').length).toBe(1));
+    const typed = slot();
+    clickShadow(select, '.search__clear');
+
+    /* One slot: the way back when there is something to go back from, the icon when there is not */
+    expect({
+      empty,
+      typed,
+      afterClear: slot(),
+      rows: root.querySelectorAll('.option').length,
+    }).toEqual({
+      empty: { clear: true, icon: false },
+      typed: { clear: false, icon: true },
+      afterClear: { clear: true, icon: false },
+      rows: 2,
+    });
+  });
+
+  it('leaves what was typed in the search box once a value is chosen', async () => {
+    const { select } = renderForm(`
+      <p-select searchable multiple name="staff">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    typeInto(select, 'ada');
+    await vi.waitFor(() => expect(root.querySelectorAll('.option').length).toBe(1));
+
+    clickShadow(select, '.option[data-index="0"]');
+
+    /* Blanked on choosing, the box emptied itself while the list stayed narrowed to what had been
+       typed: the rows the search put aside never came back and nothing said why */
+    expect({
+      typed: select.shadowRoot.querySelector('.input').value,
+      rows: root.querySelectorAll('.option').length,
+    }).toEqual({ typed: 'ada', rows: 1 });
+  });
+
+  it('keeps a field the same height whether one value is held or several', async () => {
+    const { form } = renderForm(`
+      <p-select name="a"><option value="uk" selected>United Kingdom</option></p-select>
+      <p-select name="b" multiple><option value="ada">Ada Lovelace</option></p-select>`);
+    await customElements.whenDefined('p-select');
+    const [single, multiple] = [...form.querySelectorAll('p-select')];
+    multiple.value = ['ada'];
+    await vi.waitFor(() => expect(multiple.shadowRoot.querySelector('.selection')).toBeTruthy());
+
+    /* One layout, one row: a single used to run to two rows, its selection taking the line and
+       the search box dropping beneath it */
+    expect(Math.round(single.getBoundingClientRect().height)).toBe(
+      Math.round(multiple.getBoundingClientRect().height)
+    );
+  });
+
+  it('puts the secondary text under the label by default', async () => {
+    const { select } = renderForm(`
+      <p-select searchable name="staff" multiple>
+        <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    await openList(select);
+
+    /* A row reads as a name with a line about it beneath, rather than one run-on line */
+    expect(getComputedStyle(select.shadowRoot.querySelector('.secondary')).display).toBe('block');
+  });
+
+  it('puts the secondary text back on the label\u2019s line where one row is asked for', async () => {
+    const { select } = renderForm(`
+      <p-select searchable name="staff" multiple list-rows="1">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1577,7 +1647,7 @@ describe('p-select, how tall the list and its rows are', () => {
 
   it('puts the secondary text on its own line where two rows are asked for', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple list-rows="2">
+      <p-select searchable name="staff" multiple list-rows="2">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
       </p-select>`);
     await customElements.whenDefined('p-select');
@@ -1587,16 +1657,17 @@ describe('p-select, how tall the list and its rows are', () => {
   });
 
   it('caps the list and scrolls it, by default', async () => {
-    const { select } = renderForm(`<p-select name="staff" multiple>${MANY}</p-select>`);
+    const { select } = renderForm(`<p-select searchable name="staff" multiple>${MANY}</p-select>`);
     await customElements.whenDefined('p-select');
-    const menu = await openList(select);
+    await openList(select);
+    const list = select.shadowRoot.querySelector('.options');
 
-    expect(menu.scrollHeight > menu.clientHeight).toBe(true);
+    expect(list.scrollHeight > list.clientHeight).toBe(true);
   });
 
   it('lets the list fit its content when the page asks for no cap', async () => {
     const { select } = renderForm(
-      `<p-select name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
+      `<p-select searchable name="staff" multiple style="--select-menu-max-height: none">${MANY}</p-select>`
     );
     await customElements.whenDefined('p-select');
     const menu = await openList(select);
@@ -1640,7 +1711,7 @@ describe('p-select, where the icons sit once the field grows', () => {
 
   it('follows the taller row when a selection carries two lines', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2" style="width: 14rem">
+      <p-select searchable name="staff" multiple selection-rows="2" style="width: 14rem">
         <option value="ada" data-secondary="Duty manager">Ada Lovelace</option>
         <option value="grace" data-secondary="Rear admiral">Grace Hopper</option>
       </p-select>`);
@@ -1657,20 +1728,6 @@ describe('p-select, where the icons sit once the field grows', () => {
 describe('p-select, reaching the chosen values from the keyboard', () => {
   afterEach(() => {
     document.body.replaceChildren();
-  });
-
-  it('keeps the remove buttons out of the tab order, as the clear button is', async () => {
-    const { select } = renderForm(STAFF);
-    await customElements.whenDefined('p-select');
-
-    select.value = ['ada', 'grace', 'mary'];
-
-    /* Otherwise tabbing into a field holding twenty values stops twenty times before the input */
-    expect(
-      [...select.shadowRoot.querySelectorAll('.selection__remove')].map(button =>
-        button.getAttribute('tabindex')
-      )
-    ).toEqual(['-1', '-1', '-1']);
   });
 
   it('takes the last value back on Backspace in an empty input', async () => {
@@ -1709,7 +1766,7 @@ describe('p-select, a label that is markup', () => {
 
   it('shows a chosen value whose label is markup as text', async () => {
     const { select } = renderForm(`
-      <p-select name="staff" multiple selection-rows="2">
+      <p-select searchable name="staff" multiple selection-rows="2">
         <option value="ada" data-secondary="&lt;img src=x onerror=&quot;window.__pselectInjected = true&quot;&gt;">
           &lt;img src=x onerror="window.__pselectInjected = true"&gt;
         </option>

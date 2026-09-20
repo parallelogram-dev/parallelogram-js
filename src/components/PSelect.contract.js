@@ -33,19 +33,34 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         "How many rows a chosen value takes in the control: its label, or its label over the option's secondary text",
     },
     {
-      name: 'remove-label',
-      type: 'string',
-      default: 'Remove {label}',
-      option: 'removeLabel',
-      description: "The accessible name of a chosen value's remove button; {label} is its label",
-    },
-    {
       name: 'list-rows',
       type: 'enum',
       options: ['1', '2'],
       default: '1',
       description:
         'How many rows an option takes in the list: its label with the secondary text after it, or the secondary text on its own line beneath',
+    },
+    {
+      name: 'searchable',
+      type: 'flag',
+      description:
+        'Offers a box to type in that narrows the list. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help',
+    },
+    {
+      name: 'search-label',
+      type: 'string',
+      default: 'Search',
+      option: 'searchLabel',
+      description:
+        'The placeholder in the search box once something is chosen, when the field\u2019s own placeholder has given way to the selections',
+    },
+    {
+      name: 'search-clear-label',
+      type: 'string',
+      default: 'Clear the search',
+      option: 'searchClearLabel',
+      description:
+        'The accessible name of the button that takes back what was typed in the search box',
     },
     {
       name: 'select-all',
@@ -74,13 +89,6 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       default: 'Select…',
       option: 'placeholder',
       description: 'Shown when nothing is chosen',
-    },
-    {
-      name: 'clear-label',
-      type: 'string',
-      default: 'Clear the selection',
-      option: 'clearLabel',
-      description: 'The accessible name of the clear button',
     },
     {
       name: 'search-hint',
@@ -222,22 +230,27 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'p-select:close', description: 'The list closed' },
   ],
   parts: [
-    { name: 'input', description: 'The text input' },
-    { name: 'selections', description: 'The chosen values in the control, where multiple is set' },
+    { name: 'control', description: 'The field itself, which carries the combobox role and focus' },
+    { name: 'menu', description: 'The popup, holding the search bar, the bulk bar and the list' },
+    {
+      name: 'search',
+      description: 'The search bar at the top of the popup, where searchable is set',
+    },
+    { name: 'input', description: 'The search box inside that bar' },
+    { name: 'search-clear', description: 'The button that takes back what was typed into it' },
+    { name: 'selections', description: 'The chosen values in the control' },
     { name: 'selection', description: 'One chosen value' },
-    { name: 'selection-remove', description: 'The button that takes one chosen value back out' },
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },
     { name: 'bulk-all', description: 'The button that takes every option the search left' },
     { name: 'bulk-none', description: 'The button that gives those options back' },
-    { name: 'clear', description: 'The button that clears the selection' },
     { name: 'listbox', description: 'The list of options' },
   ],
   cssProperties: [
     {
-      name: '--selection-row',
-      default: '2rem',
+      name: '--select-row',
+      default: '1.75rem',
       description:
-        'How tall one row of chosen values is, which is what keeps the icons level with the first row as the field grows. The element measures a real row and writes it here, so a page rarely sets it',
+        'How tall one row of the control is, which is what keeps the icons in the gutter level with the first row as the field grows. The element measures a real row and writes it here once anything is chosen, so a page rarely sets it',
     },
     {
       name: '--select-menu-max-height',
@@ -253,12 +266,13 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     {
       name: '--select-chosen-bg',
       default: 'var(--color-accent)',
-      description: 'Background of a chosen row where multiple is set; it is filled, not tinted',
+      description:
+        'Background of a chosen row in the list; it is filled, not tinted, whether one value may be chosen or several',
     },
     {
       name: '--select-chosen-color',
       default: 'var(--color-accent-contrast)',
-      description: 'Text and tick colour of a chosen row where multiple is set',
+      description: 'Text colour of a chosen row in the list',
     },
     {
       name: '--select-chosen-hover-bg',
@@ -316,9 +330,28 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: 'Corner radius of the control; follows the control surface',
     },
     {
-      name: '--select-padding',
-      default: '0.45rem 0.6rem',
-      description: 'Padding inside the control',
+      name: '--select-padding-block',
+      default: '0.45rem',
+      description:
+        'Padding above and below the control\u2019s rows, which the icons in the gutter start from',
+    },
+    {
+      name: '--select-padding-inline',
+      default: '0.8rem',
+      description:
+        'Padding at the leading and trailing edges of the control, which the chevron sits in from',
+    },
+    {
+      name: '--select-selection-padding-inline',
+      default: '0.6rem',
+      description:
+        "A chosen value's own inset. The control gives back exactly this much of its leading padding, so a value's text starts in the same place whether it is drawn on a ground of its own or not",
+    },
+    {
+      name: '--select-gutter',
+      default: 'calc(var(--select-padding-inline) + 2.85rem)',
+      description:
+        'The trailing strip the control keeps for the chevron and the slot beside it, whether or not anything is drawn there, so opening the list never moves what is already in the field',
     },
     {
       name: '--select-placeholder',
@@ -469,7 +502,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       id: 'many',
       title: 'Choosing several',
       description:
-        'With `multiple` the list toggles rather than replaces and stays open, a chosen row is filled with a tick at its trailing edge, and every chosen value sits in the control with the button that takes it back out. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
+        'With `multiple` the list toggles rather than replaces and stays open, and every chosen value sits in the control. A value goes back out by choosing its row again, or with Backspace from the empty input. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
       markup: `<div class="form">
   <div class="form__group">
     <label class="form__label" for="shift">Staff on shift</label>
