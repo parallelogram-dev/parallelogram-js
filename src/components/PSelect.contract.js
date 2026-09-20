@@ -55,6 +55,14 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'The placeholder in the search box once something is chosen, when the field\u2019s own placeholder has given way to the selections',
     },
     {
+      name: 'search-clear-label',
+      type: 'string',
+      default: 'Clear the search',
+      option: 'searchClearLabel',
+      description:
+        'The accessible name of the button that takes back what was typed in the search box',
+    },
+    {
       name: 'select-all',
       type: 'flag',
       description:
@@ -236,6 +244,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       description: 'The search bar at the top of the popup, where searchable is set',
     },
     { name: 'input', description: 'The search box inside that bar' },
+    { name: 'search-clear', description: 'The button that takes back what was typed into it' },
     { name: 'selections', description: 'The chosen values in the control' },
     { name: 'selection', description: 'One chosen value' },
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },

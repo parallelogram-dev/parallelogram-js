@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The search box carries the way back from a search: once something is typed, the icon at its trailing edge becomes a button that takes it back and brings the whole list with it, in the same slot so neither swap moves the other. A search field's own button is drawn by WebKit and Blink but not by Firefox, so this one is drawn rather than borrowed and behaves the same everywhere. `search-clear` is the part, `search-clear-label` its name.
 - `searchable` offers a search bar at the top of the list, ruled off from the rows the way the bulk bar is, with its icon at the trailing edge under the chevron. It narrows the list as it is typed in. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help. `search-label` is the placeholder it carries once something is chosen and the field's own placeholder has given way to the selections.
 
 ### Changed

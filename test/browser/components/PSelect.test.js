@@ -1583,6 +1583,39 @@ describe('p-select, how tall the list and its rows are', () => {
     expect(new Set(heights).size).toBe(1);
   });
 
+  it('offers the way back from a search only once something is typed', async () => {
+    const { select } = renderForm(`
+      <p-select searchable multiple name="staff">
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    const root = await openList(select);
+    const slot = () => ({
+      clear: root.querySelector('.search__clear').hidden,
+      icon: root.querySelector('.search__icon').hidden,
+    });
+    const empty = slot();
+
+    typeInto(select, 'ada');
+    await vi.waitFor(() => expect(root.querySelectorAll('.option').length).toBe(1));
+    const typed = slot();
+    clickShadow(select, '.search__clear');
+
+    /* One slot: the way back when there is something to go back from, the icon when there is not */
+    expect({
+      empty,
+      typed,
+      afterClear: slot(),
+      rows: root.querySelectorAll('.option').length,
+    }).toEqual({
+      empty: { clear: true, icon: false },
+      typed: { clear: false, icon: true },
+      afterClear: { clear: true, icon: false },
+      rows: 2,
+    });
+  });
+
   it('leaves what was typed in the search box once a value is chosen', async () => {
     const { select } = renderForm(`
       <p-select searchable multiple name="staff">

@@ -125,6 +125,7 @@ export default class PSelect extends HTMLElement {
     placeholder: 'Select…',
     clearLabel: 'Clear the selection',
     searchLabel: 'Search',
+    searchClearLabel: 'Clear the search',
     selectAllLabel: 'Select all ({count})',
     selectNoneLabel: 'None',
     searchHint: 'Type to search',
@@ -140,6 +141,7 @@ export default class PSelect extends HTMLElement {
       'list-rows',
       'searchable',
       'search-label',
+      'search-clear-label',
       'select-all',
       'select-all-label',
       'select-none-label',
@@ -312,12 +314,13 @@ export default class PSelect extends HTMLElement {
             <input
               class="input"
               part="input"
-              type="text"
+              type="search"
               tabindex="-1"
               autocomplete="off"
               aria-autocomplete="list"
               aria-controls="listbox"
             />
+            <button type="button" class="search__clear" part="search-clear" tabindex="-1" hidden>${iconMarkup(x, { size: 'xs' })}</button>
             <span class="search__icon" aria-hidden="true">${iconMarkup(search, { size: 'xs' })}</span>
           </div>
           <div class="options" id="listbox" part="listbox" role="listbox" aria-busy="false" tabindex="-1"></div>
@@ -336,6 +339,8 @@ export default class PSelect extends HTMLElement {
       menu: this.shadowRoot.querySelector('.menu'),
       arrow: this.shadowRoot.querySelector('.arrow'),
       search: this.shadowRoot.querySelector('.search'),
+      searchClear: this.shadowRoot.querySelector('.search__clear'),
+      searchIcon: this.shadowRoot.querySelector('.search__icon'),
       clear: this.shadowRoot.querySelector('.clear'),
       live: this.shadowRoot.querySelector('.live'),
     };
@@ -389,6 +394,10 @@ export default class PSelect extends HTMLElement {
       control.focus();
       this.toggle();
     });
+
+    this._els.searchClear.addEventListener('mousedown', event => event.preventDefault());
+    this._els.searchClear.addEventListener('click', () => this._clearSearch());
+    this._els.searchClear.setAttribute('aria-label', text(this, 'search-clear-label'));
 
     control.addEventListener('keydown', event => this._handleKeydown(event));
     control.addEventListener('focus', () => {
@@ -507,6 +516,24 @@ export default class PSelect extends HTMLElement {
     this.setOptions(options);
   }
 
+  /**
+   * The slot at the trailing edge of the search bar holds the way to take back what was typed when
+   * there is something to take back, and the search icon when there is not, so neither swap moves
+   * the other and both stay in the chevron's column
+   */
+  _syncSearchSlot() {
+    const typed = this._els.input.value !== '';
+    this._els.searchClear.hidden = !typed;
+    this._els.searchIcon.hidden = typed;
+  }
+
+  _clearSearch() {
+    this._els.input.value = '';
+    this._filterLocal('');
+    this._syncSearchSlot();
+    this._els.input.focus();
+  }
+
   _handleInput(event) {
     /* Without a search box there is nothing to type into, so nothing narrows the list */
     if (!this.state.searchable) {
@@ -514,6 +541,7 @@ export default class PSelect extends HTMLElement {
       return;
     }
 
+    this._syncSearchSlot();
     const query = event.target.value;
     this.state.query = query;
     this.open();
@@ -604,6 +632,7 @@ export default class PSelect extends HTMLElement {
         if (this._els.input.value !== '') {
           this._els.input.value = '';
           this._filterLocal('');
+          this._syncSearchSlot();
         }
         this.close();
         break;
