@@ -8,6 +8,8 @@ import { text } from '../utils/text.js';
 
 /** How many options Page Up and Page Down move by */
 const PAGE_SIZE = 10;
+/** How long a typeahead buffer survives a pause, as a native select's does */
+const TYPEAHEAD_CLEAR = 1000;
 /* Pixels from the end of the list at which the next page is asked for */
 const LOAD_MORE_MARGIN = 48;
 
@@ -537,8 +539,62 @@ export default class PSelect extends HTMLElement {
     this._filterLocal(query);
   }
 
+  /**
+   * Whether a key is a character someone meant to type, rather than a command or a chord
+   */
+  _isTypeahead(event) {
+    return (
+      !this.state.searchable &&
+      event.key.length === 1 &&
+      event.key !== ' ' &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    );
+  }
+
+  /**
+   * Move to the option a typed prefix names, the way a native select does. Without a search box
+   * there is nowhere to type, so a field of fifty options could only be walked one row at a time.
+   *
+   * The buffer clears after a second of quiet, as a native select's does. A run of the same
+   * character cycles the options beginning with it instead of looking for a prefix nothing
+   * matches, so pressing u twice reaches the second of two options starting with it.
+   */
+  _typeaheadTo(character) {
+    clearTimeout(this._typeaheadTimer);
+    this._typed = (this._typed ?? '') + character.toLowerCase();
+    this._typeaheadTimer = setTimeout(() => {
+      this._typed = '';
+    }, TYPEAHEAD_CLEAR);
+
+    const rows = this.state.filtered.filter(option => !option.disabled);
+    if (rows.length === 0) return;
+
+    const repeated = [...this._typed].every(letter => letter === this._typed[0]);
+    const prefix = repeated ? this._typed[0] : this._typed;
+    const matches = rows.filter(option => option.label.toLowerCase().startsWith(prefix));
+    if (matches.length === 0) return;
+
+    const match = repeated ? matches[(this._typed.length - 1) % matches.length] : matches[0];
+
+    /* Shut, a native select chooses as it goes; open, the list marks where the keys have reached
+       and Enter is what chooses, which is what the arrow keys do here already */
+    if (this.state.open) {
+      this._setHighlight(this.state.filtered.indexOf(match));
+    } else {
+      this._choose(match.value, match);
+    }
+  }
+
   _handleKeydown(event) {
     const { key } = event;
+
+    if (this._isTypeahead(event)) {
+      event.preventDefault();
+      this._typeaheadTo(key);
+      return;
+    }
 
     if (!this.state.open) {
       if (key === 'ArrowDown' || (key === 'ArrowUp' && !event.altKey)) {
@@ -1000,6 +1056,8 @@ export default class PSelect extends HTMLElement {
     /* Read before anything is redrawn: the list is where the search box lives, and by the time it
        has been taken down the keyboard has nowhere to go back to */
     const keyboardWasInTheList = this._els.menu.contains(this.shadowRoot.activeElement);
+    clearTimeout(this._typeaheadTimer);
+    this._typed = '';
     this.state.open = false;
     this._els.control.setAttribute('aria-expanded', 'false');
     this._els.control.removeAttribute('aria-activedescendant');

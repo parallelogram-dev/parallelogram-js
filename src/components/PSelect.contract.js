@@ -44,7 +44,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       name: 'searchable',
       type: 'flag',
       description:
-        'Offers a box to type in that narrows the list. Without it the list is not searchable and typing does nothing, which suits a handful of options where a search box is more furniture than help',
+        'Offers a box to type in that narrows the list. Without it a printable key moves the field to the option it names, as a native select does, which suits a handful of options where a search box is more furniture than help',
     },
     {
       name: 'search-label',

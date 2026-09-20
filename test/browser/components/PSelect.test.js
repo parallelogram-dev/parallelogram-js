@@ -342,6 +342,88 @@ describe('p-select combobox', () => {
     expect(controlOf(select).getAttribute('aria-label')).toBe('Seat class');
   });
 
+  it('chooses the option a typed letter names while the list is shut', async () => {
+    const select = mountSelect(`
+      <p-select name="c" aria-label="Country">
+        <option value="au">Australia</option>
+        <option value="nz">New Zealand</option>
+        <option value="uk">United Kingdom</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    controlOf(select).focus();
+
+    await userEvent.keyboard('n');
+
+    /* What a native select does, and the only way through a long list without a search box */
+    expect([select.value, select.shadowRoot.querySelector('.menu').hidden]).toEqual(['nz', true]);
+  });
+
+  it('follows a typed prefix past the first letter', async () => {
+    const select = mountSelect(`
+      <p-select name="c" aria-label="Country">
+        <option value="ca">Canada</option>
+        <option value="cl">Chile</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    controlOf(select).focus();
+
+    await userEvent.keyboard('ch');
+
+    expect(select.value).toBe('cl');
+  });
+
+  it('cycles the options a repeated letter names', async () => {
+    const select = mountSelect(`
+      <p-select name="c" aria-label="Country">
+        <option value="uk">United Kingdom</option>
+        <option value="us">United States</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    controlOf(select).focus();
+
+    await userEvent.keyboard('u');
+    const first = select.value;
+    await userEvent.keyboard('u');
+
+    /* A run of one letter walks the options beginning with it, rather than seeking a prefix
+       no label has */
+    expect([first, select.value]).toEqual(['uk', 'us']);
+  });
+
+  it('marks where typing reaches while the list is open, rather than choosing', async () => {
+    const select = mountSelect(`
+      <p-select name="c" aria-label="Country">
+        <option value="au">Australia</option>
+        <option value="nz">New Zealand</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    controlOf(select).focus();
+    select.open();
+
+    await userEvent.keyboard('n');
+
+    /* Open, Enter is what chooses — the same as the arrow keys */
+    expect([
+      select.value,
+      select.shadowRoot.querySelector('.option[data-active]')?.textContent.trim(),
+    ]).toEqual(['', 'New Zealand']);
+  });
+
+  it('leaves typing to the search box where the page asked for one', async () => {
+    const select = mountSelect(`
+      <p-select searchable name="c" aria-label="Country">
+        <option value="au">Australia</option>
+        <option value="nz">New Zealand</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    controlOf(select).focus();
+
+    await userEvent.keyboard('n');
+
+    /* A field with a search box already has somewhere for a letter to go */
+    expect(select.value).toBe('');
+  });
+
   it('moves to the first and last options with Home and End', () => {
     const select = mountSelect(COUNTRIES);
     press(select, 'ArrowDown');
