@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A chosen row in the list is filled the same way whether one value may be chosen or several. A single select's chosen row was a ten percent tint while a multiple's was filled in the accent, which made one mode's list look like a weaker copy of the other's. The tick that rode at a filled row's trailing edge is gone with it: the fill is the whole mark, and the tick was carrying nothing the colour did not.
+- Rows in the list are separated by a hairline, so two chosen ones next to each other read as two filled rows rather than one block of colour.
+- An option's text is cut with an ellipsis rather than wrapped. `list-rows="1"` says an option takes one row, but nothing held it to that, so a long label and its secondary text spilled into a second line the row had no height for — a ragged copy of `list-rows="2"` rather than a deliberate one. The control's chosen values were already cut this way; the list now matches.
 - `<p-select>` draws what is chosen the same way whether one value is held or several. Both modes now render a selection through one path, and the input has one job in both: it is the search box, never the display, and never read-only. A single select therefore no longer shows its label in a read-only input that had to be cleared before it could be searched — the label sits in a selection beside a search box that is always typeable. Both modes are laid out in flow rather than one being stretched over a box of a fixed height, so a field is as tall as what is in it in either mode.
 - The chevron and the slot beside it sit in a strip the control always reserves, rather than joining the row and pushing the chosen values about as the open state shows or hides them. Opening the list no longer grows the field by a row or moves the chevron. `--select-gutter` is how wide that strip is.
 - A chosen value no longer carries a button of its own to take it back out, and a field holding several no longer offers the clear button. A value goes back out by choosing its row again, which is the same gesture that put it in, or with Backspace from the empty input. A field holding one value keeps its clear button.
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The tick on a chosen row in the list, with the `check` icon it drew.
 - `--select-padding` and `--selection-row`, replaced by `--select-padding-block`, `--select-padding-inline` and `--select-row`. The two padding properties are read directly by the strip the icons sit in, so setting them keeps the icons with the text; the old single property could not.
 - The `selection-remove` part and the `remove-label` text, with the buttons they named.
 

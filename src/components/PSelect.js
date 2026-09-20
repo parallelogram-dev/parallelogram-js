@@ -1,6 +1,6 @@
 import { TransitionManager } from '../managers/TransitionManager.js';
 import styles from '../styles/framework/components/PSelect.scss';
-import { check, chevronDown, iconElement, iconMarkup, search, x } from '../utils/icons.js';
+import { chevronDown, iconMarkup, search, x } from '../utils/icons.js';
 import { adoptStyles, setStaticHTML } from '../utils/shadow.js';
 import { dispatchComponentEvent } from '../utils/events.js';
 import { followFocusSource } from '../utils/focus-source.js';
@@ -1245,15 +1245,6 @@ export default class PSelect extends HTMLElement {
         element.append(...richOptionContent(option));
       } else {
         element.textContent = option.label;
-      }
-      if (this.state.multiple) {
-        /* The tick rides at the trailing edge of a filled row, rather than a box at the leading
-           one, and holds its space so nothing shifts as rows are chosen */
-        const tick = document.createElement('span');
-        tick.className = 'option__tick';
-        tick.setAttribute('aria-hidden', 'true');
-        tick.append(iconElement(check, { size: 'sm' }));
-        element.append(tick);
       }
       (groupElement ?? menu).append(element);
     });

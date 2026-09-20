@@ -304,6 +304,12 @@
   transition: background-color 0.15s ease;
 }
 
+/* A hairline between rows, so two chosen ones next to each other read as two filled rows rather
+   than one block of colour */
+.option + .option {
+  margin-top: 1px;
+}
+
 /* A thumbnail has its size before it loads, so the list doesn't reflow as images arrive; it is
    no taller than a line of text, so an option with one is as tall as an option without */
 .image {
@@ -314,8 +320,13 @@
   object-fit: cover;
 }
 
+/* One row means one row: the label and what follows it are cut with an ellipsis rather than
+   wrapping into a second line the row was never given the height for */
 .text {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .secondary {
@@ -353,15 +364,10 @@
   outline-offset: -2px;
 }
 
-/* Where several may be chosen a row is filled rather than tinted, with the tick at its trailing
-   edge. A single select keeps the tint it has always had */
-:host([multiple]) .option[aria-selected='true'] {
-  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
-  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
-}
-
-:host([multiple]) .option[aria-selected='true']:hover,
-:host([multiple]) .option[aria-selected='true'][data-active] {
+/* A chosen row is filled, whether one may be chosen or several: the fill is the whole mark now
+   that no tick rides beside it, and a tint that faint carried too little on its own */
+.option[aria-selected='true']:hover,
+.option[aria-selected='true'][data-active] {
   background: var(--select-chosen-hover-bg, var(--color-accent-hover, #{$primary-dark}));
 }
 
@@ -400,19 +406,9 @@
   outline-offset: 1px;
 }
 
-.option__tick {
-  display: inline-flex;
-  margin-left: auto;
-  flex: none;
-  opacity: 0;
-}
-
-.option[aria-selected='true'] .option__tick {
-  opacity: 1;
-}
-
 .option[aria-selected='true'] {
-  background: var(--select-selected-bg);
+  background: var(--select-chosen-bg, var(--color-accent, #{$primary}));
+  color: var(--select-chosen-color, var(--color-accent-contrast, #ffffff));
   font-weight: 500;
 }
 

@@ -245,12 +245,13 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     {
       name: '--select-chosen-bg',
       default: 'var(--color-accent)',
-      description: 'Background of a chosen row where multiple is set; it is filled, not tinted',
+      description:
+        'Background of a chosen row in the list; it is filled, not tinted, whether one value may be chosen or several',
     },
     {
       name: '--select-chosen-color',
       default: 'var(--color-accent-contrast)',
-      description: 'Text and tick colour of a chosen row where multiple is set',
+      description: 'Text colour of a chosen row in the list',
     },
     {
       name: '--select-chosen-hover-bg',
@@ -474,7 +475,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       id: 'many',
       title: 'Choosing several',
       description:
-        'With `multiple` the list toggles rather than replaces and stays open, a chosen row is filled with a tick at its trailing edge, and every chosen value sits in the control with the button that takes it back out. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
+        'With `multiple` the list toggles rather than replaces and stays open, and every chosen value sits in the control. A value goes back out by choosing its row again, or with Backspace from the empty input. Nothing is counted away behind "and 2 more": the field grows to about three rows and then scrolls. `selection-rows="2"` and `list-rows="2"` put the secondary text under the label in the control and in the list, and `select-all` adds the bar that takes or gives back whatever the search has narrowed to. The form carries one entry per value under the one name.',
       markup: `<div class="form">
   <div class="form__group">
     <label class="form__label" for="shift">Staff on shift</label>

@@ -1392,29 +1392,46 @@ describe('p-select, how a chosen row looks', () => {
     const chosen =
       select.shadowRoot.querySelector('.option[aria-selected="true"]:not([data-active])') ??
       select.shadowRoot.querySelector('.option[aria-selected="true"]');
-    return {
-      background: getComputedStyle(chosen).backgroundColor,
-      tick: Boolean(chosen.querySelector('.option__tick')),
-    };
+    const style = getComputedStyle(chosen);
+    return { background: style.backgroundColor, color: style.color };
   };
 
-  it('paints a chosen row and ticks it where several may be chosen', async () => {
+  it('leaves a hairline between rows so two chosen ones read as two', async () => {
+    const { select } = renderForm(STAFF);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    select.open();
+    await vi.waitFor(() => expect(select.shadowRoot.querySelector('.menu').hidden).toBe(false));
+
+    const [first, second] = [...select.shadowRoot.querySelectorAll('.option')];
+    const gap = second.getBoundingClientRect().top - first.getBoundingClientRect().bottom;
+
+    expect(Math.round(gap)).toBe(1);
+  });
+
+  it('fills a chosen row where several may be chosen', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');
     select.value = ['ada', 'mary'];
 
-    /* A filled row with a tick at its trailing edge, rather than a box at the leading one. Read
-       from a row the keyboard is not on, since that one carries the hover shade */
-    expect(await openAndRead(select)).toEqual({ background: 'rgb(37, 99, 235)', tick: true });
+    /* The fill is the whole mark: no tick rides beside it. Read from a row the keyboard is not
+       on, since that one carries the hover shade */
+    expect(await openAndRead(select)).toEqual({
+      background: 'rgb(37, 99, 235)',
+      color: 'rgb(255, 255, 255)',
+    });
   });
 
-  it('leaves a single select\u2019s chosen row as the tint it has always been', async () => {
+  it('fills a chosen row the same way where only one may be chosen', async () => {
     const { select } = renderForm(COUNTRIES);
     await customElements.whenDefined('p-select');
 
+    /* One value or several, a chosen row is filled the same way: the mode changes what may be
+       chosen, not what being chosen looks like. Where only one may be, that row is also the one
+       the arrow keys carry on from, so it wears the deeper shade a marked row wears */
     expect(await openAndRead(select)).toEqual({
-      background: 'rgba(59, 130, 246, 0.1)',
-      tick: false,
+      background: 'rgb(29, 78, 216)',
+      color: 'rgb(255, 255, 255)',
     });
   });
 });
