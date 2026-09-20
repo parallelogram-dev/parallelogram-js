@@ -343,7 +343,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     },
     {
       name: '--select-selection-padding-inline',
-      default: '0.5rem',
+      default: '0.35rem',
       description:
         "A chosen value's own inset. The control gives back exactly this much of its leading padding, so a value's text starts in the same place whether it is drawn on a ground of its own or not",
     },
