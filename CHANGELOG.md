@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Taking a value back out of a `<p-select multiple>` from its own remove button no longer opens the list as well. The control opens on `mousedown` and the remove buttons sit inside it, so the guard the clear button already had is now on them too. A press on the chip itself, rather than its button, still opens the list, as any other part of the control does.
 - A `<p-select multiple>` no longer opens its list with one row already marked. It marked whichever chosen value came first, which is an arbitrary pick among several, and that row was then drawn in the deeper accent the list uses for a row under the pointer — so it read as somewhere the pointer had already landed before anything had been done. Nothing is marked on open now, and an arrow key enters the list at its first row. A select where only one value may be chosen still opens onto that value, which is the row the arrow keys should carry on from.
 
 ## [0.7.17] - 2026-09-20

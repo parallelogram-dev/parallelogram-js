@@ -336,7 +336,11 @@ export default class PSelect extends HTMLElement {
       this._bulkChoose(button.dataset.bulk === 'all');
     });
 
-    this._els.selections.addEventListener('mousedown', event => event.preventDefault());
+    this._els.selections.addEventListener('mousedown', event => {
+      event.preventDefault();
+      /* The remove buttons sit inside the control, so they must not open the list as well */
+      if (event.target.closest('[data-value]')) event.stopPropagation();
+    });
     this._els.selections.addEventListener('click', event => {
       const button = event.target.closest('[data-value]');
       if (!button) return;
