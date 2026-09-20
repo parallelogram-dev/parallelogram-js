@@ -1207,6 +1207,38 @@ describe('p-select, what it shows once several are chosen', () => {
     });
   });
 
+  it('will not let a disabled field have a value taken back out', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple disabled>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+    const changed = [];
+    select.addEventListener('change', () => changed.push([...select.value]));
+
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    /* Backspace is already turned away while disabled; the remove buttons were not */
+    expect({ left: [...select.value], changed }).toEqual({ left: ['ada', 'grace'], changed: [] });
+  });
+
+  it('gives the remove buttons back once the field is enabled again', async () => {
+    const { select } = renderForm(`
+      <p-select name="staff" multiple disabled>
+        <option value="ada">Ada Lovelace</option>
+        <option value="grace">Grace Hopper</option>
+      </p-select>`);
+    await customElements.whenDefined('p-select');
+    select.value = ['ada', 'grace'];
+
+    select.removeAttribute('disabled');
+    clickShadow(select, '.selection [part="selection-remove"]');
+
+    expect([...select.value]).toEqual(['grace']);
+  });
+
   it('names every part a page can style', async () => {
     const { select } = renderForm(STAFF);
     await customElements.whenDefined('p-select');

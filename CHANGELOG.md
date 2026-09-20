@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A disabled `<p-select multiple>` can no longer have its values taken back out. The buttons on each chosen value stayed live while the field was disabled, so a value could still be removed and a `change` event still went out, from a field that should not have been changeable at all. Backspace was already turned away; the buttons now are too, and they come back the moment the field is enabled again.
+
 ## [0.7.17] - 2026-09-20
 
 ### Fixed

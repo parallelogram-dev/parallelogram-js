@@ -807,6 +807,9 @@ export default class PSelect extends HTMLElement {
         /* Out of the tab order, as the clear button is: a field holding twenty values would
            otherwise stop the keyboard twenty times before the input. Backspace is the way back */
         remove.tabIndex = -1;
+        /* A disabled field turns Backspace away as well; without this the remove buttons were the
+           one way left to change a value it should not be possible to change */
+        remove.disabled = this.state.disabled;
         remove.setAttribute('aria-label', text(this, 'remove-label', { label }));
         remove.dataset.value = value;
         remove.append(iconElement(x, { size: 'xs' }));
@@ -951,6 +954,7 @@ export default class PSelect extends HTMLElement {
     this.state.disabled = disabled;
     this._els.input.disabled = disabled;
     if (disabled) this.close();
+    this._renderSelections();
     this._updateControls();
   }
 
