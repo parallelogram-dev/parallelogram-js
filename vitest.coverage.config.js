@@ -20,6 +20,8 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.js'],
       exclude: ['src/**/*.contract.js'],
+      /* text for the terminal, html for browsing locally or in an IDE, cobertura for CI to upload */
+      reporter: ['text', 'html', 'cobertura'],
       /* The real combined number when these were set, rounded down. The unit project alone reported
          about 51/44/50/53, which is why the gate used to sit there: it was measuring the half of the
          suite that does not cover PSelect, PDatetime or PUploader. */

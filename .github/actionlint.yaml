@@ -1,0 +1,6 @@
+paths:
+  .github/workflows/ci.yml:
+    ignore:
+      # actionlint v1.7.12 predates the "code-quality" permission scope used by
+      # actions/upload-code-coverage; the workflow value is valid on GitHub Actions.
+      - 'unknown permission scope "code-quality"'
