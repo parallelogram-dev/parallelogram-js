@@ -1,0 +1,8 @@
+name: parallelogram-js
+
+# The docs site is a development-only playground, not shipped code. It is excluded because
+# the CodeQL JavaScript extractor fails to parse its `import.meta.hot` HMR guards, and the
+# extractor's parser target is not configurable.
+paths:
+  - src
+  - scripts
