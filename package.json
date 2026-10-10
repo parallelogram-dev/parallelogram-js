@@ -99,7 +99,8 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
   ],
   "directories": {
     "test": "test"
@@ -146,10 +147,11 @@
   },
   "author": "PeptoLab",
   "allowScripts": {
-    "@parcel/watcher@2.5.1": true
+    "@parcel/watcher@2.5.1": true,
+    "fsevents@2.3.3": true
   },
   "sizeBudget": {
-    "parallelogram.js": 83510,
+    "parallelogram.js": 96512,
     "index.js": 16662,
     "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3944,
@@ -168,6 +170,9 @@
     "components/Scrollhide.js": 3930,
     "components/Scrollreveal.js": 4491,
     "components/SelectLoader.js": 4854,
+    "components/Sortable.js": 11574,
+    "components/Swappable.js": 11195,
+    "components/Droppable.js": 11584,
     "components/Tabs.js": 4910,
     "components/Toast.js": 6842,
     "components/Toggle.js": 5137,
@@ -199,6 +204,6 @@
     "managers/PageManager.js": 8489,
     "managers/RouterManager.js": 3883,
     "managers/TransitionManager.js": 1016,
-    "styles/index.min.css": 6300
+    "styles/index.min.css": 6779
   }
 }

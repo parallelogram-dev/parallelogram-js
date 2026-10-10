@@ -318,3 +318,29 @@ describe('custom properties', () => {
     expect(dead).toEqual([]);
   });
 });
+
+describe('credits', () => {
+  const credited = credit => ({
+    ...contracts.find(contract => contract.name === 'Toggle'),
+    credits: [credit],
+  });
+  const valid = {
+    name: 'Upstream',
+    url: 'https://example.com/upstream',
+    license: 'MIT',
+    copyright: 'Copyright (c) 2020 Upstream',
+  };
+
+  it('accepts a credit naming the work, its https link, licence and copyright', () => {
+    expect(validateContract(credited(valid))).toEqual([]);
+  });
+
+  it.each([
+    ['without a name', { ...valid, name: '' }],
+    ['without an https link', { ...valid, url: 'http://example.com' }],
+    ['without a licence', { ...valid, license: undefined }],
+    ['without a copyright', { ...valid, copyright: ' ' }],
+  ])('reports a credit %s', (_, credit) => {
+    expect(validateContract(credited(credit))).toHaveLength(1);
+  });
+});

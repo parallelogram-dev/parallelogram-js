@@ -13,6 +13,7 @@ import PModal from '../../../src/components/PModal.contract.js';
 import CopyToClipboard from '../../../src/components/CopyToClipboard.contract.js';
 import PSelect from '../../../src/components/PSelect.contract.js';
 import Toggle from '../../../src/components/Toggle.contract.js';
+import Sortable from '../../../src/components/Sortable.contract.js';
 
 const parse = html => {
   const doc = document.implementation.createHTMLDocument('');
@@ -261,5 +262,22 @@ describe('documentation site rendering', () => {
     );
 
     expect(row.textContent).toContain('PSelect.defaults.searchLabel');
+  });
+
+  it('credits the work a component is built on, linked, with its licence and copyright', () => {
+    const section = parse(componentPage(Sortable))
+      .querySelector('#acknowledgements')
+      ?.closest('section');
+    const link = section?.querySelector('a[href="https://github.com/Shopify/draggable"]');
+
+    expect([
+      link?.textContent,
+      section?.textContent.includes('MIT'),
+      section?.textContent.includes('Copyright (c) 2018-present Shopify'),
+    ]).toEqual(['Shopify Draggable', true, true]);
+  });
+
+  it('leaves the acknowledgements out of a component built on nothing else', () => {
+    expect(parse(componentPage(Toggle)).querySelector('#acknowledgements')).toBeNull();
   });
 });

@@ -17,6 +17,7 @@
 @use './components/toggle.scss';
 @use './components/dropdown.scss';
 @use './components/tooltip.scss';
+@use './components/draggable.scss';
 
 /* Framework-level variables (overrides for settings) */
 :root {
@@ -39,7 +40,7 @@
 
 /* The framework's own elements and anything inside them, so the rule below leaves a page's own
    focus styles alone */
-$framework-elements: '[data-lazysrc], [data-modal], [data-lightbox], [data-form-enhancer], [data-copytoclipboard], [data-datatable], [data-lightbox-action], [data-toggle], [data-dropdown], [data-dropdown-state], [data-tooltip], [data-tabs], [data-accordion], [data-selectloader], p-select, p-datetime, p-modal, p-uploader, p-toasts';
+$framework-elements: '[data-lazysrc], [data-modal], [data-lightbox], [data-form-enhancer], [data-copytoclipboard], [data-datatable], [data-lightbox-action], [data-toggle], [data-dropdown], [data-dropdown-state], [data-tooltip], [data-sortable], [data-swappable], [data-droppable], [data-tabs], [data-accordion], [data-selectloader], p-select, p-datetime, p-modal, p-uploader, p-toasts';
 
 /* The package's own custom elements */
 $framework-tags: 'p-select, p-datetime, p-modal, p-uploader, p-toasts';

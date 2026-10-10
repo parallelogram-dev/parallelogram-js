@@ -219,6 +219,17 @@ export function componentMarkdown(contract) {
       `## Example: ${example.title}`,
       `\`\`\`html\n${example.markup}\n\`\`\``,
     ]),
+    ...(contract.credits?.length
+      ? [
+          '## Acknowledgements',
+          contract.credits
+            .map(
+              credit =>
+                `- Built on [${credit.name}](${credit.url}), ${credit.license} licence, ${credit.copyright}`
+            )
+            .join('\n'),
+        ]
+      : []),
   ].join('\n\n');
 }
 
