@@ -1,3 +1,5 @@
+import { dragCredits } from '../utils/draggable/contract.js';
+
 /** @type {import('../contract.js').ComponentContract} */
 export default {
   name: 'PUploader',
@@ -7,7 +9,7 @@ export default {
   summary: 'Upload, order and describe a set of files',
   description: `Files are added by dropping them or through a button that opens the file picker, and each one uploads as multipart form data with its progress shown. Existing files are \`<p-uploader-file>\` children. Each feature appears only when its server address is set: uploading, editing fields, deleting and reordering.
 
-With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to dragging. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.
+With a sequence-action, files are reordered by dragging their thumbnails, with a mouse or with a finger after a short rest, on the drag engine behind Sortable. A dashed placeholder, a \`<div drag-item-state="placeholder">\` among the files, shows where the file will land, and the order is saved once it is there. Letting go outside the uploader, or pressing Escape, puts the file back. Each file also has Move up and Move down buttons as the keyboard's way to reorder. With \`max-files="1"\` and an upload-action, each file has a Replace button. Fields are shown only when \`<p-uploader-fields>\` declares them, and every field is edited in a panel that slides over the card's details. Requests send an \`X-CSRF-Token\` header from \`<meta name="csrf-token">\` unless \`requestHeaders\` is set.
 
 The upload endpoint must answer with JSON carrying an \`id\`, which is written to the file's \`file-id\` and is the id every later update, delete and sequence request sends. Without it an upload looks like it worked and nothing that follows can name the file. A \`preview\` in the same response becomes the card's thumbnail, which is worth returning for a file the browser cannot draw itself. Everything else in the response is kept and passed to \`p-uploader:upload-success\` as \`response\`.
 
@@ -363,7 +365,17 @@ A failed request is read for something worth showing: JSON contributes its \`mes
     { name: '--uploader-files-gap', description: 'Space between files' },
     { name: '--uploader-file-radius-start', description: 'Top corners of a file card' },
     { name: '--uploader-file-radius-end', description: 'Bottom corners of a file card' },
+    {
+      name: '--uploader-placeholder-border',
+      default: 'var(--color-accent)',
+      description: 'Colour of the dashed border where a dragged file will land',
+    },
+    {
+      name: '--uploader-placeholder-bg',
+      description: 'Background where a dragged file will land: a pale wash of the accent',
+    },
   ],
+  credits: dragCredits,
   elements: [
     {
       tag: 'p-uploader-file',
@@ -395,6 +407,25 @@ A failed request is read for something worth showing: JSON contributes its \`mes
           default: 'info',
           readonly: true,
           description: 'The panel the card shows',
+        },
+        {
+          name: 'sortable',
+          type: 'flag',
+          readonly: true,
+          description:
+            'Set while the file can be dragged: it replaces draggable="true", which turned on the browser’s own drag and drop',
+        },
+        {
+          name: 'dragging',
+          type: 'flag',
+          readonly: true,
+          description: 'Set on the file being dragged, which is hidden while its placeholder moves',
+        },
+        {
+          name: 'drag-over',
+          type: 'flag',
+          readonly: true,
+          description: 'Set on the file under the pointer during a drag',
         },
       ],
       events: [
