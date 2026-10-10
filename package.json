@@ -146,7 +146,8 @@
   },
   "author": "PeptoLab",
   "allowScripts": {
-    "@parcel/watcher@2.5.1": true
+    "@parcel/watcher@2.5.1": true,
+    "fsevents@2.3.3": true
   },
   "sizeBudget": {
     "parallelogram.js": 96512,
