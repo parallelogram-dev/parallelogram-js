@@ -94,4 +94,26 @@ describe('the drag engine', () => {
       left: null,
     });
   });
+
+  it('starts a drag from a handle inside an item’s shadow root, and only from the handle', async () => {
+    for (const item of list.children) {
+      item.attachShadow({ mode: 'open' }).innerHTML =
+        '<span part="grip" style="display:block;height:16px">grip</span><span style="display:block;height:16px">body</span>';
+    }
+    engine = new Sortable([list], {
+      draggable: 'counted-item',
+      handle: '[part~="grip"]',
+      distance: 4,
+      placeholder: () => document.createElement('div'),
+    });
+    const [first, second, third] = list.children;
+    const grip = item => item.shadowRoot.querySelector('[part~="grip"]');
+    const body = item => item.shadowRoot.querySelector('span:not([part])');
+
+    await drag(body(first), third, { dy: 6 });
+    const fromBody = ids();
+    await drag(grip(first), third, { dy: 6 });
+
+    expect([fromBody, ids(), second.isConnected]).toEqual([['a', 'b', 'c'], ['b', 'c', 'a'], true]);
+  });
 });
