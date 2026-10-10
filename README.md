@@ -37,3 +37,5 @@ The framework is optional. Any enhancement can be used on its own — `import To
 ## License
 
 [MIT](LICENSE)
+
+Sortable, Swappable and Droppable are built on a port of [Shopify Draggable](https://github.com/Shopify/draggable), used under its MIT licence. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) reproduces it.

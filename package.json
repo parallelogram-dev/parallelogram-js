@@ -99,7 +99,8 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
   ],
   "directories": {
     "test": "test"
