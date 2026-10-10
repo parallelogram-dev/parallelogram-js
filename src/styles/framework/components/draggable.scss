@@ -1,0 +1,78 @@
+/**
+ * Sortable, Swappable and Droppable Styles
+ * One stylesheet for the three drag enhancements, styled by state attribute: the container's
+ * data-<component>-state, the placeholder, copy and dropped item's data-<component>-item-state,
+ * and a dropzone's data-droppable-zone-state. The copy that follows the pointer is a fixed-position
+ * clone the engine places with a transform, so these only give it a lift and a stacking order.
+ */
+
+@use '../../design-system/mixins' as mix;
+
+$components: sortable, swappable, droppable;
+
+@each $name in $components {
+  /* Items show they can be picked up, unless only a handle can. Droppable's items sit in its
+     dropzones rather than directly in the container, so it has a rule of its own below. */
+  @if $name != droppable {
+    [data-#{$name}]:not([data-#{$name}-handle]) > * {
+      cursor: grab;
+    }
+  }
+
+  [data-#{$name}-state='over'] {
+    background: var(--drag-over-bg, var(--color-hover, rgba(0, 0, 0, 0.04)));
+  }
+
+  /* Where the item will land */
+  [data-#{$name}-item-state='placeholder'] {
+    opacity: var(--drag-placeholder-opacity, 0.4);
+    outline: var(--drag-placeholder-outline, 2px dashed var(--color-accent, #2563eb));
+    outline-offset: -2px;
+  }
+
+  /* A keyboard drag has no copy, so the item itself shows it has been picked up */
+  [data-#{$name}-item-state='placeholder']:focus-visible,
+  [data-#{$name}-item-state='placeholder'] :focus-visible {
+    opacity: 1;
+    outline: var(--framework-focus-width, 2px) solid var(--framework-focus-color, #2563eb);
+  }
+
+  [data-#{$name}-item-state='mirror'] {
+    z-index: var(--drag-mirror-z-index, 2147483000);
+    box-shadow: var(
+      --drag-mirror-shadow,
+      var(--surface-dropdown-shadow, 0 8px 24px rgba(0, 0, 0, 0.15))
+    );
+    opacity: var(--drag-mirror-opacity, 0.95);
+    cursor: grabbing;
+  }
+
+  [data-#{$name}-item-state='placed'] {
+    animation: drag-placed var(--drag-placed-duration, 0.6s) ease-out;
+  }
+}
+
+[data-droppable]:not([data-droppable-handle]) [data-droppable-zone] > * {
+  cursor: grab;
+}
+
+[data-droppable-zone-state='available'] {
+  outline: var(--drag-zone-outline, 2px dashed var(--color-border-strong, #94a3b8));
+  outline-offset: -2px;
+}
+
+@keyframes drag-placed {
+  from {
+    background-color: var(--drag-placed-color, rgba(37, 99, 235, 0.15));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sortable-item-state='placed'],
+  [data-swappable-item-state='placed'],
+  [data-droppable-item-state='placed'] {
+    animation: none;
+  }
+}
+
+@include mix.pointer-focus('[data-sortable], [data-swappable], [data-droppable]');
