@@ -42,6 +42,9 @@ import {
  * @property {number} [distance] - Pixels a mouse or pen moves before a drag starts
  * @property {number} [placedTimeout] - How long a dropped element keeps its `placed` state
  * @property {string} [attribute] - Prefix of the state attributes, such as `data-sortable`
+ * @property {(originalSource: HTMLElement) => HTMLElement} [placeholder] - Builds the element that
+ *   holds the dragged element's place. A deep copy by default, which a custom element can't
+ *   always survive: the copy is constructed and connected as a second, live instance.
  * @property {Object} [mirror] - Mirror plugin options
  * @property {Object} [scrollable] - Scrollable plugin options
  * @property {Function[]} [plugins] - Extra plugin classes
@@ -58,6 +61,7 @@ export const defaultOptions = {
   distance: 0,
   placedTimeout: 800,
   attribute: 'data-draggable',
+  placeholder: null,
   plugins: [],
   sensors: [],
   exclude: { plugins: [], sensors: [] },
@@ -275,7 +279,7 @@ export class Draggable {
       this.lastPlacedSource = null;
     }
 
-    this.source = originalSource.cloneNode(true);
+    this.source = this.options.placeholder?.(originalSource) ?? originalSource.cloneNode(true);
     originalSource.parentNode.insertBefore(this.source, originalSource);
     originalSource.style.display = 'none';
 
