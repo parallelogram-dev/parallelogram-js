@@ -550,6 +550,75 @@ pre {
     background: var(--site-accent-soft);
   }
 
+  /* Sortable, Swappable and Droppable's examples: items look like things to pick up, and each
+     dropzone shows its name and a place to drop, so the drag has somewhere visible to go */
+  .sortable-list {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    max-width: 22rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 8px;
+      background: var(--color-surface);
+    }
+  }
+
+  .sortable-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1rem;
+
+    .sortable-list {
+      min-height: 7rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: var(--site-accent-soft);
+    }
+  }
+
+  .sortable-grip {
+    color: var(--color-text-muted);
+    cursor: grab;
+  }
+
+  .swappable-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    max-width: 22rem;
+  }
+
+  .droppable-zones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  .droppable-zone {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    min-height: 7rem;
+    padding: 0.5rem;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 8px;
+
+    &::before {
+      content: attr(aria-label);
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+    }
+  }
+
   .hero {
     display: grid;
     place-items: end start;

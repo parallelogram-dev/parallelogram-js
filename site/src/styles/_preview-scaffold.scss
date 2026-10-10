@@ -61,6 +61,74 @@
     color: var(--surface-card-color-text);
   }
 
+  :where(.sortable-list) {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    max-width: 20rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: var(--surface-card-border-width) solid var(--color-border-strong);
+      border-radius: var(--surface-card-radius);
+      background: var(--surface-card-color-bg);
+      color: var(--surface-card-color-text);
+    }
+  }
+
+  :where(.sortable-board) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.75rem;
+
+    .sortable-list {
+      min-height: 6rem;
+      padding: 0.5rem;
+      border: var(--surface-card-border-width) dashed var(--color-border-strong);
+      border-radius: var(--surface-panel-radius);
+    }
+  }
+
+  :where(.sortable-grip) {
+    color: var(--color-text-muted);
+    cursor: grab;
+  }
+
+  :where(.swappable-grid) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    max-width: 20rem;
+  }
+
+  :where(.droppable-zones) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  :where(.droppable-zone) {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    min-height: 6rem;
+    padding: 0.5rem;
+    border: var(--surface-card-border-width) dashed var(--color-border-strong);
+    border-radius: var(--surface-panel-radius);
+
+    &::before {
+      content: attr(aria-label);
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+    }
+  }
+
   :where(.hero) {
     display: grid;
     place-items: end start;
