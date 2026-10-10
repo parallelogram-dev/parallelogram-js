@@ -63,16 +63,20 @@ export class PointerSensor extends Sensor {
     if (event.pointerType === 'mouse' && (event.button !== 0 || event.ctrlKey || event.metaKey))
       return;
 
-    const container = closest(event.target, this.containers);
+    /* The event is retargeted to the outermost shadow host by the time it reaches the document,
+       so a handle inside an item's shadow root is found from where the press really began */
+    const origin = event.composedPath?.()[0] ?? event.target;
+    const container = closest(origin, this.containers);
     if (!container) return;
-    if (this.options.handle && !closest(event.target, this.options.handle)) return;
+    if (this.options.handle && !closest(origin, this.options.handle)) return;
 
-    const originalSource = closest(event.target, this.options.draggable);
+    const originalSource = closest(origin, this.options.draggable);
     if (!originalSource || !container.contains(originalSource)) return;
 
     this.pointerId = event.pointerId;
     this.pointerType = event.pointerType || 'mouse';
     this.startEvent = event;
+    this.origin = origin;
     this.downAt = Date.now();
     this.currentContainer = container;
     this.originalSource = originalSource;
@@ -131,7 +135,7 @@ export class PointerSensor extends Sensor {
     const dragStartEvent = new DragStartSensorEvent({
       clientX: startEvent.clientX,
       clientY: startEvent.clientY,
-      target: startEvent.target,
+      target: this.origin,
       container,
       originalSource,
       originalEvent: startEvent,
@@ -214,6 +218,7 @@ export class PointerSensor extends Sensor {
     this.pointerId = null;
     this.pointerType = null;
     this.startEvent = null;
+    this.origin = null;
     this.currentContainer = null;
     this.originalSource = null;
   }

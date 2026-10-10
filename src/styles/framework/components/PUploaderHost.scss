@@ -165,6 +165,20 @@
   margin-bottom: var(--uploader-files-gap, #{$space-sm});
 }
 
+/* Where a dragged file will land: the drag engine's placeholder, sized to the card */
+::slotted([drag-item-state='placeholder']) {
+  border: 2px dashed var(--uploader-placeholder-border, var(--color-accent, #{$primary}));
+  border-radius: var(--surface-card-radius, #{$radius-xs});
+  background: var(
+    --uploader-placeholder-bg,
+    color-mix(in srgb, var(--color-accent, #{$primary}) 6%, transparent)
+  );
+}
+
+:host(:not([full])) ::slotted([drag-item-state='placeholder']:last-child) {
+  margin-bottom: var(--uploader-files-gap, #{$space-sm});
+}
+
 ::slotted(p-uploader-fields) {
   display: none;
 }

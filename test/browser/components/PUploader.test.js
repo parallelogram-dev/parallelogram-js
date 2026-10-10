@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PUploader from '../../../src/components/PUploader.js';
 import frameworkStyles from '../../../src/styles/framework/index.scss';
+import { drag, nextFrames } from '../support/drag.js';
 
 const PAYLOAD = '<img src="data:," onerror="window.__puploaderInjected = true">';
 
@@ -217,16 +218,6 @@ const addFiles = (uploader, files) => {
 const fileIds = uploader =>
   [...uploader.querySelectorAll('p-uploader-file')].map(file => file.getAttribute('file-id'));
 
-const drag = (type, target, dataTransfer) => {
-  /* A real drag is preceded by the press that started it, which is what says where it began */
-  if (type === 'dragstart') {
-    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
-  }
-  return target.dispatchEvent(
-    new DragEvent(type, { bubbles: true, composed: true, cancelable: true, dataTransfer })
-  );
-};
-
 /* Drags start on the thumbnail: it is the handle, so a press elsewhere stays a click */
 const handleOf = file => file.shadowRoot.querySelector('[part~="preview"]');
 
@@ -253,13 +244,10 @@ describe('p-uploader host', () => {
     return uploader;
   };
 
+  /* Drag the first file's thumbnail past the middle of the second file */
   const reorder = uploader => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
-    const transfer = new DataTransfer();
-    drag('dragstart', handleOf(first), transfer);
-    drag('dragenter', second, transfer);
-    drag('drop', second, transfer);
-    drag('dragend', first, transfer);
+    return drag(handleOf(first), second, { dy: 10 });
   };
 
   it('keeps the delete confirmation open when it is asked for just after an upload finishes', async () => {
@@ -341,29 +329,39 @@ describe('p-uploader host', () => {
       'first',
       'second',
     ]);
-    const [file] = uploader.querySelectorAll('p-uploader-file');
+    const [file, second] = uploader.querySelectorAll('p-uploader-file');
     file.setAttribute('filename', 'harbour.jpg');
     file.setAttribute('preview', 'images/harbour.jpg');
-    const transfer = new DataTransfer();
-    let handedToBrowser = null;
-    transfer.setDragImage = element => {
-      handedToBrowser = element.tagName;
-    };
+    const target = second.getBoundingClientRect();
+    const end = { x: Math.round(target.left + 40), y: Math.round(target.top + 30) };
+    let during = null;
 
-    drag('dragstart', file.shadowRoot.querySelector('[part~="preview"]'), transfer);
-    const chip = uploader.shadowRoot.querySelector('[part~="drag-chip"]');
-    document.dispatchEvent(new DragEvent('dragover', { bubbles: true, clientX: 120, clientY: 80 }));
-    const moved = chip.style.transform;
-    drag('dragend', file, transfer);
+    await drag(handleOf(file), end, {
+      during: async () => {
+        await nextFrames();
+        const chip = uploader.shadowRoot.querySelector('[part~="drag-chip"]');
+        during = {
+          text: chip?.textContent,
+          image: chip?.querySelector('img')?.getAttribute('src'),
+          transform: chip?.style.transform,
+          /* The card itself is never copied, so the page holds only the two files */
+          files: document.querySelectorAll('p-uploader-file').length,
+        };
+      },
+    });
 
-    expect([
-      chip.textContent,
-      chip.querySelector('img')?.getAttribute('src'),
-      /* The browser is given a blank picture of its own, so only the chip shows */
-      handedToBrowser,
-      moved,
-      uploader.shadowRoot.querySelector('[part~="drag-chip"]'),
-    ]).toEqual(['harbour.jpg', 'images/harbour.jpg', 'IMG', 'translate(132px, 60px)', null]);
+    expect({
+      during,
+      after: uploader.shadowRoot.querySelector('[part~="drag-chip"]'),
+    }).toEqual({
+      during: {
+        text: 'harbour.jpg',
+        image: 'images/harbour.jpg',
+        transform: `translate3d(${end.x + 12}px, ${end.y - 20}px, 0px)`,
+        files: 2,
+      },
+      after: null,
+    });
   });
 
   it('starts a drag only from the thumbnail, so pressing a button cannot reorder files', async () => {
@@ -374,15 +372,147 @@ describe('p-uploader host', () => {
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
     const before = fileIds(uploader);
     const moveButton = first.shadowRoot.querySelector('[data-action="move-down"]');
-    const transfer = new DataTransfer();
 
-    /* A press on a button that the browser turns into a drag of the card beneath it */
-    drag('dragstart', moveButton, transfer);
-    drag('dragenter', second, transfer);
-    drag('drop', second, transfer);
-    drag('dragend', moveButton, transfer);
+    await drag(moveButton, second, { dy: 10 });
 
     expect(fileIds(uploader)).toEqual(before);
+  });
+
+  it('marks the file being dragged and each file the pointer passes over', async () => {
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+    const [first, second, third] = uploader.querySelectorAll('p-uploader-file');
+    const passed = new Set();
+    /* A file the pointer reaches slides out from under it as the placeholder takes its place, so
+       drag-over is caught as it is set rather than looked for at the end */
+    const observer = new MutationObserver(records =>
+      records
+        .filter(record => record.target.hasAttribute('drag-over'))
+        .forEach(record => passed.add(record.target.getAttribute('file-id')))
+    );
+    observer.observe(uploader, { attributeFilter: ['drag-over'], subtree: true });
+    let dragging = null;
+
+    await drag(handleOf(first), third, {
+      during: () => (dragging = [first, second, third].map(file => file.hasAttribute('dragging'))),
+    });
+    observer.disconnect();
+
+    expect({
+      dragging,
+      passed: [...passed].sort(),
+      after: [first, second, third].some(
+        file => file.hasAttribute('dragging') || file.hasAttribute('drag-over')
+      ),
+    }).toEqual({ dragging: [true, false, false], passed: ['second', 'third'], after: false });
+  });
+
+  it('saves a dragged order once the file is in place, and says where it went', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+      'third',
+    ]);
+    const [first, , third] = uploader.querySelectorAll('p-uploader-file');
+
+    await drag(handleOf(first), third, { dy: 10 });
+
+    await vi.waitFor(() => expect(save).toHaveBeenCalled());
+    expect({
+      order: fileIds(uploader),
+      sent: save.mock.calls.map(([, init]) => JSON.parse(init.body).sequence),
+      message: uploader.shadowRoot.querySelector('[part~="message"]')?.textContent,
+    }).toEqual({
+      order: ['second', 'third', 'first'],
+      sent: [['second', 'third', 'first']],
+      message: 'Moved first.jpg to position 3 of 3.',
+    });
+  });
+
+  it('reorders by touch once a finger has rested on the thumbnail', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+
+    await drag(handleOf(first), second, { dy: 10, pointerType: 'touch', hold: 150 });
+
+    expect(fileIds(uploader)).toEqual(['second', 'first']);
+  });
+
+  it('puts a dragged file back when Escape is pressed', async () => {
+    const save = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', save);
+    const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
+      'first',
+      'second',
+    ]);
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    let lifted = false;
+
+    await drag(handleOf(first), second, {
+      dy: 10,
+      during: () => {
+        lifted = first.hasAttribute('dragging');
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      },
+    });
+    await nextTask();
+
+    expect([lifted, fileIds(uploader), save.mock.calls.length]).toEqual([
+      true,
+      ['first', 'second'],
+      0,
+    ]);
+  });
+
+  it('offers no reordering while a file’s panel is open, or with one file', async () => {
+    const uploader = await renderUploader(
+      { 'sequence-action': '/api/sequence', 'delete-action': '/api/delete' },
+      ['first', 'second']
+    );
+    const [first, second] = uploader.querySelectorAll('p-uploader-file');
+    first.shadowRoot.querySelector('[data-action="show-delete"]').click();
+    await nextFrames();
+
+    await drag(handleOf(first), second, { dy: 10 });
+    const withPanelOpen = fileIds(uploader);
+    const single = await renderUploader({ 'sequence-action': '/api/sequence' }, ['only']);
+
+    expect([
+      withPanelOpen,
+      first.hasAttribute('sortable'),
+      second.hasAttribute('sortable'),
+      single.querySelector('p-uploader-file').hasAttribute('sortable'),
+    ]).toEqual([['first', 'second'], false, true, false]);
+  });
+
+  it('uploads a file dropped from the desktop onto the drop zone', async () => {
+    const uploader = await renderUploader({ 'upload-action': '/api/upload' });
+    const selector = uploader.shadowRoot.querySelector('[part~="selector"]');
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['x'], 'harbour.txt', { type: 'text/plain' }));
+    const fire = type =>
+      selector.dispatchEvent(
+        new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: transfer })
+      );
+
+    fire('dragover');
+    const highlighted = selector.classList.contains('dragover');
+    fire('drop');
+
+    await vi.waitFor(() => expect(RecordingUpload.instances).toHaveLength(1));
+    expect([highlighted, selector.classList.contains('dragover')]).toEqual([true, false]);
   });
 
   it('opens the file picker from a button keyboard users can reach', async () => {
@@ -509,7 +639,7 @@ describe('p-uploader host', () => {
     ]);
     uploader.requestHeaders = { 'X-CSRF-Token': 'from-property' };
 
-    reorder(uploader);
+    await reorder(uploader);
 
     await vi.waitFor(() => expect(save).toHaveBeenCalled());
     expect(new Headers(save.mock.calls[0][1].headers).get('X-CSRF-Token')).toBe('from-property');
@@ -532,7 +662,7 @@ describe('p-uploader host', () => {
       )
     );
 
-    reorder(uploader);
+    await reorder(uploader);
 
     await expect(saved).resolves.toEqual([true, ['first', 'second']]);
   });
@@ -625,13 +755,13 @@ describe('p-uploader host', () => {
       'second',
     ]);
 
-    reorder(uploader);
+    await reorder(uploader);
 
     await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
     await vi.waitFor(() => expect(fileIds(uploader)).toEqual(['first', 'second']));
   });
 
-  it('restores the original order when a drag is abandoned', async () => {
+  it('restores the original order when a drag is let go outside the uploader', async () => {
     const save = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', save);
     const uploader = await renderUploader({ 'sequence-action': '/api/sequence' }, [
@@ -639,14 +769,25 @@ describe('p-uploader host', () => {
       'second',
     ]);
     const [first, second] = uploader.querySelectorAll('p-uploader-file');
-    const transfer = new DataTransfer();
+    const box = second.getBoundingClientRect();
+    let crossed = false;
 
-    drag('dragstart', handleOf(first), transfer);
-    drag('dragenter', second, transfer);
-    drag('dragend', first, transfer);
+    /* Straight down across the second file, which the first passes, and out of the uploader */
+    await drag(
+      handleOf(first),
+      { x: box.left + box.width / 2, y: uploader.getBoundingClientRect().bottom + 40 },
+      {
+        during: () =>
+          (crossed = uploader.lastElementChild?.getAttribute('drag-item-state') === 'placeholder'),
+      }
+    );
     await nextTask();
 
-    expect([fileIds(uploader), save.mock.calls.length]).toEqual([['first', 'second'], 0]);
+    expect([crossed, fileIds(uploader), save.mock.calls.length]).toEqual([
+      true,
+      ['first', 'second'],
+      0,
+    ]);
   });
 
   it('offers no delete button or reordering without the matching actions', async () => {
@@ -655,8 +796,8 @@ describe('p-uploader host', () => {
 
     expect({
       deleteButton: first.shadowRoot.querySelector('[data-action="show-delete"]') !== null,
-      draggable: first.hasAttribute('draggable'),
-    }).toEqual({ deleteButton: false, draggable: false });
+      sortable: first.hasAttribute('sortable'),
+    }).toEqual({ deleteButton: false, sortable: false });
   });
 
   it('stops uploads in progress when removed from the page', async () => {

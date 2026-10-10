@@ -22,6 +22,9 @@ export const defaultOptions = {
   thresholdY: null,
   /** Where to append the mirror: selector, element, or (source) => element. Defaults to the source's parent. */
   appendTo: null,
+  /** Build the mirror: (source, originalSource) => element. Defaults to a copy of the source, sized
+      to it; an element built here keeps its own size. */
+  create: null,
 };
 
 /**
@@ -80,9 +83,9 @@ export class Mirror extends AbstractPlugin {
     this.draggable.trigger(mirrorCreateEvent);
     if (mirrorCreateEvent.canceled()) return;
 
-    const mirror = source.cloneNode(true);
-    const rect = source.getBoundingClientRect();
     const { options } = this;
+    const mirror = options.create?.(source, originalSource) ?? source.cloneNode(true);
+    const rect = source.getBoundingClientRect();
 
     this.offset = {
       top: options.cursorOffsetY ?? sensorEvent.clientY - rect.top,
@@ -94,7 +97,7 @@ export class Mirror extends AbstractPlugin {
       const styles = getComputedStyle(source);
       mirror.style.width = styles.width;
       mirror.style.height = styles.height;
-    } else {
+    } else if (!options.create) {
       /* A mirror appended to <body> would otherwise lose a width it got from its list. */
       mirror.style.width = `${rect.width}px`;
       mirror.style.boxSizing = 'border-box';

@@ -40,17 +40,8 @@ $size-icon-md: 1.25rem;
   font-family: inherit;
 }
 
-:host([draggable='true']) .uploader__preview {
+:host([sortable]) .uploader__preview {
   cursor: grab;
-}
-
-:host([dragging]) .uploader__preview {
-  cursor: grabbing;
-}
-
-:host([dragging]) {
-  opacity: 0.5;
-  transition: none;
 }
 
 /* The shadow root's own :host rule would otherwise beat the browser's rule for [hidden] */
@@ -64,13 +55,13 @@ $size-icon-md: 1.25rem;
   transform: translateY(-4px);
 }
 
-:host([draggable='true']) {
+:host([sortable]) {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
 }
 
-:host([draggable='true']:active) {
+:host([sortable]:active) {
   cursor: grabbing;
 }
 

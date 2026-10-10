@@ -6,6 +6,10 @@ import { followFocusSource } from '../utils/focus-source.js';
 import { boolAttr, errorMessage, uploaderText } from '../utils/uploader.js';
 import { text } from '../utils/text.js';
 import { iconMarkup, plus } from '../utils/icons.js';
+import { Sortable } from '../utils/draggable/Sortable.js';
+import { KeyboardSensor } from '../utils/draggable/sensors/KeyboardSensor.js';
+import { Focusable } from '../utils/draggable/plugins/Focusable.js';
+import { closest } from '../utils/draggable/dom.js';
 import { PUploaderFile } from './PUploaderFile.js';
 
 export { PUploaderFile };
@@ -67,8 +71,9 @@ const formatBytes = bytes => {
  * - full: set by the component while it holds `max-files` files; the drop zone is hidden meanwhile
  * - stacked: joins the files into one list with no gap, rounding only its outer corners
  *
- * With a sequence-action, each file has Move up and Move down buttons as a keyboard alternative to
- * dragging. With max-files="1" and an upload-action, each file has a Replace button, and the new
+ * With a sequence-action, files are reordered by dragging their thumbnails, on the drag engine
+ * behind Sortable, and each file has Move up and Move down buttons as the keyboard's way to do the
+ * same. With max-files="1" and an upload-action, each file has a Replace button, and the new
  * file takes the old one's place (deleted through delete-action) once it has uploaded.
  *
  * @properties
@@ -147,14 +152,11 @@ export default class PUploader extends HTMLElement {
     /* File tracking */
     this.files = new Map();
     this.fieldSchema = null;
-    this.draggedElement = null;
-    this.draggedOverElement = null;
     this.XHRConstructor = null;
     this.eventBus = null;
     this.logger = null;
     this.requestHeaders = null;
     this._inFlight = new Set();
-    this._dropAccepted = false;
 
     /* Render initial structure */
     this._render();
@@ -175,6 +177,8 @@ export default class PUploader extends HTMLElement {
 
   disconnectedCallback() {
     this.abortController?.abort();
+    this._sorter?.destroy();
+    this._sorter = null;
     for (const request of this._inFlight) {
       request.abort();
     }
@@ -333,15 +337,20 @@ export default class PUploader extends HTMLElement {
     );
     controls.find(control => control && !control.disabled)?.focus();
 
-    const position = [...this.querySelectorAll('p-uploader-file')].indexOf(file) + 1;
+    this._announceMove(file);
+    this._updateSequence();
+  }
+
+  /** Say where a file has moved to, in the uploader's status message */
+  _announceMove(file) {
+    const files = [...this.querySelectorAll('p-uploader-file')];
     this._showMessage(
       this._text('moved-message', {
         file: file.getAttribute('filename') || this._text('unnamed-file'),
-        position,
+        position: files.indexOf(file) + 1,
         count: files.length,
       })
     );
-    this._updateSequence();
   }
 
   /**
@@ -525,14 +534,11 @@ export default class PUploader extends HTMLElement {
       { signal }
     );
 
+    /* Files dragged in from the desktop use the browser's own drag and drop; reordering the files
+       already here is the drag engine's */
     selector.addEventListener(
       'dragover',
       e => {
-        if (this.draggedElement) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
         e.preventDefault();
         selector.classList.add('dragover');
       },
@@ -542,7 +548,6 @@ export default class PUploader extends HTMLElement {
     selector.addEventListener(
       'dragleave',
       e => {
-        if (this.draggedElement) return;
         e.preventDefault();
         selector.classList.remove('dragover');
       },
@@ -552,12 +557,6 @@ export default class PUploader extends HTMLElement {
     selector.addEventListener(
       'drop',
       e => {
-        if (this.draggedElement) {
-          e.preventDefault();
-          e.stopPropagation();
-          this._dropAccepted = true;
-          return;
-        }
         e.preventDefault();
         selector.classList.remove('dragover');
         this._handleFileDrop(e);
@@ -565,34 +564,7 @@ export default class PUploader extends HTMLElement {
       { signal }
     );
 
-    this.addEventListener(
-      'dragover',
-      e => {
-        if (this.draggedElement) {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-        }
-      },
-      { signal }
-    );
-
-    /* The drag itself starts on the card, so where the press began is what says whether it is a
-       drag of the card or a click on one of its buttons */
-    this.addEventListener(
-      'pointerdown',
-      e => {
-        const origin = e.composedPath()[0];
-        this._pressedHandle =
-          origin instanceof Element ? Boolean(origin.closest('[part~="preview"]')) : false;
-      },
-      { signal, capture: true }
-    );
-
-    this.addEventListener('dragstart', e => this._handleDragStart(e), { signal });
-    this.addEventListener('dragend', () => this._handleDragEnd(), { signal });
-    this.addEventListener('dragenter', e => this._handleDragEnter(e), { signal });
-    this.addEventListener('dragleave', e => this._handleDragLeave(e), { signal });
-    this.addEventListener('drop', e => this._handleDrop(e), { signal });
+    this._setupSorting(signal);
 
     this.addEventListener(
       'p-uploader-file:delete',
@@ -620,7 +592,7 @@ export default class PUploader extends HTMLElement {
         });
 
         if (this._canSort() && existingFiles.length > 1) {
-          fileElement.setAttribute('draggable', 'true');
+          fileElement.setAttribute('sortable', '');
         }
       }
 
@@ -853,80 +825,99 @@ export default class PUploader extends HTMLElement {
 
   _updateDraggableState() {
     const files = [...this.querySelectorAll('p-uploader-file')];
-    const draggable = this._canSort() && files.length > 1;
+    const sortable = this._canSort() && files.length > 1;
 
     files.forEach(file => {
       const panelOpen = (file.getAttribute('data-current-panel') || 'info') !== 'info';
-      if (draggable && !panelOpen) {
-        file.setAttribute('draggable', 'true');
-      } else {
-        file.removeAttribute('draggable');
-      }
+      file.toggleAttribute('sortable', sortable && !panelOpen);
       file._syncOrderButtons?.();
     });
   }
 
-  _handleDragStart(e) {
-    const fileElement = e.target.closest('p-uploader-file');
-    if (!fileElement || !fileElement.hasAttribute('draggable')) return;
+  /**
+   * Reorder the files by dragging their thumbnails, on the drag engine behind Sortable
+   *
+   * The engine's copies are built here rather than cloned: a copy of a card would be a second,
+   * live `<p-uploader-file>`. Its keyboard sensor is left out, because a key pressed inside a card
+   * reaches the document as if pressed on the card, so Space on Edit would pick the card up; Move
+   * up and Move down are the keyboard's way to reorder.
+   *
+   * @param {AbortSignal} signal
+   */
+  _setupSorting(signal) {
+    const sorter = new Sortable([this], {
+      draggable: 'p-uploader-file[sortable]',
+      handle: '[part~="preview"]',
+      distance: 4,
+      delay: { mouse: 0, pen: 0, touch: 100 },
+      attribute: 'drag',
+      placeholder: file => this._createPlaceholder(file),
+      mirror: {
+        create: (_placeholder, file) => this._createChip(file),
+        appendTo: () => this.shadowRoot,
+        cursorOffsetX: -12,
+        cursorOffsetY: 20,
+      },
+      exclude: { sensors: [KeyboardSensor], plugins: [Focusable] },
+      logger: this.logger,
+    });
 
-    /* The image is the handle: a press anywhere else on the card belongs to what it lands on, so
-       clicking Edit or Delete can't turn into a reorder */
-    if (!this._pressedHandle) {
-      e.preventDefault();
-      return;
-    }
-
-    this.draggedElement = fileElement;
-    e.dataTransfer.effectAllowed = 'move';
-    this._setDragImage(e, fileElement);
-
-    /* Capture the order before the drag, to put the files back if it is abandoned */
-    this._dragStartOrder = Array.from(this.querySelectorAll('p-uploader-file'));
-    if (!this._sequenceSaving) {
-      this._confirmedOrder = this._dragStartOrder;
-    }
-
-    window.getSelection()?.removeAllRanges();
-
-    setTimeout(() => {
-      if (this.draggedElement) {
-        fileElement.setAttribute('dragging', '');
+    sorter.on('drag:start', ({ originalSource }) => {
+      originalSource.setAttribute('dragging', '');
+      this._dragStartOrder = [...this.querySelectorAll('p-uploader-file')];
+      if (!this._sequenceSaving) {
+        this._confirmedOrder = this._dragStartOrder;
       }
-    }, 0);
+    });
+    sorter.on('drag:over', ({ over }) => over.setAttribute('drag-over', ''));
+    sorter.on('drag:out', ({ over }) => over.removeAttribute('drag-over'));
+
+    /* Let go outside the uploader, the file goes back where it started */
+    sorter.on('drag:stop', event => {
+      const { sensorEvent } = event;
+      if (!sensorEvent?.revert && !closest(sensorEvent?.target, this)) event.cancel();
+    });
+    sorter.on('drag:stopped', ({ originalSource }) => this._finishDrag(originalSource));
+
+    document.addEventListener(
+      'keydown',
+      event => {
+        if (event.key === 'Escape' && sorter.isDragging()) {
+          event.preventDefault();
+          sorter.cancel();
+        }
+      },
+      { signal }
+    );
+
+    this._sorter = sorter;
   }
 
   /**
-   * Save the new order after a drop inside the uploader, or put the files back when the drag was
-   * abandoned
+   * What holds a dragged file's place in the list: an empty box of the card's height
+   *
+   * @param {HTMLElement} file
+   * @returns {HTMLElement}
    */
+  _createPlaceholder(file) {
+    const placeholder = document.createElement('div');
+    placeholder.setAttribute('aria-hidden', 'true');
+    placeholder.style.height = `${file.getBoundingClientRect().height}px`;
+    return placeholder;
+  }
+
   /**
-   * Show the file being dragged as a chip that follows the cursor
+   * The chip that follows the pointer while a file is dragged, with its thumbnail and name
    *
-   * The browser's own picture is turned off rather than replaced: asked to photograph an element,
-   * Safari leaves the thumbnail out and Chrome draws it, so neither can be relied on. The chip is
-   * an ordinary element moved with the pointer instead, which every browser draws the same way.
-   *
-   * @param {DragEvent} e
-   * @param {HTMLElement} fileElement
+   * @param {HTMLElement} file
+   * @returns {HTMLElement}
    */
-  _setDragImage(e, fileElement) {
-    if (!e.dataTransfer) return;
-
-    /* Nothing for the browser to draw */
-    if (e.dataTransfer.setDragImage) {
-      this._blankDragImage ??= Object.assign(new Image(), {
-        src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      });
-      e.dataTransfer.setDragImage(this._blankDragImage, 0, 0);
-    }
-
+  _createChip(file) {
     const chip = document.createElement('div');
     chip.className = 'uploader__chip';
     chip.setAttribute('part', 'drag-chip');
-    chip.setAttribute('aria-hidden', 'true');
 
-    const preview = fileElement.shadowRoot?.querySelector('.uploader__preview img');
+    const preview = file.shadowRoot?.querySelector('.uploader__preview img');
     if (preview?.getAttribute('src')) {
       const image = preview.cloneNode();
       image.className = 'uploader__chip-image';
@@ -934,107 +925,30 @@ export default class PUploader extends HTMLElement {
     }
     const name = document.createElement('span');
     name.className = 'uploader__chip-name';
-    name.textContent = fileElement.getAttribute('filename') || 'File';
+    name.textContent = file.getAttribute('filename') || 'File';
     chip.append(name);
-
-    this.shadowRoot.append(chip);
-    this._chip = chip;
-    this._moveChip(e);
-
-    /* dragover carries the pointer in every browser, where the drag event's own position does not */
-    this._chipMove = event => this._moveChip(event);
-    document.addEventListener('dragover', this._chipMove);
+    return chip;
   }
 
   /**
-   * Put the chip under the cursor
+   * Once a dragged file is back in the list, say where it went and save the order if it changed
    *
-   * @param {DragEvent} e
+   * @param {HTMLElement} file
    */
-  _moveChip(e) {
-    if (!this._chip || (e.clientX === 0 && e.clientY === 0)) return;
-    this._chip.style.transform = `translate(${e.clientX + 12}px, ${e.clientY - 20}px)`;
-  }
-
-  /** Take the chip away once the drag is over */
-  _removeChip() {
-    document.removeEventListener('dragover', this._chipMove);
-    this._chipMove = null;
-    this._chip?.remove();
-    this._chip = null;
-  }
-
-  _handleDragEnd() {
-    this._removeChip();
-    if (!this.draggedElement) return;
-
-    this.draggedElement.removeAttribute('dragging');
-    const files = [...this.querySelectorAll('p-uploader-file')];
-    files.forEach(el => el.removeAttribute('drag-over'));
-
-    const dropped = this._dropAccepted;
-    this.draggedElement = null;
-    this.draggedOverElement = null;
-    this._dropAccepted = false;
+  _finishDrag(file) {
+    file.removeAttribute('dragging');
+    for (const over of this.querySelectorAll('p-uploader-file[drag-over]')) {
+      over.removeAttribute('drag-over');
+    }
 
     const previous = this._dragStartOrder;
     this._dragStartOrder = null;
-    const moved = previous?.some((file, index) => files[index] !== file);
-    if (!moved) return;
+    const files = [...this.querySelectorAll('p-uploader-file')];
+    this._updateDraggableState();
+    if (!previous?.some((other, index) => files[index] !== other)) return;
 
-    if (dropped) {
-      this._updateSequence();
-    } else {
-      this._restoreOrder(previous);
-    }
-  }
-
-  _handleDragEnter(e) {
-    if (!this.draggedElement) return;
-
-    const fileElement = e.target.closest('p-uploader-file');
-    if (!fileElement || fileElement === this.draggedElement) return;
-
-    if (fileElement === this.draggedOverElement) return;
-
-    if (this.draggedOverElement) {
-      this.draggedOverElement.removeAttribute('drag-over');
-    }
-
-    fileElement.setAttribute('drag-over', '');
-    this.draggedOverElement = fileElement;
-
-    const allFiles = Array.from(this.querySelectorAll('p-uploader-file'));
-    const draggedIndex = allFiles.indexOf(this.draggedElement);
-    const targetIndex = allFiles.indexOf(fileElement);
-
-    if (targetIndex !== -1) {
-      if (targetIndex > draggedIndex) {
-        fileElement.parentNode.insertBefore(this.draggedElement, fileElement.nextSibling);
-      } else {
-        fileElement.parentNode.insertBefore(this.draggedElement, fileElement);
-      }
-    }
-  }
-
-  _handleDragLeave(e) {
-    if (!this.draggedElement) return;
-
-    const fileElement = e.target.closest('p-uploader-file');
-    if (!fileElement) return;
-
-    if (fileElement === this.draggedOverElement && !fileElement.contains(e.relatedTarget)) {
-      fileElement.removeAttribute('drag-over');
-      this.draggedOverElement = null;
-    }
-  }
-
-  _handleDrop(e) {
-    if (!this.draggedElement) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    this._dropAccepted = true;
+    this._announceMove(file);
+    this._updateSequence();
   }
 
   /**
