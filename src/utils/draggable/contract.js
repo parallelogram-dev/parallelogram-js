@@ -7,6 +7,18 @@
  */
 
 const AXES = ['both', 'x', 'y'];
+
+/** @type {import('../../contract.js').CreditContract[]} */
+export const dragCredits = [
+  {
+    name: 'Shopify Draggable',
+    url: 'https://github.com/Shopify/draggable',
+    license: 'MIT',
+    copyright: 'Copyright (c) 2018-present Shopify',
+    description:
+      "The drag engine, its Mirror, Scrollable and Focusable plugins, and the Sortable, Swappable and Droppable behaviour are ported from Draggable 1.2. A single Pointer Events sensor replaces its mouse, touch and force-touch sensors, the keyboard sensor is new, and state is written to data attributes rather than classes. Thank you to Shopify and Draggable's contributors for the work this builds on.",
+  },
+];
 const DETAIL =
   '{ element: HTMLElement; item: HTMLElement; placeholder: HTMLElement; reverted: boolean; pointerType: string | null';
 

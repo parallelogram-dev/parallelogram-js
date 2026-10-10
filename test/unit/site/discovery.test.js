@@ -81,6 +81,24 @@ describe('discovery files', () => {
     ]).toEqual([true, true, true, true, true, true]);
   });
 
+  it('carries the credit for the work a component is built on into llms-full.txt', () => {
+    const credited = {
+      ...PROBE,
+      credits: [
+        {
+          name: 'Upstream',
+          url: 'https://example.com/upstream',
+          license: 'MIT',
+          copyright: 'Copyright (c) 2020 Upstream',
+        },
+      ],
+    };
+
+    expect(llmsFullTxt([credited], [])).toContain(
+      '[Upstream](https://example.com/upstream), MIT licence, Copyright (c) 2020 Upstream'
+    );
+  });
+
   it('lists every guide and component page in llms.txt', () => {
     expect(guideAndComponentUrls.filter(url => !llmsLinks.includes(url))).toEqual([]);
   });

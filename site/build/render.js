@@ -455,6 +455,23 @@ ${panels}
 </div>`;
 }
 
+/**
+ * The work a component is built on, each linked, with the licence and copyright notice it is used
+ * under
+ */
+function acknowledgements(contract) {
+  const credits = contract.credits ?? [];
+  if (credits.length === 0) return '';
+
+  const credit = item => `<p>${escapeHtml(titleFor(contract))} is built on <a href="${escapeHtml(item.url)}">${escapeHtml(item.name)}</a>, used under the ${escapeHtml(item.license)} licence. ${escapeHtml(item.copyright)}.</p>
+${item.description ? paragraphs(item.description) : ''}`;
+
+  return `<section class="doc__section" aria-labelledby="acknowledgements">
+<h2 id="acknowledgements">Acknowledgements</h2>
+${credits.map(credit).join('\n')}
+</section>`;
+}
+
 export function componentPage(contract) {
   const facts = [
     ['Import', `${PACKAGE}/${contract.module}`],
@@ -511,6 +528,7 @@ ${paragraphs(contract.withoutJs)}
     : ''
 }
 ${usage(contract)}
+${acknowledgements(contract)}
 </div>
 <div class="doc__reference">
 ${reference(contract, '')}

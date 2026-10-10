@@ -1,5 +1,6 @@
 import {
   dragAttributes,
+  dragCredits,
   dragCssProperties,
   dragEvents,
   dragMethods,
@@ -15,9 +16,7 @@ export default {
   summary: 'Drag items between dropzones that hold one item each',
   description: `The dropzones are the elements marked \`data-droppable-zone\` inside the container, and the items are their children, or the elements \`data-droppable-items\` selects. An item dragged over an empty dropzone moves into it; dragged back over its own, or let go outside every dropzone, it goes home. A dropzone holding an item is occupied, so the markup needs no marker for it.
 
-From the keyboard, Space or Enter picks up the focused item, the arrow keys move it to the previous or next free dropzone, Space or Enter drops it and Escape puts it back. Give each dropzone an \`aria-label\` so its name is announced; one without is announced by its \`data-droppable-zone\` value. Containers with the same \`data-droppable-group\` share their dropzones. \`droppable:change\` fires once an item has landed in a different dropzone.
-
-Built on a port of Shopify Draggable (MIT).`,
+From the keyboard, Space or Enter picks up the focused item, the arrow keys move it to the previous or next free dropzone, Space or Enter drops it and Escape puts it back. Give each dropzone an \`aria-label\` so its name is announced; one without is announced by its \`data-droppable-zone\` value. Containers with the same \`data-droppable-group\` share their dropzones. \`droppable:change\` fires once an item has landed in a different dropzone.`,
   attributes: [
     ...dragAttributes({
       name: 'droppable',
@@ -61,6 +60,7 @@ Built on a port of Shopify Draggable (MIT).`,
   }),
   methods: dragMethods,
   cssProperties: dragCssProperties({ zones: true }),
+  credits: dragCredits,
   examples: [
     {
       id: 'basic',

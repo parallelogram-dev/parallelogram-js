@@ -1,5 +1,6 @@
 import {
   dragAttributes,
+  dragCredits,
   dragCssProperties,
   dragEvents,
   dragMethods,
@@ -17,9 +18,7 @@ export default {
 
 From the keyboard, Tab reaches each item, Space or Enter picks it up, the arrow keys move it and Space or Enter drops it; Escape puts it back where it started. Each step is announced to screen readers, and every announcement can be reworded or translated with an attribute or once on \`Sortable.defaults\`.
 
-Containers with the same \`data-sortable-group\` share their items, for a board of columns. \`sortable:change\` fires on each list a drop changed once the item is in place, with the list's items in order — the event to save on. An \`<input type="hidden">\` in each item puts the new order in a form without any script.
-
-Built on a port of Shopify Draggable (MIT).`,
+Containers with the same \`data-sortable-group\` share their items, for a board of columns. \`sortable:change\` fires on each list a drop changed once the item is in place, with the list's items in order — the event to save on. An \`<input type="hidden">\` in each item puts the new order in a form without any script.`,
   attributes: dragAttributes({
     name: 'sortable',
     items: "the container's children",
@@ -45,6 +44,7 @@ Built on a port of Shopify Draggable (MIT).`,
   }),
   methods: dragMethods,
   cssProperties: dragCssProperties(),
+  credits: dragCredits,
   examples: [
     {
       id: 'basic',

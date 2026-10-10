@@ -97,6 +97,15 @@
  */
 
 /**
+ * @typedef {Object} CreditContract
+ * @property {string} name - The work the component is built on, such as `Shopify Draggable`
+ * @property {string} url - An https link to it
+ * @property {string} license - The licence it is used under, such as `MIT`
+ * @property {string} copyright - Its copyright notice, as its licence states it
+ * @property {string} [description] - What was taken from it and what changed
+ */
+
+/**
  * @typedef {Object} ComponentContract
  * @property {string} name - The class name
  * @property {'element'|'enhancement'} kind - A custom element, or a component that enhances
@@ -121,6 +130,7 @@
  * @property {NamedContract[]} [cssProperties]
  * @property {ElementContract[]} [elements] - Child elements the component defines alongside itself
  * @property {string} [accessibility]
+ * @property {CreditContract[]} [credits] - Work the component is built on, acknowledged on its page
  * @property {ExampleContract[]} examples
  */
 
@@ -204,6 +214,19 @@ function checkEvents(events, where, problems) {
   }
 }
 
+function checkCredits(credits, problems) {
+  for (const credit of credits ?? []) {
+    if (!isText(credit.name)) problems.push('A credit needs the name of the work');
+    if (!/^https:\/\/\S+$/.test(credit.url ?? '')) {
+      problems.push(`The credit for ${credit.name} needs an https link`);
+    }
+    if (!isText(credit.license)) problems.push(`The credit for ${credit.name} needs a licence`);
+    if (!isText(credit.copyright)) {
+      problems.push(`The credit for ${credit.name} needs a copyright notice`);
+    }
+  }
+}
+
 function checkNamed(items, label, problems, pattern) {
   if (items === undefined) return;
   if (!Array.isArray(items)) {
@@ -253,6 +276,7 @@ export function validateContract(contract) {
   checkNamed(contract.cssProperties, 'CSS property', problems, /^--[a-z][a-z0-9-]*$/);
   checkNamed(contract.properties, 'property', problems, /^[a-z][A-Za-z]*$/);
   checkNamed(contract.methods, 'method', problems, /^[a-z][A-Za-z]*$/);
+  checkCredits(contract.credits, problems);
 
   const attributeNames = new Set((contract.attributes ?? []).map(attribute => attribute.name));
   for (const element of contract.elements ?? []) {

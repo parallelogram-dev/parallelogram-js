@@ -1,5 +1,6 @@
 import {
   dragAttributes,
+  dragCredits,
   dragCssProperties,
   dragEvents,
   dragMethods,
@@ -15,9 +16,7 @@ export default {
   summary: 'Drag one item onto another to exchange their places',
   description: `Works as Sortable does, with a mouse, a finger or the keyboard, except that an item dropped on another swaps the two rather than shifting the ones between: the right shape for a grid of tiles or a set of slots, where every other item should stay put.
 
-The container's children are the items, or the elements \`data-swappable-items\` selects, and \`data-swappable-handle\` limits where a drag can start. From the keyboard, Space or Enter picks up the focused item, the arrow keys swap it with the previous or next one, Space or Enter drops it and Escape undoes the swap. Containers with the same \`data-swappable-group\` swap with each other. \`swappable:change\` fires once a drop has swapped two items.
-
-Built on a port of Shopify Draggable (MIT).`,
+The container's children are the items, or the elements \`data-swappable-items\` selects, and \`data-swappable-handle\` limits where a drag can start. From the keyboard, Space or Enter picks up the focused item, the arrow keys swap it with the previous or next one, Space or Enter drops it and Escape undoes the swap. Containers with the same \`data-swappable-group\` swap with each other. \`swappable:change\` fires once a drop has swapped two items.`,
   attributes: dragAttributes({
     name: 'swappable',
     items: "the container's children",
@@ -41,6 +40,7 @@ Built on a port of Shopify Draggable (MIT).`,
   }),
   methods: dragMethods,
   cssProperties: dragCssProperties(),
+  credits: dragCredits,
   examples: [
     {
       id: 'basic',
