@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A `<p-select>` with `data-select-src` reads its `<option>` children as the list it starts from, as one without does. It ignored them, so a form redisplaying a saved row had no label to show for it until someone searched, and with `data-select-min` above 0, or a saved row past the first page, that label never came: an edit form showed the row's id where its name belonged. The children need only be the chosen rows; a search replaces them with what the URL answers. A `value` attribute naming a row the children leave out still counts, for the URL to name once it is asked.
+- A `<p-select multiple>` with `data-select-src` keeps the label of each value it holds while a search lists other rows. A chip took its label from the current list alone, so choosing a second value from a new search turned the first back into its bare value. The same holds for a single value after a search, and a form reset puts back the rows the markup gave with their labels.
+
 ## [0.7.20] - 2026-10-10
 
 ### Added
