@@ -127,7 +127,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       name: 'data-select-src',
       type: 'url',
       description:
-        'URL for remote options, with {q} replaced by the search text. With {page} in it the list is paged: page 1 first, then the next page whenever the list is scrolled to its end or the arrow keys reach the last option, for as long as the response says `more: true`. {limit} is replaced by data-select-limit.',
+        'URL for remote options, with {q} replaced by the search text. With {page} in it the list is paged: page 1 first, then the next page whenever the list is scrolled to its end or the arrow keys reach the last option, for as long as the response says `more: true`. {limit} is replaced by data-select-limit. Any `<option>` children are the list it starts from, so a form redisplaying saved values gives just the chosen rows and their labels show before anything is searched.',
     },
     {
       name: 'data-select-min',

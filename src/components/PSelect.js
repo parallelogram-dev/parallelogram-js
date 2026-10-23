@@ -198,6 +198,10 @@ export default class PSelect extends HTMLElement {
     };
 
     this._selectedOption = null;
+    /* The option behind each value held, kept while a remote search replaces the list it came from */
+    this._chosen = new Map();
+    /* The rows the markup gave, which a remote search may never list again: a reset goes back to them */
+    this._given = [];
     this._defaultValue = '';
     this._abortController = null;
     this._requestedPage = 0;
@@ -448,9 +452,14 @@ export default class PSelect extends HTMLElement {
     });
   }
 
+  /**
+   * The `<option>` children are the starting list. With `data-select-src` they need only be the
+   * chosen rows, so a form redisplaying saved values shows their labels before anything is
+   * searched; the URL's answers replace them once a search runs. A `value` attribute naming a row
+   * the children leave out still counts there, since the URL may know it
+   */
   _parseOptionsFromDOM() {
-    if (this.state.src) return;
-
+    const remote = Boolean(this.state.src);
     const options = [];
     let selectedValue = null;
 
@@ -468,12 +477,13 @@ export default class PSelect extends HTMLElement {
         selectedValue = option.value;
       }
     }
+    this._given = options;
 
     /* The value attribute is the default when it names an option, as it does for a native input */
     const attribute = this.getAttribute('value');
     if (this.state.multiple) {
-      const named = this._asList(attribute).filter(item =>
-        options.some(option => option.value === item)
+      const named = this._asList(attribute).filter(
+        item => remote || options.some(option => option.value === item)
       );
       const selected = [...this.querySelectorAll('option[selected]')].map(option => option.value);
       this._defaultValue = named.length ? named : selected;
@@ -482,9 +492,10 @@ export default class PSelect extends HTMLElement {
       );
       if (!keepAll || !this.state.values.length) this.state.values = [...this._defaultValue];
     } else {
-      const defaultValue = options.some(option => option.value === attribute)
-        ? attribute
-        : selectedValue;
+      const named = remote
+        ? attribute !== null && attribute !== ''
+        : options.some(option => option.value === attribute);
+      const defaultValue = named ? attribute : selectedValue;
       this._defaultValue = defaultValue ?? '';
       const keep = options.some(option => option.value === this.state.value);
       if (!keep || (!this._selectedOption && defaultValue !== null)) {
@@ -881,7 +892,8 @@ export default class PSelect extends HTMLElement {
     box.classList.toggle('selections--two', two);
     box.replaceChildren(
       ...this.state.values.map(value => {
-        const option = this.state.options.find(item => item.value === value);
+        const option =
+          this.state.options.find(item => item.value === value) ?? this._chosen.get(value);
         const label = option?.label ?? value;
         const chip = document.createElement('span');
         chip.className = two ? 'selection selection--two' : 'selection';
@@ -988,9 +1000,17 @@ export default class PSelect extends HTMLElement {
       this.state.values = this.state.value === '' ? [] : [this.state.value];
     }
 
+    for (const option of [...this._given, ...this.state.options]) {
+      if (this.state.values.includes(option.value)) this._chosen.set(option.value, option);
+    }
+    for (const value of this._chosen.keys()) {
+      if (!this.state.values.includes(value)) this._chosen.delete(value);
+    }
+
     this._selectedOption =
       this.state.options.find(option => option.value === this.state.value) ??
-      (this._selectedOption?.value === this.state.value ? this._selectedOption : null);
+      this._chosen.get(this.state.value) ??
+      null;
 
     for (const element of this._els.options.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
