@@ -25,11 +25,13 @@ export class KeyboardSensor extends Sensor {
   }
 
   attach() {
+    super.attach();
     document.addEventListener('keydown', this.onKeyDown, true);
     return this;
   }
 
   detach() {
+    super.detach();
     document.removeEventListener('keydown', this.onKeyDown, true);
     document.removeEventListener('focusout', this.onFocusOut, true);
     this.dragging = false;
@@ -49,7 +51,7 @@ export class KeyboardSensor extends Sensor {
     if (this.draggable?.isDragging()) return;
 
     const { target } = event;
-    const container = closest(target, this.containers);
+    const container = this.containerFor(target);
     if (!container) return;
 
     const originalSource = closest(target, this.options.draggable);

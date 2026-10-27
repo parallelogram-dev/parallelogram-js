@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `@parallelogram-js/core/draggable` exports the drag engine behind Sortable, Swappable and Droppable: `Draggable`, `Sortable`, `Swappable` and `Droppable`, the `Mirror`, `Scrollable` and `Focusable` plugins with `AbstractPlugin`, the `PointerSensor` and `KeyboardSensor` with `Sensor`, and `closest`. The components configure the engine from data attributes; a script that needs an option no attribute carries, such as its own placeholder, a copy built for the pointer rather than cloned, somewhere else to put that copy or a sensor left out, can now construct the engine itself, as `<p-uploader>` does. A list of form rows is the usual case: the engine's default placeholder is a copy of the row, whose checked radios would take the checks from the row they copy.
 
+### Fixed
+
+- A sortable list inside another one's item, such as images inside a block of a sortable list of blocks, drags its own items. A press in it started a drag in both lists, so the outer one lifted the whole block, hiding the list the press was made in, and from the keyboard the outer list took the key so the inner one never moved. Each sensor now starts a drag only when the nearest drag container around the press, of any Sortable, Swappable or Droppable on the page, is its own.
+
 ## [0.7.21] - 2026-10-23
 
 ### Fixed

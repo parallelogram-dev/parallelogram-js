@@ -48,11 +48,13 @@ export class PointerSensor extends Sensor {
   }
 
   attach() {
+    super.attach();
     document.addEventListener('pointerdown', this.onPointerDown, true);
     return this;
   }
 
   detach() {
+    super.detach();
     document.removeEventListener('pointerdown', this.onPointerDown, true);
     this.reset();
     return this;
@@ -66,7 +68,7 @@ export class PointerSensor extends Sensor {
     /* The event is retargeted to the outermost shadow host by the time it reaches the document,
        so a handle inside an item's shadow root is found from where the press really began */
     const origin = event.composedPath?.()[0] ?? event.target;
-    const container = closest(origin, this.containers);
+    const container = this.containerFor(origin);
     if (!container) return;
     if (this.options.handle && !closest(origin, this.options.handle)) return;
 

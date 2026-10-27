@@ -16,10 +16,13 @@ const makeList = () => {
 
 describe('draggable entry', () => {
   let sorter;
+  let outer;
 
   afterEach(() => {
     sorter?.destroy();
+    outer?.destroy();
     sorter = null;
+    outer = null;
     document.body.replaceChildren();
   });
 
@@ -62,5 +65,48 @@ describe('draggable entry', () => {
     expect(stops).toEqual([{ oldIndex: 0, newIndex: 1 }]);
     expect(list.lastElementChild).toBe(first);
     expect(first.querySelector('input').checked).toBe(true);
+  });
+
+  it("leaves a press in a list inside another engine's item to the inner list", () => {
+    document.body.innerHTML = `<ul class="blocks">
+      <li tabindex="0">Block <ul class="images"><li tabindex="0">A</li><li tabindex="0">B</li></ul></li>
+    </ul>`;
+    const blocks = document.querySelector('.blocks');
+    const images = document.querySelector('.images');
+    outer = new Sortable([blocks], { draggable: 'li' });
+    sorter = new Sortable([images], { draggable: 'li' });
+    const starts = [];
+    outer.on('sortable:start', () => starts.push('blocks'));
+    sorter.on('sortable:start', () => starts.push('images'));
+
+    const [first] = images.children;
+    first.focus();
+    press(first, ' ');
+    press(document.activeElement, 'ArrowDown');
+    press(document.activeElement, ' ');
+
+    expect({ starts, order: [...images.children].map(item => item.textContent) }).toEqual({
+      starts: ['images'],
+      order: ['B', 'A'],
+    });
+  });
+
+  it('takes a press again once the inner list is destroyed', () => {
+    document.body.innerHTML = `<ul class="blocks">
+      <li>Block <ul class="images"><li class="grip" tabindex="0">A</li></ul></li>
+      <li>Other</li>
+    </ul>`;
+    const blocks = document.querySelector('.blocks');
+    outer = new Sortable([blocks], { draggable: '.blocks > li', handle: '.grip' });
+    new Sortable([document.querySelector('.images')], { draggable: 'li' }).destroy();
+    const starts = [];
+    outer.on('sortable:start', () => starts.push('blocks'));
+
+    const grip = document.querySelector('.grip');
+    grip.focus();
+    press(grip, ' ');
+    press(document.activeElement, 'Escape');
+
+    expect(starts).toEqual(['blocks']);
   });
 });
