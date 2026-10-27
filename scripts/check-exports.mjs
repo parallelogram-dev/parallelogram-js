@@ -37,6 +37,8 @@ const jsSubpaths = [
 
 const cases = [
   { specifier: name, devFolder: true },
+  { specifier: `${name}/draggable`, devFolder: true },
+  { specifier: `${name}/draggable.js`, devFolder: true },
   ...jsSubpaths.flatMap(subpath => [
     { specifier: `${name}/${subpath}`, devFolder: true },
     { specifier: `${name}/${subpath}.js`, devFolder: true },

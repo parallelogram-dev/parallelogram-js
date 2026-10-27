@@ -34,6 +34,6 @@ Run `npm run test:browser` when a change touches focus, layout, animation or any
 - Update a component's contract, `src/components/<Name>.contract.js`, in the same change as the component. `test/unit/contracts.test.js` checks them against each other.
 - Record user-facing changes under `[Unreleased]` in `CHANGELOG.md`, never under a released version.
 - Tests that need a real browser go in `test/browser`; `test/unit` runs in happy-dom.
-- Public import paths are `@parallelogram-js/core/components/<Name>`, with or without `.js`. Files inside `src` import each other by relative path.
+- Public import paths are `@parallelogram-js/core/components/<Name>`, with or without `.js`, and `@parallelogram-js/core/draggable` for the drag engine. Files inside `src` import each other by relative path.
 - Enhancement components extend `BaseComponent` and are configured through `data-<component>-*` attributes, such as `data-toggle-capture`. They write state to `data-<component>-state` rather than classes.
 - Web components are named `P<Name>` with the tag `p-<name>`.
