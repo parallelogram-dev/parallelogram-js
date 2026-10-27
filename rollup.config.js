@@ -16,6 +16,7 @@ const entries = (folder, keep = () => true) =>
  */
 const input = Object.fromEntries([
   ['index', 'src/index.js'],
+  ['draggable', 'src/draggable.js'],
   ...entries('components', file => !file.endsWith('.contract.js')),
   ...entries('adapters', file => !file.startsWith('_')),
   ...entries('core'),
