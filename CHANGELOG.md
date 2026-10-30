@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.23] - 2026-10-30
+
 ### Added
 
 - `<p-toasts>` can be tuned from a theme: `--toast-offset-x` and `--toast-offset-y` set how far in from the window's edges the stack sits, `--toast-distance` how far a toast travels as it fades in and out, `--toast-ease-in` and `--toast-ease-out` the curves of coming in and going out, and `--toast-stagger` the wait between each toast's move as the stack closes up or makes room. Their defaults are what the stack did before.
