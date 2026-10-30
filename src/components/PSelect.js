@@ -85,6 +85,13 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * The element is form-associated: it submits its value under its `name`, supports `required`, and
  * restores its `value` attribute, or else its selected option, when the form resets.
  *
+ * With `multiple`, the values are held in the options' order. With `sortable` as well they are held
+ * in the order given and then chosen, a new one going last, and the editor puts them in order:
+ * a chosen value is dragged to its place among the others, or, with its row highlighted in the
+ * open list, moved one place earlier with Alt+Shift+Up or Left Arrow and later with Alt+Shift+Down
+ * or Right Arrow. The form carries the values in that order, and the `value` attribute gives the
+ * starting order.
+ *
  * @example
  * <label for="country">Country</label>
  * <p-select id="country" name="country" placeholder="Choose a country">
@@ -107,6 +114,8 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * - data-select-debounce: milliseconds to wait after typing before a remote search (default 200)
  * - data-select-limit: rows per page, replacing `{limit}` in the URL (default 25)
  * - data-select-open-on-focus: open the list when the input receives focus (default false)
+ * - sortable: with `multiple`, hold the values in the editor's order and let them be reordered
+ * - moved-message: what is announced when a value moves, with {label}, {position} and {count}
  *
  * @events
  * - input, change: dispatched when the user chooses a different option; they bubble out of shadow
@@ -131,12 +140,14 @@ export default class PSelect extends HTMLElement {
     searchHint: 'Type to search',
     searchMinHint: 'Type {min} or more characters to search',
     noResults: 'No results found',
+    movedMessage: '{label} moved to place {position} of {count}',
   };
 
   static get observedAttributes() {
     return [
       'value',
       'multiple',
+      'sortable',
       'selection-rows',
       'list-rows',
       'searchable',
@@ -176,6 +187,7 @@ export default class PSelect extends HTMLElement {
       filtered: [],
       value: '',
       multiple: false,
+      sortable: false,
       values: [],
       selectionRows: 1,
       searchable: false,
@@ -208,6 +220,8 @@ export default class PSelect extends HTMLElement {
     this._searchTimeout = null;
     this._optionObserver = null;
     this._parseQueued = false;
+    this._sorter = null;
+    this._sorterLoading = false;
 
     this._render();
     this._setupEventListeners();
@@ -218,6 +232,7 @@ export default class PSelect extends HTMLElement {
     this._readConfig();
     this._parseOptionsFromDOM();
     this._updateName();
+    this._updateSorting();
 
     this._optionObserver = new MutationObserver(() => this._queueParse());
     this._optionObserver.observe(this, {
@@ -245,6 +260,8 @@ export default class PSelect extends HTMLElement {
     this._cancelPendingRequest();
     this._optionObserver?.disconnect();
     this._optionObserver = null;
+    this._sorter?.destroy();
+    this._sorter = null;
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -257,6 +274,12 @@ export default class PSelect extends HTMLElement {
       case 'multiple':
         this.state.multiple = newValue !== null;
         this._setValue(this.state.multiple ? this.state.values : this.state.value);
+        this._updateSorting();
+        break;
+      case 'sortable':
+        this.state.sortable = newValue !== null;
+        this._setValue(this.state.multiple ? this.state.values : this.state.value);
+        this._updateSorting();
         break;
       case 'selection-rows':
         this.state.selectionRows = Number(newValue) === 2 ? 2 : 1;
@@ -358,10 +381,18 @@ export default class PSelect extends HTMLElement {
 
     this._els.selections.addEventListener('mousedown', event => {
       event.preventDefault();
-      /* The remove buttons sit inside the control, so they must not open the list as well */
-      if (event.target.closest('[data-value]')) event.stopPropagation();
+      /* The remove buttons sit inside the control, so they must not open the list as well. Nor
+         may a value that can be dragged, which opens it on a click instead, once it is clear the
+         press was not the start of a drag */
+      if (event.target.closest('[data-value], .selection--sortable')) event.stopPropagation();
     });
     this._els.selections.addEventListener('click', event => {
+      if (event.target.closest('.selection--sortable')) {
+        event.stopPropagation();
+        this._els.control.focus();
+        this.toggle();
+        return;
+      }
       const button = event.target.closest('[data-value]');
       if (!button) return;
       event.stopPropagation();
@@ -623,6 +654,13 @@ export default class PSelect extends HTMLElement {
 
     const last = this.state.filtered.length - 1;
     const current = this.state.highlightedIndex;
+
+    if (this._movesValue(event)) {
+      event.preventDefault();
+      const offset = key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 1;
+      this._moveValue(this.state.filtered[current]?.value, offset);
+      return;
+    }
 
     switch (key) {
       case 'ArrowDown':
@@ -898,6 +936,10 @@ export default class PSelect extends HTMLElement {
         const chip = document.createElement('span');
         chip.className = two ? 'selection selection--two' : 'selection';
         chip.setAttribute('part', 'selection');
+        if (this._canSort()) {
+          chip.classList.add('selection--sortable');
+          chip.dataset.chip = value;
+        }
 
         const body = document.createElement('span');
         body.className = 'selection__body';
@@ -984,12 +1026,16 @@ export default class PSelect extends HTMLElement {
   /**
    * A value, or several where `multiple` is set. A list is held in the options' own order rather
    * than the order it was chosen, so the field reads as a filtered copy of the list and does not
-   * reshuffle while someone works
+   * reshuffle while someone works; where `sortable` is set it is held in the order given, which is
+   * the editor's
    *
    * @param {string|string[]|null} value
    */
   _setValue(value) {
-    if (this.state.multiple) {
+    if (this.state.multiple && this.state.sortable) {
+      this.state.values = [...new Set(this._asList(value))];
+      this.state.value = this.state.values[0] ?? '';
+    } else if (this.state.multiple) {
       const wanted = new Set(this._asList(value));
       const known = this.state.options.filter(option => wanted.has(option.value));
       const rest = [...wanted].filter(item => !known.some(option => option.value === item));
@@ -1021,6 +1067,125 @@ export default class PSelect extends HTMLElement {
     this._updateDisplay();
   }
 
+  /** Whether the chosen values can be put in order: several of them, where `sortable` is set */
+  _canSort() {
+    return (
+      this.state.multiple &&
+      this.state.sortable &&
+      !this.state.disabled &&
+      this.state.values.length > 1
+    );
+  }
+
+  /**
+   * Drag the chosen values into order, on the drag engine behind Sortable, wherever they can be
+   * ordered at all. The engine is loaded the first time it is wanted, so a field that is not
+   * sortable never fetches it. Its keyboard sensor and focus plugin are left out: the values sit
+   * inside the combobox, which keeps focus, so the keyboard moves them from the list instead
+   */
+  async _updateSorting() {
+    const wanted = () => this.isConnected && this.state.multiple && this.state.sortable;
+    if (!wanted()) {
+      this._sorter?.destroy();
+      this._sorter = null;
+      return;
+    }
+    if (this._sorter || this._sorterLoading) return;
+
+    this._sorterLoading = true;
+    const [{ Sortable }, { KeyboardSensor }, { Focusable }] = await Promise.all([
+      import('../utils/draggable/Sortable.js'),
+      import('../utils/draggable/sensors/KeyboardSensor.js'),
+      import('../utils/draggable/plugins/Focusable.js'),
+    ]).finally(() => {
+      this._sorterLoading = false;
+    });
+    if (this._sorter || !wanted()) return;
+
+    const sorter = new Sortable([this._els.selections], {
+      draggable: '.selection--sortable',
+      distance: 4,
+      delay: { mouse: 0, pen: 0, touch: 100 },
+      attribute: 'data-sort',
+      mirror: { appendTo: () => this.shadowRoot },
+      exclude: { sensors: [KeyboardSensor], plugins: [Focusable] },
+    });
+
+    /* Let go outside the field, the value goes back where it started */
+    sorter.on('drag:stop', event => {
+      const { sensorEvent } = event;
+      if (!sensorEvent?.revert && !this._els.selections.contains(sensorEvent?.target)) {
+        event.cancel();
+      }
+    });
+    sorter.on('drag:stopped', ({ originalSource }) => this._finishSort(originalSource));
+
+    this._sorter = sorter;
+  }
+
+  /**
+   * Once a dragged value is back among the others, hold the order they are now in, and say where
+   * it went when that changed
+   *
+   * @param {HTMLElement} chip
+   */
+  _finishSort(chip) {
+    const order = [...this._els.selections.querySelectorAll(':scope > [data-chip]')].map(
+      element => element.dataset.chip
+    );
+    if (order.every((value, index) => value === this.state.values[index])) {
+      this._renderSelections();
+      return;
+    }
+    this._reorder(order, chip.dataset.chip);
+  }
+
+  /** Whether a key moves the highlighted value among the chosen rather than through the list */
+  _movesValue(event) {
+    return (
+      event.altKey &&
+      event.shiftKey &&
+      this._canSort() &&
+      ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)
+    );
+  }
+
+  /**
+   * Move a chosen value one place earlier or later among the chosen
+   *
+   * @param {string|undefined} value
+   * @param {-1|1} offset
+   */
+  _moveValue(value, offset) {
+    const index = this.state.values.indexOf(value);
+    const target = index + offset;
+    if (index < 0 || target < 0 || target >= this.state.values.length) return;
+
+    const order = [...this.state.values];
+    [order[index], order[target]] = [order[target], order[index]];
+    this._reorder(order, value);
+  }
+
+  /**
+   * Hold the chosen values in a new order, say so as a form control does, and say where the one
+   * that moved now is
+   *
+   * @param {string[]} order
+   * @param {string} moved
+   */
+  _reorder(order, moved) {
+    this._setValue(order);
+    const option = this._chosen.get(moved) ?? null;
+    this._announceChange({ value: moved, label: option?.label ?? '' }, option);
+    this._announce(
+      text(this, 'moved-message', {
+        label: option?.label ?? moved,
+        position: this.state.values.indexOf(moved) + 1,
+        count: this.state.values.length,
+      })
+    );
+  }
+
   /** Whether a value is among those chosen */
   _holds(value) {
     return value !== undefined && this.state.values.includes(value);
@@ -1046,6 +1211,7 @@ export default class PSelect extends HTMLElement {
     this._els.control.tabIndex = disabled ? -1 : 0;
     if (disabled) this.close();
     this._updateControls();
+    this._renderSelections();
   }
 
   _updateRequiredState(required) {

@@ -34,6 +34,25 @@ export function closest(element, value) {
   return null;
 }
 
+/**
+ * The element at a point, looking inside open shadow roots where `document.elementFromPoint`
+ * stops at the outermost host, so an item kept in a component's shadow root is found under the
+ * pointer as one in the page is
+ *
+ * @param {number} x
+ * @param {number} y
+ * @returns {Element|null}
+ */
+export function elementFromPoint(x, y) {
+  let element = document.elementFromPoint(x, y);
+  while (element?.shadowRoot) {
+    const inner = element.shadowRoot.elementFromPoint(x, y);
+    if (!inner || inner === element) break;
+    element = inner;
+  }
+  return element;
+}
+
 /** Distance between two points */
 export function distance(x1, y1, x2, y2) {
   return Math.hypot(x2 - x1, y2 - y1);

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `<p-select multiple sortable>` holds its values in the editor's order rather than the options' order, and lets the editor reorder them: a chosen value is dragged to its place among the others, or, with its row highlighted in the open list, moved a place with Alt+Shift and an arrow key, and the move is announced (`moved-message`). The form carries the values in that order, and the `value` attribute gives the starting order, so a list a server keeps in sequence round-trips.
+
+### Fixed
+
+- The drag engine works on a list kept in a shadow root: its sensor events are composed, so they reach the engine listening on the document, and it finds what is under the pointer inside open shadow roots, where `document.elementFromPoint` stops at the outermost host.
+
 ## [0.7.23] - 2026-10-30
 
 ### Added
