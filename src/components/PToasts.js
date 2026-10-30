@@ -236,10 +236,11 @@ export default class PToasts extends HTMLElement {
     const stagger = milliseconds(styles.getPropertyValue('--toast-stagger'), 0);
     const easing = styles.getPropertyValue('--toast-ease-in').trim() || 'ease-out';
 
-    if (Math.abs(stackNow - stackWas) >= 0.5) {
-      /* The stack is as wide as its widest toast. When that changes, the stack eases to its new
-         width and every toast, stretched to it, follows; the inline width holds it until the
-         animation's first frame */
+    if (deltas.size > 0 && stackNow < stackWas - 0.5) {
+      /* The stack is as wide as its widest toast. When that one goes and others remain, the stack
+         eases down to its new width and every toast, stretched to it, follows; the inline width
+         holds it until the animation's first frame. A toast arriving widens it at once, so the new
+         toast is never squeezed */
       this._stack.style.width = `${stackWas}px`;
       const resize = this._stack.animate([{ width: `${stackWas}px` }, { width: `${stackNow}px` }], {
         duration,
