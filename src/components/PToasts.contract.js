@@ -93,13 +93,43 @@ Where popovers are supported the element shows itself as a manual popover and mo
       default: '0 6px 20px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--color-border)',
       description: 'Shadow, including the inset ring that edges the toast',
     },
+    {
+      name: '--toast-offset-x',
+      default: '0',
+      description: "How far in from the window's side the stack sits",
+    },
+    {
+      name: '--toast-offset-y',
+      default: '0',
+      description: "How far in from the window's top, or bottom, the stack sits",
+    },
     { name: '--toast-padding', description: 'Space around the stack' },
     { name: '--toast-gap', description: 'Space between toasts' },
     { name: '--toast-item-padding', description: 'Padding inside each toast' },
     { name: '--toast-min-width', default: '300px', description: 'Narrowest a toast gets' },
     { name: '--toast-max-width', default: '500px', description: 'Widest a toast gets' },
     { name: '--toast-font', description: 'Font shorthand' },
-    { name: '--toast-animation-duration', description: 'Length of the enter and leave animations' },
+    {
+      name: '--toast-animation-duration',
+      description:
+        'Length of the enter and leave animations, and of the move the other toasts make when one goes',
+    },
+    {
+      name: '--toast-ease-in',
+      default: 'ease-out',
+      description: "The curve of a toast coming in, which the other toasts' move also follows",
+    },
+    { name: '--toast-ease-out', default: 'ease-in', description: 'The curve of a toast going out' },
+    {
+      name: '--toast-distance',
+      default: '6px',
+      description: 'How far a toast travels as it fades in and out',
+    },
+    {
+      name: '--toast-stagger',
+      default: '0s',
+      description: "The wait between each toast's move as the stack closes up",
+    },
     { name: '--toast-z-index', description: "Stacking order where popovers aren't supported" },
   ],
   examples: [

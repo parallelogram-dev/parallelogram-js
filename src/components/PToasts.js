@@ -54,12 +54,35 @@ const ANNOUNCEMENT_LIFETIME = 5000;
  * @cssprop --toast-text-color - text colour of every toast (defaults `var(--color-inverse-text)` on
  *   info toasts and `var(--color-on-status)` on the others)
  * @cssprop --toast-border-radius, --toast-shadow - toast surface
+ * @cssprop --toast-offset-x, --toast-offset-y - how far in from the window's side, and its top or
+ *   bottom, the stack sits (default `0`)
  * @cssprop --toast-padding, --toast-gap, --toast-item-padding - spacing around and between toasts
  * @cssprop --toast-min-width, --toast-max-width - toast width limits
  * @cssprop --toast-font - toast font shorthand
- * @cssprop --toast-animation-duration - length of the enter and leave animations
+ * @cssprop --toast-animation-duration - length of the enter and leave animations, and of the move
+ *   the other toasts make when one goes
+ * @cssprop --toast-ease-in, --toast-ease-out - the curve of a toast coming in, which the others'
+ *   move also follows, and of one going out (defaults `ease-out` and `ease-in`)
+ * @cssprop --toast-distance - how far a toast travels as it fades in and out (default `6px`)
+ * @cssprop --toast-stagger - the wait between each toast's move as the stack closes up (default
+ *   `0s`)
  * @cssprop --toast-z-index - stacking order where popovers aren't supported
  */
+/**
+ * A custom property's time in milliseconds: "0.4s" or "400ms", or the fallback when it is unset or
+ * not a time
+ *
+ * @param {string} declared
+ * @param {number} fallback
+ * @returns {number}
+ */
+const milliseconds = (declared, fallback) => {
+  const value = declared.trim();
+  const number = parseFloat(value);
+  if (value === '' || Number.isNaN(number)) return fallback;
+  return value.endsWith('ms') ? number : number * 1000;
+};
+
 export default class PToasts extends HTMLElement {
   /** The text the stack shows: a site changes it here once, a page changes one with the attribute */
   static defaults = { dismissLabel: 'Dismiss notification' };
@@ -182,35 +205,65 @@ export default class PToasts extends HTMLElement {
   }
 
   /**
-   * Change the stack, and float every toast that moved from where it was to where it is
+   * Change the stack, and float every toast that moved, or changed width, from how it was to how
+   * it is
    *
-   * A removed toast's space closes in the same frame, and the toasts below it were drawn at their
-   * new place in that frame, a jump. Each starts from its old place and arrives over the toast
-   * animation's duration. Nothing floats for a visitor who prefers reduced motion.
+   * A leaving toast's space closes in the same frame, and the toasts below it were drawn at their
+   * new place in that frame, a jump; when it was the widest, the stack narrows in that frame too,
+   * and every toast with it. Each toast starts from its old place and arrives over the toast
+   * animation's duration, on the entering curve, each one --toast-stagger after the one before it,
+   * and the stack eases between its widths. Nothing floats for a visitor who prefers reduced
+   * motion.
    *
    * @param {() => void} change
    */
   _reflow(change) {
+    const stackWas = this._stack.getBoundingClientRect().width;
     const before = new Map(
       [...this._stack.children].map(toast => [toast, toast.getBoundingClientRect().top])
     );
     change();
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const declared = getComputedStyle(this).getPropertyValue('--toast-animation-duration').trim();
-    const duration = declared.endsWith('ms')
-      ? parseFloat(declared)
-      : (parseFloat(declared) || 0.18) * 1000;
-    for (const [toast, top] of before) {
-      if (!toast.isConnected) continue;
-      const delta = top - toast.getBoundingClientRect().top;
+    const stackNow = this._stack.getBoundingClientRect().width;
+    const deltas = new Map(
+      [...before]
+        .filter(([toast]) => toast.isConnected)
+        .map(([toast, top]) => [toast, top - toast.getBoundingClientRect().top])
+    );
+    const styles = getComputedStyle(this);
+    const duration = milliseconds(styles.getPropertyValue('--toast-animation-duration'), 180);
+    const stagger = milliseconds(styles.getPropertyValue('--toast-stagger'), 0);
+    const easing = styles.getPropertyValue('--toast-ease-in').trim() || 'ease-out';
+
+    if (Math.abs(stackNow - stackWas) >= 0.5) {
+      /* The stack is as wide as its widest toast. When that changes, the stack eases to its new
+         width and every toast, stretched to it, follows; the inline width holds it until the
+         animation's first frame */
+      this._stack.style.width = `${stackWas}px`;
+      const resize = this._stack.animate([{ width: `${stackWas}px` }, { width: `${stackNow}px` }], {
+        duration,
+        easing,
+        fill: 'both',
+      });
+      resize.finished.then(
+        () => {
+          resize.cancel();
+          this._stack.style.width = '';
+        },
+        () => {}
+      );
+    }
+
+    let moved = 0;
+    for (const [toast, delta] of deltas) {
       if (Math.abs(delta) < 0.5) continue;
       /* Set inline first: a new animation is pending until the next frame, and the toast would be
-         painted at its new place for that one frame */
+         painted at its new place for that one frame; it also holds the toast through its stagger */
       toast.style.transform = `translateY(${delta}px)`;
       const animation = toast.animate(
         [{ transform: `translateY(${delta}px)` }, { transform: 'none' }],
-        { duration, easing: 'ease-out', fill: 'forwards' }
+        { duration, delay: moved++ * stagger, easing, fill: 'both' }
       );
       animation.finished.then(
         () => {
@@ -228,8 +281,24 @@ export default class PToasts extends HTMLElement {
 
     clearTimeout(entry.timer);
     this._toasts.delete(id);
-    entry.element.setAttribute('data-state', 'leaving');
-    whenAnimationsFinish(entry.element).then(() => this._reflow(() => entry.element.remove()));
+    const { element } = entry;
+    /* Lift the toast out of the stack as it starts to fade, so the toasts below it close up while
+       it goes rather than once it has gone; it fades where it was, then leaves */
+    this._reflow(() => {
+      const { offsetTop, offsetLeft, offsetWidth } = element;
+      /* Held by the edge the stack hangs from, so a stack that narrows behind it leaves it be */
+      const edge = (this.getAttribute('placement') ?? '').endsWith('left')
+        ? { left: `${offsetLeft}px` }
+        : { right: `${this._stack.offsetWidth - offsetLeft - offsetWidth}px` };
+      Object.assign(element.style, {
+        position: 'absolute',
+        top: `${offsetTop}px`,
+        width: `${offsetWidth}px`,
+        ...edge,
+      });
+      element.setAttribute('data-state', 'leaving');
+    });
+    whenAnimationsFinish(element).then(() => element.remove());
 
     dispatchComponentEvent(this, 'p-toasts:close', {
       id,

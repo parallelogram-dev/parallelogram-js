@@ -2,10 +2,12 @@
 @use '../../design-system' as *;
 
 /* Also resets the user agent's popover box, since the host is shown as a manual popover */
+/* The stack sits in a corner of the window, --toast-offset-x and --toast-offset-y in from its edges,
+   and --toast-padding spaces the toasts inside that */
 :host {
   position: fixed;
-  top: 0;
-  right: 0;
+  top: var(--toast-offset-y, 0);
+  right: var(--toast-offset-x, 0);
   bottom: auto;
   left: auto;
   z-index: var(--toast-z-index, #{$z-toast});
@@ -26,7 +28,7 @@
 :host([placement='top-left']),
 :host([placement='bottom-left']) {
   right: auto;
-  left: 0;
+  left: var(--toast-offset-x, 0);
 }
 
 :host([placement='top-center']),
@@ -38,10 +40,12 @@
 
 :host([placement^='bottom']) {
   top: auto;
-  bottom: 0;
+  bottom: var(--toast-offset-y, 0);
 }
 
 .stack {
+  /* A leaving toast is taken out of the flow and held where it was while it fades */
+  position: relative;
   display: grid;
   gap: var(--toast-gap, #{$space-md});
 }
@@ -138,11 +142,13 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .toast {
-    animation: toast-in var(--toast-animation-duration, #{$duration-fast}) ease-out;
+    animation: toast-in var(--toast-animation-duration, #{$duration-fast})
+      var(--toast-ease-in, ease-out);
   }
 
   .toast[data-state='leaving'] {
-    animation: toast-out var(--toast-animation-duration, #{$duration-fast}) ease-in forwards;
+    animation: toast-out var(--toast-animation-duration, #{$duration-fast})
+      var(--toast-ease-out, ease-in) forwards;
   }
 
   .btn.close {
@@ -150,17 +156,19 @@
   }
 }
 
+/* A toast fades in from a little above its place and fades out the same way; --toast-distance
+   says how far */
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(calc(-1 * var(--toast-distance, 6px)));
   }
 }
 
 @keyframes toast-out {
   to {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(calc(-1 * var(--toast-distance, 6px)));
   }
 }
 
