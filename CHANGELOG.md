@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The drag engine works on a list kept in a shadow root: its sensor events are composed, so they reach the engine listening on the document, and it finds what is under the pointer inside open shadow roots, where `document.elementFromPoint` stops at the outermost host.
 
+## [0.7.23] - 2026-10-30
+
+### Added
+
+- `<p-toasts>` can be tuned from a theme: `--toast-offset-x` and `--toast-offset-y` set how far in from the window's edges the stack sits, `--toast-distance` how far a toast travels as it fades in and out, `--toast-ease-in` and `--toast-ease-out` the curves of coming in and going out, and `--toast-stagger` the wait between each toast's move as the stack closes up or makes room. Their defaults are what the stack did before.
+
+### Changed
+
+- The toasts below one that is going close up as it fades, each after the one before it by `--toast-stagger`, rather than once it has gone. The leaving toast fades where it was.
+
 ## [0.7.22] - 2026-10-27
 
 ### Added
