@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import PSelect from '../../../src/components/PSelect.js';
+import { drag, nextFrames } from '../support/drag.js';
 
 const clickShadow = (host, selector) => {
   const target = host.shadowRoot.querySelector(selector);
@@ -1944,5 +1945,183 @@ describe('p-select, a label that is markup', () => {
       images: root.querySelectorAll('.selection img').length,
       text: root.querySelector('.selection__name').textContent.includes('<img'),
     }).toEqual({ injected: false, images: 0, text: true });
+  });
+});
+
+describe('p-select, values put in order where sortable', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const SCOPE = `
+    <p-select searchable name="scope" multiple sortable value="poster,branding">
+      <option value="branding">Branding</option>
+      <option value="digital">Digital</option>
+      <option value="poster">Poster Design</option>
+    </p-select>`;
+
+  const names = select =>
+    [...select.shadowRoot.querySelectorAll('.selection__name')].map(node => node.textContent);
+
+  const chips = select => [...select.shadowRoot.querySelectorAll('.selection')];
+
+  /* The drag engine is fetched once a field is sortable: wait for the same modules, then a frame */
+  const engineLoaded = async () => {
+    await Promise.all([
+      import('../../../src/utils/draggable/Sortable.js'),
+      import('../../../src/utils/draggable/sensors/KeyboardSensor.js'),
+      import('../../../src/utils/draggable/plugins/Focusable.js'),
+    ]);
+    await nextFrames(1);
+  };
+
+  it('holds the values in the order given, and submits them in it', async () => {
+    const { form, select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+
+    expect({
+      value: select.value,
+      shown: names(select),
+      submitted: new FormData(form).getAll('scope'),
+    }).toEqual({
+      value: ['poster', 'branding'],
+      shown: ['Poster Design', 'Branding'],
+      submitted: ['poster', 'branding'],
+    });
+  });
+
+  it('puts a value chosen afterwards after the others', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+
+    select.select('digital');
+
+    expect(select.value).toEqual(['poster', 'branding', 'digital']);
+  });
+
+  it('moves the highlighted value a place with Alt+Shift and an arrow key, and says where', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+    const changes = [];
+    select.addEventListener('change', () => changes.push([...select.value]));
+
+    select.open();
+    press(select, 'ArrowDown');
+    press(select, 'ArrowUp', { altKey: true, shiftKey: true });
+    await nextFrames();
+
+    /* Branding is the first row in the list, and among the chosen it was second */
+    expect({
+      value: select.value,
+      changes,
+      said: select.shadowRoot.querySelector('.live').textContent,
+      open: controlOf(select).getAttribute('aria-expanded'),
+    }).toEqual({
+      value: ['branding', 'poster'],
+      changes: [['branding', 'poster']],
+      said: 'Branding moved to place 1 of 2',
+      open: 'true',
+    });
+  });
+
+  it('leaves a value at the end it is already at', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+    const changes = [];
+    select.addEventListener('change', () => changes.push([...select.value]));
+
+    select.open();
+    press(select, 'ArrowDown');
+    press(select, 'ArrowRight', { altKey: true, shiftKey: true });
+
+    expect({ value: select.value, changes }).toEqual({
+      value: ['poster', 'branding'],
+      changes: [],
+    });
+  });
+
+  it('moves nothing from a highlighted row that is not chosen', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+
+    select.open();
+    press(select, 'ArrowDown');
+    press(select, 'ArrowDown');
+    press(select, 'ArrowUp', { altKey: true, shiftKey: true });
+
+    expect(select.value).toEqual(['poster', 'branding']);
+  });
+
+  it('puts a value where it is dragged to among the others', async () => {
+    const { form, select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+    const changes = [];
+    select.addEventListener('change', () => changes.push([...select.value]));
+    await engineLoaded();
+    const [first, second] = chips(select);
+    const target = first.getBoundingClientRect();
+
+    await drag(second, { x: target.left + 4, y: target.top + target.height / 2 });
+
+    expect({
+      value: select.value,
+      shown: names(select),
+      submitted: new FormData(form).getAll('scope'),
+      changes,
+    }).toEqual({
+      value: ['branding', 'poster'],
+      shown: ['Branding', 'Poster Design'],
+      submitted: ['branding', 'poster'],
+      changes: [['branding', 'poster']],
+    });
+  });
+
+  it('puts a dragged value back where it was when it is let go outside the field', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+    await engineLoaded();
+    const [first, second] = chips(select);
+    const target = first.getBoundingClientRect();
+
+    await drag(second, { x: target.left + 4, y: target.top + target.height / 2 + 400 });
+
+    expect([select.value, names(select)]).toEqual([
+      ['poster', 'branding'],
+      ['Poster Design', 'Branding'],
+    ]);
+  });
+
+  it('opens the list on a click on a value that can be dragged', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+
+    clickShadow(select, '.selection');
+
+    expect(controlOf(select).getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('offers nothing to drag while the field is disabled or holds one value', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+    select.setAttribute('disabled', '');
+    const disabled = select.shadowRoot.querySelectorAll('.selection--sortable').length;
+    select.removeAttribute('disabled');
+    select.value = ['digital'];
+
+    expect([disabled, select.shadowRoot.querySelectorAll('.selection--sortable').length]).toEqual([
+      0, 0,
+    ]);
+  });
+
+  it('holds the values in the options\u2019 order again once it is no longer sortable', async () => {
+    const { select } = renderForm(SCOPE);
+    await customElements.whenDefined('p-select');
+
+    select.removeAttribute('sortable');
+
+    expect([select.value, chips(select).some(chip => 'chip' in chip.dataset)]).toEqual([
+      ['branding', 'poster'],
+      false,
+    ]);
   });
 });

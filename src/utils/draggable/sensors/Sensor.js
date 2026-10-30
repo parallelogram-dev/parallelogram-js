@@ -89,11 +89,15 @@ export class Sensor {
     return nearest && this.containers.includes(nearest) ? nearest : null;
   }
 
-  /** Dispatch a sensor event as a bubbling, cancelable DOM event on `element`. */
+  /**
+   * Dispatch a sensor event as a bubbling, cancelable DOM event on `element`. It is composed, so
+   * it reaches the engine listening on the document from a container kept in a shadow root.
+   */
   trigger(element, sensorEvent) {
     const event = new CustomEvent(sensorEvent.type, {
       bubbles: true,
       cancelable: true,
+      composed: true,
       detail: sensorEvent,
     });
     element.dispatchEvent(event);

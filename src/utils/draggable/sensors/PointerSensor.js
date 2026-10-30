@@ -1,4 +1,4 @@
-import { closest, distance } from '../dom.js';
+import { closest, distance, elementFromPoint } from '../dom.js';
 import { Sensor } from './Sensor.js';
 import { DragStartSensorEvent, DragMoveSensorEvent, DragStopSensorEvent } from '../events.js';
 
@@ -164,7 +164,7 @@ export class PointerSensor extends Sensor {
     const dragMoveEvent = new DragMoveSensorEvent({
       clientX: event.clientX,
       clientY: event.clientY,
-      target: document.elementFromPoint(event.clientX, event.clientY),
+      target: elementFromPoint(event.clientX, event.clientY),
       container: this.currentContainer,
       originalEvent: event,
       pointerType: this.pointerType,
@@ -194,7 +194,7 @@ export class PointerSensor extends Sensor {
       const dragStopEvent = new DragStopSensorEvent({
         clientX: event.clientX,
         clientY: event.clientY,
-        target: document.elementFromPoint(event.clientX, event.clientY),
+        target: elementFromPoint(event.clientX, event.clientY),
         container: this.currentContainer,
         originalEvent: event,
         pointerType: this.pointerType,

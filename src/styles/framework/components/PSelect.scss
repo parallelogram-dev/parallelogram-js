@@ -259,6 +259,21 @@
   font-size: var(--select-selection-font-size, inherit);
 }
 
+/* A value that can be dragged into place says so under the pointer, and the gap it leaves while
+   it is carried shows where it will land */
+.selection--sortable {
+  cursor: grab;
+}
+
+.selection[data-sort-item-state='placeholder'] {
+  opacity: 0.4;
+}
+
+.selection[data-sort-item-state='mirror'] {
+  cursor: grabbing;
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 0.2);
+}
+
 /* Where one value is held there is nothing to tell apart from its neighbours, so it is drawn as
    the field's own text rather than as a chip on a ground of its own */
 /* Where one value is held there is nothing to tell apart from its neighbours, so it loses the

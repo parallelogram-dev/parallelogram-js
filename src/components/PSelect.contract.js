@@ -25,6 +25,12 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
         'Allows more than one value: choosing toggles rather than replaces, the field submits one entry per value under its name, and `value` reads and writes a list',
     },
     {
+      name: 'sortable',
+      type: 'flag',
+      description:
+        'With multiple, holds the values in the order given and then chosen rather than the options’ order, and lets the editor reorder them: a chosen value is dragged to its place among the others, or, with its row highlighted in the open list, moved a place earlier with Alt+Shift+Up or Left Arrow and later with Alt+Shift+Down or Right Arrow. The form carries the values in that order, and `value` gives the starting order',
+    },
+    {
       name: 'selection-rows',
       type: 'enum',
       options: ['1', '2'],
@@ -110,6 +116,14 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       default: 'No results found',
       option: 'noResults',
       description: 'What the list says when nothing matches',
+    },
+    {
+      name: 'moved-message',
+      type: 'string',
+      default: '{label} moved to place {position} of {count}',
+      option: 'movedMessage',
+      description:
+        'What is announced when a sortable value moves, with {label}, {position} and {count} for the value, its new place and how many there are',
     },
     { name: 'disabled', type: 'flag', property: 'disabled', description: 'Disables the select' },
     {
