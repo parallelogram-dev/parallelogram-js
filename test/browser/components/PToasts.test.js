@@ -283,23 +283,15 @@ describe('p-toasts', () => {
       )
     );
     const before = second.getBoundingClientRect().top;
-    const removed = new Promise(resolve => {
-      new MutationObserver((records, observer) => {
-        if (records.some(record => record.removedNodes.length)) {
-          observer.disconnect();
-          resolve();
-        }
-      }).observe(second.parentNode, { childList: true });
-    });
 
     dismissFirst();
-    await removed;
     const justAfter = second.getBoundingClientRect().top;
     await new Promise(resolve => setTimeout(resolve, 400));
     const settled = second.getBoundingClientRect().top;
 
-    /* The first toast's space closes the moment it is removed; the second used to be drawn at its
-       new place in that same frame. It starts from where it was and arrives over the animation */
+    /* The first toast's space closes the moment it starts to fade; the second used to be drawn at
+       its new place in that same frame. It starts from where it was and arrives over the animation,
+       while the first is still fading where it was */
     expect({
       staysPutAtFirst: Math.abs(justAfter - before) < 2,
       arrives: settled < before - 10,

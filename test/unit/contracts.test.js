@@ -18,6 +18,13 @@ const styles = readdirSync(`${root}src/styles/framework/components`)
   .map(file => read(`src/styles/framework/components/${file}`))
   .join('\n');
 
+/* A component's script may read a property too, as PToasts reads its stagger for the Web Animations
+   it runs, which no stylesheet can express */
+const scripts = readdirSync(`${root}src/components`)
+  .filter(file => file.endsWith('.js'))
+  .map(file => read(`src/components/${file}`))
+  .join('\n');
+
 const QUOTED_EVENT = /['"`]([a-z][a-z-]*:[a-z][a-z-]*)['"`]/g;
 const HELPER_READ =
   /\b(?:getAttr|getBoolAttr|getNumberAttr|hasAttr|setAttr|removeAttr)\(\s*[\w.]+,\s*'([a-z-]+)'/g;
@@ -312,6 +319,7 @@ describe('custom properties', () => {
         .map(property => property.name)
         /* var() may wrap, so the name need not follow the bracket on the same line */
         .filter(name => !new RegExp(`var\\(\\s*${name}\\s*[,)]`).test(styles))
+        .filter(name => !new RegExp(`getPropertyValue\\(\\s*['"]${name}['"]`).test(scripts))
         .map(name => `${contract.name} ${name}`)
     );
 
