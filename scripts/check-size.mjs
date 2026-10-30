@@ -22,6 +22,7 @@ const HEADROOM = 1.05;
 
 const jsEntries = [
   'index.js',
+  'draggable.js',
   /* The single-file bundle sits at the root of dist, so it is named rather than found in a folder */
   'parallelogram.js',
   ...['components', 'adapters', 'core', 'managers'].flatMap(folder =>

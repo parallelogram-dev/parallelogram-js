@@ -1,6 +1,6 @@
 {
   "name": "@parallelogram-js/core",
-  "version": "0.7.20",
+  "version": "0.7.22",
   "description": "A lightweight, enhancement-first JavaScript framework for progressive web applications",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
     "check:logger": "node scripts/check-logger.mjs",
     "check:package": "publint --strict",
     "check:size": "node scripts/check-size.mjs",
-    "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./custom-elements.json",
+    "check:types": "tsc -p test/types/tsconfig.json && attw --pack . --profile esm-only --entrypoints . ./draggable ./components/PModal ./components/PUploader.js ./components/Toggle ./core/BaseComponent ./managers/RouterManager ./adapters/ga4 ./custom-elements.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -49,6 +49,16 @@
       "types": "./dist/types/index.d.ts",
       "development": "./dist/dev/index.js",
       "default": "./dist/index.js"
+    },
+    "./draggable": {
+      "types": "./dist/types/draggable.d.ts",
+      "development": "./dist/dev/draggable.js",
+      "default": "./dist/draggable.js"
+    },
+    "./draggable.js": {
+      "types": "./dist/types/draggable.d.ts",
+      "development": "./dist/dev/draggable.js",
+      "default": "./dist/draggable.js"
     },
     "./components/*.js": {
       "types": "./dist/types/components/*.d.ts",
@@ -153,6 +163,7 @@
   "sizeBudget": {
     "parallelogram.js": 96512,
     "index.js": 16662,
+    "draggable.js": 8673,
     "components/Accordion.js": 3726,
     "components/CopyToClipboard.js": 3944,
     "components/DataTable.js": 6873,
@@ -163,7 +174,7 @@
     "components/Modal.js": 8989,
     "components/PDatetime.js": 13904,
     "components/PModal.js": 5501,
-    "components/PSelect.js": 10586,
+    "components/PSelect.js": 11126,
     "components/PToasts.js": 4098,
     "components/PUploader.js": 22554,
     "components/PUploaderFile.js": 9042,

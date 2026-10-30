@@ -1062,6 +1062,85 @@ describe('p-select paging', () => {
   });
 });
 
+const SAVED_ROW =
+  '<p-select searchable name="row" aria-label="Row" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="1" data-select-debounce="0" data-select-limit="10"><option value="r42" selected>Row 42</option></p-select>';
+
+const SAVED_ROWS =
+  '<p-select searchable multiple name="rows" aria-label="Rows" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="1" data-select-debounce="0" data-select-limit="10"><option value="r42" selected>Row 42</option><option value="r43" selected>Row 43</option></p-select>';
+
+describe('p-select, a remote list redisplaying saved rows', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.replaceChildren();
+  });
+
+  it('shows the label of a saved row given as an option, without asking the source', () => {
+    const calls = pagedSource();
+    const { select } = renderForm(SAVED_ROW);
+
+    expect([select.value, labelOf(select), calls]).toEqual(['r42', ['Row 42'], []]);
+  });
+
+  it('keeps the saved row and its label while a search lists other rows', async () => {
+    pagedSource();
+    const { form, select } = renderForm(SAVED_ROW);
+
+    select.open();
+    typeInto(select, 'Row');
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    expect([labelOf(select), new FormData(form).get('row')]).toEqual([['Row 42'], 'r42']);
+  });
+
+  it('keeps the labels of saved rows when another is chosen from a search', async () => {
+    pagedSource();
+    const { form, select } = renderForm(SAVED_ROWS);
+
+    select.open();
+    typeInto(select, 'Row');
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    select.select('r1');
+
+    expect([labelOf(select), new FormData(form).getAll('rows')]).toEqual([
+      ['Row 1', 'Row 42', 'Row 43'],
+      ['r1', 'r42', 'r43'],
+    ]);
+  });
+
+  it('forgets a saved row taken back out', async () => {
+    pagedSource();
+    const { select } = renderForm(SAVED_ROWS);
+
+    select.value = ['r43'];
+
+    expect(labelOf(select)).toEqual(['Row 43']);
+  });
+
+  it('puts the saved row back when the form is reset after another was chosen', async () => {
+    pagedSource();
+    const { form, select } = renderForm(SAVED_ROW);
+
+    select.open();
+    typeInto(select, 'Row');
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+    select.select('r3');
+    form.reset();
+
+    expect([select.value, labelOf(select)]).toEqual(['r42', ['Row 42']]);
+  });
+
+  it('still takes a value attribute the options leave out, for the source to name', async () => {
+    pagedSource();
+    const select = mountSelect(
+      '<p-select searchable name="row" aria-label="Row" value="r5" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"><option value="r42">Row 42</option></p-select>'
+    );
+
+    await vi.waitFor(() => expect(labelOf(select)).toEqual(['Row 5']), WAIT);
+
+    expect(select.value).toBe('r5');
+  });
+});
+
 describe('p-select disabled', () => {
   afterEach(() => {
     document.body.replaceChildren();

@@ -15,6 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The toasts below one that is going close up as it fades, each after the one before it by `--toast-stagger`, rather than once it has gone. The leaving toast fades where it was.
 
+## [0.7.22] - 2026-10-27
+
+### Added
+
+- `@parallelogram-js/core/draggable` exports the drag engine behind Sortable, Swappable and Droppable: `Draggable`, `Sortable`, `Swappable` and `Droppable`, the `Mirror`, `Scrollable` and `Focusable` plugins with `AbstractPlugin`, the `PointerSensor` and `KeyboardSensor` with `Sensor`, and `closest`. The components configure the engine from data attributes; a script that needs an option no attribute carries, such as its own placeholder, a copy built for the pointer rather than cloned, somewhere else to put that copy or a sensor left out, can now construct the engine itself, as `<p-uploader>` does. A list of form rows is the usual case: the engine's default placeholder is a copy of the row, whose checked radios would take the checks from the row they copy.
+
+### Fixed
+
+- A sortable list inside another one's item, such as images inside a block of a sortable list of blocks, drags its own items. A press in it started a drag in both lists, so the outer one lifted the whole block, hiding the list the press was made in, and from the keyboard the outer list took the key so the inner one never moved. Each sensor now starts a drag only when the nearest drag container around the press, of any Sortable, Swappable or Droppable on the page, is its own.
+
+## [0.7.21] - 2026-10-23
+
+### Fixed
+
+- A `<p-select>` with `data-select-src` reads its `<option>` children as the list it starts from, as one without does. It ignored them, so a form redisplaying a saved row had no label to show for it until someone searched, and with `data-select-min` above 0, or a saved row past the first page, that label never came: an edit form showed the row's id where its name belonged. The children need only be the chosen rows; a search replaces them with what the URL answers. A `value` attribute naming a row the children leave out still counts, for the URL to name once it is asked.
+- A `<p-select multiple>` with `data-select-src` keeps the label of each value it holds while a search lists other rows. A chip took its label from the current list alone, so choosing a second value from a new search turned the first back into its bare value. The same holds for a single value after a search, and a form reset puts back the rows the markup gave with their labels.
+
 ## [0.7.20] - 2026-10-10
 
 ### Added
