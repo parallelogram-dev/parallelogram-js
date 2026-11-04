@@ -85,6 +85,10 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  * The element is form-associated: it submits its value under its `name`, supports `required`, and
  * restores its `value` attribute, or else its selected option, when the form resets.
  *
+ * An option whose value is empty, such as "Any owner" on a filter, is shown as chosen while nothing
+ * else is, as a native select shows it, rather than the placeholder. With `multiple` its label
+ * stands in the placeholder's place, and choosing it takes every value back out.
+ *
  * With `multiple`, the values are held in the options' order. With `sortable` as well they are held
  * in the order given and then chosen, a new one going last, and the editor puts them in order:
  * a chosen value is dragged to its place among the others, or, with its row highlighted in the
@@ -907,11 +911,11 @@ export default class PSelect extends HTMLElement {
        search had put aside never came back and nothing on screen said why */
     /* The placeholder speaks for an empty field; once something is chosen the selections do, and
        a search box says what it is for instead of sitting there blank */
-    this._els.input.placeholder = this.state.values.length
+    this._els.input.placeholder = this._shownValues().length
       ? this.state.searchable
         ? text(this, 'search-label')
         : ''
-      : this.state.placeholder;
+      : (this.state.multiple && this._emptyOption()?.label) || this.state.placeholder;
     this._renderSelections();
     this._updateControls();
   }
@@ -926,12 +930,15 @@ export default class PSelect extends HTMLElement {
     if (!box) return;
 
     const two = this.state.selectionRows === 2;
-    box.hidden = this.state.values.length === 0;
+    const shown = this._shownValues();
+    box.hidden = shown.length === 0;
     box.classList.toggle('selections--two', two);
     box.replaceChildren(
-      ...this.state.values.map(value => {
+      ...shown.map(value => {
         const option =
-          this.state.options.find(item => item.value === value) ?? this._chosen.get(value);
+          value === ''
+            ? this._emptyOption()
+            : (this.state.options.find(item => item.value === value) ?? this._chosen.get(value));
         const label = option?.label ?? value;
         const chip = document.createElement('span');
         chip.className = two ? 'selection selection--two' : 'selection';
@@ -1060,7 +1067,7 @@ export default class PSelect extends HTMLElement {
 
     for (const element of this._els.options.querySelectorAll('[role="option"]')) {
       const option = this.state.filtered[Number(element.dataset.index)];
-      element.setAttribute('aria-selected', String(this._holds(option?.value)));
+      element.setAttribute('aria-selected', String(this._shows(option?.value)));
     }
 
     this._syncFormState();
@@ -1191,6 +1198,33 @@ export default class PSelect extends HTMLElement {
     return value !== undefined && this.state.values.includes(value);
   }
 
+  /** Whether a value's row reads as chosen: one held, or the empty option while nothing is */
+  _shows(value) {
+    return value !== undefined && this._shownValues().includes(value);
+  }
+
+  /** The option whose value is empty, from the current list or else the markup's */
+  _emptyOption() {
+    return (
+      this.state.options.find(option => option.value === '') ??
+      this._given.find(option => option.value === '') ??
+      null
+    );
+  }
+
+  /**
+   * The values the control shows as chosen: those held, or with one value the empty option while
+   * nothing is, as a native select shows it
+   *
+   * @returns {string[]}
+   */
+  _shownValues() {
+    if (this.state.values.length || this.state.multiple || !this._emptyOption()) {
+      return this.state.values;
+    }
+    return [''];
+  }
+
   /** A value attribute, a property or an array read as a list of values */
   _asList(value) {
     if (Array.isArray(value)) return value.map(String).filter(item => item !== '');
@@ -1286,6 +1320,11 @@ export default class PSelect extends HTMLElement {
    * @param {{ label: string, secondary?: string, description?: string, image?: string }} [option] - the option chosen, whose label and rich fields go in the detail
    */
   _choose(value, option = null) {
+    if (this.state.multiple && value === '') {
+      /* The empty option stands for nothing chosen, so it takes the rest back out */
+      this._clearAll();
+      return;
+    }
     if (this.state.multiple) {
       /* The same gesture puts a value in and takes it back out */
       const held = this._holds(value);
@@ -1521,7 +1560,7 @@ export default class PSelect extends HTMLElement {
       element.id = `option-${index}`;
       element.dataset.index = String(index);
       element.setAttribute('role', 'option');
-      element.setAttribute('aria-selected', String(this._holds(option.value)));
+      element.setAttribute('aria-selected', String(this._shows(option.value)));
       if (option.disabled) {
         element.setAttribute('aria-disabled', 'true');
       }
