@@ -629,6 +629,12 @@ export default {
       description: 'Background of hovered days and buttons',
     },
     { name: '--datetime-cell-size', description: 'Size of each day in the grid' },
+    {
+      name: '--datetime-min-width',
+      default: '12rem',
+      description:
+        'Narrowest the field gets; a value too long for it is cut short with an ellipsis',
+    },
     { name: '--datetime-panel-min-width', description: 'Narrowest the panel gets' },
     { name: '--datetime-animation-duration', description: 'Length of the panel animation' },
   ],

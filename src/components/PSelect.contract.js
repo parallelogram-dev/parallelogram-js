@@ -94,7 +94,8 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
       type: 'string',
       default: 'Select…',
       option: 'placeholder',
-      description: 'Shown when nothing is chosen',
+      description:
+        'Shown when nothing is chosen. An option whose value is empty is shown instead, as chosen with one value and in this place with `multiple`',
     },
     {
       name: 'search-hint',

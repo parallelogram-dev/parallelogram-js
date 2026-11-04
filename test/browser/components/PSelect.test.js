@@ -1142,6 +1142,102 @@ describe('p-select, a remote list redisplaying saved rows', () => {
   });
 });
 
+const OWNERS = `
+  <p-select searchable name="owner" value="" placeholder="Pick one">
+    <option value="">Any owner</option>
+    <option value="ada">Ada Lovelace</option>
+    <option value="grace">Grace Hopper</option>
+  </p-select>
+`;
+
+describe('p-select, an option whose value is empty', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.replaceChildren();
+  });
+
+  it('shows the empty option as chosen in a searchable field, as a native select does', () => {
+    const { select } = renderForm(OWNERS);
+
+    expect([select.value, labelOf(select), inputOf(select).placeholder]).toEqual([
+      '',
+      ['Any owner'],
+      'Search',
+    ]);
+  });
+
+  it('shows the empty option as chosen in a field that cannot be searched', () => {
+    const { select } = renderForm(OWNERS.replace('searchable ', ''));
+
+    expect([labelOf(select), inputOf(select).placeholder]).toEqual([['Any owner'], '']);
+  });
+
+  it('shows the empty option without a value attribute to name it', () => {
+    const { select } = renderForm(OWNERS.replace(' value=""', ''));
+
+    expect(labelOf(select)).toEqual(['Any owner']);
+  });
+
+  it('marks the empty option\u2019s row as the selected one', () => {
+    const { select } = renderForm(OWNERS);
+
+    expect(optionsOf(select).map(row => row.getAttribute('aria-selected'))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
+  });
+
+  it('shows the empty option again once the value is set back to empty', () => {
+    const { form, select } = renderForm(OWNERS);
+    select.select('ada');
+
+    select.value = '';
+
+    expect([labelOf(select), new FormData(form).get('owner')]).toEqual([['Any owner'], '']);
+  });
+
+  it('shows the placeholder where no option is empty', () => {
+    const { select } = renderForm(OWNERS.replace('<option value="">Any owner</option>', ''));
+
+    expect([labelOf(select), inputOf(select).placeholder]).toEqual([[], 'Pick one']);
+  });
+
+  it('keeps showing the empty option from markup after a search lists other rows', async () => {
+    pagedSource();
+    const select = mountSelect(
+      '<p-select searchable name="row" aria-label="Row" value="" data-select-src="/api/rows?q={q}&page={page}&limit={limit}" data-select-min="0" data-select-debounce="0" data-select-limit="10"><option value="">Any row</option></p-select>'
+    );
+
+    select.open();
+    typeInto(select, 'Row');
+    await vi.waitFor(() => expect(optionsOf(select).length).toBe(10), WAIT);
+
+    expect(labelOf(select)).toEqual(['Any row']);
+  });
+
+  it('puts the empty option\u2019s label in the placeholder\u2019s place where several may be chosen', () => {
+    const { select } = renderForm(OWNERS.replace('searchable', 'searchable multiple'));
+
+    expect([select.value, labelOf(select), inputOf(select).placeholder]).toEqual([
+      [],
+      [],
+      'Any owner',
+    ]);
+  });
+
+  it('takes every value back out when the empty option is chosen where several may be', () => {
+    const { form, select } = renderForm(OWNERS.replace('searchable', 'searchable multiple'));
+    select.value = ['ada', 'grace'];
+    const changes = [];
+    select.addEventListener('change', () => changes.push(select.value));
+
+    select.select('');
+
+    expect([select.value, new FormData(form).getAll('owner'), changes]).toEqual([[], [], [[]]]);
+  });
+});
+
 describe('p-select disabled', () => {
   afterEach(() => {
     document.body.replaceChildren();
