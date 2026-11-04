@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.25] - 2026-11-04
+
 ### Added
 
 - `<p-datetime>` takes `--datetime-min-width`, the narrowest its field gets, so two pickers can sit side by side in a narrow column. It defaults to the `12rem` the field kept to before.
