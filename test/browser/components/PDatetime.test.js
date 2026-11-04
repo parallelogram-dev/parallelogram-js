@@ -744,6 +744,61 @@ describe('p-datetime', () => {
     }
   });
 
+  it('is 12rem wide at its narrowest unless the page says otherwise', async () => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const standard = renderPicker({ style: 'width: 1px' });
+    const narrowed = renderPicker({ style: 'width: 1px; --datetime-min-width: 6rem' });
+    await nextFrame();
+
+    expect([standard.offsetWidth, narrowed.offsetWidth]).toEqual([12 * rem, 6 * rem]);
+  });
+
+  it('truncates a value too long for a narrow field with an ellipsis, inside the field', async () => {
+    const picker = renderPicker({
+      mode: 'datetime',
+      value: '2024-01-15T08:00',
+      style: '--datetime-min-width: 0; width: 5rem',
+    });
+    await nextFrame();
+    const input = shadow(picker, '[data-datetime-input]');
+    const style = getComputedStyle(input);
+    const host = picker.getBoundingClientRect();
+    const box = input.getBoundingClientRect();
+
+    /* An ellipsis is drawn only by a block container; a flex one clips its text bare */
+    expect({
+      clipped: input.scrollWidth > input.clientWidth,
+      inside: box.left >= host.left && box.right <= host.right,
+      block: ['block', 'inline-block', 'flow-root'].includes(style.display),
+      overflow: [style.overflowX, style.whiteSpace, style.textOverflow],
+    }).toEqual({
+      clipped: true,
+      inside: true,
+      block: true,
+      overflow: ['hidden', 'nowrap', 'ellipsis'],
+    });
+  });
+
+  it('keeps both ends of a range inside a narrow field', async () => {
+    const picker = renderPicker({
+      range: '',
+      value: '2024-01-08',
+      'range-to-value': '2024-01-15',
+      style: '--datetime-min-width: 0; width: 8rem',
+    });
+    await nextFrame();
+    const host = picker.getBoundingClientRect();
+    const boxes = [
+      shadow(picker, '[data-datetime-input]'),
+      shadow(picker, '[data-datetime-input-to]'),
+      trigger(picker),
+    ].map(element => element.getBoundingClientRect());
+
+    expect(boxes.every(box => box.left >= host.left - 0.5 && box.right <= host.right + 0.5)).toBe(
+      true
+    );
+  });
+
   it('reports a missing value in the words the page chose', async () => {
     const picker = renderPicker({ required: '', 'required-message': '{what} requis' });
     await nextFrame();

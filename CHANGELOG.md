@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `<p-datetime>` takes `--datetime-min-width`, the narrowest its field gets, so two pickers can sit side by side in a narrow column. It defaults to the `12rem` the field kept to before.
+
 ### Fixed
 
 - A `<p-select>` shows an option whose value is empty, such as "Any owner" on a filter, as chosen while nothing else is, as a native select does. It showed the placeholder, or an empty box, as though the option were not there, searchable or not. With `multiple` the option's label stands in the placeholder's place while nothing is chosen, and choosing it takes every value back out.
+- A `<p-datetime>` value too long for its field ends in an ellipsis. It was cut off bare at the field's edge.
 
 ## [0.7.24] - 2026-10-30
 

@@ -118,6 +118,8 @@ const addMonths = (date, months) => {
  *   `var(--surface-control-border-color)`)
  * @cssprop --datetime-hover - background of hovered days and buttons (default `var(--color-hover)`)
  * @cssprop --datetime-cell-size - size of each day in the grid
+ * @cssprop --datetime-min-width - narrowest the field gets, where a value too long for it is cut short
+ *   with an ellipsis (default `12rem`)
  * @cssprop --datetime-panel-min-width - narrowest the panel gets
  * @cssprop --datetime-animation-duration - length of the panel animation
  *
