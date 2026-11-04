@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.27] - 2026-11-04
+
 ### Fixed
 
 - The placeholder in a `<p-select>`'s closed control sits on the same line as the chevron and a first chosen value, in either mode. It was only as tall as its own text, and the control packs its rows to the top, so it sat about a quarter of a row above them.
