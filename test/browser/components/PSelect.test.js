@@ -1508,6 +1508,109 @@ describe('p-select, what it shows once several are chosen', () => {
   });
 });
 
+const PAGES = `
+  <p-select searchable multiple name="related[]" placeholder="Any page">
+    <option value="page.1">Home</option>
+    <option value="page.2">About</option>
+  </p-select>
+`;
+
+/** The placeholder drawn in the closed control, or null where none is shown there */
+const shownPlaceholder = select => {
+  const element = select.shadowRoot.querySelector('.control .placeholder');
+  return element?.checkVisibility() && element.getBoundingClientRect().width > 0
+    ? element.textContent
+    : null;
+};
+
+describe('p-select, the placeholder in the closed control', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('shows the placeholder while several may be chosen and none is', () => {
+    const { select } = renderForm(PAGES);
+
+    expect([select.value, shownPlaceholder(select)]).toEqual([[], 'Any page']);
+  });
+
+  it('gives way to the first value chosen, and comes back when the last is taken out', () => {
+    const { select } = renderForm(PAGES);
+
+    select.select('page.1');
+    const chosen = shownPlaceholder(select);
+    select.select('page.1');
+
+    expect([chosen, shownPlaceholder(select)]).toEqual([null, 'Any page']);
+  });
+
+  it('shows the placeholder while one may be chosen and none is', () => {
+    const { select } = renderForm(PAGES.replace('searchable multiple', ''));
+
+    expect([select.value, shownPlaceholder(select)]).toEqual(['', 'Any page']);
+  });
+
+  it('shows no placeholder beside a value that is held', () => {
+    const { select } = renderForm(COUNTRIES);
+
+    expect(shownPlaceholder(select)).toBe(null);
+  });
+
+  it('shows the label of an empty option in the placeholder\u2019s place where several may be chosen', () => {
+    const { select } = renderForm(
+      PAGES.replace(
+        '<option value="page.1">',
+        '<option value="">Every page</option><option value="page.1">'
+      )
+    );
+
+    expect(shownPlaceholder(select)).toBe('Every page');
+  });
+
+  it('follows a placeholder the page changes later', () => {
+    const { select } = renderForm(PAGES);
+
+    select.setAttribute('placeholder', 'Any CMS section');
+
+    expect([shownPlaceholder(select), inputOf(select).placeholder]).toEqual([
+      'Any CMS section',
+      'Any CMS section',
+    ]);
+  });
+
+  it('keeps the search box\u2019s words when the placeholder changes while a value is held', () => {
+    const { select } = renderForm(PAGES);
+    select.select('page.1');
+
+    select.setAttribute('placeholder', 'Any CMS section');
+
+    expect(inputOf(select).placeholder).toBe('Search');
+  });
+
+  it('draws the placeholder muted, with its text where a value\u2019s text starts', () => {
+    const { select } = renderForm(PAGES.replace('searchable multiple', ''));
+    const placeholder = select.shadowRoot.querySelector('.control .placeholder');
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--select-placeholder)';
+    select.shadowRoot.querySelector('.control').append(probe);
+    const muted = getComputedStyle(probe).color;
+    probe.remove();
+    const text = element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect().left;
+    };
+    const empty = text(placeholder);
+
+    select.select('page.1');
+
+    expect([getComputedStyle(placeholder).color, Math.round(empty)]).toEqual([
+      muted,
+      Math.round(text(select.shadowRoot.querySelector('.selection__name'))),
+    ]);
+  });
+});
+
 describe('p-select, the list when several may be chosen', () => {
   afterEach(() => {
     document.body.replaceChildren();
