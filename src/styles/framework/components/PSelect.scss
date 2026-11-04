@@ -241,12 +241,13 @@
 }
 
 /* What an empty field says, in the closed control. Inset by a selection's own padding, so its text
-   starts where a value's will */
+   starts where a value's will, and a row tall, so it sits on the line the chevron and a first
+   value do. The row is its line height rather than a flex box's, which would drop the ellipsis */
 .placeholder {
   flex: 1 1 0;
   min-width: 0;
   padding-inline: var(--select-selection-padding-inline);
-  line-height: 1.25;
+  line-height: var(--select-row);
   color: var(--select-placeholder);
   overflow: hidden;
   text-overflow: ellipsis;
