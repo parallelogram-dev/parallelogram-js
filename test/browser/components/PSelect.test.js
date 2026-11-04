@@ -1587,6 +1587,29 @@ describe('p-select, the placeholder in the closed control', () => {
     expect(inputOf(select).placeholder).toBe('Search');
   });
 
+  it.each([
+    ['several', 'searchable multiple'],
+    ['one', 'searchable'],
+  ])(
+    'centres the placeholder on the row the chevron and the first value sit on, where %s may be chosen',
+    (_, attributes) => {
+      const { select } = renderForm(PAGES.replace('searchable multiple', attributes));
+      const centre = rect => (rect.top + rect.bottom) / 2;
+      const range = document.createRange();
+      range.selectNodeContents(select.shadowRoot.querySelector('.control .placeholder'));
+      const placeholder = centre(range.getBoundingClientRect());
+      const arrow = centre(select.shadowRoot.querySelector('.arrow').getBoundingClientRect());
+
+      select.select('page.1');
+      const value = centre(select.shadowRoot.querySelector('.selection').getBoundingClientRect());
+
+      expect([Math.abs(placeholder - arrow) <= 1, Math.abs(placeholder - value) <= 1]).toEqual([
+        true,
+        true,
+      ]);
+    }
+  );
+
   it('draws the placeholder muted, with its text where a value\u2019s text starts', () => {
     const { select } = renderForm(PAGES.replace('searchable multiple', ''));
     const placeholder = select.shadowRoot.querySelector('.control .placeholder');
