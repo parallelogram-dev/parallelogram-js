@@ -130,6 +130,7 @@ const richOptionContent = ({ label, secondary, description, image }) => {
  *
  * @csspart input - the text input
  * @csspart listbox - the list of options
+ * @csspart placeholder - the placeholder in the control while nothing is chosen
  */
 export default class PSelect extends HTMLElement {
   static formAssociated = true;
@@ -299,7 +300,7 @@ export default class PSelect extends HTMLElement {
         break;
       case 'placeholder':
         this.state.placeholder = newValue || this.constructor.defaults.placeholder;
-        this._els.input.placeholder = this.state.placeholder;
+        this._updateDisplay();
         break;
       case 'disabled':
         this._updateDisabledState(newValue !== null);
@@ -331,6 +332,7 @@ export default class PSelect extends HTMLElement {
           aria-controls="listbox"
         >
           <span class="selections" part="selections" hidden></span>
+          <span class="placeholder" part="placeholder"></span>
           <span class="arrow" aria-hidden="true">${iconMarkup(chevronDown, { size: 'sm' })}</span>
         </div>
 
@@ -359,6 +361,7 @@ export default class PSelect extends HTMLElement {
     this._els = {
       control: this.shadowRoot.querySelector('.control'),
       selections: this.shadowRoot.querySelector('.selections'),
+      placeholder: this.shadowRoot.querySelector('.control .placeholder'),
       options: this.shadowRoot.querySelector('.options'),
       input: this.shadowRoot.querySelector('.input'),
       menu: this.shadowRoot.querySelector('.menu'),
@@ -909,13 +912,19 @@ export default class PSelect extends HTMLElement {
     /* What was typed stays until it is cleared. Blanked on every redraw, the box emptied itself as
        a value was chosen while the list stayed narrowed to what had been typed, so the rows the
        search had put aside never came back and nothing on screen said why */
-    /* The placeholder speaks for an empty field; once something is chosen the selections do, and
-       a search box says what it is for instead of sitting there blank */
-    this._els.input.placeholder = this._shownValues().length
+    /* The placeholder speaks for an empty field, in the closed control as well as the search box;
+       once something is chosen the selections do, and a search box says what it is for instead
+       of sitting there blank */
+    const shown = this._shownValues().length > 0;
+    const placeholder =
+      (this.state.multiple && this._emptyOption()?.label) || this.state.placeholder;
+    this._els.input.placeholder = shown
       ? this.state.searchable
         ? text(this, 'search-label')
         : ''
-      : (this.state.multiple && this._emptyOption()?.label) || this.state.placeholder;
+      : placeholder;
+    this._els.placeholder.textContent = placeholder;
+    this._els.placeholder.hidden = shown;
     this._renderSelections();
     this._updateControls();
   }

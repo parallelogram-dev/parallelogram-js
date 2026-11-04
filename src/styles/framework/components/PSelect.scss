@@ -240,6 +240,23 @@
   display: none;
 }
 
+/* What an empty field says, in the closed control. Inset by a selection's own padding, so its text
+   starts where a value's will */
+.placeholder {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: var(--select-selection-padding-inline);
+  line-height: 1.25;
+  color: var(--select-placeholder);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder[hidden] {
+  display: none;
+}
+
 .selection {
   display: inline-flex;
   align-items: center;

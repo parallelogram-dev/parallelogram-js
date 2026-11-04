@@ -255,6 +255,7 @@ Options come from \`<option>\` and \`<optgroup>\` children, which are watched fo
     { name: 'search-clear', description: 'The button that takes back what was typed into it' },
     { name: 'selections', description: 'The chosen values in the control' },
     { name: 'selection', description: 'One chosen value' },
+    { name: 'placeholder', description: 'The placeholder in the control while nothing is chosen' },
     { name: 'bulk', description: 'The bar above the list, where select-all is set' },
     { name: 'bulk-all', description: 'The button that takes every option the search left' },
     { name: 'bulk-none', description: 'The button that gives those options back' },

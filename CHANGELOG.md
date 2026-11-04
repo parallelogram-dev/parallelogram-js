@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A `<p-select>` with nothing chosen shows its `placeholder` in the closed control, muted, where a value's text would start, and it gives way to the first value chosen. The control was blank: the placeholder reached only the search box inside the closed list, so a filter such as `<p-select multiple placeholder="Any page">` gave no hint of what it was for. With `multiple`, an option whose value is empty still stands in its place. The control's placeholder is the `placeholder` part.
+
 ## [0.7.25] - 2026-11-04
 
 ### Added
