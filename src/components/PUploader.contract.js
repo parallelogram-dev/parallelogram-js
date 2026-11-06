@@ -363,6 +363,10 @@ A failed request is read for something worth showing: JSON contributes its \`mes
     },
     { name: '--uploader-padding', description: 'Padding' },
     { name: '--uploader-files-gap', description: 'Space between files' },
+    {
+      name: '--uploader-preview-fit',
+      description: 'How a preview image fits its box, as object-fit. Defaults to cover',
+    },
     { name: '--uploader-file-radius-start', description: 'Top corners of a file card' },
     { name: '--uploader-file-radius-end', description: 'Bottom corners of a file card' },
     {

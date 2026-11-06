@@ -62,6 +62,17 @@ describe('p-uploader', () => {
     delete window.__puploaderInjected;
   });
 
+  it('fills the preview box unless a page asks to show the picture whole', async () => {
+    const { file } = await mountUploader();
+    const image = () => file.shadowRoot.querySelector('.uploader__preview img');
+    const fit = getComputedStyle(image()).objectFit;
+
+    file.style.setProperty('--uploader-preview-fit', 'contain');
+
+    expect(fit).toBe('cover');
+    expect(getComputedStyle(image()).objectFit).toBe('contain');
+  });
+
   it('renders a filename containing markup as text', async () => {
     const file = element('p-uploader-file', { filename: PAYLOAD });
     document.body.append(file);
