@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.28] - 2026-11-06
+
 ### Added
 
 - `<p-uploader-file>` takes `--uploader-preview-fit`, the `object-fit` of its preview image, so a page can show a picture whole (`contain`) instead of filling the box. It defaults to `cover`, as before.
