@@ -19,7 +19,9 @@ export default {
   summary: 'Date, time and date range picker with a calendar dialog',
   description: `The value fields and the calendar button open a dialog with a day grid and, in datetime and time modes, time selects. Values are local and follow the native inputs: \`yyyy-mm-dd\` in date mode, \`yyyy-mm-ddThh:mm\` in datetime mode like \`datetime-local\`, and \`hh:mm\` in time mode, with \`:ss\` when the seconds are set. An ISO instant with \`Z\` or an offset is read as the local date and time it stands for. The element is form-associated: it submits its value, and in range mode the end of the range under \`range-to\`, in that format or the one \`format\` names.
 
-\`min\` and \`max\` disable days outside them, and \`min-from-field\` and \`max-from-field\` follow another field, such as a check-in date limiting check-out.`,
+\`min\` and \`max\` disable days outside them, and \`min-from-field\` and \`max-from-field\` follow another field, such as a check-in date limiting check-out.
+
+The dialog opens in the top layer, below the field or above it when there is no room below, so a scrolling or clipping container such as a sidebar never cuts it off.`,
   withoutJs: `Until the module loads this element is empty markup with no field and no calendar in it, and the package stylesheet hides it while scripts are running. It is the form field, so a form submitted before it upgrades carries no date and \`required\` cannot hold the form back. Where that matters, render a native \`<input type="date">\` on the server and replace it once the module is in.`,
   attributes: [
     {

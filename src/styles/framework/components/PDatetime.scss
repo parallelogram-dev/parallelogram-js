@@ -309,7 +309,15 @@ button:disabled {
   opacity: var(--datetime-icon-opacity);
 }
 
-/* Panel */
+/* Panel. In the top layer, undo the browser's popover centring and colours before the panel's own
+   rules below; the script pins it to the field's edges */
+.panel:where([popover]) {
+  inset: auto;
+  margin: 0;
+  overflow: visible;
+  color: inherit;
+}
+
 .panel {
   position: absolute;
   top: 100%;
@@ -324,6 +332,13 @@ button:disabled {
   opacity: 0;
   transform: translateY(-0.5em);
   pointer-events: none;
+}
+
+/* Pinned to the field on every scroll, so only the fade and slide animate; an animated edge would
+   trail behind the field */
+.panel[popover] {
+  position: fixed;
+  transition-property: opacity, transform;
 }
 
 /* Flip up when there isn't enough room below */
