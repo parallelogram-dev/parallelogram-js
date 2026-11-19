@@ -221,6 +221,12 @@ export default class PDatetime extends HTMLElement {
     this._toInput = this.shadowRoot.querySelector('[data-datetime-input-to]');
     this._btn = this.shadowRoot.querySelector('[data-datetime-trigger]');
     this._panel = this.shadowRoot.querySelector('[data-datetime-panel]');
+    /* Open in the top layer where the browser can, so no scrolling or clipping ancestor cuts the
+       panel off; elsewhere it stays positioned against the field as before */
+    this._topLayer = typeof this._panel.showPopover === 'function';
+    if (this._topLayer) {
+      this._panel.setAttribute('popover', 'manual');
+    }
     this._nav = this.shadowRoot.querySelector('[data-datetime-nav]');
     this._gridContainer = this.shadowRoot.querySelector('[data-datetime-grid-container]');
     this._grid = this.shadowRoot.querySelector('[data-datetime-grid]');
@@ -839,6 +845,7 @@ export default class PDatetime extends HTMLElement {
     this._setExpanded(true);
 
     this._panel.hidden = false;
+    this._showPopover();
     requestAnimationFrame(() => {
       this._positionPanel();
       this._panel.classList.add('open');
@@ -937,6 +944,7 @@ export default class PDatetime extends HTMLElement {
     this._hideTimer = setTimeout(() => {
       this._panel.hidden = true;
       this._panel.classList.remove('panel--above', 'panel--align-right');
+      this._hidePopover();
     }, 150);
 
     if (returnFocus || focusWasInside) {
@@ -955,11 +963,26 @@ export default class PDatetime extends HTMLElement {
     );
   }
 
+  _showPopover() {
+    if (this._topLayer && this.isConnected && !this._panel.matches(':popover-open')) {
+      this._panel.showPopover();
+    }
+  }
+
+  _hidePopover() {
+    if (this._topLayer && this._panel.matches(':popover-open')) {
+      this._panel.hidePopover();
+    }
+  }
+
   /**
    * Flips the panel above the host when it doesn't fit below but does fit above, and right-aligns
    * it when the left-anchored panel would overflow the right edge. A panel that fits neither way
    * stays below, where scrolling reaches it, rather than being cut off at the top of the viewport.
    * Re-evaluated on open and on any scroll/resize while the panel is open.
+   *
+   * In the top layer the panel is fixed to the viewport, so it is pinned to the field's edges here;
+   * its margin keeps the gap from the field, as it does when positioned against the field.
    */
   _positionPanel() {
     /* Reset any prior flip so measurements reflect the default placement */
@@ -973,13 +996,21 @@ export default class PDatetime extends HTMLElement {
     const spaceBelow = viewportH - hostRect.bottom;
     const spaceAbove = hostRect.top;
 
-    if (panelRect.height > spaceBelow && panelRect.height <= spaceAbove) {
-      this._panel.classList.add('panel--above');
-    }
+    const above = panelRect.height > spaceBelow && panelRect.height <= spaceAbove;
+    const alignRight = hostRect.left + panelRect.width > viewportW;
 
-    if (hostRect.left + panelRect.width > viewportW) {
-      this._panel.classList.add('panel--align-right');
-    }
+    this._panel.classList.toggle('panel--above', above);
+    this._panel.classList.toggle('panel--align-right', alignRight);
+
+    if (!this._topLayer) return;
+
+    const { clientWidth, clientHeight } = document.documentElement;
+    Object.assign(this._panel.style, {
+      top: above ? 'auto' : `${hostRect.bottom}px`,
+      bottom: above ? `${clientHeight - hostRect.top}px` : 'auto',
+      left: alignRight ? 'auto' : `${hostRect.left}px`,
+      right: alignRight ? `${clientWidth - hostRect.right}px` : 'auto',
+    });
   }
 
   /**

@@ -242,6 +242,150 @@ describe('p-datetime', () => {
     expect(panel(picker).classList.contains('panel--above')).toBe(false);
   });
 
+  describe('in a narrow scrolling column', () => {
+    const renderInColumn = () => {
+      const column = document.createElement('aside');
+      column.style.cssText =
+        'position: fixed; top: 80px; right: 0; bottom: 0; width: 200px; overflow-y: auto;';
+      const picker = document.createElement('p-datetime');
+      picker.setAttribute('mode', 'date');
+      picker.setAttribute('value', '2026-11-29');
+      column.append(picker);
+      document.body.append(column);
+      return picker;
+    };
+
+    const openFully = async picker => {
+      trigger(picker).click();
+      await nextFrame();
+      await wait(250);
+    };
+
+    it('opens its panel in the top layer', async () => {
+      const picker = renderInColumn();
+      await openFully(picker);
+
+      expect(panel(picker).matches(':popover-open')).toBe(true);
+    });
+
+    it('shows the whole panel where the column would cut it off', async () => {
+      const picker = renderInColumn();
+      picker.style.marginTop = '120px';
+      await openFully(picker);
+      const box = panel(picker).getBoundingClientRect();
+      const corners = [
+        [box.left + 4, box.top + 4],
+        [box.left + 4, box.bottom - 4],
+        [box.right - 4, box.top + 4],
+      ];
+
+      expect(corners.map(([x, y]) => document.elementFromPoint(x, y) === picker)).toEqual([
+        true,
+        true,
+        true,
+      ]);
+    });
+
+    it('sits below its field, lined up with its right edge, when it overflows the window', async () => {
+      const picker = renderInColumn();
+      picker.style.marginTop = '120px';
+      await openFully(picker);
+      const field = picker.getBoundingClientRect();
+      const box = panel(picker).getBoundingClientRect();
+
+      expect([
+        box.top > field.bottom && box.top - field.bottom < 20,
+        Math.round(box.right),
+      ]).toEqual([true, Math.round(field.right)]);
+    });
+
+    it('sits above its field with the month controls in view when there is no room below', async () => {
+      const picker = renderInColumn();
+      await openFully(picker);
+      const height = panel(picker).getBoundingClientRect().height;
+      picker.close();
+      await wait(200);
+
+      /* The column starts below where the flipped panel's top lands, so it would cut off the month
+         controls */
+      const column = picker.parentElement;
+      column.style.top = `${innerHeight - height - 40}px`;
+      picker.style.marginTop = `${height - 40}px`;
+      await openFully(picker);
+      const field = picker.getBoundingClientRect();
+      const box = panel(picker).getBoundingClientRect();
+      const next = shadow(picker, '[data-datetime-nav-btn="next"]').getBoundingClientRect();
+
+      expect([
+        field.top - box.bottom > 0 && field.top - box.bottom < 20,
+        document.elementFromPoint(next.left + next.width / 2, next.top + next.height / 2) ===
+          picker,
+      ]).toEqual([true, true]);
+    });
+
+    it('follows its field when the column scrolls', async () => {
+      const picker = renderInColumn();
+      picker.style.marginTop = '120px';
+      const spacer = document.createElement('div');
+      spacer.style.height = '2000px';
+      picker.after(spacer);
+      await openFully(picker);
+
+      picker.parentElement.scrollTop = 50;
+      await wait(50);
+      const field = picker.getBoundingClientRect();
+      const box = panel(picker).getBoundingClientRect();
+
+      expect(box.top > field.bottom && box.top - field.bottom < 20).toBe(true);
+    });
+
+    it('leaves the top layer once closed', async () => {
+      const picker = renderInColumn();
+      await openFully(picker);
+
+      picker.close();
+      await wait(200);
+
+      expect(panel(picker).matches(':popover-open')).toBe(false);
+    });
+
+    it('opens again straight after closing', async () => {
+      const picker = renderInColumn();
+      await openFully(picker);
+
+      picker.close();
+      picker.open();
+      await wait(250);
+
+      expect([panel(picker).matches(':popover-open'), panel(picker).hidden]).toEqual([true, false]);
+    });
+  });
+
+  describe('without popover support', () => {
+    let original;
+
+    afterEach(() => {
+      Object.defineProperty(HTMLElement.prototype, 'showPopover', original);
+    });
+
+    it('positions the panel against its field', async () => {
+      original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'showPopover');
+      Object.defineProperty(HTMLElement.prototype, 'showPopover', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      const picker = renderPicker({ mode: 'date' });
+      trigger(picker).click();
+      await nextFrame();
+
+      expect([
+        panel(picker).hasAttribute('popover'),
+        getComputedStyle(panel(picker)).position,
+      ]).toEqual([false, 'absolute']);
+    });
+  });
+
   it('stays open when focus moves to its panel, as Safari does for a click on a button', async () => {
     const container = document.createElement('main');
     container.tabIndex = -1;
