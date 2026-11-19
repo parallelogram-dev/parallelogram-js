@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.29] - 2026-11-19
+
 ### Fixed
 
 - A `<p-datetime>` in a scrolling or clipping container, such as a narrow sidebar, shows its whole calendar. The calendar opened inside the container, which cut off its sides and, when it opened upwards, the month and its arrows, so a date in another month could not be reached. It now opens in the top layer, pinned to the field, and follows the field as the container scrolls.
