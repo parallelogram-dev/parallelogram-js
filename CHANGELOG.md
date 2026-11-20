@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- DynamicFill (`components/DynamicFill`) fills per-visitor placeholders on cached pages, such as a form's CSRF token and an enquiry count, from a page cache's endpoint. Placeholders are `data-dynamic-fill` elements, written by Parallelogram Cache's `pCache.csrfInput()` and `pCache.fragment()` or by any server answering the same JSON. Every placeholder mounted in one pass shares a request per endpoint, placeholders on pages the router swaps in get a request of their own, and `data-dynamic-fill-status` moves from pending to filled or error. It sets `window.pCacheDynamic`, so it never fills a page alongside the cache's fallback script.
+
 ## [0.7.29] - 2026-11-19
 
 ### Fixed

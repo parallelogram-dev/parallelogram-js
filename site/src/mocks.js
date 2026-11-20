@@ -215,8 +215,9 @@ const matches = (options, query) => {
 
 /**
  * Answer the site's JSON requests: `/api/update`, `/api/delete` and `/api/sequence` for the
- * uploader, `/api/places` and `/api/directory` for the select. Every other request goes to the
- * network. The delays are there so the examples show their loading states.
+ * uploader, `/api/places` and `/api/directory` for the select, and `/p-cache/dynamic` for
+ * DynamicFill. Every other request goes to the network. The delays are there so the examples show
+ * their loading states.
  */
 export function installMockApi() {
   if (window.fetch.isMockApi) return;
@@ -246,6 +247,20 @@ export function installMockApi() {
       const limit = Number(url.searchParams.get('limit')) || 25;
       const start = (Math.max(1, Number(url.searchParams.get('page')) || 1) - 1) * limit;
       return json({ options: rows.slice(start, start + limit), more: start + limit < rows.length });
+    }
+
+    /* A stand-in for a page cache's per-visitor endpoint: a made-up token and enquiry count */
+    if (/\/p-cache\/dynamic$/.test(url.pathname)) {
+      await delay(300);
+      const names = (url.searchParams.get('fragments') ?? '').split(',').filter(Boolean);
+      const fragments = Object.fromEntries(
+        names.filter(name => name === 'enquiryCount').map(name => [name, { value: 3 }])
+      );
+      const csrf =
+        url.searchParams.get('csrf') === '1'
+          ? { name: 'CRAFT_CSRF_TOKEN', value: 'example' }
+          : undefined;
+      return json(csrf ? { fragments, csrf } : { fragments });
     }
 
     return networkFetch(resource, options);
